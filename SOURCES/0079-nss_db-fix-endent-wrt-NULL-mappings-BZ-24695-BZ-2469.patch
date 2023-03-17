@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Benjamin Herrenschmidt <benh@amazon.com>
+Date: Fri, 20 Nov 2020 09:57:08 +1100
+Subject: [PATCH] nss_db: fix endent wrt NULL mappings [BZ #24695] [BZ #24696]
+
+[BenH: Tests removed as they use container test infra we don't have]
+
+nss_db allows for getpwent et al to be called without a set*ent,
+but it only works once.  After the last get*ent a set*ent is
+required to restart, because the end*ent did not properly reset
+the module.  Resetting it to NULL allows for a proper restart.
+
+If the database doesn't exist, however, end*ent erroniously called
+munmap which set errno.
+
+The test case runs "makedb" inside the testroot, so needs selinux
+DSOs installed.
+
+diff --git a/ChangeLog b/ChangeLog
+index 37baf86ad8b9cad3e1a62812997a1bf1bc137db6..028bd2fdfb8938cfd88e7d08cf3fc26eb877f4ed 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,11 @@
++2019-07-10  DJ Delorie  <dj@redhat.com>
++	    Sergei Trofimovich <slyfox@inbox.ru>
++
++	[BZ #24696]
++	[BZ #24695]
++	* nss/nss_db/db-open.c (internal_endent): Protect against NULL
++	mappings.
++
+ 2019-09-02  Ian Kent  <ikent@redhat.com>
+ 
+ 	Use autofs "ignore" mount hint in getmntent_r/getmntent.
+diff --git a/nss/nss_db/db-open.c b/nss/nss_db/db-open.c
+index 1c58bd1c548f7f0a1ce05a633cf5d82a3d8764a2..1112d98b4af385fc2d64edd9624ee0858eab1204 100644
+--- a/nss/nss_db/db-open.c
++++ b/nss/nss_db/db-open.c
+@@ -63,5 +63,9 @@ internal_setent (const char *file, struct nss_db_map *mapping)
+ void
+ internal_endent (struct nss_db_map *mapping)
+ {
+-  munmap (mapping->header, mapping->len);
++  if (mapping->header != NULL)
++    {
++      munmap (mapping->header, mapping->len);
++      mapping->header = NULL;
++    }
+ }

@@ -1,0 +1,88 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Richard Henderson <rth@twiddle.net>
+Date: Fri, 3 Nov 2017 16:38:16 +0000
+Subject: [PATCH] aarch64: Guess L1 cache linesize for aarch64
+
+Using the cache hierarchy linesize minimum in CTR_EL0.
+See the comment within the code for rationale.
+
+	* sysdeps/unix/sysv/linux/aarch64/sysconf.c: New file.
+
+(cherry picked from commit 6d58ce5e5072945d44f2dba83ad16cd6febd056c)
+
+diff --git a/ChangeLog b/ChangeLog
+index 50276a599240572dfcc6e36b0d9f722432004a3f..375e1efaf90a69120139b5c6bbbf23331ed0921b 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -674,6 +674,10 @@
+ 	(nsystem_dirs_len): Use array_length.
+ 	(_dl_init_paths): Use nsystem_dirs_len to compute the array size.
+ 
++2017-11-03  Richard Henderson  <rth@twiddle.net>
++	
++	* sysdeps/unix/sysv/linux/aarch64/sysconf.c: New file.
++
+ 2017-11-02  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	Add array_length and array_end macros.
+diff --git a/sysdeps/unix/sysv/linux/aarch64/sysconf.c b/sysdeps/unix/sysv/linux/aarch64/sysconf.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..30608dd82da704bfbf71f12f0a8cf72ab13f30ee
+--- /dev/null
++++ b/sysdeps/unix/sysv/linux/aarch64/sysconf.c
+@@ -0,0 +1,55 @@
++/* Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <assert.h>
++#include <stdbool.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++
++static long int linux_sysconf (int name);
++
++/* Get the value of the system variable NAME.  */
++long int
++__sysconf (int name)
++{
++  unsigned ctr;
++
++  /* Unfortunately, the registers that contain the actual cache info
++     (CCSIDR_EL1, CLIDR_EL1, and CSSELR_EL1) are protected by the Linux
++     kernel (though they need not have been).  However, CTR_EL0 contains
++     the *minimum* linesize in the entire cache hierarchy, and is
++     accessible to userland, for use in __aarch64_sync_cache_range,
++     and it is a reasonable assumption that the L1 cache will have that
++     minimum line size.  */
++  switch (name)
++    {
++    case _SC_LEVEL1_ICACHE_LINESIZE:
++      asm("mrs\t%0, ctr_el0" : "=r"(ctr));
++      return 4 << (ctr & 0xf);
++    case _SC_LEVEL1_DCACHE_LINESIZE:
++      asm("mrs\t%0, ctr_el0" : "=r"(ctr));
++      return 4 << ((ctr >> 16) & 0xf);
++    }
++
++  return linux_sysconf (name);
++}
++
++/* Now the generic Linux version.  */
++#undef __sysconf
++#define __sysconf static linux_sysconf
++#include <sysdeps/unix/sysv/linux/sysconf.c>

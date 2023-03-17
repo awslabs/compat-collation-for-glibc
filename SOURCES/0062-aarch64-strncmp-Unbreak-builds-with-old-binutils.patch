@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Wed, 14 Mar 2018 18:51:05 +0530
+Subject: [PATCH] aarch64/strncmp: Unbreak builds with old binutils
+
+Binutils 2.26.* and older do not support moves with shifted registers,
+so use a separate shift instruction instead.
+
+(cherry picked from commit d46f84de745db8f3f06a37048261f4e5ceacf0a3)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/sysdeps/aarch64/strncmp.S b/sysdeps/aarch64/strncmp.S
+index 33c07befd8286830c715bd652bc2b7777a478f90..d1bfa27ca4c9b0f4f43f177e19c04ea03e626f34 100644
+--- a/sysdeps/aarch64/strncmp.S
++++ b/sysdeps/aarch64/strncmp.S
+@@ -208,13 +208,15 @@ L(done):
+ 	/* Align the SRC1 to a dword by doing a bytewise compare and then do
+ 	   the dword loop.  */
+ L(try_misaligned_words):
+-	mov	limit_wd, limit, lsr #3
++	mov	limit_wd, limit
++	lsr	limit_wd, limit_wd, #3
+ 	cbz	count, L(do_misaligned)
+ 
+ 	neg	count, count
+ 	and	count, count, #7
+ 	sub	limit, limit, count
+-	mov	limit_wd, limit, lsr #3
++	mov	limit_wd, limit
++	lsr	limit_wd, limit_wd, #3
+ 
+ L(page_end_loop):
+ 	ldrb	data1w, [src1], #1

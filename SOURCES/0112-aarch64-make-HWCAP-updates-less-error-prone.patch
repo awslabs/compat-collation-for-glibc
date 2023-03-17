@@ -1,0 +1,71 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Thu, 11 Jan 2018 17:21:46 +0000
+Subject: [PATCH] aarch64: make HWCAP updates less error prone
+
+Remove unused _DL_HWCAP_LAST definition and move _DL_HWCAP_COUNT
+where it is needed (dl-procinfo.h always includes dl-procinfo.c).
+
+	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.h
+	(_DL_HWCAP_LAST): Remove.
+	(_DL_HWCAP_COUNT): Move to ...
+	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+	(_DL_HWCAP_COUNT): ... here.
+
+(cherry picked from commit afce1991f6f61514172696ec3edf93331cb0e04f)
+
+diff --git a/ChangeLog b/ChangeLog
+index 3ae6108ac44d3077d3604d095b9ecc61366b549f..64fec8cafefbcd50a5a7efabfb39704421039b27 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -151,6 +151,14 @@
+ 	* resolv/tst-resolv-network.c: Use test framework instead explicit
+ 	main function.
+ 
++2018-01-16  Szabolcs Nagy  <szabolcs.nagy@arm.com>
++
++	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.h
++	(_DL_HWCAP_LAST): Remove.
++	(_DL_HWCAP_COUNT): Move to ...
++	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
++	(_DL_HWCAP_COUNT): ... here.
++
+ 2018-01-15  Alan Hayward  <alan.hayward@arm.com>
+ 
+ 	* elf/elf.h (NT_ARM_SVE): Define.
+diff --git a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+index fed31fd9b5b1bffac8407afbb1a6bd03f1656de8..3549a427d860ac2d2cb3bbbeab69196bb51d182f 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
++++ b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+@@ -56,10 +56,13 @@ PROCINFO_CLASS struct cpu_features _dl_aarch64_cpu_features
+ # endif
+ #endif
+ 
++/* Number of HWCAP bits set.  */
++#define _DL_HWCAP_COUNT 16
++
+ #if !defined PROCINFO_DECL && defined SHARED
+   ._dl_aarch64_cap_flags
+ #else
+-PROCINFO_CLASS const char _dl_aarch64_cap_flags[16][10]
++PROCINFO_CLASS const char _dl_aarch64_cap_flags[_DL_HWCAP_COUNT][10]
+ #endif
+ #ifndef PROCINFO_DECL
+ /* Matches the names in arch/arm64/kernel/cpuinfo.c of Linux.  */
+diff --git a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.h b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.h
+index 0333a18267dfef3e657d2d3d29f163fb6237bcdf..bc4afa4a6ebcc52db9bdf7e136b39d6f5211e0a8 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.h
++++ b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.h
+@@ -27,12 +27,6 @@
+ /* We cannot provide a general printing function.  */
+ #define _dl_procinfo(type, word) -1
+ 
+-/* Number of HWCAP bits set.  */
+-#define _DL_HWCAP_COUNT 16
+-
+-/* Offset of the last bit allocated in HWCAP.  */
+-#define _DL_HWCAP_LAST 15
+-
+ /* HWCAP_CPUID should be available by default to influence IFUNC as well as
+    library search.  */
+ #define HWCAP_IMPORTANT HWCAP_CPUID

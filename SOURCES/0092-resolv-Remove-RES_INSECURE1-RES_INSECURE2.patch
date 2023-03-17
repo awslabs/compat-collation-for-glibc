@@ -1,0 +1,118 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florian Weimer <fweimer@redhat.com>
+Date: Mon, 8 Apr 2019 11:19:38 +0200
+Subject: [PATCH] resolv: Remove RES_INSECURE1, RES_INSECURE2
+
+Always perform the associated security checks.
+
+[BenH]: Keep the definitions in resolv.h as to avoid breaking AL2
+userspace APIs, though the flags no longer have an effect.
+
+(cherry picked from commit 333221862ecbebde60dd16e7ca17d26444e62f50)
+
+diff --git a/ChangeLog b/ChangeLog
+index 700c6951514d1f78acede439a90c61b02533e72a..64e4e555b8d55fa1f165ee085b9da5c5fe44410d 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,10 @@
++2019-04-08  Florian Weimer  <fweimer@redhat.com>
++
++	* resolv/res_send.c (send_dg): Always perform RES_INSECURE1 and
++	RES_INSECURE2 security checks.
++	* resolv/res_debug.c (p_option): Remove RES_INSECURE1 and
++	RES_INSECURE2 handling.
++
+ 2019-05-22  Wilco Dijkstra  <wdijkstr@arm.com>
+ 
+ 	[BZ #24531]
+diff --git a/NEWS b/NEWS
+index 6c7f748ffca10d982b016fb5711ac329017bdf46..4f377727afd6afbc5614475cf45bd260114cfca0 100644
+--- a/NEWS
++++ b/NEWS
+@@ -9,6 +9,9 @@ Version 2.26.1
+ 
+ Major new features:
+ 
++* The obsolete RES_INSECURE1 and RES_INSECURE2 option flags for the DNS stub
++  resolver no longer have any effect (they are still present in <resolv.h>).
++
+ * In order to support faster and safer process termination the malloc API
+   family of functions will no longer print a failure address and stack
+   backtrace after detecting heap corruption.  The goal is to minimize the
+diff --git a/resolv/res_debug.c b/resolv/res_debug.c
+index 154a4f8e2437903e7e82511f2d1eab326a4c56b3..abb048cf5a79d511aba3065a2fbdcb06bec1e44d 100644
+--- a/resolv/res_debug.c
++++ b/resolv/res_debug.c
+@@ -604,8 +604,6 @@ p_option(u_long option) {
+ 	case RES_DEFNAMES:	return "defnam";
+ 	case RES_STAYOPEN:	return "styopn";
+ 	case RES_DNSRCH:	return "dnsrch";
+-	case RES_INSECURE1:	return "insecure1";
+-	case RES_INSECURE2:	return "insecure2";
+ 	case RES_NOALIASES:	return "noaliases";
+ 	case DEPRECATED_RES_USE_INET6:	return "inet6";
+ 	case RES_ROTATE:	return "rotate";
+diff --git a/resolv/res_send.c b/resolv/res_send.c
+index 55eaa9cbdb9bbb77e8f3a0977ba77fefb7978def..9a53c8401dff2ebebf65eab48639f7e78a1a3aa5 100644
+--- a/resolv/res_send.c
++++ b/resolv/res_send.c
+@@ -1319,31 +1319,25 @@ send_dg(res_state statp,
+ 			 */
+ 			goto wait;
+ 		}
+-		if (!(statp->options & RES_INSECURE1) &&
+-		    !res_ourserver_p(statp, &from)) {
+-			/*
+-			 * response from wrong server? ignore it.
+-			 * XXX - potential security hazard could
+-			 *	 be detected here.
+-			 */
+-			goto wait;
+-		}
+-		if (!(statp->options & RES_INSECURE2)
+-		    && (recvresp1 || !res_queriesmatch(buf, buf + buflen,
++
++		/* Paranoia check.  Due to the connected UDP socket,
++		   the kernel has already filtered invalid addresses
++		   for us.  */
++		if (!res_ourserver_p(statp, &from))
++		  goto wait;
++
++		/* Check for the correct header layout and a matching
++		   question.  */
++		if ((recvresp1 || !res_queriesmatch(buf, buf + buflen,
+ 						       *thisansp,
+ 						       *thisansp
+ 						       + *thisanssizp))
+ 		    && (recvresp2 || !res_queriesmatch(buf2, buf2 + buflen2,
+ 						       *thisansp,
+ 						       *thisansp
+-						       + *thisanssizp))) {
+-			/*
+-			 * response contains wrong query? ignore it.
+-			 * XXX - potential security hazard could
+-			 *	 be detected here.
+-			 */
+-			goto wait;
+-		}
++						       + *thisanssizp)))
++		  goto wait;
++
+ 		if (anhp->rcode == SERVFAIL ||
+ 		    anhp->rcode == NOTIMP ||
+ 		    anhp->rcode == REFUSED) {
+diff --git a/resolv/resolv.h b/resolv/resolv.h
+index e8c581ccd10bc15f8f8a4b13f8f8a5825d8fff17..dacbb0fa87a2cbc4fdd2ff4f4cea8cbc403019b4 100644
+--- a/resolv/resolv.h
++++ b/resolv/resolv.h
+@@ -115,8 +115,8 @@ struct res_sym {
+ #define RES_DEFNAMES	0x00000080	/* use default domain name */
+ #define RES_STAYOPEN	0x00000100	/* Keep TCP socket open */
+ #define RES_DNSRCH	0x00000200	/* search up local domain tree */
+-#define	RES_INSECURE1	0x00000400	/* type 1 security disabled */
+-#define	RES_INSECURE2	0x00000800	/* type 2 security disabled */
++#define	RES_INSECURE1	0x00000400	/* OBSOLETE: type 1 security disabled */
++#define	RES_INSECURE2	0x00000800	/* OBSOLETE: type 2 security disabled */
+ #define	RES_NOALIASES	0x00001000	/* shuts off HOSTALIASES feature */
+ #define	RES_USE_INET6	\
+   __glibc_macro_warning ("RES_USE_INET6 is deprecated") 0x00002000

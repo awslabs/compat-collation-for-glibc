@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florian Weimer <fweimer@redhat.com>
+Date: Wed, 14 Oct 2020 10:54:39 +0200
+Subject: [PATCH] support: Provide a way to clear the RA bit in DNS server
+ responses
+
+(cherry picked from commit 08443b19965f48862b02c2fd7b33a39d66daf2ff)
+
+diff --git a/support/resolv_test.c b/support/resolv_test.c
+index 97acac3a77543f3c605c323c7fafe7a820a9ae7a..80e23ed17b17a1e04dc43ff9940b8371b77b4c15 100644
+--- a/support/resolv_test.c
++++ b/support/resolv_test.c
+@@ -181,7 +181,9 @@ resolv_response_init (struct resolv_response_builder *b,
+   b->buffer[2] |= b->query_buffer[2] & 0x01; /* Copy the RD bit.  */
+   if (flags.tc)
+     b->buffer[2] |= 0x02;
+-  b->buffer[3] = 0x80 | flags.rcode; /* Always set RA.  */
++  b->buffer[3] = flags.rcode;
++  if (!flags.clear_ra)
++    b->buffer[3] |= 0x80;
+ 
+   /* Fill in the initial section count values.  */
+   b->buffer[4] = flags.qdcount >> 8;
+diff --git a/support/resolv_test.h b/support/resolv_test.h
+index 9d2ee78b46c282739c81b9a7b5cd569665dec88a..fc4313b5facc2ce0a71abfb904af5ef5f082998a 100644
+--- a/support/resolv_test.h
++++ b/support/resolv_test.h
+@@ -145,6 +145,10 @@ struct resolv_response_flags
+   /* If true, the TC (truncation) flag will be set.  */
+   bool tc;
+ 
++  /* If true, do not set the RA (recursion available) flag in the
++     response.  */
++  bool clear_ra;
++
+   /* Initial section count values.  Can be used to artificially
+      increase the counts, for malformed packet testing.*/
+   unsigned short qdcount;

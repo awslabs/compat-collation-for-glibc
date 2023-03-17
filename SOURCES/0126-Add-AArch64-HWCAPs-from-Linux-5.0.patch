@@ -1,0 +1,76 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Joseph Myers <joseph@codesourcery.com>
+Date: Tue, 19 Mar 2019 14:02:17 +0000
+Subject: [PATCH] Add AArch64 HWCAPs from Linux 5.0.
+
+This patch adds new AArch64 HWCAPs from Linux 5.0 to the AArch64
+bits/hwcap.h and dl-procinfo.c.
+
+Tested (compilation only) with build-many-glibcs.py for
+aarch64-linux-gnu.
+
+	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_SB): New
+	macro.
+	(HWCAP_PACA): Likewise.
+	(HWCAP_PACG): Likewise.
+	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c (_DL_HWCAP_COUNT):
+	Increase to 32.
+	(_dl_aarch64_cap_flags): Add new entries for new HWCAPs.
+
+(cherry picked from commit a2e57f89a35e6056c9488428e68c4889e114ef71)
+
+diff --git a/ChangeLog b/ChangeLog
+index a22f4b7baaa1b192b3038ab88d15c8b3777bbcca..3d69c53204db3595c0bb8a1dd6e4ae276d2c5127 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -27,6 +27,16 @@
+ 	* resolv/res_debug.c (p_option): Remove RES_INSECURE1 and
+ 	RES_INSECURE2 handling.
+ 
++2019-03-19  Joseph Myers  <joseph@codesourcery.com>
++
++	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_SB): New
++	macro.
++	(HWCAP_PACA): Likewise.
++	(HWCAP_PACG): Likewise.
++	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c (_DL_HWCAP_COUNT):
++	Increase to 32.
++	(_dl_aarch64_cap_flags): Add new entries for new HWCAPs.
++
+ 2019-05-22  Wilco Dijkstra  <wdijkstr@arm.com>
+ 
+ 	[BZ #24531]
+diff --git a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+index d3ae4a4c6a3ac714d09de799f598be768f5a0e82..e228c14d93049bf0276f0123e9dd5138c4331c35 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
++++ b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+@@ -51,3 +51,6 @@
+ #define HWCAP_ILRCPC		(1 << 26)
+ #define HWCAP_FLAGM		(1 << 27)
+ #define HWCAP_SSBS		(1 << 28)
++#define HWCAP_SB		(1 << 29)
++#define HWCAP_PACA		(1 << 30)
++#define HWCAP_PACG		(1UL << 31)
+diff --git a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+index a593805231482b4b431ee11fd324749db6f9c460..1585929e868a8959f0da1cb9cca810e10e0152e8 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
++++ b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+@@ -57,7 +57,7 @@ PROCINFO_CLASS struct cpu_features _dl_aarch64_cpu_features
+ #endif
+ 
+ /* Number of HWCAP bits set.  */
+-#define _DL_HWCAP_COUNT 29
++#define _DL_HWCAP_COUNT 32
+ 
+ #if !defined PROCINFO_DECL && defined SHARED
+   ._dl_aarch64_cap_flags
+@@ -69,7 +69,8 @@ PROCINFO_CLASS const char _dl_aarch64_cap_flags[_DL_HWCAP_COUNT][10]
+ = { "fp", "asimd", "evtstrm", "aes", "pmull", "sha1", "sha2", "crc32",
+     "atomics", "fphp", "asimdhp", "cpuid", "asimdrdm", "jscvt", "fcma",
+     "lrcpc", "dcpop", "sha3", "sm3", "sm4", "asimddp", "sha512", "sve",
+-    "asimdfhm", "dit", "uscat", "ilrcpc", "flagm", "ssbs" }
++    "asimdfhm", "dit", "uscat", "ilrcpc", "flagm", "ssbs", "sb", "paca",
++    "pacg" }
+ #endif
+ #if !defined SHARED || defined PROCINFO_DECL
+ ;

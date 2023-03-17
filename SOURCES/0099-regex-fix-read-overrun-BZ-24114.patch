@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Eggert <eggert@cs.ucla.edu>
+Date: Mon, 21 Jan 2019 11:08:13 -0800
+Subject: [PATCH] regex: fix read overrun [BZ #24114]
+
+Problem found by AddressSanitizer, reported by Hongxu Chen in:
+https://debbugs.gnu.org/34140
+* posix/regexec.c (proceed_next_node):
+Do not read past end of input buffer.
+
+(cherry picked from commit 583dd860d5b833037175247230a328f0050dbfe9)
+
+diff --git a/ChangeLog b/ChangeLog
+index 9c6b24e06343602d21e37eeb88b382f6ea02f904..50276a599240572dfcc6e36b0d9f722432004a3f 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -72,6 +72,14 @@
+ 	* nscd/gai.c: Include <arpa/inet.h> and change visibility of
+ 	__inet_aton_exact.
+ 
++2019-01-31  Paul Eggert  <eggert@cs.ucla.edu>
++	
++	regex: fix read overrun [BZ #24114]
++	Problem found by AddressSanitizer, reported by Hongxu Chen in:
++	https://debbugs.gnu.org/34140
++	* posix/regexec.c (proceed_next_node):
++	Do not read past end of input buffer.
++
+ 2019-01-21  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	[BZ #20018]
+diff --git a/posix/regexec.c b/posix/regexec.c
+index 8eb09dcfa0d329a3100bf74b67229d0db87b2d18..5174276dfdf949f0008566de49c5420d0b5ef13f 100644
+--- a/posix/regexec.c
++++ b/posix/regexec.c
+@@ -1304,8 +1304,10 @@ proceed_next_node (const re_match_context_t *mctx, int nregs, regmatch_t *regs,
+ 	      else if (naccepted)
+ 		{
+ 		  char *buf = (char *) re_string_get_buffer (&mctx->input);
+-		  if (memcmp (buf + regs[subexp_idx].rm_so, buf + *pidx,
+-			      naccepted) != 0)
++		  if (mctx->input.valid_len - *pidx < naccepted
++		      || (memcmp (buf + regs[subexp_idx].rm_so, buf + *pidx,
++				  naccepted)
++			  != 0))
+ 		    return -1;
+ 		}
+ 	    }

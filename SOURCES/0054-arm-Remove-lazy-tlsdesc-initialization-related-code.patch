@@ -1,0 +1,278 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Fri, 20 Oct 2017 17:53:44 +0100
+Subject: [PATCH] arm: Remove lazy tlsdesc initialization related code
+
+Lazy tlsdesc initialization is no longer used in the dynamic linker
+so all related code can be removed.
+
+        * sysdeps/arm/dl-machine.h (elf_machine_runtime_setup): Remove
+        DT_TLSDESC_GOT initialization.
+        * sysdeps/arm/dl-tlsdesc.S (_dl_tlsdesc_lazy_resolver): Remove.
+        (_dl_tlsdesc_resolve_hold): Likewise.
+        * sysdeps/aarch64/dl-tlsdesc.h (_dl_tlsdesc_lazy_resolver): Remove.
+        (_dl_tlsdesc_resolve_hold): Likewise.
+        * sysdeps/aarch64/tlsdesc.c (_dl_tlsdesc_lazy_resolver_fixup): Remove.
+        (_dl_tlsdesc_resolve_hold_fixup): Likewise.
+
+(cherry picked from commit 94d2f0af157d8c02e688a315039f8044aedbcc89)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/sysdeps/arm/dl-machine.h b/sysdeps/arm/dl-machine.h
+index f055aaf69d9d04707f3c28daea2392943ad3a6bb..695473b1cc3b0e9ac663bc55f3689726300b5d43 100644
+--- a/sysdeps/arm/dl-machine.h
++++ b/sysdeps/arm/dl-machine.h
+@@ -120,10 +120,6 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+ 	got[2] = (Elf32_Addr) &_dl_runtime_resolve;
+     }
+ 
+-  if (l->l_info[ADDRIDX (DT_TLSDESC_GOT)] && lazy)
+-    *(Elf32_Addr*)(D_PTR (l, l_info[ADDRIDX (DT_TLSDESC_GOT)]) + l->l_addr)
+-      = (Elf32_Addr) &_dl_tlsdesc_lazy_resolver;
+-
+   return lazy;
+ }
+ 
+diff --git a/sysdeps/arm/dl-tlsdesc.S b/sysdeps/arm/dl-tlsdesc.S
+index e7bed02188d71e2abeeb9ddf5054f36ea186ccdf..99d4b8327feda0f6d2326e54216b5bd4e76f8854 100644
+--- a/sysdeps/arm/dl-tlsdesc.S
++++ b/sysdeps/arm/dl-tlsdesc.S
+@@ -132,87 +132,3 @@ _dl_tlsdesc_dynamic:
+ 	cfi_endproc
+ 	.size	_dl_tlsdesc_dynamic, .-_dl_tlsdesc_dynamic
+ #endif /* SHARED */
+-
+-/* lazy resolved for tls descriptors.  */
+-	.hidden _dl_tlsdesc_lazy_resolver
+-	.global	_dl_tlsdesc_lazy_resolver
+-	.type	_dl_tlsdesc_lazy_resolver,#function
+-	cfi_startproc
+-	eabi_fnstart
+-	.align 2
+-_dl_tlsdesc_lazy_resolver:
+-	/* r0 points at the tlsdesc,
+-	   r1 points at the GOT
+-	   r2 was pushed by the trampoline and used as a temp,
+-	      we need to pop it here.
+-	  We push the remaining call-clobbered registers here, and also
+-	  R1 -- to keep the stack correctly aligned.  */
+-	/* Tell the unwinder that r2 has already been pushed.  */
+-	eabi_save ({r2})
+-	cfi_adjust_cfa_offset (4)
+-	cfi_rel_offset (r2, 0)
+-	eabi_save ({r0,r1,r3,ip,lr})
+-	push	{r0, r1, r3, ip, lr}
+-	cfi_adjust_cfa_offset (20)
+-	cfi_rel_offset (r0, 0)
+-	cfi_rel_offset (r1, 4)
+-	cfi_rel_offset (r3, 8)
+-	cfi_rel_offset (ip, 12)
+-	cfi_rel_offset (lr, 16)
+-	bl	_dl_tlsdesc_lazy_resolver_fixup
+-	pop	{r0, r1, r3, ip, lr}
+-	cfi_adjust_cfa_offset (-20)
+-	cfi_restore (lr)
+-	cfi_restore (ip)
+-	cfi_restore (r3)
+-	cfi_restore (r1)
+-	cfi_restore (r0)
+-	pop	{r2}
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r2)
+-	ldr	r1, [r0, #4]
+-	BX	(r1)
+-	eabi_fnend
+-	cfi_endproc
+-	.size	_dl_tlsdesc_lazy_resolver, .-_dl_tlsdesc_lazy_resolver
+-
+-/* Holder for lazy tls descriptors being resolve in another thread.
+-
+-   Our calling convention is to clobber r0, r1 and the processor
+-   flags.  All others that are modified must be saved */
+-	.hidden _dl_tlsdesc_resolve_hold
+-	.global	_dl_tlsdesc_resolve_hold
+-	.type	_dl_tlsdesc_resolve_hold,#function
+-	cfi_startproc
+-	eabi_fnstart
+-	.align 2
+-_dl_tlsdesc_resolve_hold:
+-	/* r0 is saved so its original value can be used after the call and
+-	   r1 is saved only to keep the stack aligned.  (r0 points to the tls
+-	   descriptor, it is passed to _dl_tlsdesc_resolve_hold_fixup which
+-	   is a void function that may clobber r0, later r0 is used to load
+-	   the new resolver.)  */
+-	eabi_save ({r0,r1,r2,r3,ip,lr})
+-	push	{r0, r1, r2, r3, ip, lr}
+-	cfi_adjust_cfa_offset (24)
+-	cfi_rel_offset (r0, 0)
+-	cfi_rel_offset (r1, 4)
+-	cfi_rel_offset (r2, 8)
+-	cfi_rel_offset (r3, 12)
+-	cfi_rel_offset (ip, 16)
+-	cfi_rel_offset (lr, 20)
+-	adr	r1, _dl_tlsdesc_resolve_hold
+-	bl	_dl_tlsdesc_resolve_hold_fixup
+-	pop	{r0, r1, r2, r3, ip, lr}
+-	cfi_adjust_cfa_offset (-24)
+-	cfi_restore (lr)
+-	cfi_restore (ip)
+-	cfi_restore (r3)
+-	cfi_restore (r2)
+-	cfi_restore (r1)
+-	cfi_restore (r0)
+-	ldr     r1, [r0, #4]
+-	BX      (r1)
+-	eabi_fnend
+-	cfi_endproc
+-	.size	_dl_tlsdesc_resolve_hold, .-_dl_tlsdesc_resolve_hold
+diff --git a/sysdeps/arm/dl-tlsdesc.h b/sysdeps/arm/dl-tlsdesc.h
+index 2770af02608bac21394e14cdcc7ca25300fb80cf..bb2c731e7472969e97c9dc42f3d7ec111e143ae8 100644
+--- a/sysdeps/arm/dl-tlsdesc.h
++++ b/sysdeps/arm/dl-tlsdesc.h
+@@ -48,9 +48,7 @@ struct tlsdesc_dynamic_arg
+ 
+ extern ptrdiff_t attribute_hidden
+   _dl_tlsdesc_return(struct tlsdesc *),
+-  _dl_tlsdesc_undefweak(struct tlsdesc *),
+-  _dl_tlsdesc_resolve_hold(struct tlsdesc *),
+-  _dl_tlsdesc_lazy_resolver(struct tlsdesc *);
++  _dl_tlsdesc_undefweak(struct tlsdesc *);
+ 
+ # ifdef SHARED
+ extern void *_dl_make_tlsdesc_dynamic (struct link_map *map, size_t ti_offset);
+diff --git a/sysdeps/arm/tlsdesc.c b/sysdeps/arm/tlsdesc.c
+index 7ec5fef688353183c86e37b9833028b05476a0e4..97720cfe6838c2d9fb4dc8d0dc9e026d91840b34 100644
+--- a/sysdeps/arm/tlsdesc.c
++++ b/sysdeps/arm/tlsdesc.c
+@@ -16,130 +16,13 @@
+    License along with the GNU C Library.  If not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
+-#include <link.h>
+ #include <ldsodefs.h>
+-#include <elf/dynamic-link.h>
+ #include <tls.h>
+ #include <dl-tlsdesc.h>
+ #include <dl-unmap-segments.h>
++#define _dl_tlsdesc_resolve_hold 0
+ #include <tlsdeschtab.h>
+ 
+-/* This function is used to lazily resolve TLS_DESC REL relocations
+-   Besides the TLS descriptor itself, we get the module's got address
+-   as the second parameter. */
+-
+-void
+-attribute_hidden
+-_dl_tlsdesc_lazy_resolver_fixup (struct tlsdesc volatile *td,
+-				 Elf32_Addr *got)
+-{
+-  struct link_map *l = (struct link_map *)got[1];
+-  lookup_t result;
+-  unsigned long value;
+-
+-  if (_dl_tlsdesc_resolve_early_return_p
+-      (td, (void*)(D_PTR (l, l_info[ADDRIDX (DT_TLSDESC_PLT)]) + l->l_addr)))
+-    return;
+-
+-  if (td->argument.value & 0x80000000)
+-    {
+-      /* A global symbol, this is the symbol index.  */
+-      /* The code below was borrowed from _dl_fixup().  */
+-      const Elf_Symndx symndx = td->argument.value ^ 0x80000000;
+-      const ElfW(Sym) *const symtab
+-	= (const void *) D_PTR (l, l_info[DT_SYMTAB]);
+-      const char *strtab = (const void *) D_PTR (l, l_info[DT_STRTAB]);
+-      const ElfW(Sym) *sym = &symtab[symndx];
+-
+-      /* Look up the target symbol.  If the normal lookup rules are not
+-	 used don't look in the global scope.  */
+-      if (ELFW(ST_BIND) (sym->st_info) != STB_LOCAL
+-	  && __builtin_expect (ELFW(ST_VISIBILITY) (sym->st_other), 0) == 0)
+-	{
+-	  const struct r_found_version *version = NULL;
+-
+-	  if (l->l_info[VERSYMIDX (DT_VERSYM)] != NULL)
+-	    {
+-	      const ElfW(Half) *vernum =
+-		(const void *) D_PTR (l, l_info[VERSYMIDX (DT_VERSYM)]);
+-	      ElfW(Half) ndx = vernum[symndx] & 0x7fff;
+-	      version = &l->l_versions[ndx];
+-	      if (version->hash == 0)
+-		version = NULL;
+-	    }
+-
+-	  result = _dl_lookup_symbol_x
+-	    (strtab + sym->st_name, l, &sym,
+-	     l->l_scope, version, ELF_RTYPE_CLASS_PLT,
+-	     DL_LOOKUP_ADD_DEPENDENCY, NULL);
+-	  if (sym)
+-	    value = sym->st_value;
+-	  else
+-	    {
+-	      td->entry = _dl_tlsdesc_undefweak;
+-	      goto done;
+-	    }
+-	}
+-      else
+-	{
+-	  /* We already found the symbol.  The module (and therefore its load
+-	     address) is also known.  */
+-	  result = l;
+-	  value = sym->st_value;
+-	}
+-    }
+-  else
+-    {
+-      /* A local symbol, this is the offset within our tls section.
+-	 */
+-      value = td->argument.value;
+-      result = l;
+-    }
+-
+-#ifndef SHARED
+-  CHECK_STATIC_TLS (l, result);
+-#else
+-  if (!TRY_STATIC_TLS (l, result))
+-    {
+-      td->argument.pointer = _dl_make_tlsdesc_dynamic (result, value);
+-      td->entry = _dl_tlsdesc_dynamic;
+-    }
+-  else
+-#endif
+-    {
+-      td->argument.value = value + result->l_tls_offset;
+-      td->entry = _dl_tlsdesc_return;
+-    }
+-
+- done:
+-  _dl_tlsdesc_wake_up_held_fixups ();
+-}
+-
+-/* This function is used to avoid busy waiting for other threads to
+-   complete the lazy relocation.  Once another thread wins the race to
+-   relocate a TLS descriptor, it sets the descriptor up such that this
+-   function is called to wait until the resolver releases the
+-   lock.  */
+-
+-void
+-attribute_hidden
+-_dl_tlsdesc_resolve_hold_fixup (struct tlsdesc volatile *td,
+-				void *caller)
+-{
+-  /* Maybe we're lucky and can return early.  */
+-  if (caller != td->entry)
+-    return;
+-
+-  /* Locking here will stop execution until the running resolver runs
+-     _dl_tlsdesc_wake_up_held_fixups(), releasing the lock.
+-
+-     FIXME: We'd be better off waiting on a condition variable, such
+-     that we didn't have to hold the lock throughout the relocation
+-     processing.  */
+-  __rtld_lock_lock_recursive (GL(dl_load_lock));
+-  __rtld_lock_unlock_recursive (GL(dl_load_lock));
+-}
+-
+ /* Unmap the dynamic object, but also release its TLS descriptor table
+    if there is one.  */
+ 

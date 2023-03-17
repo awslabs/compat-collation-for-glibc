@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Benjamin Herrenschmidt <benh@amazon.com>
+Date: Wed, 25 Aug 2021 09:56:28 +1000
+Subject: [PATCH] Add AArch64 HWCAP_DCPOP from Linux 4.14.
+
+This patch adds the HWCAP_DCPOP macro from Linux 4.14 to the AArch64
+bits/hwcap.h.
+
+Tested (compilation only) for aarch64 with build-many-glibcs.py.
+
+	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_DCPOP): New
+	macro.
+
+(cherry picked from commit e7df6c5c79458dc042a8c967bafa6e8eca88ae0d)
+
+diff --git a/ChangeLog b/ChangeLog
+index 64fec8cafefbcd50a5a7efabfb39704421039b27..60bbb00be27243bf427790c8ba2ecede7d85b764 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -282,6 +282,11 @@
+ 	* resolv/Makefile (tests): Add tst-p_secstodate.
+ 	($(objpfx)tst-p_secstodate): Depend on $(objpfx)libresolv.so.
+ 
++2017-11-17  Joseph Myers  <joseph@codesourcery.com>
++
++	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_DCPOP): New
++	macro.
++
+ 2017-11-12  Paul Eggert  <eggert@cs.ucla.edu>
+ 
+ 	timezone: pacify GCC -Wstringop-truncation
+diff --git a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+index 1de782089c6ec550e844701185e18a6209e7419c..e46bb691184d503ec5323726ee0e471d2219a1db 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
++++ b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+@@ -37,3 +37,4 @@
+ #define HWCAP_JSCVT		(1 << 13)
+ #define HWCAP_FCMA		(1 << 14)
+ #define HWCAP_LRCPC		(1 << 15)
++#define HWCAP_DCPOP		(1 << 16)

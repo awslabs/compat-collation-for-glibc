@@ -1,0 +1,66 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Tue, 9 Jul 2019 12:11:39 +0100
+Subject: [PATCH] aarch64: simplify the DT_AARCH64_VARIANT_PCS handling code
+
+Remove unnecessary variant_pcs field: the dynamic tag can be checked
+directly.
+
+	* sysdeps/aarch64/dl-machine.h (elf_machine_runtime_setup): Remove the
+	DT_AARCH64_VARIANT_PCS check.
+	(elf_machine_lazy_rel): Use l_info[DT_AARCH64 (VARIANT_PCS)].
+	* sysdeps/aarch64/linkmap.h (struct link_map_machine): Remove
+	variant_pcs.
+
+(cherry picked from commit 30ba0375464f34e4bf8129f3d3dc14d0c09add17)
+
+diff --git a/ChangeLog b/ChangeLog
+index 6334007973d04a8ecb9075eac1b2fc1d7d20c5e8..73243ff8fadddc5fd2d85570595ae9e2e96c1cf2 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,11 @@
++2019-07-10  Szabolcs Nagy  <szabolcs.nagy@arm.com>
++
++	* sysdeps/aarch64/dl-machine.h (elf_machine_runtime_setup): Remove the
++	DT_AARCH64_VARIANT_PCS check.
++	(elf_machine_lazy_rel): Use l_info[DT_AARCH64 (VARIANT_PCS)].
++	* sysdeps/aarch64/linkmap.h (struct link_map_machine): Remove
++	variant_pcs.
++
+ 2019-06-13  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+ 
+ 	* sysdeps/aarch64/dl-dtprocnum.h: New file.
+diff --git a/sysdeps/aarch64/dl-machine.h b/sysdeps/aarch64/dl-machine.h
+index f6532de26f421a012330465dc5faedea63633625..42862620bb746decbd97c5b76a33ed9bbf66e53f 100644
+--- a/sysdeps/aarch64/dl-machine.h
++++ b/sysdeps/aarch64/dl-machine.h
+@@ -105,10 +105,6 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+ 	}
+     }
+ 
+-  /* Check if STO_AARCH64_VARIANT_PCS needs to be handled.  */
+-  if (l->l_info[DT_AARCH64 (VARIANT_PCS)])
+-    l->l_mach.variant_pcs = 1;
+-
+   return lazy;
+ }
+ 
+@@ -401,7 +397,7 @@ elf_machine_lazy_rel (struct link_map *map,
+ 	  return;
+ 	}
+ 
+-      if (__glibc_unlikely (map->l_mach.variant_pcs))
++      if (__glibc_unlikely (map->l_info[DT_AARCH64 (VARIANT_PCS)] != NULL))
+ 	{
+ 	  /* Check the symbol table for variant PCS symbols.  */
+ 	  const Elf_Symndx symndx = ELFW (R_SYM) (reloc->r_info);
+diff --git a/sysdeps/aarch64/linkmap.h b/sysdeps/aarch64/linkmap.h
+index fea7ece30a62e799bc7e683fc3854a2a8679480b..0ce1f646ef16239fbb8395dcf135623e69a96637 100644
+--- a/sysdeps/aarch64/linkmap.h
++++ b/sysdeps/aarch64/linkmap.h
+@@ -20,5 +20,4 @@ struct link_map_machine
+ {
+   ElfW(Addr) plt;	  /* Address of .plt */
+   void *tlsdesc_table;	  /* Address of TLS descriptor hash table.  */
+-  int variant_pcs;	  /* If set, PLT calls may follow a variant PCS.  */
+ };

@@ -1,0 +1,75 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Wilco Dijkstra <wdijkstr@arm.com>
+Date: Wed, 19 Dec 2018 18:28:24 +0000
+Subject: [PATCH] Add ifunc support for Ares
+
+Add Ares to the midr_el0 list and support ifunc dispatch.  Since Ares
+supports 2 128-bit loads/stores, use Neon registers for memcpy by
+selecting __memcpy_falkor by default (we should rename this to
+__memcpy_simd or similar).
+
+        * manual/tunables.texi (glibc.cpu.name): Add ares tunable.
+        * sysdeps/aarch64/multiarch/memcpy.c (__libc_memcpy): Use
+        __memcpy_falkor for ares.
+        * sysdeps/unix/sysv/linux/aarch64/cpu-features.h (IS_ARES):
+        Add new define.
+        * sysdeps/unix/sysv/linux/aarch64/cpu-features.c (cpu_list):
+        Add ares cpu.
+
+(cherry picked from commit 02f440c1ef5d5d79552a524065aa3e2fabe469b9
+        contextual conflicts resolved;
+	rework the patch to drop code for unsupported CPUs)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/manual/tunables.texi b/manual/tunables.texi
+index b09e3fe7917751a108abd8aeb487d3564c722365..293778ea541e1d9e9a4802687f6f25664ca160cc 100644
+--- a/manual/tunables.texi
++++ b/manual/tunables.texi
+@@ -253,7 +253,7 @@ This tunable is specific to i386 and x86-64.
+ @deftp Tunable glibc.tune.cpu
+ The @code{glibc.tune.cpu=xxx} tunable allows the user to tell @theglibc{} to
+ assume that the CPU is @code{xxx} where xxx may have one of these values:
+-@code{generic}, @code{falkor}, @code{thunderxt88}.
++@code{generic}, @code{falkor}, @code{thunderxt88}, @code{ares}.
+ 
+ This tunable is specific to aarch64.
+ @end deftp
+diff --git a/sysdeps/aarch64/multiarch/memcpy.c b/sysdeps/aarch64/multiarch/memcpy.c
+index b395df1c635f7dcd107f8cb288f0f021d754ed02..ee4d78ea1d948158bbc5c705f33f9eaf8ff4b85d 100644
+--- a/sysdeps/aarch64/multiarch/memcpy.c
++++ b/sysdeps/aarch64/multiarch/memcpy.c
+@@ -35,7 +35,7 @@ extern __typeof (__redirect_memcpy) __memcpy_falkor attribute_hidden;
+ libc_ifunc (__libc_memcpy,
+             (IS_THUNDERX (midr)
+ 	     ? __memcpy_thunderx
+-	     : (IS_FALKOR (midr)
++	     : (IS_FALKOR (midr) || IS_ARES (midr)
+ 		? __memcpy_falkor
+ 		: __memcpy_generic)));
+ 
+diff --git a/sysdeps/unix/sysv/linux/aarch64/cpu-features.c b/sysdeps/unix/sysv/linux/aarch64/cpu-features.c
+index 0c7e13f4fa3da813f17201520b39b6140f931032..571db40afca8309c15b539b5e15bb629cb68f04f 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/cpu-features.c
++++ b/sysdeps/unix/sysv/linux/aarch64/cpu-features.c
+@@ -30,6 +30,7 @@ struct cpu_list
+ static struct cpu_list cpu_list[] = {
+       {"falkor",	0x510FC000},
+       {"thunderxt88",	0x430F0A10},
++      {"ares",          0x411FD0C0},
+       {"generic", 	0x0}
+ };
+ 
+diff --git a/sysdeps/unix/sysv/linux/aarch64/cpu-features.h b/sysdeps/unix/sysv/linux/aarch64/cpu-features.h
+index 73cb53da9a13049b6829e577559ba43678544d3f..318fc2307937540b294720e153c4c0725db0ec52 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/cpu-features.h
++++ b/sysdeps/unix/sysv/linux/aarch64/cpu-features.h
+@@ -44,6 +44,9 @@
+ #define IS_FALKOR(midr) (MIDR_IMPLEMENTOR(midr) == 'Q'			      \
+                         && MIDR_PARTNUM(midr) == 0xc00)
+ 
++#define IS_ARES(midr) (MIDR_IMPLEMENTOR(midr) == 'A'                           \
++		       && MIDR_PARTNUM(midr) == 0xd0c)
++
+ struct cpu_features
+ {
+   uint64_t midr_el1;

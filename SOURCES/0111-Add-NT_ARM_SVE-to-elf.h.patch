@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Alan Hayward <alan.hayward@arm.com>
+Date: Fri, 12 Jan 2018 16:56:19 +0000
+Subject: [PATCH] Add NT_ARM_SVE to elf.h
+
+This definition is for AArch64 SVE registers in elf core dumps.
+
+	* elf/elf.h (NT_ARM_SVE): Define.
+
+(cherry picked from commit c9e613a728b9eaf0713b5a5970bb9ad4984fc688)
+
+diff --git a/ChangeLog b/ChangeLog
+index d04c154d64ec337aff653015f766d5936b66f791..3ae6108ac44d3077d3604d095b9ecc61366b549f 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -151,6 +151,10 @@
+ 	* resolv/tst-resolv-network.c: Use test framework instead explicit
+ 	main function.
+ 
++2018-01-15  Alan Hayward  <alan.hayward@arm.com>
++
++	* elf/elf.h (NT_ARM_SVE): Define.
++
+ 2019-01-21  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	* resolv/inet_addr.c: Reformat to GNU style.
+diff --git a/elf/elf.h b/elf/elf.h
+index 3900b4c9f0cad606a7beb2511c0bb6d603e885ee..94db9883998d45e0b54dd789c91fea4439d2cbe9 100644
+--- a/elf/elf.h
++++ b/elf/elf.h
+@@ -779,6 +779,8 @@ typedef struct
+ #define NT_ARM_HW_BREAK	0x402		/* ARM hardware breakpoint registers */
+ #define NT_ARM_HW_WATCH	0x403		/* ARM hardware watchpoint registers */
+ #define NT_ARM_SYSTEM_CALL	0x404	/* ARM system call number */
++#define NT_ARM_SVE	0x405		/* ARM Scalable Vector Extension
++					   registers */
+ 
+ /* Legal values for the note segment descriptor types for object files.  */
+ 

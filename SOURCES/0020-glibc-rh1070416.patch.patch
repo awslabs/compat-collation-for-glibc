@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-rh1070416.patch
+
+
+diff --git a/nscd/nscd.service b/nscd/nscd.service
+index ab38e8f9822fe309f557b8b858ec77bfbba6f882..a97018605cec420738a3c245d8fe36d7f251da58 100644
+--- a/nscd/nscd.service
++++ b/nscd/nscd.service
+@@ -2,6 +2,7 @@
+ 
+ [Unit]
+ Description=Name Service Cache Daemon
++After=syslog.target
+ 
+ [Service]
+ Type=forking
+@@ -17,3 +18,4 @@ PIDFile=/run/nscd/nscd.pid
+ 
+ [Install]
+ WantedBy=multi-user.target
++Also=nscd.socket
+diff --git a/nscd/nscd.socket b/nscd/nscd.socket
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e512d5339fa113669ed9b3a89995afc96e95033
+--- /dev/null
++++ b/nscd/nscd.socket
+@@ -0,0 +1,8 @@
++[Unit]
++Description=Name Service Cache Daemon Socket
++
++[Socket]
++ListenDatagram=/var/run/nscd/socket
++
++[Install]
++WantedBy=sockets.target

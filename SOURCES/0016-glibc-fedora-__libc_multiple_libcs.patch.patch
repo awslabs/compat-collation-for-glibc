@@ -1,0 +1,88 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-fedora-__libc_multiple_libcs.patch
+
+#
+# Upstream discussions:
+# https://sourceware.org/ml/libc-alpha/2014-02/msg00580.html
+#
+# Based on the following commit:
+#
+# From 16552c01a66633c9e412984d9d92616bd4e5303c Mon Sep 17 00:00:00 2001
+# From: Andreas Schwab <schwab@redhat.com>
+# Date: Fri, 11 Jun 2010 11:04:11 +0200
+# Subject: [PATCH] Properly set __libc_multiple_libcs
+#
+# * elf/rtld.c (_dl_starting_up): Always define.
+# (dl_main): Always set _dl_starting_up.
+# * elf/dl-support.c (_dl_starting_up): Always define.
+# * elf/dl-init.c (_dl_init): Always clear _dl_starting_up.
+#
+# ---
+#  ChangeLog        |    7 +++++++
+#  elf/dl-init.c    |    4 ----
+#  elf/dl-support.c |    2 --
+#  elf/rtld.c       |    4 ----
+#  4 files changed, 7 insertions(+), 10 deletions(-)
+#
+
+diff --git a/elf/dl-init.c b/elf/dl-init.c
+index 5c5f3de3659aac3b41b312b3489c8d44b7fd42fb..c199594ba1b455ea903130d5cfda021f948b3844 100644
+--- a/elf/dl-init.c
++++ b/elf/dl-init.c
+@@ -119,8 +119,6 @@ _dl_init (struct link_map *main_map, int argc, char **argv, char **env)
+   while (i-- > 0)
+     call_init (main_map->l_initfini[i], argc, argv, env);
+ 
+-#ifndef HAVE_INLINED_SYSCALLS
+   /* Finished starting up.  */
+   _dl_starting_up = 0;
+-#endif
+ }
+diff --git a/elf/dl-support.c b/elf/dl-support.c
+index c22be854f45b918ee307a60bed5fd32be55e1ec8..df74ac058bec22391212d24ea69f0129c61e7c10 100644
+--- a/elf/dl-support.c
++++ b/elf/dl-support.c
+@@ -117,10 +117,8 @@ struct r_scope_elem _dl_initial_searchlist =
+     .r_nlist = 1,
+   };
+ 
+-#ifndef HAVE_INLINED_SYSCALLS
+ /* Nonzero during startup.  */
+ int _dl_starting_up = 1;
+-#endif
+ 
+ /* Random data provided by the kernel.  */
+ void *_dl_random;
+diff --git a/elf/rtld.c b/elf/rtld.c
+index 1772f89ea893ad55bfc33604bf96982024a6da44..bc839f9eae21b6cdca38b85a1df9e5c55e1a0c06 100644
+--- a/elf/rtld.c
++++ b/elf/rtld.c
+@@ -214,7 +214,6 @@ audit_list_iter_next (struct audit_list_iter *iter)
+   return iter->previous->name;
+ }
+ 
+-#ifndef HAVE_INLINED_SYSCALLS
+ /* Set nonzero during loading and initialization of executable and
+    libraries, cleared before the executable's entry point runs.  This
+    must not be initialized to nonzero, because the unused dynamic
+@@ -224,7 +223,6 @@ audit_list_iter_next (struct audit_list_iter *iter)
+    never be called.  */
+ int _dl_starting_up = 0;
+ rtld_hidden_def (_dl_starting_up)
+-#endif
+ 
+ /* This is the structure which defines all variables global to ld.so
+    (except those which cannot be added for some reason).  */
+@@ -898,10 +896,8 @@ dl_main (const ElfW(Phdr) *phdr,
+   /* Process the environment variable which control the behaviour.  */
+   process_envvars (&mode);
+ 
+-#ifndef HAVE_INLINED_SYSCALLS
+   /* Set up a flag which tells we are just starting.  */
+   _dl_starting_up = 1;
+-#endif
+ 
+   if (*user_entry == (ElfW(Addr)) ENTRY_POINT)
+     {

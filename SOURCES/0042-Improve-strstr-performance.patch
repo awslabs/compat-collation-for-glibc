@@ -1,0 +1,222 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Wilco Dijkstra <wdijkstr@arm.com>
+Date: Mon, 16 Jul 2018 17:50:09 +0100
+Subject: [PATCH] Improve strstr performance
+
+Improve strstr performance.  Strstr tends to be slow because it uses
+many calls to memchr and a slow byte loop to scan for the next match.
+Performance is significantly improved by using strnlen on larger blocks
+and using strchr to search for the next matching character.  strcasestr
+can also use strnlen to scan ahead, and memmem can use memchr to check
+for the next match.
+
+On the GLIBC bench tests the performance gains on Cortex-A72 are:
+strstr: +25%
+strcasestr: +4.3%
+memmem: +18%
+
+On a 256KB dataset strstr performance improves by 67%, strcasestr by 47%.
+
+Reviewd-by: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+
+(cherry picked from commit 3ae725dfb6d7f61447d27d00ed83e573bd5454f4
+	contextual conflicts resolved;)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/benchtests/bench-strcasestr.c b/benchtests/bench-strcasestr.c
+index 4e6f480c84712bc53dc4a32426d126f8485060df..9a031b3064977a2de1d4fb9044a5987d6cd933e0 100644
+--- a/benchtests/bench-strcasestr.c
++++ b/benchtests/bench-strcasestr.c
+@@ -24,6 +24,7 @@
+ #define STRCASESTR simple_strcasestr
+ #define NO_ALIAS
+ #define __strncasecmp strncasecmp
++#define __strnlen strnlen
+ #include "../string/strcasestr.c"
+ 
+ 
+diff --git a/benchtests/bench-strstr.c b/benchtests/bench-strstr.c
+index e63659f13693f5d9a7a43bc0298e2229b9aeb783..98eadbfb58d9fe842e50450284cdeccc38e81463 100644
+--- a/benchtests/bench-strstr.c
++++ b/benchtests/bench-strstr.c
+@@ -22,6 +22,7 @@
+ 
+ 
+ #define STRSTR simple_strstr
++#define __strnlen strnlen
+ #include "../string/strstr.c"
+ 
+ 
+diff --git a/string/memmem.c b/string/memmem.c
+index 54fca4966d5fdf2ed2cfd7e835c5a224c6b1a813..34299b886448387ed475320c8de92246da734fac 100644
+--- a/string/memmem.c
++++ b/string/memmem.c
+@@ -31,6 +31,7 @@
+ 
+ #define RETURN_TYPE void *
+ #define AVAILABLE(h, h_l, j, n_l) ((j) <= (h_l) - (n_l))
++#define FASTSEARCH(S,C,N) (void*) memchr ((void *)(S), (C), (N))
+ #include "str-two-way.h"
+ 
+ #undef memmem
+diff --git a/string/str-two-way.h b/string/str-two-way.h
+index 599c867ffd7913d15ea7b26a96d325ec7a4e3559..f433c76478f48557163bcc1c3d8a0c91f06a28d7 100644
+--- a/string/str-two-way.h
++++ b/string/str-two-way.h
+@@ -281,50 +281,50 @@ two_way_short_needle (const unsigned char *haystack, size_t haystack_len,
+     }
+   else
+     {
+-      const unsigned char *phaystack = &haystack[suffix];
++      const unsigned char *phaystack;
+       /* The comparison always starts from needle[suffix], so cache it
+ 	 and use an optimized first-character loop.  */
+       unsigned char needle_suffix = CANON_ELEMENT (needle[suffix]);
+ 
+-#if CHECK_EOL
+-      /* We start matching from the SUFFIX'th element, so make sure we
+-	 don't hit '\0' before that.  */
+-      if (haystack_len < suffix + 1
+-	  && !AVAILABLE (haystack, haystack_len, 0, suffix + 1))
+-	return NULL;
+-#endif
+-
+       /* The two halves of needle are distinct; no extra memory is
+ 	 required, and any mismatch results in a maximal shift.  */
+       period = MAX (suffix, needle_len - suffix) + 1;
+       j = 0;
+-      while (1
+-#if !CHECK_EOL
+-	     && AVAILABLE (haystack, haystack_len, j, needle_len)
+-#endif
+-	     )
++      while (AVAILABLE (haystack, haystack_len, j, needle_len))
+ 	{
+ 	  unsigned char haystack_char;
+ 	  const unsigned char *pneedle;
+ 
+-	  /* TODO: The first-character loop can be sped up by adapting
+-	     longword-at-a-time implementation of memchr/strchr.  */
+-	  if (needle_suffix
++	  phaystack = &haystack[suffix + j];
++
++#ifdef FASTSEARCH
++	  if (*phaystack++ != needle_suffix)
++	    {
++	      phaystack = FASTSEARCH (phaystack, needle_suffix,
++				      haystack_len - needle_len - j);
++	      if (phaystack == NULL)
++		goto ret0;
++	      j = phaystack - &haystack[suffix];
++	      phaystack++;
++	    }
++#else
++	  while (needle_suffix
+ 	      != (haystack_char = CANON_ELEMENT (*phaystack++)))
+ 	    {
+ 	      RET0_IF_0 (haystack_char);
+-#if !CHECK_EOL
++# if !CHECK_EOL
+ 	      ++j;
+-#endif
+-	      continue;
++	      if (!AVAILABLE (haystack, haystack_len, j, needle_len))
++		goto ret0;
++# endif
+ 	    }
+ 
+-#if CHECK_EOL
++# if CHECK_EOL
+ 	  /* Calculate J if it wasn't kept up-to-date in the first-character
+ 	     loop.  */
+ 	  j = phaystack - &haystack[suffix] - 1;
++# endif
+ #endif
+-
+ 	  /* Scan for matches in right half.  */
+ 	  i = suffix + 1;
+ 	  pneedle = &needle[i];
+@@ -338,6 +338,11 @@ two_way_short_needle (const unsigned char *haystack, size_t haystack_len,
+ 		}
+ 	      ++i;
+ 	    }
++#if CHECK_EOL
++	  /* Update minimal length of haystack.  */
++	  if (phaystack > haystack + haystack_len)
++	    haystack_len = phaystack - haystack;
++#endif
+ 	  if (needle_len <= i)
+ 	    {
+ 	      /* Scan for matches in left half.  */
+@@ -360,13 +365,6 @@ two_way_short_needle (const unsigned char *haystack, size_t haystack_len,
+ 	    }
+ 	  else
+ 	    j += i - suffix + 1;
+-
+-#if CHECK_EOL
+-	  if (!AVAILABLE (haystack, haystack_len, j, needle_len))
+-	    break;
+-#endif
+-
+-	  phaystack = &haystack[suffix + j];
+ 	}
+     }
+  ret0: __attribute__ ((unused))
+diff --git a/string/strcasestr.c b/string/strcasestr.c
+index 2acf003155976bcc05178ccb9b565387739e58c7..7caaade5d221554ded0f081f82b0715548c152b6 100644
+--- a/string/strcasestr.c
++++ b/string/strcasestr.c
+@@ -37,8 +37,8 @@
+ /* Two-Way algorithm.  */
+ #define RETURN_TYPE char *
+ #define AVAILABLE(h, h_l, j, n_l)			\
+-  (!memchr ((h) + (h_l), '\0', (j) + (n_l) - (h_l))	\
+-   && ((h_l) = (j) + (n_l)))
++  (((j) + (n_l) <= (h_l)) || ((h_l) += __strnlen ((void*)((h) + (h_l)), 512), \
++			      (j) + (n_l) <= (h_l)))
+ #define CHECK_EOL (1)
+ #define RET0_IF_0(a) if (!a) goto ret0
+ #define CANON_ELEMENT(c) TOLOWER (c)
+diff --git a/string/strstr.c b/string/strstr.c
+index 88f1d5de36cab4d39f20348d2d2cb80ca626d0b1..6a3d14510ea4aef6567af096944ce45253853aea 100644
+--- a/string/strstr.c
++++ b/string/strstr.c
+@@ -33,10 +33,12 @@
+ 
+ #define RETURN_TYPE char *
+ #define AVAILABLE(h, h_l, j, n_l)			\
+-  (!memchr ((h) + (h_l), '\0', (j) + (n_l) - (h_l))	\
+-   && ((h_l) = (j) + (n_l)))
++    (((j) + (n_l) <= (h_l)) || ((h_l) += __strnlen ((void*)((h) + (h_l)), 512), \
++                               (j) + (n_l) <= (h_l)))
++
+ #define CHECK_EOL (1)
+ #define RET0_IF_0(a) if (!a) goto ret0
++#define FASTSEARCH(S,C,N) (void*) strchr ((void*)(S), (C))
+ #include "str-two-way.h"
+ 
+ #undef strstr
+diff --git a/string/test-strcasestr.c b/string/test-strcasestr.c
+index abb391673272d9a09db6a4013da77ce7a9ec4ef8..78e03da7c439f237774c550b11cb0623ed5f756c 100644
+--- a/string/test-strcasestr.c
++++ b/string/test-strcasestr.c
+@@ -25,6 +25,7 @@
+ #define STRCASESTR simple_strcasestr
+ #define NO_ALIAS
+ #define __strncasecmp strncasecmp
++#define __strnlen strnlen
+ #include "strcasestr.c"
+ 
+ 
+diff --git a/string/test-strstr.c b/string/test-strstr.c
+index 33f221149aa85ed0171156006005d7d10710aa7d..8d04134e0b3a80c74edb0db10082a91a4ec460aa 100644
+--- a/string/test-strstr.c
++++ b/string/test-strstr.c
+@@ -24,6 +24,7 @@
+ 
+ #define STRSTR simple_strstr
+ #define libc_hidden_builtin_def(arg) /* nothing */
++#define __strnlen strnlen
+ #include "strstr.c"
+ 
+ 

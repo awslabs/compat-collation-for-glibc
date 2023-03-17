@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-nscd-sysconfig.patch
+
+
+diff --git a/nscd/nscd.service b/nscd/nscd.service
+index a97018605cec420738a3c245d8fe36d7f251da58..32aa268c70a62931d10190f9aaa8920bd974560d 100644
+--- a/nscd/nscd.service
++++ b/nscd/nscd.service
+@@ -6,7 +6,8 @@ After=syslog.target
+ 
+ [Service]
+ Type=forking
+-ExecStart=/usr/sbin/nscd
++EnvironmentFile=-/etc/sysconfig/nscd
++ExecStart=/usr/sbin/nscd $NSCD_OPTIONS
+ ExecStop=/usr/sbin/nscd --shutdown
+ ExecReload=/usr/sbin/nscd -i passwd
+ ExecReload=/usr/sbin/nscd -i group

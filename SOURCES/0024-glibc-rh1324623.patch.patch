@@ -1,0 +1,123 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:31 +1000
+Subject: [PATCH] glibc-rh1324623.patch
+
+# Build libcrypt twice, with and without NSS.
+
+This patch creates a crypt-glibc subdirectory which builds the
+libgcrypt files, but this time against the glibc sources.
+
+The default subdirs list does not include this subdirectory because
+the file names conflict with the crypt directory.  The spec file does
+not use the install target to install the built libcrypt.so file,
+either.
+
+diff --git a/crypt-glibc/Makefile b/crypt-glibc/Makefile
+new file mode 100644
+index 0000000000000000000000000000000000000000..fc0e517a9406d591781dd44aa8481c5adb752035
+--- /dev/null
++++ b/crypt-glibc/Makefile
+@@ -0,0 +1,61 @@
++# Build libcrypt against internal cryptographic algorithms.
++# Copyright (C) 1996-2016 Free Software Foundation, Inc.
++# This file is part of the GNU C Library.
++
++# The GNU C Library is free software; you can redistribute it and/or
++# modify it under the terms of the GNU Lesser General Public
++# License as published by the Free Software Foundation; either
++# version 2.1 of the License, or (at your option) any later version.
++
++# The GNU C Library is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# Lesser General Public License for more details.
++
++# You should have received a copy of the GNU Lesser General Public
++# License along with the GNU C Library; if not, see
++# <http://www.gnu.org/licenses/>.
++
++#
++#	Sub-makefile for crypt() portion of the library.
++#
++subdir	:= crypt-glibc
++
++include ../Makeconfig
++
++extra-libs := libcrypt
++extra-libs-others := $(extra-libs)
++
++# Use the sources in the crypt subdirectory.
++vpath %.c ../crypt
++vpath %.input ../crypt
++
++libcrypt-routines := \
++  crypt-entry md5-crypt sha256-crypt sha512-crypt crypt crypt_util
++
++tests := cert md5c-test sha256c-test sha512c-test badsalttest
++
++libcrypt-routines += md5 sha256 sha512
++
++tests += md5test sha256test sha512test
++
++# The test md5test-giant uses up to 400 MB of RSS and runs on a fast
++# machine over a minute.
++xtests = md5test-giant
++
++include ../Rules
++
++md5-routines := md5 $(filter md5%,$(libcrypt-sysdep_routines))
++sha256-routines := sha256 $(filter sha256%,$(libcrypt-sysdep_routines))
++sha512-routines := sha512 $(filter sha512%,$(libcrypt-sysdep_routines))
++
++$(objpfx)md5test: $(patsubst %, $(objpfx)%.o,$(md5-routines))
++$(objpfx)md5test-giant: $(patsubst %, $(objpfx)%.o,$(md5-routines))
++$(objpfx)sha256test: $(patsubst %, $(objpfx)%.o,$(sha256-routines))
++$(objpfx)sha512test: $(patsubst %, $(objpfx)%.o,$(sha512-routines))
++
++ifeq (yes,$(build-shared))
++$(addprefix $(objpfx),$(tests)): $(objpfx)libcrypt.so
++else
++$(addprefix $(objpfx),$(tests)): $(objpfx)libcrypt.a
++endif
+diff --git a/crypt-glibc/Versions b/crypt-glibc/Versions
+new file mode 100644
+index 0000000000000000000000000000000000000000..389e7d544aff1e2e9a70048345e773998e6a5401
+--- /dev/null
++++ b/crypt-glibc/Versions
+@@ -0,0 +1,5 @@
++libcrypt {
++  GLIBC_2.0 {
++    crypt; crypt_r; encrypt; encrypt_r; fcrypt; setkey; setkey_r;
++  }
++}
+diff --git a/crypt/md5.c b/crypt/md5.c
+index ecd52e4896cfd33e5ac360141ea69cc1097f8eb6..3270b215aed0310a31bd77cd841d09f526e95a37 100644
+--- a/crypt/md5.c
++++ b/crypt/md5.c
+@@ -270,4 +270,4 @@ md5_process_bytes (const void *buffer, size_t len, struct md5_ctx *ctx)
+     }
+ }
+ 
+-#include <md5-block.c>
++#include "md5-block.c"
+diff --git a/crypt/sha256.c b/crypt/sha256.c
+index 8f394f750aaff82719a2187994c32d7dab6d6076..5f65b9282b87be21f2dd5ba9869bffd5a98c3efc 100644
+--- a/crypt/sha256.c
++++ b/crypt/sha256.c
+@@ -211,4 +211,4 @@ __sha256_process_bytes (const void *buffer, size_t len, struct sha256_ctx *ctx)
+     }
+ }
+ 
+-#include <sha256-block.c>
++#include "sha256-block.c"
+diff --git a/crypt/sha512.c b/crypt/sha512.c
+index c0fab733380594926bbffa7cfb2e93318cad5a98..901897f8469f75353eed54596955e9ec48494641 100644
+--- a/crypt/sha512.c
++++ b/crypt/sha512.c
+@@ -235,4 +235,4 @@ __sha512_process_bytes (const void *buffer, size_t len, struct sha512_ctx *ctx)
+     }
+ }
+ 
+-#include <sha512-block.c>
++#include "sha512-block.c"

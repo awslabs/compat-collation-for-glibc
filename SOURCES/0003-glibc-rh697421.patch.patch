@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:29 +1000
+Subject: [PATCH] glibc-rh697421.patch
+
+# http://sourceware.org/ml/libc-alpha/2012-12/msg00103.html
+
+diff --git a/iconvdata/gconv-modules b/iconvdata/gconv-modules
+index 19bec0cd0a6873cdba587aaadf2d0f2cbc07ec62..e959f16ad9b6dd3cf88bc19c13d004b766e4a511 100644
+--- a/iconvdata/gconv-modules
++++ b/iconvdata/gconv-modules
+@@ -1961,3 +1961,6 @@ alias	HPGREEK8//		HP-GREEK8//
+ alias	OSF10010004//		HP-GREEK8//
+ module	HP-GREEK8//		INTERNAL		HP-GREEK8	1
+ module	INTERNAL		HP-GREEK8//		HP-GREEK8	1
++
++alias	ISO-10646-UCS-2//	UNICODE//
++alias	ISO-10646-UCS-2//	ISO-10646/UTF8/

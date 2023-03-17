@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-fedora-localedef.patch
+
+All these were from the glibc-fedora.patch mega-patch and need another
+round of reviewing.  Ideally they'll either be submitted upstream or
+dropped.
+
+diff --git a/localedata/Makefile b/localedata/Makefile
+index 20c5921aeac9ea071b75e4011de61910a35aa48b..fe5922fbc0983ae99a639e5d0df73876f3b2c705 100644
+--- a/localedata/Makefile
++++ b/localedata/Makefile
+@@ -226,6 +226,7 @@ $(INSTALL-SUPPORTED-LOCALES): install-locales-dir
+ 	echo -n '...'; \
+ 	input=`echo $$locale | sed 's/\([^.]*\)[^@]*\(.*\)/\1\2/'`; \
+ 	$(LOCALEDEF) --alias-file=../intl/locale.alias \
++		     --no-archive \
+ 		     -i locales/$$input -c -f charmaps/$$charset \
+ 		     $(addprefix --prefix=,$(install_root)) $$locale \
+ 	&& echo ' done'; \

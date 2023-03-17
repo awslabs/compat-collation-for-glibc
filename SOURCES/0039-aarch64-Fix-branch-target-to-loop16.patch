@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Tue, 6 Mar 2018 22:56:35 +0530
+Subject: [PATCH] aarch64: Fix branch target to loop16
+
+I goofed up when changing the loop8 name to loop16 and missed on out
+the branch instance.  Fixed and actually build tested this time.
+
+    * sysdeps/aarch64/memcmp.S (more16): Fix branch target loop16.
+(cherry picked from commit 4e54d918630ea53e29dd70d3bdffcb00d29ed3d4)
+Signed-off-by:Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/sysdeps/aarch64/memcmp.S b/sysdeps/aarch64/memcmp.S
+index d074c9861562c7de686fc91a32668a7c743a0aa0..a741e7b17fc20bcf728b71699717bfb5d250a4f9 100644
+--- a/sysdeps/aarch64/memcmp.S
++++ b/sysdeps/aarch64/memcmp.S
+@@ -75,7 +75,7 @@ L(more16):
+ 	/* We overlap loads between 0-32 bytes at either side of SRC1 when we
+ 	   try to align, so limit it only to strings larger than 128 bytes.  */
+ 	cmp	limit, 96
+-	b.ls	L(loop8)
++	b.ls	L(loop16)
+ 
+ 	/* Align src1 and adjust src2 with bytes not yet done.  */
+ 	and	tmp1, src1, 15

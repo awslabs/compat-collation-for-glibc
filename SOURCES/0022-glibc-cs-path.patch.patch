@@ -1,0 +1,15 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-cs-path.patch
+
+# confstr _CS_PATH should only return /usr/bin on Fedora since /bin is just a
+# symlink to it.
+
+diff --git a/sysdeps/unix/confstr.h b/sysdeps/unix/confstr.h
+index 15859c3b2759878e636dba5e2744a2601648db98..9b63b7f8069866fdbad57ec1fd6024fa458f24ac 100644
+--- a/sysdeps/unix/confstr.h
++++ b/sysdeps/unix/confstr.h
+@@ -1 +1 @@
+-#define	CS_PATH	"/bin:/usr/bin"
++#define	CS_PATH	"/usr/bin"

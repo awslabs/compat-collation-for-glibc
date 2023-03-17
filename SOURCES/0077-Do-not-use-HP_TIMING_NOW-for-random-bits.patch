@@ -1,0 +1,167 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+Date: Wed, 16 Jan 2019 18:10:56 +0000
+Subject: [PATCH] Do not use HP_TIMING_NOW for random bits
+
+ [BenH: Patch modified to remove the changes to tempname
+        as they currently introduce a regression as two fast
+	consecutive calls could return the same temp name if
+	they happen faster than the clock can tick. This isn't
+	yet fixed upstream (not completely at least), tracked
+	in https://sourceware.org/bugzilla/show_bug.cgi?id=26648
+ ]
+
+ This patch removes the HP_TIMING_BITS usage for fast random bits and replace
+ with clock_gettime (CLOCK_MONOTONIC).  It has unspecified starting time and
+ nano-second accuracy, so its randomness is significantly better than
+ gettimeofday.
+
+ Althoug it should incur in more overhead (specially for architecture that
+ support hp-timing), the symbol is also common implemented as a vDSO.
+
+ Checked on aarch64-linux-gnu, x86_64-linux-gnu, and i686-linux-gnu. I also
+ checked on a i686-gnu build.
+
+         * include/random-bits.h: New file.
+         * resolv/res_mkquery.c [HP_TIMING_AVAIL] (RANDOM_BITS,
+         (__res_context_mkquery): Remove usage hp-timing usage and replace with
+         random_bits.
+         * resolv/res_send.c [HP_TIMING_AVAIL] (nameserver_offset): Likewise.
+
+diff --git a/ChangeLog b/ChangeLog
+index f655771f94f2221cda03cc092f1e59aeb1e2d952..842bd7cb128a897f0d3bc14462e1cba2aa5de2b1 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,11 @@
++2019-03-22  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
++
++	* include/random-bits.h: New file.
++	* resolv/res_mkquery.c [HP_TIMING_AVAIL] (RANDOM_BITS,
++	(__res_context_mkquery): Remove usage hp-timing usage and replace with
++	random_bits.
++	* resolv/res_send.c [HP_TIMING_AVAIL] (nameserver_offset): Likewise.
++
+ 2019-02-04  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	[BZ #20018]
+diff --git a/include/random-bits.h b/include/random-bits.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..a0651a5a34f80a8db85c1bb052e5137e7eee9e0b
+--- /dev/null
++++ b/include/random-bits.h
+@@ -0,0 +1,41 @@
++/* Fast pseudo-random bits based on clock_gettime.
++   Copyright (C) 2019 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifndef _RANDOM_BITS_H
++# define _RANDOM_BITS_H
++
++#include <time.h>
++#include <stdint.h>
++
++/* Provides fast pseudo-random bits through clock_gettime.  It has unspecified
++   starting time, nano-second accuracy, its randomness is significantly better
++   than gettimeofday, and for mostly architectures it is implemented through
++   vDSO instead of a syscall.  Since the source is a system clock, the upper
++   bits will have less entropy. */
++static inline uint32_t
++random_bits (void)
++{
++  struct timespec tv;
++  __clock_gettime (CLOCK_MONOTONIC, &tv);
++  /* Shuffle the lower bits to minimize the clock bias.  */
++  uint32_t ret = tv.tv_nsec ^ tv.tv_sec;
++  ret ^= (ret << 24) | (ret >> 8);
++  return ret;
++}
++
++#endif
+diff --git a/resolv/res_mkquery.c b/resolv/res_mkquery.c
+index 59fc5ab28c0faa6666847b7f6823a0356229ba24..4f60d1874acd04708559fa9145f841040dba1444 100644
+--- a/resolv/res_mkquery.c
++++ b/resolv/res_mkquery.c
+@@ -82,6 +82,7 @@
+  * SOFTWARE.
+  */
+ 
++#include <stdint.h>
+ #include <sys/types.h>
+ #include <sys/param.h>
+ #include <netinet/in.h>
+@@ -92,12 +93,7 @@
+ #include <string.h>
+ #include <sys/time.h>
+ #include <shlib-compat.h>
+-
+-#include <hp-timing.h>
+-#include <stdint.h>
+-#if HP_TIMING_AVAIL
+-# define RANDOM_BITS(Var) { uint64_t v64; HP_TIMING_NOW (v64); Var = v64; }
+-#endif
++#include <random-bits.h>
+ 
+ int
+ __res_context_mkquery (struct resolv_context *ctx, int op, const char *dname,
+@@ -120,16 +116,7 @@ __res_context_mkquery (struct resolv_context *ctx, int op, const char *dname,
+   /* We randomize the IDs every time.  The old code just incremented
+      by one after the initial randomization which still predictable if
+      the application does multiple requests.  */
+-  int randombits;
+-#ifdef RANDOM_BITS
+-  RANDOM_BITS (randombits);
+-#else
+-  struct timeval tv;
+-  __gettimeofday (&tv, NULL);
+-  randombits = (tv.tv_sec << 8) ^ tv.tv_usec;
+-#endif
+-
+-  hp->id = randombits;
++  hp->id = random_bits ();
+   hp->opcode = op;
+   hp->rd = (ctx->resp->options & RES_RECURSE) != 0;
+   hp->rcode = NOERROR;
+diff --git a/resolv/res_send.c b/resolv/res_send.c
+index 83f35f60da718b9bd6c0a0e3a09bd058393c7105..47b85d22bc58a40d942f55cfda4d651a40a836f0 100644
+--- a/resolv/res_send.c
++++ b/resolv/res_send.c
+@@ -109,7 +109,7 @@
+ #include <unistd.h>
+ #include <kernel-features.h>
+ #include <libc-diag.h>
+-#include <hp-timing.h>
++#include <random-bits.h>
+ 
+ #if PACKETSZ > 65536
+ #define MAXPACKET       PACKETSZ
+@@ -309,15 +309,7 @@ nameserver_offset (struct __res_state *statp)
+   if ((offset & 1) == 0)
+     {
+       /* Initialization is required.  */
+-#if HP_TIMING_AVAIL
+-      uint64_t ticks;
+-      HP_TIMING_NOW (ticks);
+-      offset = ticks;
+-#else
+-      struct timeval tv;
+-      __gettimeofday (&tv, NULL);
+-      offset = ((tv.tv_sec << 8) ^ tv.tv_usec);
+-#endif
++      offset = random_bits ();
+       /* The lowest bit is the most random.  Preserve it.  */
+       offset <<= 1;
+ 

@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florian Weimer <fweimer@redhat.com>
+Date: Sat, 11 Nov 2017 10:54:16 +0100
+Subject: [PATCH] resolv: Use test framework in tst-resolv-network
+
+The main function was left in place by accident when the
+test was imported.
+
+(cherry picked from commit a19c0a1db50ed3fd58715a1d78ea465d82fe9fd5)
+
+diff --git a/ChangeLog b/ChangeLog
+index 6016ead568f27588e6cc521851580bc806b69a2e..8f85082408d01f7253405dd81e29ca05313809bd 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -113,6 +113,11 @@
+ 	* resolv/tst-resolv-nondecimal.c: Likewise.
+ 	* sysdeps/posix/getaddrinfo.c (gaih_inet): Call __inet_aton_exact.
+ 
++2017-11-11  Florian Weimer  <fweimer@redhat.com>
++
++	* resolv/tst-resolv-network.c: Use test framework instead explicit
++	main function.
++
+ 2019-01-21  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	* resolv/inet_addr.c: Reformat to GNU style.
+diff --git a/resolv/tst-resolv-network.c b/resolv/tst-resolv-network.c
+index 65ce9634ccfd3524405201ba019ab84a0c4d06e6..69e3dccb79fd222f97b246c30f88762944a47847 100644
+--- a/resolv/tst-resolv-network.c
++++ b/resolv/tst-resolv-network.c
+@@ -217,8 +217,8 @@ check_long_name (void)
+   free (mem.buffer);
+ }
+ 
+-int
+-main (void)
++static int
++do_test (void)
+ {
+   struct resolv_test *obj = resolv_test_start
+     ((struct resolv_redirect_config)
+@@ -302,4 +302,8 @@ main (void)
+   check_long_name ();
+ 
+   resolv_test_end (obj);
++
++  return 0;
+ }
++
++#include <support/test-driver.c>

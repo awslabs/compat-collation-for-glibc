@@ -1,0 +1,98 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florian Weimer <fweimer@redhat.com>
+Date: Mon, 4 Feb 2019 20:07:18 +0100
+Subject: [PATCH] nscd: Do not use __inet_aton_exact@GLIBC_PRIVATE [BZ #20018]
+
+This commit avoids referencing the __inet_aton_exact@GLIBC_PRIVATE
+symbol from nscd.  In master, the separately-compiled getaddrinfo
+implementation in nscd needs it, however such an internal ABI change
+is not desirable on a release branch if it can be avoided.
+
+Reviewed-by: Frederick Lefebvre <fredlef@amazon.com>
+
+diff --git a/ChangeLog b/ChangeLog
+index a5472b16dbe04687289b910858ee68c317c472e4..f655771f94f2221cda03cc092f1e59aeb1e2d952 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,13 @@
++2019-02-04  Florian Weimer  <fweimer@redhat.com>
++
++	[BZ #20018]
++	nscd: Do not rely on new GLIBC_PRIVATE ABI after CVE-2016-10739 fix.
++	* nscd/nscd-inet_addr.c: New file.  Build resolv/inet_addr.c for
++	nscd, without public symbols.
++	* nscd/Makefile (nscd-modules): Add it.
++	* nscd/gai.c: Include <arpa/inet.h> and change visibility of
++	__inet_aton_exact.
++
+ 2019-01-21  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	[BZ #20018]
+diff --git a/nscd/Makefile b/nscd/Makefile
+index 41269968874e479db02e4f17c9fa144de9aaa4b1..8438c41eeebf9b441898ed8853e85c3d7cce29c8 100644
+--- a/nscd/Makefile
++++ b/nscd/Makefile
+@@ -36,7 +36,7 @@ nscd-modules := nscd connections pwdcache getpwnam_r getpwuid_r grpcache \
+ 		getsrvbynm_r getsrvbypt_r servicescache \
+ 		dbg_log nscd_conf nscd_stat cache mem nscd_setup_thread \
+ 		xmalloc xstrdup aicache initgrcache gai res_hconf \
+-		netgroupcache
++		netgroupcache nscd-inet_addr
+ 
+ ifeq ($(build-nscd)$(have-thread-library),yesyes)
+ 
+diff --git a/nscd/gai.c b/nscd/gai.c
+index ccdd4451be061a923c226c44ee636c311c05d2cb..f4bf792c29531792dd16ddd2731ede18a6ccfbff 100644
+--- a/nscd/gai.c
++++ b/nscd/gai.c
+@@ -31,6 +31,12 @@
+ /* nscd uses 1MB or 2MB thread stacks.  */
+ #define __libc_use_alloca(size) (size <= __MAX_ALLOCA_CUTOFF)
+ 
++/* We do not want to export __inet_aton_exact.  Get the prototype and
++   change its visibility to hidden.  */
++#include <arpa/inet.h>
++__typeof__ (__inet_aton_exact) __inet_aton_exact
++  __attribute__ ((visibility ("hidden")));
++
+ /* We are nscd, so we don't want to be talking to ourselves.  */
+ #undef  USE_NSCD
+ 
+diff --git a/nscd/nscd-inet_addr.c b/nscd/nscd-inet_addr.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..f366b9567d914f998ece4a7b20541c94f403a18e
+--- /dev/null
++++ b/nscd/nscd-inet_addr.c
+@@ -0,0 +1,32 @@
++/* Legacy IPv4 text-to-address functions.  Version for nscd.
++   Copyright (C) 2019 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <arpa/inet.h>
++
++/* We do not want to export __inet_aton_exact.  Get the prototype and
++   change the visibility to hidden.  */
++#include <arpa/inet.h>
++__typeof__ (__inet_aton_exact) __inet_aton_exact
++  __attribute__ ((visibility ("hidden")));
++
++/* Do not provide definitions of the public symbols exported from
++   libc.  */
++#undef weak_alias
++#define weak_alias(from, to)
++
++#include <resolv/inet_addr.c>

@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Joseph Myers <joseph@codesourcery.com>
+Date: Tue, 1 Jan 2019 02:01:43 +0000
+Subject: [PATCH] Add HWCAP_SSBS from Linux 4.20 to AArch64 bits/hwcap.h.
+
+This patch adds the HWCAP_SSBS constant from Linux 4.20 to the AArch64
+bits/hwcap.h.
+
+Tested with build-many-glibcs.py for aarch64-linux-gnu.
+
+	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_SSBS): New
+	macro.
+
+(cherry picked from commit f45077974a82594bd92f7c5dfa4c8a8fce563b4e)
+
+diff --git a/ChangeLog b/ChangeLog
+index 321e60234506672a9485973975b881c773abaf5e..97a61f8a631f3ce4ff16eb06573ee33c99f17771 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -136,6 +136,12 @@
+ 	* sysdeps/posix/getaddrinfo.c (gaih_inet): Call __inet_aton_exact.
+ 
+ 2018-04-20  Joseph Myers  <joseph@codesourcery.com>
++	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_SSBS): New
++	macro.
++
++	* sysdeps/unix/sysv/linux/syscall-names.list: Update kernel
++	version to 4.20.
++	(riscv_flush_icache): New syscall.
+ 
+ 	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_ASIMDFHM):
+ 	New macro.
+diff --git a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+index 926b5a97621db827c7673b7b5d28d4c62a50f8fc..7f5ce62e5d8e06d722f81215277355b2bfd794c8 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
++++ b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+@@ -49,3 +49,4 @@
+ #define HWCAP_USCAT		(1 << 25)
+ #define HWCAP_ILRCPC		(1 << 26)
+ #define HWCAP_FLAGM		(1 << 27)
++#define HWCAP_SSBS		(1 << 28)

@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florian Weimer <fweimer@redhat.com>
+Date: Wed, 28 Nov 2018 07:00:48 +0100
+Subject: [PATCH] support_quote_string: Do not use str parameter name
+
+This avoids a build failure if this identifier is used as a macro
+in a test.
+
+(cherry picked from commit 47d8d9a2172f827a8dde7695f415aa6f78a82d0e)
+
+diff --git a/ChangeLog b/ChangeLog
+index bd04c06943c468a7521579fb4e2e585c0f1b5136..fb6a30ee2eab6c44038ffb98f1a05f15425c5bf5 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,8 @@
++2018-11-28  Florian Weimer  <fweimer@redhat.com>
++
++	* support/support.h (support_quote_string): Do not use str
++	parameter name.
++
+ 2018-11-27  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	* support/support.h (support_quote_string): Declare.
+diff --git a/support/support.h b/support/support.h
+index 4d9f7528a66d67e1aec0bdf2eda9332aa990674d..4ea92e1c2109c06fc9e8879cb54c0fd1d252647a 100644
+--- a/support/support.h
++++ b/support/support.h
+@@ -65,10 +65,10 @@ void support_write_file_string (const char *path, const char *contents);
+    the result).  */
+ char *support_quote_blob (const void *blob, size_t length);
+ 
+-/* Quote the contents of the at STR, in such a way that the result
++/* Quote the contents of the string, in such a way that the result
+    string can be included in a C literal (in single/double quotes,
+    without putting the quotes into the result).  */
+-char *support_quote_string (const char *str);
++char *support_quote_string (const char *);
+ 
+ /* Error-checking wrapper functions which terminate the process on
+    error.  */

@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:29 +1000
+Subject: [PATCH] glibc-arm-hardfloat-3.patch
+
+Horrible hack, never to be upstreamed.  Can go away once the world
+has been rebuilt to use the new ld.so path.
+
+diff --git a/elf/dl-load.c b/elf/dl-load.c
+index 127be5beca66e73e08f454fc9e40c0d78811d3ce..03549dafa680b0526e00a3604f21d5b6b91779bb 100644
+--- a/elf/dl-load.c
++++ b/elf/dl-load.c
+@@ -1931,10 +1931,14 @@ _dl_map_object (struct link_map *loader, const char *name,
+ 	  soname = ((const char *) D_PTR (l, l_info[DT_STRTAB])
+ 		    + l->l_info[DT_SONAME]->d_un.d_val);
+ 	  if (strcmp (name, soname) != 0)
+-	    continue;
++#ifdef __arm__
++	    if (strcmp (name, "ld-linux.so.3")
++		|| strcmp (soname, "ld-linux-armhf.so.3"))
++#endif
++	      continue;
+ 
+ 	  /* We have a match on a new name -- cache it.  */
+-	  add_name_to_object (l, soname);
++	  add_name_to_object (l, name);
+ 	  l->l_soname_added = 1;
+ 	}
+ 

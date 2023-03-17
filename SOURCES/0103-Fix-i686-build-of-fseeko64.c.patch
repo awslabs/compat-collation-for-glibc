@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nikhil Dikshit <nikhildi@amazon.com>
+Date: Wed, 21 Jul 2021 21:52:57 +0000
+Subject: [PATCH] Fix i686 build of fseeko64.c
+
+
+diff --git a/libio/fseeko64.c b/libio/fseeko64.c
+index e2331e4ded08ca6d511ceef5cd2048508837e092..21f59d814c7ca33dc7c387f3d8705e77d7358e1b 100644
+--- a/libio/fseeko64.c
++++ b/libio/fseeko64.c
+@@ -25,8 +25,8 @@
+    in files containing the exception.  */
+ 
+ #include <errno.h>
+-#include "libioP.h"
+-#include "stdio.h"
++#include <libioP.h>
++#include <stdio.h>
+ 
+ /* fseeko.c defines this as an alias if __OFF_T_MATCHES_OFF64_T.  */
+ #ifndef __OFF_T_MATCHES_OFF64_T

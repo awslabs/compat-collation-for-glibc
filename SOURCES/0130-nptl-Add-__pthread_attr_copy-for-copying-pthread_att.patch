@@ -1,0 +1,163 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nikhildi <nikhildi@amazon.com>
+Date: Wed, 29 Dec 2021 00:18:30 +0000
+Subject: [PATCH] nptl: Add __pthread_attr_copy for copying pthread_attr_t
+ objects
+
+Also add the private type union pthread_attr_transparent, to reduce
+the amount of casting that is required.
+
+Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+Tested-by: Carlos O'Donell <carlos@redhat.com>
+(cherry picked from commit 331c6e8a184167dd21a9f0b3fc165aeefea6eeca)
+
+Difference from upstream:
+Unlike upstream, __pthread_attr_copy is in libpthread.so.
+
+Source: https://git.centos.org/rpms/glibc/raw/3bda5c7fcbe5c923289b967fbfd787ccfb941f88/f/SOURCES/glibc-rh1966472-1.patch
+
+Backported-by: Nikhil Dikshit <nikhildi@amazon.com>
+
+diff --git a/nptl/Makefile b/nptl/Makefile
+index 844f23fc23b972bac8f529d177a80381c91db8a9..acdec09b009ebad6f8738e16edfbae1e7c304f59 100644
+--- a/nptl/Makefile
++++ b/nptl/Makefile
+@@ -53,7 +53,8 @@ libpthread-routines = nptl-init vars events version pt-interp \
+ 		      pthread_getconcurrency pthread_setconcurrency \
+ 		      pthread_getschedparam pthread_setschedparam \
+ 		      pthread_setschedprio \
+-		      pthread_attr_init pthread_attr_destroy \
++		      pthread_attr_init pthread_attr_copy \
++		      pthread_attr_destroy \
+ 		      pthread_attr_getdetachstate pthread_attr_setdetachstate \
+ 		      pthread_attr_getguardsize pthread_attr_setguardsize \
+ 		      pthread_attr_getschedparam pthread_attr_setschedparam \
+diff --git a/nptl/Versions b/nptl/Versions
+index 0ae5def464b9c8a77bb79895f37c43e3e3226f29..6a22e0aac092a223b38f485abfdde60a60a1af8e 100644
+--- a/nptl/Versions
++++ b/nptl/Versions
+@@ -271,5 +271,6 @@ libpthread {
+     __pthread_unwind; __pthread_get_minstack;
+     __pthread_barrier_init; __pthread_barrier_wait;
+     __shm_directory;
++    __pthread_attr_copy;
+   }
+ }
+diff --git a/nptl/pthreadP.h b/nptl/pthreadP.h
+index c5ae04692eca665fab80fe40e278efd0e2a360d4..ba84cbf111b965dd6b22037fd0d97d857d8fea7c 100644
+--- a/nptl/pthreadP.h
++++ b/nptl/pthreadP.h
+@@ -472,6 +472,9 @@ extern int __pthread_attr_getstack (const pthread_attr_t *__restrict __attr,
+ 				    size_t *__restrict __stacksize);
+ extern int __pthread_attr_setstack (pthread_attr_t *__attr, void *__stackaddr,
+ 				    size_t __stacksize);
++extern int __pthread_attr_setaffinity_np (pthread_attr_t *attr,
++					  size_t cpusetsize,
++					  const cpu_set_t *cpuset);
+ extern int __pthread_rwlock_init (pthread_rwlock_t *__restrict __rwlock,
+ 				  const pthread_rwlockattr_t *__restrict
+ 				  __attr);
+@@ -612,6 +615,11 @@ extern void __wait_lookup_done (void) attribute_hidden;
+ # define PTHREAD_STATIC_FN_REQUIRE(name) __asm (".globl " #name);
+ #endif
+ 
++/* Make a deep copy of the attribute *SOURCE in *TARGET.  *TARGET is
++   not assumed to have been initialized.  Returns 0 on success, or a
++   positive error code otherwise.  */
++int __pthread_attr_copy (pthread_attr_t *target, const pthread_attr_t *source);
++
+ /* Returns 0 if POL is a valid scheduling policy.  */
+ static inline int
+ check_sched_policy_attr (int pol)
+diff --git a/nptl/pthread_attr_copy.c b/nptl/pthread_attr_copy.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..67f272acf297100cca041588777d327af52205f2
+--- /dev/null
++++ b/nptl/pthread_attr_copy.c
+@@ -0,0 +1,56 @@
++/* Deep copy of a pthread_attr_t object.
++   Copyright (C) 2020 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <errno.h>
++#include <pthreadP.h>
++#include <stdlib.h>
++
++int
++__pthread_attr_copy (pthread_attr_t *target, const pthread_attr_t *source)
++{
++  /* Avoid overwriting *TARGET until all allocations have
++     succeeded.  */
++  union pthread_attr_transparent temp;
++  temp.external = *source;
++
++  /* Force new allocation.  This function has full ownership of temp.  */
++  temp.internal.cpuset = NULL;
++  temp.internal.cpusetsize = 0;
++
++  int ret = 0;
++
++  struct pthread_attr *isource = (struct pthread_attr *) source;
++
++  /* Propagate affinity mask information.  */
++  if (isource->cpusetsize > 0)
++    ret = __pthread_attr_setaffinity_np (&temp.external,
++					 isource->cpusetsize,
++					 isource->cpuset);
++
++  if (ret != 0)
++    {
++      /* Deallocate because we have ownership.  */
++      __pthread_attr_destroy (&temp.external);
++      return ret;
++    }
++
++  /* Transfer ownership.  *target is not assumed to have been
++     initialized.  */
++  *target = temp.external;
++  return 0;
++}
+diff --git a/nptl/pthread_attr_setaffinity.c b/nptl/pthread_attr_setaffinity.c
+index 497512eb9c2dde033c63834d755f0c05664542cf..389fafafcd88331198f7f1875c4dd53bea4d5e5c 100644
+--- a/nptl/pthread_attr_setaffinity.c
++++ b/nptl/pthread_attr_setaffinity.c
+@@ -57,6 +57,7 @@ __pthread_attr_setaffinity_new (pthread_attr_t *attr, size_t cpusetsize,
+ 
+   return 0;
+ }
++strong_alias (__pthread_attr_setaffinity_new, __pthread_attr_setaffinity_np)
+ versioned_symbol (libpthread, __pthread_attr_setaffinity_new,
+ 		  pthread_attr_setaffinity_np, GLIBC_2_3_4);
+ 
+diff --git a/sysdeps/nptl/internaltypes.h b/sysdeps/nptl/internaltypes.h
+index 5be9d983aba9d00599ea94146e8b96d903ef6e00..e91bea9149a54a0b44f95f1b953e7dad995e77d0 100644
+--- a/sysdeps/nptl/internaltypes.h
++++ b/sysdeps/nptl/internaltypes.h
+@@ -49,6 +49,13 @@ struct pthread_attr
+ #define ATTR_FLAG_SCHED_SET		0x0020
+ #define ATTR_FLAG_POLICY_SET		0x0040
+ 
++/* Used to allocate a pthread_attr_t object which is also accessed
++   internally.  */
++union pthread_attr_transparent
++{
++  pthread_attr_t external;
++  struct pthread_attr internal;
++};
+ 
+ /* Mutex attribute data structure.  */
+ struct pthread_mutexattr

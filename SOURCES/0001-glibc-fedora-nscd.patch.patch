@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:29 +1000
+Subject: [PATCH] glibc-fedora-nscd.patch
+
+Configuration twiddle, not sure there's a good case to get upstream to
+change this.
+
+diff --git a/nscd/nscd.conf b/nscd/nscd.conf
+index 39b875912dbaf730588e59a3dfd34a014057c83d..3730835c50a349c4aa3a35d97041cef6595e2f96 100644
+--- a/nscd/nscd.conf
++++ b/nscd/nscd.conf
+@@ -33,7 +33,7 @@
+ #	logfile			/var/log/nscd.log
+ #	threads			4
+ #	max-threads		32
+-#	server-user		nobody
++	server-user		nscd
+ #	stat-user		somebody
+ 	debug-level		0
+ #	reload-count		5

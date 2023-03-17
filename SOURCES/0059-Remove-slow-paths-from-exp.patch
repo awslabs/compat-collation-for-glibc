@@ -1,0 +1,419 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Tue, 30 Jan 2018 14:48:22 +0000
+Subject: [PATCH] Remove slow paths from exp
+
+Remove the __slowexp code, so exp is no longer correctly rounded.  The
+result is computed to about 70 bits precision so the worst case ulp
+error is about 0.500007 in nearest rounding mode.
+
+  * manual/probes.texi: Remove slowexp probes.
+  * math/Makefile: Remove slowexp.
+  * sysdeps/generic/math_private.h (__slowexp): Remove.
+  * sysdeps/ieee754/dbl-64/e_exp.c (__ieee754_exp): Remove __slowexp and
+    document error bounds.
+  * sysdeps/i386/fpu/slowexp.c: Remove.
+  * sysdeps/ia64/fpu/slowexp.c: Remove.
+  * sysdeps/ieee754/dbl-64/slowexp.c: Remove.
+  * sysdeps/ieee754/dbl-64/uexp.h (err_0): Remove.
+  * sysdeps/m68k/m680x0/fpu/slowexp.c: Remove.
+  * sysdeps/powerpc/power4/fpu/Makefile (CPPFLAGS-slowexp.c): Remove.
+  * sysdeps/x86_64/fpu/multiarch/Makefile: Remove slowexp-fma.
+  * sysdeps/x86_64/fpu/multiarch/e_exp-avx.c (__slowexp): Remove.
+  * sysdeps/x86_64/fpu/multiarch/e_exp-fma.c (__slowexp): Remove.
+  * sysdeps/x86_64/fpu/multiarch/e_exp-fma4.c (__slowexp): Remove.
+  * sysdeps/x86_64/fpu/multiarch/slowexp-avx.c: Remove.
+  * sysdeps/x86_64/fpu/multiarch/slowexp-fma.c: Remove.
+  * sysdeps/x86_64/fpu/multiarch/slowexp-fma4.c: Remove.
+
+(cherry picked from commit de800d83059dbedb7d151580f0a3bdc9eaf37340
+        contextual conflicts resolved;
+	partial backport: drop fma related only fma4 exists)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/manual/probes.texi b/manual/probes.texi
+index 4047df29a5e856bf95923674d58b529f30843f2d..9668b14a0693476b4a6c820ba180acd516d8b328 100644
+--- a/manual/probes.texi
++++ b/manual/probes.texi
+@@ -258,20 +258,6 @@ Unless explicitly mentioned otherwise, a precision of 1 implies 24 bits of
+ precision in the mantissa of the multiple precision number.  Hence, a precision
+ level of 32 implies 768 bits of precision in the mantissa.
+ 
+-@deftp Probe slowexp_p6 (double @var{$arg1}, double @var{$arg2})
+-This probe is triggered when the @code{exp} function is called with an
+-input that results in multiple precision computation with precision
+-6.  Argument @var{$arg1} is the input value and @var{$arg2} is the
+-computed output.
+-@end deftp
+-
+-@deftp Probe slowexp_p32 (double @var{$arg1}, double @var{$arg2})
+-This probe is triggered when the @code{exp} function is called with an
+-input that results in multiple precision computation with precision
+-32.  Argument @var{$arg1} is the input value and @var{$arg2} is the
+-computed output.
+-@end deftp
+-
+ @deftp Probe slowlog (int @var{$arg1}, double @var{$arg2}, double @var{$arg3})
+ This probe is triggered when the @code{log} function is called with an
+ input that results in multiple precision computation.  Argument
+diff --git a/math/Makefile b/math/Makefile
+index e9e9c1d11052fb12bfb1005287b2729f94766ee6..fdcc8944c788745c6d34b0d5e6ea4e678234af4f 100644
+--- a/math/Makefile
++++ b/math/Makefile
+@@ -111,7 +111,7 @@ type-ldouble-yes := ldouble
+ # double support
+ type-double-suffix :=
+ type-double-routines := branred doasin dosincos mpa mpatan2	\
+-		       mpatan mpexp mplog mpsqrt mptan sincos32 slowexp	\
++		       mpatan mpexp mplog mpsqrt mptan sincos32	\
+ 		       sincostab k_rem_pio2
+ 
+ # float support
+diff --git a/sysdeps/generic/math_private.h b/sysdeps/generic/math_private.h
+index e4cc8a6c28568d0f035e6e6c9a3f38509fd33e6e..96eb628b3599b6dbba0685848d31669213279626 100644
+--- a/sysdeps/generic/math_private.h
++++ b/sysdeps/generic/math_private.h
+@@ -266,7 +266,6 @@ extern double __sin32 (double __x, double __res, double __res1);
+ extern double __cos32 (double __x, double __res, double __res1);
+ extern double __mpsin (double __x, double __dx, bool __range_reduce);
+ extern double __mpcos (double __x, double __dx, bool __range_reduce);
+-extern double __slowexp (double __x);
+ extern void __docos (double __x, double __dx, double __v[]);
+ 
+ #ifndef math_opt_barrier
+diff --git a/sysdeps/i386/fpu/slowexp.c b/sysdeps/i386/fpu/slowexp.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/i386/fpu/slowexp.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/ia64/fpu/slowexp.c b/sysdeps/ia64/fpu/slowexp.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/ia64/fpu/slowexp.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/ieee754/dbl-64/e_exp.c b/sysdeps/ieee754/dbl-64/e_exp.c
+index bf79917104c14efeabc64fa8c8a74630ea217ece..20eb734a349dcbfc27cc334d3757d0a948ee7448 100644
+--- a/sysdeps/ieee754/dbl-64/e_exp.c
++++ b/sysdeps/ieee754/dbl-64/e_exp.c
+@@ -23,10 +23,10 @@
+ /*           exp1                                                          */
+ /*                                                                         */
+ /* FILES NEEDED:dla.h endian.h mpa.h mydefs.h uexp.h                       */
+-/*              mpa.c mpexp.x slowexp.c                                    */
++/*              mpa.c mpexp.x                                              */
+ /*                                                                         */
+ /* An ultimate exp routine. Given an IEEE double machine number x          */
+-/* it computes the correctly rounded (to nearest) value of e^x             */
++/* it computes an almost correctly rounded (to nearest) value of e^x       */
+ /* Assumption: Machine arithmetic operations are performed in              */
+ /* round to nearest mode of IEEE 754 standard.                             */
+ /*                                                                         */
+@@ -46,10 +46,6 @@
+ # define SECTION
+ #endif
+ 
+-double __slowexp (double);
+-
+-/* An ultimate exp routine. Given an IEEE double machine number x it computes
+-   the correctly rounded (to nearest) value of e^x.  */
+ double
+ SECTION
+ __ieee754_exp (double x)
+@@ -93,17 +89,10 @@ __ieee754_exp (double x)
+ 
+ 	rem = (bet + bet * eps) + al * eps;
+ 	res = al + rem;
+-	cor = (al - res) + rem;
+-	if (res == (res + cor * err_0))
+-	  {
+-	    retval = res * binexp.x;
+-	    goto ret;
+-	  }
+-	else
+-	  {
+-	    retval = __slowexp (x);
+-	    goto ret;
+-	  }			/*if error is over bound */
++	/* Maximum relative error is 7.8e-22 (70.1 bits).
++	   Maximum ULP error is 0.500007.  */
++	retval = res * binexp.x;
++	goto ret;
+       }
+ 
+     if (n <= smallint)
+@@ -166,38 +155,22 @@ __ieee754_exp (double x)
+ 	if (ex >= -1022)
+ 	  {
+ 	    binexp.i[HIGH_HALF] = (1023 + ex) << 20;
+-	    if (res == (res + cor * err_0))
+-	      {
+-		retval = res * binexp.x;
+-		goto ret;
+-	      }
+-	    else
+-	      {
+-		retval = __slowexp (x);
+-		goto check_uflow_ret;
+-	      }			/*if error is over bound */
++	    /* Does not underflow: res >= 1.0, binexp >= 0x1p-1022
++	       Maximum relative error is 7.8e-22 (70.1 bits).
++	       Maximum ULP error is 0.500007.  */
++	    retval = res * binexp.x;
++	    goto ret;
+ 	  }
+ 	ex = -(1022 + ex);
+ 	binexp.i[HIGH_HALF] = (1023 - ex) << 20;
+ 	res *= binexp.x;
+ 	cor *= binexp.x;
+-	eps = 1.0000000001 + err_0 * binexp.x;
+ 	t = 1.0 + res;
+ 	y = ((1.0 - t) + res) + cor;
+ 	res = t + y;
+-	cor = (t - res) + y;
+-	if (res == (res + eps * cor))
+-	  {
+-	    binexp.i[HIGH_HALF] = 0x00100000;
+-	    retval = (res - 1.0) * binexp.x;
+-	    goto check_uflow_ret;
+-	  }
+-	else
+-	  {
+-	    retval = __slowexp (x);
+-	    goto check_uflow_ret;
+-	  }			/*   if error is over bound    */
+-      check_uflow_ret:
++	/* Maximum ULP error is 0.5000035.  */
++	binexp.i[HIGH_HALF] = 0x00100000;
++	retval = (res - 1.0) * binexp.x;
+ 	if (retval < DBL_MIN)
+ 	  {
+ 	    double force_underflow = tiny * tiny;
+@@ -210,10 +183,9 @@ __ieee754_exp (double x)
+     else
+       {
+ 	binexp.i[HIGH_HALF] = (junk1.i[LOW_HALF] + 767) << 20;
+-	if (res == (res + cor * err_0))
+-	  retval = res * binexp.x * t256.x;
+-	else
+-	  retval = __slowexp (x);
++	/* Maximum relative error is 7.8e-22 (70.1 bits).
++	   Maximum ULP error is 0.500007.  */
++	retval = res * binexp.x * t256.x;
+ 	if (isinf (retval))
+ 	  goto ret_huge;
+ 	else
+diff --git a/sysdeps/ieee754/dbl-64/slowexp.c b/sysdeps/ieee754/dbl-64/slowexp.c
+deleted file mode 100644
+index e8fa2e263b30a78f968162001f111ea2f6841fbe..0000000000000000000000000000000000000000
+--- a/sysdeps/ieee754/dbl-64/slowexp.c
++++ /dev/null
+@@ -1,86 +0,0 @@
+-/*
+- * IBM Accurate Mathematical Library
+- * written by International Business Machines Corp.
+- * Copyright (C) 2001-2017 Free Software Foundation, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU Lesser General Public License as published by
+- * the Free Software Foundation; either version 2.1 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU Lesser General Public License for more details.
+- *
+- * You should have received a copy of the GNU Lesser General Public License
+- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+- */
+-/**************************************************************************/
+-/*  MODULE_NAME:slowexp.c                                                 */
+-/*                                                                        */
+-/*  FUNCTION:slowexp                                                      */
+-/*                                                                        */
+-/*  FILES NEEDED:mpa.h                                                    */
+-/*               mpa.c mpexp.c                                            */
+-/*                                                                        */
+-/*Converting from double precision to Multi-precision and calculating     */
+-/* e^x                                                                    */
+-/**************************************************************************/
+-#include <math_private.h>
+-
+-#include <stap-probe.h>
+-
+-#ifndef USE_LONG_DOUBLE_FOR_MP
+-# include "mpa.h"
+-void __mpexp (mp_no *x, mp_no *y, int p);
+-#endif
+-
+-#ifndef SECTION
+-# define SECTION
+-#endif
+-
+-/*Converting from double precision to Multi-precision and calculating  e^x */
+-double
+-SECTION
+-__slowexp (double x)
+-{
+-#ifndef USE_LONG_DOUBLE_FOR_MP
+-  double w, z, res, eps = 3.0e-26;
+-  int p;
+-  mp_no mpx, mpy, mpz, mpw, mpeps, mpcor;
+-
+-  /* Use the multiple precision __MPEXP function to compute the exponential
+-     First at 144 bits and if it is not accurate enough, at 768 bits.  */
+-  p = 6;
+-  __dbl_mp (x, &mpx, p);
+-  __mpexp (&mpx, &mpy, p);
+-  __dbl_mp (eps, &mpeps, p);
+-  __mul (&mpeps, &mpy, &mpcor, p);
+-  __add (&mpy, &mpcor, &mpw, p);
+-  __sub (&mpy, &mpcor, &mpz, p);
+-  __mp_dbl (&mpw, &w, p);
+-  __mp_dbl (&mpz, &z, p);
+-  if (w == z)
+-    {
+-      /* Track how often we get to the slow exp code plus
+-	 its input/output values.  */
+-      LIBC_PROBE (slowexp_p6, 2, &x, &w);
+-      return w;
+-    }
+-  else
+-    {
+-      p = 32;
+-      __dbl_mp (x, &mpx, p);
+-      __mpexp (&mpx, &mpy, p);
+-      __mp_dbl (&mpy, &res, p);
+-
+-      /* Track how often we get to the uber-slow exp code plus
+-	 its input/output values.  */
+-      LIBC_PROBE (slowexp_p32, 2, &x, &res);
+-      return res;
+-    }
+-#else
+-  return (double) __ieee754_expl((long double)x);
+-#endif
+-}
+diff --git a/sysdeps/ieee754/dbl-64/uexp.h b/sysdeps/ieee754/dbl-64/uexp.h
+index 4788814d21b5771936f86bcef0dfa6fcb961d1d7..65fe2e1e08d1224de2ba435ca2c9347cd9fb5079 100644
+--- a/sysdeps/ieee754/dbl-64/uexp.h
++++ b/sysdeps/ieee754/dbl-64/uexp.h
+@@ -29,8 +29,7 @@
+ 
+ #include "mydefs.h"
+ 
+-const static double zero = 0.0, hhuge = 1.0e300, tiny = 1.0e-300,
+-err_0 = 1.000014;
++const static double zero = 0.0, hhuge = 1.0e300, tiny = 1.0e-300;
+ const static int4 bigint = 0x40862002,
+              badint = 0x40876000,smallint = 0x3C8fffff;
+ const static int4 hugeint = 0x7FFFFFFF, infint = 0x7ff00000;
+diff --git a/sysdeps/m68k/m680x0/fpu/slowexp.c b/sysdeps/m68k/m680x0/fpu/slowexp.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/m68k/m680x0/fpu/slowexp.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/powerpc/power4/fpu/Makefile b/sysdeps/powerpc/power4/fpu/Makefile
+index fa1b070a00269d3e3efbe62b97a1c36f655c2afc..f487ed60141c4f04dfa93ae825fbae531881b90c 100644
+--- a/sysdeps/powerpc/power4/fpu/Makefile
++++ b/sysdeps/powerpc/power4/fpu/Makefile
+@@ -2,5 +2,4 @@
+ 
+ ifeq ($(subdir),math)
+ CFLAGS-mpa.c += --param max-unroll-times=4 -funroll-loops -fpeel-loops
+-CPPFLAGS-slowexp.c += -DUSE_LONG_DOUBLE_FOR_MP=1
+ endif
+diff --git a/sysdeps/x86_64/fpu/multiarch/Makefile b/sysdeps/x86_64/fpu/multiarch/Makefile
+index 58d924fd9366dcac0ef3509c33de2918c58c5439..6dc7628c3fe7628428a0c3564bda258c56275f76 100644
+--- a/sysdeps/x86_64/fpu/multiarch/Makefile
++++ b/sysdeps/x86_64/fpu/multiarch/Makefile
+@@ -4,7 +4,7 @@ libm-sysdep_routines += s_floor-c s_ceil-c s_floorf-c s_ceilf-c \
+ 
+ libm-sysdep_routines += e_exp-fma4 e_log-fma4 e_pow-fma4 s_atan-fma4 \
+ 			e_asin-fma4 e_atan2-fma4 s_sin-fma4 s_tan-fma4 \
+-			mplog-fma4 mpa-fma4 slowexp-fma4 \
++			mplog-fma4 mpa-fma4 \
+ 			sincos32-fma4 doasin-fma4 dosincos-fma4 \
+ 			mpexp-fma4 \
+ 			mpatan2-fma4 mpatan-fma4 mpsqrt-fma4 mptan-fma4
+@@ -25,13 +25,12 @@ CFLAGS-mpsqrt-fma4.c = -mfma4
+ CFLAGS-mptan-fma4.c = -mfma4
+ CFLAGS-s_atan-fma4.c = -mfma4
+ CFLAGS-sincos32-fma4.c = -mfma4
+-CFLAGS-slowexp-fma4.c = -mfma4
+ CFLAGS-s_sin-fma4.c = -mfma4
+ CFLAGS-s_tan-fma4.c = -mfma4
+ 
+ libm-sysdep_routines += e_exp-avx e_log-avx s_atan-avx \
+ 			e_atan2-avx s_sin-avx s_tan-avx \
+-			mplog-avx mpa-avx slowexp-avx \
++			mplog-avx mpa-avx \
+ 			mpexp-avx
+ 
+ CFLAGS-e_atan2-avx.c = -msse2avx -DSSE2AVX
+@@ -42,7 +41,6 @@ CFLAGS-mpexp-avx.c = -msse2avx -DSSE2AVX
+ CFLAGS-mplog-avx.c = -msse2avx -DSSE2AVX
+ CFLAGS-s_atan-avx.c = -msse2avx -DSSE2AVX
+ CFLAGS-s_sin-avx.c = -msse2avx -DSSE2AVX
+-CFLAGS-slowexp-avx.c = -msse2avx -DSSE2AVX
+ CFLAGS-s_tan-avx.c = -msse2avx -DSSE2AVX
+ endif
+ 
+diff --git a/sysdeps/x86_64/fpu/multiarch/e_exp-avx.c b/sysdeps/x86_64/fpu/multiarch/e_exp-avx.c
+index ee5dd6d2dc27d1ae55a2ba4b1841ed422485cc7a..afd917442aba2f9fc4ba10d5f8d26d031b692834 100644
+--- a/sysdeps/x86_64/fpu/multiarch/e_exp-avx.c
++++ b/sysdeps/x86_64/fpu/multiarch/e_exp-avx.c
+@@ -1,6 +1,5 @@
+ #define __ieee754_exp __ieee754_exp_avx
+ #define __exp1 __exp1_avx
+-#define __slowexp __slowexp_avx
+ #define SECTION __attribute__ ((section (".text.avx")))
+ 
+ #include <sysdeps/ieee754/dbl-64/e_exp.c>
+diff --git a/sysdeps/x86_64/fpu/multiarch/e_exp-fma4.c b/sysdeps/x86_64/fpu/multiarch/e_exp-fma4.c
+index ae6eb676039a94f4acb4681b106cd6911ccc0b40..9ac7acad28036633f469920cdae1f132a34d72f0 100644
+--- a/sysdeps/x86_64/fpu/multiarch/e_exp-fma4.c
++++ b/sysdeps/x86_64/fpu/multiarch/e_exp-fma4.c
+@@ -1,6 +1,5 @@
+ #define __ieee754_exp __ieee754_exp_fma4
+ #define __exp1 __exp1_fma4
+-#define __slowexp __slowexp_fma4
+ #define SECTION __attribute__ ((section (".text.fma4")))
+ 
+ #include <sysdeps/ieee754/dbl-64/e_exp.c>
+diff --git a/sysdeps/x86_64/fpu/multiarch/slowexp-avx.c b/sysdeps/x86_64/fpu/multiarch/slowexp-avx.c
+deleted file mode 100644
+index d01c6d71a47accaa99d4a6c619ff87542c4e41b4..0000000000000000000000000000000000000000
+--- a/sysdeps/x86_64/fpu/multiarch/slowexp-avx.c
++++ /dev/null
+@@ -1,9 +0,0 @@
+-#define __slowexp __slowexp_avx
+-#define __add __add_avx
+-#define __dbl_mp __dbl_mp_avx
+-#define __mpexp __mpexp_avx
+-#define __mul __mul_avx
+-#define __sub __sub_avx
+-#define SECTION __attribute__ ((section (".text.avx")))
+-
+-#include <sysdeps/ieee754/dbl-64/slowexp.c>
+diff --git a/sysdeps/x86_64/fpu/multiarch/slowexp-fma4.c b/sysdeps/x86_64/fpu/multiarch/slowexp-fma4.c
+deleted file mode 100644
+index 3bcde84233fba961d1f0ef1b2c7c1635d729e8be..0000000000000000000000000000000000000000
+--- a/sysdeps/x86_64/fpu/multiarch/slowexp-fma4.c
++++ /dev/null
+@@ -1,9 +0,0 @@
+-#define __slowexp __slowexp_fma4
+-#define __add __add_fma4
+-#define __dbl_mp __dbl_mp_fma4
+-#define __mpexp __mpexp_fma4
+-#define __mul __mul_fma4
+-#define __sub __sub_fma4
+-#define SECTION __attribute__ ((section (".text.fma4")))
+-
+-#include <sysdeps/ieee754/dbl-64/slowexp.c>

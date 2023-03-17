@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Thu, 25 Apr 2019 15:35:35 +0100
+Subject: [PATCH] aarch64: add STO_AARCH64_VARIANT_PCS and
+ DT_AARCH64_VARIANT_PCS
+
+STO_AARCH64_VARIANT_PCS is a non-visibility st_other flag for marking
+symbols that reference functions that may follow a variant PCS with
+different register usage convention from the base PCS.
+
+DT_AARCH64_VARIANT_PCS is a dynamic tag that marks ELF modules that
+have R_*_JUMP_SLOT relocations for symbols marked with
+STO_AARCH64_VARIANT_PCS (i.e. have variant PCS calls via a PLT).
+
+	* elf/elf.h (STO_AARCH64_VARIANT_PCS): Define.
+	(DT_AARCH64_VARIANT_PCS): Define.
+
+(cherry picked from commit 55f82d328d2dd1c7c13c1992f4b9bf9c95b57551)
+
+diff --git a/ChangeLog b/ChangeLog
+index 21c1f8c67a8152fcef9b2046d7220dafc2aa2fb8..ef0482cc645e9bd553d9c66f990172be0e523340 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,8 @@
++2019-06-13  Szabolcs Nagy  <szabolcs.nagy@arm.com>
++
++	* elf/elf.h (STO_AARCH64_VARIANT_PCS): Define.
++	(DT_AARCH64_VARIANT_PCS): Define.
++
+ 2019-04-08  Florian Weimer  <fweimer@redhat.com>
+ 
+ 	* resolv/res_send.c (send_dg): Always perform RES_INSECURE1 and
+diff --git a/elf/elf.h b/elf/elf.h
+index fc0e4289147f6676f876287487d967f03b6f0d89..4adb96044770087d8bc21259c91c8f1a34fb4979 100644
+--- a/elf/elf.h
++++ b/elf/elf.h
+@@ -2770,6 +2770,13 @@ enum
+ #define R_AARCH64_TLSDESC      1031	/* TLS Descriptor.  */
+ #define R_AARCH64_IRELATIVE	1032	/* STT_GNU_IFUNC relocation.  */
+ 
++/* AArch64 specific values for the Dyn d_tag field.  */
++#define DT_AARCH64_VARIANT_PCS	(DT_LOPROC + 5)
++#define DT_AARCH64_NUM		6
++
++/* AArch64 specific values for the st_other field.  */
++#define STO_AARCH64_VARIANT_PCS 0x80
++
+ /* ARM relocs.  */
+ 
+ #define R_ARM_NONE		0	/* No reloc */

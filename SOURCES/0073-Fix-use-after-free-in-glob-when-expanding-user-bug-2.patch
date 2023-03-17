@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Schwab <schwab@suse.de>
+Date: Wed, 19 Feb 2020 17:21:46 +0100
+Subject: [PATCH] Fix use-after-free in glob when expanding ~user (bug 25414)
+
+The value of `end_name' points into the value of `dirname', thus don't
+deallocate the latter before the last use of the former.
+
+diff --git a/posix/glob.c b/posix/glob.c
+index f8e80fcde5d6217d86ebd5d961ee9a2929e7428d..9b077ad634c5fb668328b4952379276beb72c932 100644
+--- a/posix/glob.c
++++ b/posix/glob.c
+@@ -833,28 +833,29 @@ glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
+ 	      {
+ 		size_t home_len = strlen (p->pw_dir);
+ 		size_t rest_len = end_name == NULL ? 0 : strlen (end_name);
++		char *newp;
++		bool use_alloca = glob_use_alloca (alloca_used, home_len + rest_len + 1);
+ 
+-		if (__glibc_unlikely (malloc_dirname))
+-		  free (dirname);
+-		malloc_dirname = 0;
+-
+-		if (glob_use_alloca (alloca_used, home_len + rest_len + 1))
+-		  dirname = alloca_account (home_len + rest_len + 1,
+-					    alloca_used);
++		if (use_alloca)
++			newp = alloca_account (home_len + rest_len + 1, alloca_used);
+ 		else
+ 		  {
+-		    dirname = malloc (home_len + rest_len + 1);
+-		    if (dirname == NULL)
++		    newp = malloc (home_len + rest_len + 1);
++		    if (newp == NULL)
+ 		      {
+ 			scratch_buffer_free (&pwtmpbuf);
+ 			retval = GLOB_NOSPACE;
+ 			goto out;
+ 		      }
+-		    malloc_dirname = 1;
+ 		  }
+-		*((char *) mempcpy (mempcpy (dirname, p->pw_dir, home_len),
++		*((char *) mempcpy (mempcpy (newp, p->pw_dir, home_len),
+ 				    end_name, rest_len)) = '\0';
+ 
++		if (__glibc_unlikely (malloc_dirname))
++			free (dirname);
++		dirname = newp;
++		malloc_dirname = !use_alloca;
++
+ 		dirlen = home_len + rest_len;
+ 		dirname_modified = 1;
+ 	      }

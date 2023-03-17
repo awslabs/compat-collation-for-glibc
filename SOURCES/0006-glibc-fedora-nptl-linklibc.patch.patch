@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-fedora-nptl-linklibc.patch
+
+All these were from the glibc-fedora.patch mega-patch and need another
+round of reviewing.  Ideally they'll either be submitted upstream or
+dropped.
+
+diff --git a/nptl/Makefile b/nptl/Makefile
+index 0b01e18106d421a6f58150501a9afb4dd9d5575b..f9488c2a320a2e40ff39af1c9c42e0d9c82d1110 100644
+--- a/nptl/Makefile
++++ b/nptl/Makefile
+@@ -643,15 +643,19 @@ $(addprefix $(objpfx), \
+ 	$(objpfx)libpthread.so \
+ 	$(objpfx)libpthread_nonshared.a
+ $(objpfx)tst-unload: $(libdl)
+-# $(objpfx)../libc.so is used instead of $(common-objpfx)libc.so,
++# $(objpfx)linklibc.so is used instead of $(common-objpfx)libc.so,
+ # since otherwise libpthread.so comes before libc.so when linking.
+ $(addprefix $(objpfx), $(tests-reverse)): \
+-  $(objpfx)../libc.so $(objpfx)libpthread.so \
++  $(objpfx)linklibc.so $(objpfx)libpthread.so \
+   $(objpfx)libpthread_nonshared.a
+ $(objpfx)../libc.so: $(common-objpfx)libc.so ;
+ $(addprefix $(objpfx),$(tests-static) $(xtests-static)): $(objpfx)libpthread.a
+ 
+ $(objpfx)tst-atfork2.out: $(objpfx)tst-atfork2mod.so
++
++$(objpfx)linklibc.so: $(common-objpfx)libc.so
++	ln -s ../libc.so $@
++generated += libclink.so
+ else
+ $(addprefix $(objpfx),$(tests) $(test-srcs)): $(objpfx)libpthread.a
+ endif

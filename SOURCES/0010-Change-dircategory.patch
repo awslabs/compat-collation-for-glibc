@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jakub Jelinek <jakub@redhat.com>
+Date: Fri, 3 Nov 2006 16:31:21 +0000
+Subject: [PATCH] Change @dircategory.
+
+
+diff --git a/manual/libc.texinfo b/manual/libc.texinfo
+index 9c6a5d51521eb2e5fbd4f79f515978e2d6b18336..9cc22c24ce2849330aad950e0301391090cc424f 100644
+--- a/manual/libc.texinfo
++++ b/manual/libc.texinfo
+@@ -14,7 +14,7 @@
+ @include macros.texi
+ 
+ @comment Tell install-info what to do.
+-@dircategory Software libraries
++@dircategory Libraries
+ @direntry
+ * Libc: (libc).                 C library.
+ @end direntry

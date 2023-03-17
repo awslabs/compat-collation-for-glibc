@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Luke Shumaker <lukeshu@lukeshu.com>
+Date: Wed, 15 Nov 2017 14:36:25 -0200
+Subject: [PATCH] linux: Include <sysdep-cancel.h> for epoll_wait
+
+The epoll_wait wrapper uses the raw syscall if __NR_epoll_wait is defined,
+and falls back to calling epoll_pwait(..., NULL) if it isn't defined.
+However, it didn't include the appropriate headers for __NR_epoll_wait to
+be defined, so it was *always* falling back to calling epoll_pwait!
+
+This mistake was introduced in b62c3815912bc679a966134affdedd3f35ae8621,
+when epoll_wait changed from being in syscalls.list to always having a C
+wrapper.
+
+Reviewed-by: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+
+diff --git a/sysdeps/unix/sysv/linux/epoll_wait.c b/sysdeps/unix/sysv/linux/epoll_wait.c
+index eb6e6d3ace803421fd0677b498ea13af5474f8e3..b324ff832a5972c8f97d09908c6e21980f4264ca 100644
+--- a/sysdeps/unix/sysv/linux/epoll_wait.c
++++ b/sysdeps/unix/sysv/linux/epoll_wait.c
+@@ -21,6 +21,8 @@
+ #include <sys/types.h>
+ #include <sys/epoll.h>
+ 
++#include <sysdep-cancel.h>
++
+ int
+ epoll_wait (int epfd, struct epoll_event *events, int maxevents, int timeout)
+ {

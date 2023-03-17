@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Mon, 18 Sep 2017 13:37:08 +0100
+Subject: [PATCH] AArch64: update libm-test-ulps
+
+Update for new expf and logf.
+
+        * sysdeps/aarch64/libm-test-ulps: Update.
+
+diff --git a/sysdeps/aarch64/libm-test-ulps b/sysdeps/aarch64/libm-test-ulps
+index 0f987bca5966c797d0a9dbe261ece69937b20fa9..1453e8ff36da2fccd3ef2f8ba6cc62298c249ccc 100644
+--- a/sysdeps/aarch64/libm-test-ulps
++++ b/sysdeps/aarch64/libm-test-ulps
+@@ -917,9 +917,9 @@ ldouble: 2
+ 
+ Function: Real part of "clog10_downward":
+ double: 5
+-float: 4
++float: 5
+ idouble: 5
+-ifloat: 4
++ifloat: 5
+ ildouble: 3
+ ldouble: 3
+ 
+@@ -1583,15 +1583,21 @@ ldouble: 2
+ 
+ Function: "exp_downward":
+ double: 1
++float: 1
+ idouble: 1
++ifloat: 1
+ 
+ Function: "exp_towardzero":
+ double: 1
++float: 1
+ idouble: 1
++ifloat: 1
+ 
+ Function: "exp_upward":
+ double: 1
++float: 1
+ idouble: 1
++ifloat: 1
+ 
+ Function: "expm1":
+ double: 1

@@ -1,0 +1,372 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Wilco Dijkstra <wdijkstr@arm.com>
+Date: Wed, 7 Feb 2018 12:24:43 +0000
+Subject: [PATCH] Remove slow paths from log
+
+Remove the slow paths from log.  Like several other double precision math
+functions, log is exactly rounded.  This is not required from math functions
+and causes major overheads as it requires multiple fallbacks using higher
+precision arithmetic if a result is close to 0.5ULP.  Ridiculous slowdowns
+of up to 100000x have been reported when the highest precision path triggers.
+
+Interestingly removing the slow paths makes hardly any difference in practice:
+the worst case error is still ~0.502ULP, and exp(log(x)) shows identical results
+before/after on many millions of random cases.  All GLIBC math tests pass on
+AArch64 and x64 with no change in ULP error.  A simple test over a few hundred
+million values shows log is now 18% faster on average.
+
+        * manual/probes.texi (slowlog): Delete documentation of removed probe.
+        (slowlog_inexact): Likewise
+        * sysdeps/ieee754/dbl-64/e_log.c (__ieee754_log): Remove slow paths.
+        * sysdeps/ieee754/dbl-64/ulog.h: Remove unused declarations.
+
+(cherry picked from commit b7c83ca30ef8e85b6642151d95600a36535f8d97
+            contextual conflicts resolved;)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/manual/probes.texi b/manual/probes.texi
+index 9668b14a0693476b4a6c820ba180acd516d8b328..fa6e38f785c19c2783caa95d9207ebd258e140df 100644
+--- a/manual/probes.texi
++++ b/manual/probes.texi
+@@ -258,23 +258,6 @@ Unless explicitly mentioned otherwise, a precision of 1 implies 24 bits of
+ precision in the mantissa of the multiple precision number.  Hence, a precision
+ level of 32 implies 768 bits of precision in the mantissa.
+ 
+-@deftp Probe slowlog (int @var{$arg1}, double @var{$arg2}, double @var{$arg3})
+-This probe is triggered when the @code{log} function is called with an
+-input that results in multiple precision computation.  Argument
+-@var{$arg1} is the precision with which the computation succeeded.
+-Argument @var{$arg2} is the input and @var{$arg3} is the computed
+-output.
+-@end deftp
+-
+-@deftp Probe slowlog_inexact (int @var{$arg1}, double @var{$arg2}, double @var{$arg3})
+-This probe is triggered when the @code{log} function is called with an
+-input that results in multiple precision computation and none of the
+-multiple precision computations result in an accurate result.
+-Argument @var{$arg1} is the maximum precision with which computations
+-were performed.  Argument @var{$arg2} is the input and @var{$arg3} is
+-the computed output.
+-@end deftp
+-
+ @deftp Probe slowatan2 (int @var{$arg1}, double @var{$arg2}, double @var{$arg3}, double @var{$arg4})
+ This probe is triggered when the @code{atan2} function is called with
+ an input that results in multiple precision computation.  Argument
+diff --git a/sysdeps/ieee754/dbl-64/e_log.c b/sysdeps/ieee754/dbl-64/e_log.c
+index e7cddc29c87da15f2bafaa12f5af87d1873d0573..c2ebdfe57fa10138eeeb3cf15bcb5915e9949517 100644
+--- a/sysdeps/ieee754/dbl-64/e_log.c
++++ b/sysdeps/ieee754/dbl-64/e_log.c
+@@ -23,11 +23,10 @@
+ /*      FUNCTION:ulog                                                */
+ /*                                                                   */
+ /*      FILES NEEDED: dla.h endian.h mpa.h mydefs.h ulog.h           */
+-/*                    mpexp.c mplog.c mpa.c                          */
+ /*                    ulog.tbl                                       */
+ /*                                                                   */
+ /* An ultimate log routine. Given an IEEE double machine number x    */
+-/* it computes the correctly rounded (to nearest) value of log(x).   */
++/* it computes the rounded (to nearest) value of log(x).	     */
+ /* Assumption: Machine arithmetic operations are performed in        */
+ /* round to nearest mode of IEEE 754 standard.                       */
+ /*                                                                   */
+@@ -40,34 +39,26 @@
+ #include "MathLib.h"
+ #include <math.h>
+ #include <math_private.h>
+-#include <stap-probe.h>
+ 
+ #ifndef SECTION
+ # define SECTION
+ #endif
+ 
+-void __mplog (mp_no *, mp_no *, int);
+-
+ /*********************************************************************/
+-/* An ultimate log routine. Given an IEEE double machine number x     */
+-/* it computes the correctly rounded (to nearest) value of log(x).   */
++/* An ultimate log routine. Given an IEEE double machine number x    */
++/* it computes the rounded (to nearest) value of log(x).	     */
+ /*********************************************************************/
+ double
+ SECTION
+ __ieee754_log (double x)
+ {
+-#define M 4
+-  static const int pr[M] = { 8, 10, 18, 32 };
+-  int i, j, n, ux, dx, p;
++  int i, j, n, ux, dx;
+   double dbl_n, u, p0, q, r0, w, nln2a, luai, lubi, lvaj, lvbj,
+-	 sij, ssij, ttij, A, B, B0, y, y1, y2, polI, polII, sa, sb,
+-	 t1, t2, t7, t8, t, ra, rb, ww,
+-	 a0, aa0, s1, s2, ss2, s3, ss3, a1, aa1, a, aa, b, bb, c;
++	 sij, ssij, ttij, A, B, B0, polI, polII, t8, a, aa, b, bb, c;
+ #ifndef DLA_FMS
+-  double t3, t4, t5, t6;
++  double t1, t2, t3, t4, t5;
+ #endif
+   number num;
+-  mp_no mpx, mpy, mpy1, mpy2, mperr;
+ 
+ #include "ulog.tbl"
+ #include "ulog.h"
+@@ -101,7 +92,7 @@ __ieee754_log (double x)
+   if (w == 0.0)
+     return 0.0;
+ 
+-  /*--- Stage I, the case abs(x-1) < 0.03 */
++  /*--- The case abs(x-1) < 0.03 */
+ 
+   t8 = MHALF * w;
+   EMULV (t8, w, a, aa, t1, t2, t3, t4, t5);
+@@ -118,50 +109,12 @@ __ieee754_log (double x)
+   polII *= w * w * w;
+   c = (aa + bb) + polII;
+ 
+-  /* End stage I, case abs(x-1) < 0.03 */
+-  if ((y = b + (c + b * E2)) == b + (c - b * E2))
+-    return y;
++  /* Here b contains the high part of the result, and c the low part.
++     Maximum error is b * 2.334e-19, so accuracy is >61 bits.
++     Therefore max ULP error of b + c is ~0.502.  */
++  return b + c;
+ 
+-  /*--- Stage II, the case abs(x-1) < 0.03 */
+-
+-  a = d19.d + w * d20.d;
+-  a = d18.d + w * a;
+-  a = d17.d + w * a;
+-  a = d16.d + w * a;
+-  a = d15.d + w * a;
+-  a = d14.d + w * a;
+-  a = d13.d + w * a;
+-  a = d12.d + w * a;
+-  a = d11.d + w * a;
+-
+-  EMULV (w, a, s2, ss2, t1, t2, t3, t4, t5);
+-  ADD2 (d10.d, dd10.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d9.d, dd9.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d8.d, dd8.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d7.d, dd7.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d6.d, dd6.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d5.d, dd5.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d4.d, dd4.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d3.d, dd3.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (d2.d, dd2.d, s2, ss2, s3, ss3, t1, t2);
+-  MUL2 (w, 0, s3, ss3, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  MUL2 (w, 0, s2, ss2, s3, ss3, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (w, 0, s3, ss3, b, bb, t1, t2);
+-
+-  /* End stage II, case abs(x-1) < 0.03 */
+-  if ((y = b + (bb + b * E4)) == b + (bb - b * E4))
+-    return y;
+-  goto stage_n;
+-
+-  /*--- Stage I, the case abs(x-1) > 0.03 */
++  /*--- The case abs(x-1) > 0.03 */
+ case_03:
+ 
+   /* Find n,u such that x = u*2**n,   1/sqrt(2) < u < sqrt(2)  */
+@@ -203,58 +156,10 @@ case_03:
+   B0 = (((lubi + lvbj) + ssij) + ttij) + dbl_n * LN2B;
+   B = polI + B0;
+ 
+-  /* End stage I, case abs(x-1) >= 0.03 */
+-  if ((y = A + (B + E1)) == A + (B - E1))
+-    return y;
+-
+-
+-  /*--- Stage II, the case abs(x-1) > 0.03 */
+-
+-  /* Improve the accuracy of r0 */
+-  EMULV (p0, r0, sa, sb, t1, t2, t3, t4, t5);
+-  t = r0 * ((1 - sa) - sb);
+-  EADD (r0, t, ra, rb);
+-
+-  /* Compute w */
+-  MUL2 (q, 0, ra, rb, w, ww, t1, t2, t3, t4, t5, t6, t7, t8);
+-
+-  EADD (A, B0, a0, aa0);
+-
+-  /* Evaluate polynomial III */
+-  s1 = (c3.d + (c4.d + c5.d * w) * w) * w;
+-  EADD (c2.d, s1, s2, ss2);
+-  MUL2 (s2, ss2, w, ww, s3, ss3, t1, t2, t3, t4, t5, t6, t7, t8);
+-  MUL2 (s3, ss3, w, ww, s2, ss2, t1, t2, t3, t4, t5, t6, t7, t8);
+-  ADD2 (s2, ss2, w, ww, s3, ss3, t1, t2);
+-  ADD2 (s3, ss3, a0, aa0, a1, aa1, t1, t2);
+-
+-  /* End stage II, case abs(x-1) >= 0.03 */
+-  if ((y = a1 + (aa1 + E3)) == a1 + (aa1 - E3))
+-    return y;
+-
+-
+-  /* Final stages. Use multi-precision arithmetic. */
+-stage_n:
+-
+-  for (i = 0; i < M; i++)
+-    {
+-      p = pr[i];
+-      __dbl_mp (x, &mpx, p);
+-      __dbl_mp (y, &mpy, p);
+-      __mplog (&mpx, &mpy, p);
+-      __dbl_mp (e[i].d, &mperr, p);
+-      __add (&mpy, &mperr, &mpy1, p);
+-      __sub (&mpy, &mperr, &mpy2, p);
+-      __mp_dbl (&mpy1, &y1, p);
+-      __mp_dbl (&mpy2, &y2, p);
+-      if (y1 == y2)
+-	{
+-	  LIBC_PROBE (slowlog, 3, &p, &x, &y1);
+-	  return y1;
+-	}
+-    }
+-  LIBC_PROBE (slowlog_inexact, 3, &p, &x, &y1);
+-  return y1;
++  /* Here A contains the high part of the result, and B the low part.
++     Maximum abs error is 6.095e-21 and min log (x) is 0.0295 since x > 1.03.
++     Therefore max ULP error of A + B is ~0.502.  */
++  return A + B;
+ }
+ 
+ #ifndef __ieee754_log
+diff --git a/sysdeps/ieee754/dbl-64/ulog.h b/sysdeps/ieee754/dbl-64/ulog.h
+index e5fbad044eb01645bcd45db9fa60ec65322bc781..ca779391a0ee2875181d26e6abe7548447908975 100644
+--- a/sysdeps/ieee754/dbl-64/ulog.h
++++ b/sysdeps/ieee754/dbl-64/ulog.h
+@@ -42,43 +42,6 @@
+ /**/ b6             = {{0x3fbc71c5, 0x25db58ac} }, /*  0.111... */
+ /**/ b7             = {{0xbfb9a4ac, 0x11a2a61c} }, /* -0.100... */
+ /**/ b8             = {{0x3fb75077, 0x0df2b591} }, /*  0.091... */
+-  /* polynomial III */
+-#if 0
+-/**/ c1             = {{0x3ff00000, 0x00000000} }, /*  1        */
+-#endif
+-/**/ c2             = {{0xbfe00000, 0x00000000} }, /* -1/2      */
+-/**/ c3             = {{0x3fd55555, 0x55555555} }, /*  1/3      */
+-/**/ c4             = {{0xbfd00000, 0x00000000} }, /* -1/4      */
+-/**/ c5             = {{0x3fc99999, 0x9999999a} }, /*  1/5      */
+-  /* polynomial IV */
+-/**/ d2             = {{0xbfe00000, 0x00000000} }, /* -1/2      */
+-/**/ dd2            = {{0x00000000, 0x00000000} }, /* -1/2-d2   */
+-/**/ d3             = {{0x3fd55555, 0x55555555} }, /*  1/3      */
+-/**/ dd3            = {{0x3c755555, 0x55555555} }, /*  1/3-d3   */
+-/**/ d4             = {{0xbfd00000, 0x00000000} }, /* -1/4      */
+-/**/ dd4            = {{0x00000000, 0x00000000} }, /* -1/4-d4   */
+-/**/ d5             = {{0x3fc99999, 0x9999999a} }, /*  1/5      */
+-/**/ dd5            = {{0xbc699999, 0x9999999a} }, /*  1/5-d5   */
+-/**/ d6             = {{0xbfc55555, 0x55555555} }, /* -1/6      */
+-/**/ dd6            = {{0xbc655555, 0x55555555} }, /* -1/6-d6   */
+-/**/ d7             = {{0x3fc24924, 0x92492492} }, /*  1/7      */
+-/**/ dd7            = {{0x3c624924, 0x92492492} }, /*  1/7-d7   */
+-/**/ d8             = {{0xbfc00000, 0x00000000} }, /* -1/8      */
+-/**/ dd8            = {{0x00000000, 0x00000000} }, /* -1/8-d8   */
+-/**/ d9             = {{0x3fbc71c7, 0x1c71c71c} }, /*  1/9      */
+-/**/ dd9            = {{0x3c5c71c7, 0x1c71c71c} }, /*  1/9-d9   */
+-/**/ d10            = {{0xbfb99999, 0x9999999a} }, /* -1/10     */
+-/**/ dd10           = {{0x3c599999, 0x9999999a} }, /* -1/10-d10 */
+-/**/ d11            = {{0x3fb745d1, 0x745d1746} }, /*  1/11     */
+-/**/ d12            = {{0xbfb55555, 0x55555555} }, /* -1/12     */
+-/**/ d13            = {{0x3fb3b13b, 0x13b13b14} }, /*  1/13     */
+-/**/ d14            = {{0xbfb24924, 0x92492492} }, /* -1/14     */
+-/**/ d15            = {{0x3fb11111, 0x11111111} }, /*  1/15     */
+-/**/ d16            = {{0xbfb00000, 0x00000000} }, /* -1/16     */
+-/**/ d17            = {{0x3fae1e1e, 0x1e1e1e1e} }, /*  1/17     */
+-/**/ d18            = {{0xbfac71c7, 0x1c71c71c} }, /* -1/18     */
+-/**/ d19            = {{0x3faaf286, 0xbca1af28} }, /*  1/19     */
+-/**/ d20            = {{0xbfa99999, 0x9999999a} }, /* -1/20     */
+   /* constants    */
+ /**/ sqrt_2         = {{0x3ff6a09e, 0x667f3bcc} }, /* sqrt(2)   */
+ /**/ h1             = {{0x3fd2e000, 0x00000000} }, /* 151/2**9  */
+@@ -87,14 +50,6 @@
+ /**/ delv           = {{0x3ef00000, 0x00000000} }, /* 1/2**16   */
+ /**/ ln2a           = {{0x3fe62e42, 0xfefa3800} }, /* ln(2) 43 bits */
+ /**/ ln2b           = {{0x3d2ef357, 0x93c76730} }, /* ln(2)-ln2a    */
+-/**/ e1             = {{0x3bbcc868, 0x00000000} }, /* 6.095e-21     */
+-/**/ e2             = {{0x3c1138ce, 0x00000000} }, /* 2.334e-19     */
+-/**/ e3             = {{0x3aa1565d, 0x00000000} }, /* 2.801e-26     */
+-/**/ e4             = {{0x39809d88, 0x00000000} }, /* 1.024e-31     */
+-/**/ e[M]           ={{{0x37da223a, 0x00000000} }, /* 1.2e-39       */
+-/**/                  {{0x35c851c4, 0x00000000} }, /* 1.3e-49       */
+-/**/                  {{0x2ab85e51, 0x00000000} }, /* 6.8e-103      */
+-/**/                  {{0x17383827, 0x00000000} }},/* 8.1e-197      */
+ /**/ two54          = {{0x43500000, 0x00000000} }, /* 2**54         */
+ /**/ u03            = {{0x3f9eb851, 0xeb851eb8} }; /* 0.03          */
+ 
+@@ -114,43 +69,6 @@
+ /**/ b6             = {{0x25db58ac, 0x3fbc71c5} }, /*  0.111... */
+ /**/ b7             = {{0x11a2a61c, 0xbfb9a4ac} }, /* -0.100... */
+ /**/ b8             = {{0x0df2b591, 0x3fb75077} }, /*  0.091... */
+-  /* polynomial III */
+-#if 0
+-/**/ c1             = {{0x00000000, 0x3ff00000} }, /*  1        */
+-#endif
+-/**/ c2             = {{0x00000000, 0xbfe00000} }, /* -1/2      */
+-/**/ c3             = {{0x55555555, 0x3fd55555} }, /*  1/3      */
+-/**/ c4             = {{0x00000000, 0xbfd00000} }, /* -1/4      */
+-/**/ c5             = {{0x9999999a, 0x3fc99999} }, /*  1/5      */
+-  /* polynomial IV */
+-/**/ d2             = {{0x00000000, 0xbfe00000} }, /* -1/2      */
+-/**/ dd2            = {{0x00000000, 0x00000000} }, /* -1/2-d2   */
+-/**/ d3             = {{0x55555555, 0x3fd55555} }, /*  1/3      */
+-/**/ dd3            = {{0x55555555, 0x3c755555} }, /*  1/3-d3   */
+-/**/ d4             = {{0x00000000, 0xbfd00000} }, /* -1/4      */
+-/**/ dd4            = {{0x00000000, 0x00000000} }, /* -1/4-d4   */
+-/**/ d5             = {{0x9999999a, 0x3fc99999} }, /*  1/5      */
+-/**/ dd5            = {{0x9999999a, 0xbc699999} }, /*  1/5-d5   */
+-/**/ d6             = {{0x55555555, 0xbfc55555} }, /* -1/6      */
+-/**/ dd6            = {{0x55555555, 0xbc655555} }, /* -1/6-d6   */
+-/**/ d7             = {{0x92492492, 0x3fc24924} }, /*  1/7      */
+-/**/ dd7            = {{0x92492492, 0x3c624924} }, /*  1/7-d7   */
+-/**/ d8             = {{0x00000000, 0xbfc00000} }, /* -1/8      */
+-/**/ dd8            = {{0x00000000, 0x00000000} }, /* -1/8-d8   */
+-/**/ d9             = {{0x1c71c71c, 0x3fbc71c7} }, /*  1/9      */
+-/**/ dd9            = {{0x1c71c71c, 0x3c5c71c7} }, /*  1/9-d9   */
+-/**/ d10            = {{0x9999999a, 0xbfb99999} }, /* -1/10     */
+-/**/ dd10           = {{0x9999999a, 0x3c599999} }, /* -1/10-d10 */
+-/**/ d11            = {{0x745d1746, 0x3fb745d1} }, /*  1/11     */
+-/**/ d12            = {{0x55555555, 0xbfb55555} }, /* -1/12     */
+-/**/ d13            = {{0x13b13b14, 0x3fb3b13b} }, /*  1/13     */
+-/**/ d14            = {{0x92492492, 0xbfb24924} }, /* -1/14     */
+-/**/ d15            = {{0x11111111, 0x3fb11111} }, /*  1/15     */
+-/**/ d16            = {{0x00000000, 0xbfb00000} }, /* -1/16     */
+-/**/ d17            = {{0x1e1e1e1e, 0x3fae1e1e} }, /*  1/17     */
+-/**/ d18            = {{0x1c71c71c, 0xbfac71c7} }, /* -1/18     */
+-/**/ d19            = {{0xbca1af28, 0x3faaf286} }, /*  1/19     */
+-/**/ d20            = {{0x9999999a, 0xbfa99999} }, /* -1/20     */
+   /* constants    */
+ /**/ sqrt_2         = {{0x667f3bcc, 0x3ff6a09e} }, /* sqrt(2)   */
+ /**/ h1             = {{0x00000000, 0x3fd2e000} }, /* 151/2**9  */
+@@ -159,14 +77,6 @@
+ /**/ delv           = {{0x00000000, 0x3ef00000} }, /* 1/2**16   */
+ /**/ ln2a           = {{0xfefa3800, 0x3fe62e42} }, /* ln(2) 43 bits */
+ /**/ ln2b           = {{0x93c76730, 0x3d2ef357} }, /* ln(2)-ln2a    */
+-/**/ e1             = {{0x00000000, 0x3bbcc868} }, /* 6.095e-21     */
+-/**/ e2             = {{0x00000000, 0x3c1138ce} }, /* 2.334e-19     */
+-/**/ e3             = {{0x00000000, 0x3aa1565d} }, /* 2.801e-26     */
+-/**/ e4             = {{0x00000000, 0x39809d88} }, /* 1.024e-31     */
+-/**/ e[M]           ={{{0x00000000, 0x37da223a} }, /* 1.2e-39       */
+-/**/                  {{0x00000000, 0x35c851c4} }, /* 1.3e-49       */
+-/**/                  {{0x00000000, 0x2ab85e51} }, /* 6.8e-103      */
+-/**/                  {{0x00000000, 0x17383827} }},/* 8.1e-197      */
+ /**/ two54          = {{0x00000000, 0x43500000} }, /* 2**54         */
+ /**/ u03            = {{0xeb851eb8, 0x3f9eb851} }; /* 0.03          */
+ 
+@@ -178,10 +88,6 @@
+ #define  DEL_V     delv.d
+ #define  LN2A      ln2a.d
+ #define  LN2B      ln2b.d
+-#define  E1        e1.d
+-#define  E2        e2.d
+-#define  E3        e3.d
+-#define  E4        e4.d
+ #define  U03       u03.d
+ 
+ #endif

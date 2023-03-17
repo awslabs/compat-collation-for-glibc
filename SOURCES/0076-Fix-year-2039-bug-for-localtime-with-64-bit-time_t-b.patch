@@ -1,0 +1,121 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Joseph Myers <joseph@codesourcery.com>
+Date: Fri, 18 May 2018 11:57:15 +0000
+Subject: [PATCH] Fix year 2039 bug for localtime with 64-bit time_t (bug
+ 22639).
+
+Bug 22639 reports localtime failing to handle time offset transitions
+correctly in 2039 and later on platforms with 64-bit time_t.
+
+The problem is the use of SECSPERDAY (constant 86400) in calculations
+such as
+
+    t = ((year - 1970) * 365
+	 + /* Compute the number of leapdays between 1970 and YEAR
+	      (exclusive).  There is a leapday every 4th year ...  */
+	 + ((year - 1) / 4 - 1970 / 4)
+	 /* ... except every 100th year ... */
+	 - ((year - 1) / 100 - 1970 / 100)
+	 /* ... but still every 400th year.  */
+	 + ((year - 1) / 400 - 1970 / 400)) * SECSPERDAY;
+
+where t is of type time_t and year is of type int.  Before my commit
+92bd70fb85bce57ac47ba5d8af008736832c955a (an update from tzcode,
+included in 2.26 and later releases), SECSPERDAY was obtained from a
+file imported from tzcode, where the value included a cast to
+int_fast32_t.  On 64-bit platforms, glibc defines int_fast32_t to be
+long int, so 64-bit, but my patch resulted in it changing to int.
+(The bug would probably have existed even before my patch for x32,
+which has 64-bit time_t but 32-bit int_fast32_t, but I haven't
+verified that.)
+
+This patch fixes the problem by including a cast to time_t in the
+definition of SECSPERDAY.  (64-bit time support for 32-bit systems
+should move such code that isn't a public interface to using the
+internal 64-bit version of time_t throughout.)
+
+Tested for x86_64 and x86.
+
+	[BZ #22639]
+	* time/tzset.c (SECSPERDAY): Cast to time_t.
+	* time/tst-y2039.c: New file.
+	* time/Makefile (tests): Add tst-y2039.
+
+diff --git a/time/Makefile b/time/Makefile
+index 317c4d8901cf9161a9bf5f6c44f6ce0faccbd966..ff01d47ae86b865943c240eab378510fb0d52886 100644
+--- a/time/Makefile
++++ b/time/Makefile
+@@ -43,7 +43,7 @@ tests	:= test_time clocktest tst-posixtz tst-strptime tst_wcsftime \
+ 	   tst-getdate tst-mktime tst-mktime2 tst-ftime_l tst-strftime \
+ 	   tst-mktime3 tst-strptime2 bug-asctime bug-asctime_r bug-mktime1 \
+ 	   tst-strptime3 bug-getdate1 tst-strptime-whitespace tst-ftime \
+-	   tst-tzname
++	   tst-tzname tst-y2039
+ 
+ include ../Rules
+ 
+diff --git a/time/tst-y2039.c b/time/tst-y2039.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..cdc6bca54b7f26c5aa27f845a8b03d537a292690
+--- /dev/null
++++ b/time/tst-y2039.c
+@@ -0,0 +1,46 @@
++/* Test for localtime bug in year 2039 (bug 22639).
++   Copyright (C) 2017-2018 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <time.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
++#include <support/check.h>
++
++static int
++do_test (void)
++{
++  TEST_VERIFY_EXIT (setenv ("TZ", "PST8PDT,M3.2.0,M11.1.0", 1) == 0);
++  tzset ();
++  if (sizeof (time_t) > 4)
++    {
++      time_t ouch = (time_t) 2187810000LL;
++      char buf[500];
++      struct tm *tm = localtime (&ouch);
++      TEST_VERIFY_EXIT (tm != NULL);
++      TEST_VERIFY_EXIT (strftime (buf, sizeof buf, "%Y-%m-%d %H:%M:%S %Z", tm)
++			> 0);
++      puts (buf);
++      TEST_VERIFY (strcmp (buf, "2039-04-30 14:00:00 PDT") == 0);
++    }
++  else
++    FAIL_UNSUPPORTED ("32-bit time_t");
++  return 0;
++}
++
++#include <support/test-driver.c>
+diff --git a/time/tzset.c b/time/tzset.c
+index cf5fe969b6a3eb6f9625407260194f9f9f414199..5fb8a8d5341218a0d5a7510f2d93f2bd75d22054 100644
+--- a/time/tzset.c
++++ b/time/tzset.c
+@@ -27,7 +27,7 @@
+ 
+ #include <timezone/tzfile.h>
+ 
+-#define SECSPERDAY 86400
++#define SECSPERDAY ((time_t) 86400)
+ 
+ char *__tzname[2] = { (char *) "GMT", (char *) "GMT" };
+ int __daylight = 0;

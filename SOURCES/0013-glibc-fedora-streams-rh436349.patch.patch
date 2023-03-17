@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-fedora-streams-rh436349.patch
+
+This is part of commit glibc-2.3.3-1564-gd0b6ac6
+
+* Fri Mar 14 2008 Jakub Jelinek <jakub@redhat.com> 2.7.90-11
+- remove <stropts.h>, define _XOPEN_STREAMS -1 (#436349)
+
+diff --git a/streams/Makefile b/streams/Makefile
+index ce577ae30d94d53b85f2e8739e9ff87510c562a8..5c5498e0cc7c589783ee125ee8de33b61ea3a1a2 100644
+--- a/streams/Makefile
++++ b/streams/Makefile
+@@ -22,7 +22,7 @@ subdir	:= streams
+ 
+ include ../Makeconfig
+ 
+-headers		= stropts.h sys/stropts.h bits/stropts.h bits/xtitypes.h
++#headers		= stropts.h sys/stropts.h bits/stropts.h bits/xtitypes.h
+ routines	= isastream getmsg getpmsg putmsg putpmsg fattach fdetach
+ 
+ include ../Rules
+diff --git a/sysdeps/unix/sysv/linux/bits/posix_opt.h b/sysdeps/unix/sysv/linux/bits/posix_opt.h
+index 56cbbb88a077eaa834806274dc120347c10436f8..2c283101f502edc37a92d1123316b38de3630afd 100644
+--- a/sysdeps/unix/sysv/linux/bits/posix_opt.h
++++ b/sysdeps/unix/sysv/linux/bits/posix_opt.h
+@@ -188,4 +188,7 @@
+ /* Typed memory objects are not available.  */
+ #define _POSIX_TYPED_MEMORY_OBJECTS	-1
+ 
++/* Streams are not available.  */
++#define _XOPEN_STREAMS	-1
++
+ #endif /* bits/posix_opt.h */

@@ -1,0 +1,113 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Joseph Myers <joseph@codesourcery.com>
+Date: Tue, 6 Feb 2018 00:37:17 +0000
+Subject: [PATCH] Add elf.h NT_* macros from Linux 4.15 (bug 14890).
+
+Linux 4.15 adds NT_S390_RI_CB to linux/elf.h (and NT_ARM_SVE, which we
+already have in glibc).  This shows up that various other ELF note
+values from linux/elf.h are missing from glibc's elf.h.
+
+This patch adds the missing values that are relevant to glibc
+architectures.  As elf.h is a general description of the ELF format,
+not necessarily limited to glibc configurations, there's an argument
+for having the remaining NT_* values that Linux uses for non-glibc
+architectures in glibc's elf.h as well, but this patch does not add
+them.
+
+Adding the NT_PRFPREG name is bug 14890.  That bug also requests
+making the NT_FPREGSET name obsolete.  Given that elf.h is not just
+for Linux but can describe ELF for other operating systems, I don't
+think that a change of name in the Linux kernel is sufficient
+justification for declaring the other name obsolete; there can be
+multiple names for the same note value, even with incompatible
+semantics, if those reflect variants of the ELF format in actual use.
+For example, FreeBSD appears still to have the name NT_FPREGSET
+<https://github.com/freebsd/freebsd/blob/master/sys/sys/elf_common.h>
+(note: I haven't checked whether the FreeBSD kernel actually generates
+such notes or whether this is actually an other-OS definition present
+in FreeBSD's header).
+
+	[BZ #14890]
+	* elf/elf.h (NT_PRFPREG): New macro.
+	(NT_S390_VXRS_LOW): Likewise.
+	(NT_S390_VXRS_HIGH): Likewise.
+	(NT_S390_GS_CB): Likewise.
+	(NT_S390_GS_BC): Likewise.
+	(NT_S390_RI_CB): Likewise.
+
+(cherry picked from commit d28bf648976eb2e6d0bcc64a53f4ed1ebb59a40e)
+
+diff --git a/ChangeLog b/ChangeLog
+index 48fc7f8d06125e690bdbbffbb60ba829eb42b463..21c1f8c67a8152fcef9b2046d7220dafc2aa2fb8 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -151,6 +151,42 @@
+ 	* resolv/tst-resolv-network.c: Use test framework instead explicit
+ 	main function.
+ 
++2018-02-06  Joseph Myers  <joseph@codesourcery.com>
++
++	[BZ #14890]
++	* elf/elf.h (NT_PRFPREG): New macro.
++	(NT_S390_VXRS_LOW): Likewise.
++	(NT_S390_VXRS_HIGH): Likewise.
++	(NT_S390_GS_CB): Likewise.
++	(NT_S390_GS_BC): Likewise.
++	(NT_S390_RI_CB): Likewise.
++
++	* sysdeps/unix/sysv/linux/aarch64/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): New macro.
++	* sysdeps/unix/sysv/linux/arm/bits/mman.h [__USE_MISC] (MAP_SYNC):
++	Likewise.
++	* sysdeps/unix/sysv/linux/ia64/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): Likewise.
++	* sysdeps/unix/sysv/linux/m68k/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): Likewise.
++	* sysdeps/unix/sysv/linux/microblaze/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): Likewise.
++	* sysdeps/unix/sysv/linux/nios2/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): Likewise.
++	* sysdeps/unix/sysv/linux/riscv/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): Likewise.
++	* sysdeps/unix/sysv/linux/s390/bits/mman.h [__USE_MISC]
++	(MAP_SYNC): Likewise.
++	* sysdeps/unix/sysv/linux/sh/bits/mman.h [__USE_MISC] (MAP_SYNC):
++	Likewise.
++	* sysdeps/unix/sysv/linux/x86/bits/mman.h [__USE_MISC] (MAP_SYNC):
++	Likewise.
++
++	* sysdeps/unix/sysv/linux/bits/mman-linux.h [__USE_MISC]
++	(MAP_SHARED_VALIDATE): New macro.
++	* sysdeps/unix/sysv/linux/hppa/bits/mman.h [__USE_MISC]
++	(MAP_SHARED_VALIDATE): Likewise.
++
+ 2018-01-16  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+ 
+ 	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_SHA3): Define.
+diff --git a/elf/elf.h b/elf/elf.h
+index 94db9883998d45e0b54dd789c91fea4439d2cbe9..fc0e4289147f6676f876287487d967f03b6f0d89 100644
+--- a/elf/elf.h
++++ b/elf/elf.h
+@@ -739,6 +739,8 @@ typedef struct
+ /* Legal values for note segment descriptor types for core files. */
+ 
+ #define NT_PRSTATUS	1		/* Contains copy of prstatus struct */
++#define NT_PRFPREG	2		/* Contains copy of fpregset
++					   struct.  */
+ #define NT_FPREGSET	2		/* Contains copy of fpregset struct */
+ #define NT_PRPSINFO	3		/* Contains copy of prpsinfo struct */
+ #define NT_PRXREG	4		/* Contains copy of prxregset struct */
+@@ -774,6 +776,13 @@ typedef struct
+ #define NT_S390_LAST_BREAK	0x306	/* s390 breaking event address */
+ #define NT_S390_SYSTEM_CALL	0x307	/* s390 system call restart data */
+ #define NT_S390_TDB	0x308		/* s390 transaction diagnostic block */
++#define NT_S390_VXRS_LOW	0x309	/* s390 vector registers 0-15
++					   upper half.  */
++#define NT_S390_VXRS_HIGH	0x30a	/* s390 vector registers 16-31.  */
++#define NT_S390_GS_CB	0x30b		/* s390 guarded storage registers.  */
++#define NT_S390_GS_BC	0x30c		/* s390 guarded storage
++					   broadcast control block.  */
++#define NT_S390_RI_CB	0x30d		/* s390 runtime instrumentation.  */
+ #define NT_ARM_VFP	0x400		/* ARM VFP/NEON registers */
+ #define NT_ARM_TLS	0x401		/* ARM TLS register */
+ #define NT_ARM_HW_BREAK	0x402		/* ARM hardware breakpoint registers */

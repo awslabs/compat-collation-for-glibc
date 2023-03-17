@@ -1,0 +1,66 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Wed, 2 Jan 2019 17:27:02 +0000
+Subject: [PATCH] AArch64: Update dl-procinfo.c with new HWCAP
+
+bits/hwcap.h should be updated together with dl-procinfo.c.
+
+	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h: Add comment.
+	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c (_DL_HWCAP_COUNT):
+	Update.
+
+(cherry picked from commit 7d7af8f17d81358817a8e2d97f60dc528f27d6e9)
+
+diff --git a/ChangeLog b/ChangeLog
+index 97a61f8a631f3ce4ff16eb06573ee33c99f17771..a22f4b7baaa1b192b3038ab88d15c8b3777bbcca 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -135,6 +135,12 @@
+ 	* resolv/tst-resolv-nondecimal.c: Likewise.
+ 	* sysdeps/posix/getaddrinfo.c (gaih_inet): Call __inet_aton_exact.
+ 
++2019-01-03  Szabolcs Nagy  <szabolcs.nagy@arm.com>
++
++	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h: Add comment.
++	* sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c (_DL_HWCAP_COUNT):
++	Update.
++
+ 2018-04-20  Joseph Myers  <joseph@codesourcery.com>
+ 	* sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h (HWCAP_SSBS): New
+ 	macro.
+diff --git a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+index 7f5ce62e5d8e06d722f81215277355b2bfd794c8..d3ae4a4c6a3ac714d09de799f598be768f5a0e82 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
++++ b/sysdeps/unix/sysv/linux/aarch64/bits/hwcap.h
+@@ -20,7 +20,8 @@
+ # error "Never include <bits/hwcap.h> directly; use <sys/auxv.h> instead."
+ #endif
+ 
+-/* The following must match the kernel's <asm/hwcap.h>.  */
++/* The following must match the kernel's <asm/hwcap.h> and update the
++   list together with sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c.  */
+ #define HWCAP_FP		(1 << 0)
+ #define HWCAP_ASIMD		(1 << 1)
+ #define HWCAP_EVTSTRM		(1 << 2)
+diff --git a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+index 4284bce7b6fcc6ec594402ec383deeff5dabd0e2..a593805231482b4b431ee11fd324749db6f9c460 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
++++ b/sysdeps/unix/sysv/linux/aarch64/dl-procinfo.c
+@@ -57,7 +57,7 @@ PROCINFO_CLASS struct cpu_features _dl_aarch64_cpu_features
+ #endif
+ 
+ /* Number of HWCAP bits set.  */
+-#define _DL_HWCAP_COUNT 28
++#define _DL_HWCAP_COUNT 29
+ 
+ #if !defined PROCINFO_DECL && defined SHARED
+   ._dl_aarch64_cap_flags
+@@ -69,7 +69,7 @@ PROCINFO_CLASS const char _dl_aarch64_cap_flags[_DL_HWCAP_COUNT][10]
+ = { "fp", "asimd", "evtstrm", "aes", "pmull", "sha1", "sha2", "crc32",
+     "atomics", "fphp", "asimdhp", "cpuid", "asimdrdm", "jscvt", "fcma",
+     "lrcpc", "dcpop", "sha3", "sm3", "sm4", "asimddp", "sha512", "sve",
+-    "asimdfhm", "dit", "uscat", "ilrcpc", "flagm" }
++    "asimdfhm", "dit", "uscat", "ilrcpc", "flagm", "ssbs" }
+ #endif
+ #if !defined SHARED || defined PROCINFO_DECL
+ ;

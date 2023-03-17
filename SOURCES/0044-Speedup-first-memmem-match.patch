@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rajalakshmi Srinivasaraghavan <raji@linux.vnet.ibm.com>
+Date: Tue, 28 Aug 2018 12:42:19 +0530
+Subject: [PATCH] Speedup first memmem match
+
+As done in commit 284f42bc778e487dfd5dff5c01959f93b9e0c4f5, memcmp
+can be used after memchr to avoid the initialization overhead of the
+two-way algorithm for the first match.  This has shown improvement
+>40% for first match.
+
+(cherry picked from commit 83a552b0bb9fc2a5e80a0ab3723c0a80ce1db9f2)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/string/memmem.c b/string/memmem.c
+index 34299b886448387ed475320c8de92246da734fac..645b6d1a267bc6b98a6f9641b4177397bb5bb8f7 100644
+--- a/string/memmem.c
++++ b/string/memmem.c
+@@ -70,6 +70,10 @@ __memmem (const void *haystack_start, size_t haystack_len,
+       haystack_len -= haystack - (const unsigned char *) haystack_start;
+       if (haystack_len < needle_len)
+ 	return NULL;
++      /* Check whether we have a match.  This improves performance since we
++	 avoid the initialization overhead of the two-way algorithm.  */
++      if (memcmp (haystack, needle, needle_len) == 0)
++	return (void *) haystack;
+       return two_way_short_needle (haystack, haystack_len, needle, needle_len);
+     }
+   else

@@ -1,0 +1,286 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florian Weimer <fweimer@redhat.com>
+Date: Wed, 7 Nov 2018 12:42:44 +0100
+Subject: [PATCH] support: Implement TEST_COMPARE_STRING
+
+[BenH: Fix i686 build due to warning in printf %lu]
+
+(cherry picked from commit bd3d54f1ea70a9826fcb33e95156413cb2a0ff6d)
+
+diff --git a/ChangeLog b/ChangeLog
+index 64e4e555b8d55fa1f165ee085b9da5c5fe44410d..9c6b24e06343602d21e37eeb88b382f6ea02f904 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -145,6 +145,17 @@
+ 	[BZ #17630]
+ 	* resolv/tst-resolv-network.c: Add test for getnetbyname.
+ 
++2018-11-07  Florian Weimer  <fweimer@redhat.com>
++
++	Implement TEST_COMPARE_STRING.
++	* support/check.h (TEST_COMPARE_STRING): Define.
++	(support_test_compare_string): Declare.
++	* support/Makefile (libsupport-routines): Add
++	support_test_compare_string.
++	(tests): Add tst-test_compare_string.
++	* support/support_test_compare_string.c: New file.
++	* support/tst-test_compare_string.c: Likewise.
++
+ 2018-11-05  Andreas Schwab  <schwab@suse.de>
+ 
+ 	[BZ #22927]
+diff --git a/support/Makefile b/support/Makefile
+index 0a3410cbb7e73fea525a16292ff951f7a427c11a..d0e40e7d7431c3d8e898a7a5b5602ef63a39e7c5 100644
+--- a/support/Makefile
++++ b/support/Makefile
+@@ -60,6 +60,7 @@ libsupport-routines = \
+   support_shared_allocate \
+   support_test_compare_blob \
+   support_test_compare_failure \
++  support_test_compare_string \
+   support_write_file_string \
+   support_test_main \
+   support_test_verify_impl \
+@@ -162,6 +163,7 @@ tests = \
+   tst-support_record_failure \
+   tst-test_compare \
+   tst-test_compare_blob \
++  tst-test_compare_string \
+   tst-xreadlink \
+ 
+ ifeq ($(run-built-tests),yes)
+diff --git a/support/check.h b/support/check.h
+index b3a4645e9255e90d2490a1bcf62f03c976f87add..e6765289f249250136057c3363515261fb6feeaa 100644
+--- a/support/check.h
++++ b/support/check.h
+@@ -163,6 +163,19 @@ void support_test_compare_blob (const void *left,
+                                 const char *right_exp,
+                                 const char *right_len_exp);
+ 
++/* Compare the strings LEFT and RIGHT and report a test failure if
++   they are different.  Also report failure if one of the arguments is
++   a null pointer and the other is not.  The strings should be
++   reasonably short because on mismatch, both are printed.  */
++#define TEST_COMPARE_STRING(left, right)                         \
++  (support_test_compare_string (left, right, __FILE__, __LINE__, \
++                                #left, #right))
++
++void support_test_compare_string (const char *left, const char *right,
++                                  const char *file, int line,
++                                  const char *left_expr,
++                                  const char *right_expr);
++
+ /* Internal function called by the test driver.  */
+ int support_report_failure (int status)
+   __attribute__ ((weak, warn_unused_result));
+diff --git a/support/support_test_compare_string.c b/support/support_test_compare_string.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..5cbb2d791826a56832a6aff198646f81245b633a
+--- /dev/null
++++ b/support/support_test_compare_string.c
+@@ -0,0 +1,92 @@
++/* Check two strings for equality.
++   Copyright (C) 2018 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <support/check.h>
++#include <support/support.h>
++#include <support/xmemstream.h>
++
++static void
++report_length (const char *what, const char *str, size_t length)
++{
++  if (str == NULL)
++    printf ("  %s string: NULL\n", what);
++  else
++    printf ("  %s string: %zu bytes\n", what, length);
++}
++
++static void
++report_string (const char *what, const unsigned char *blob,
++               size_t length, const char *expr)
++{
++  if (length > 0)
++    {
++      printf ("  %s (evaluated from %s):\n", what, expr);
++      char *quoted = support_quote_blob (blob, length);
++      printf ("      \"%s\"\n", quoted);
++      free (quoted);
++
++      fputs ("     ", stdout);
++      for (size_t i = 0; i < length; ++i)
++        printf (" %02X", blob[i]);
++      putc ('\n', stdout);
++    }
++}
++
++static size_t
++string_length_or_zero (const char *str)
++{
++  if (str == NULL)
++    return 0;
++  else
++    return strlen (str);
++}
++
++void
++support_test_compare_string (const char *left, const char *right,
++                             const char *file, int line,
++                             const char *left_expr, const char *right_expr)
++{
++  /* Two null pointers are accepted.  */
++  if (left == NULL && right == NULL)
++    return;
++
++  size_t left_length = string_length_or_zero (left);
++  size_t right_length = string_length_or_zero (right);
++
++  if (left_length != right_length || left == NULL || right == NULL
++      || memcmp (left, right, left_length) != 0)
++    {
++      support_record_failure ();
++      printf ("%s:%d: error: blob comparison failed\n", file, line);
++      if (left_length == right_length && right != NULL && left != NULL)
++	      printf ("  string length: %lu bytes\n",
++		      (unsigned long)left_length);
++      else
++        {
++          report_length ("left", left, left_length);
++          report_length ("right", right, right_length);
++        }
++      report_string ("left", (const unsigned char *) left,
++                     left_length, left_expr);
++      report_string ("right", (const unsigned char *) right,
++                     right_length, right_expr);
++    }
++}
+diff --git a/support/tst-test_compare_string.c b/support/tst-test_compare_string.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..2a4b258587a7c8ec032bd524b25af7459a4748bc
+--- /dev/null
++++ b/support/tst-test_compare_string.c
+@@ -0,0 +1,107 @@
++/* Basic test for the TEST_COMPARE_STRING macro.
++   Copyright (C) 2018 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <string.h>
++#include <support/check.h>
++#include <support/capture_subprocess.h>
++
++static void
++subprocess (void *closure)
++{
++  /* These tests should fail.  They were chosen to cover differences
++     in length (with the same contents), single-bit mismatches, and
++     mismatching null pointers.  */
++  TEST_COMPARE_STRING ("", NULL);             /* Line 29.  */
++  TEST_COMPARE_STRING ("X", "");              /* Line 30.  */
++  TEST_COMPARE_STRING (NULL, "X");            /* Line 31.  */
++  TEST_COMPARE_STRING ("abcd", "abcD");       /* Line 32.  */
++  TEST_COMPARE_STRING ("abcd", NULL);         /* Line 33.  */
++  TEST_COMPARE_STRING (NULL, "abcd");         /* Line 34.  */
++}
++
++/* Same contents, different addresses.  */
++char buffer_abc_1[] = "abc";
++char buffer_abc_2[] = "abc";
++
++static int
++do_test (void)
++{
++  /* This should succeed.  Even if the pointers and array contents are
++     different, zero-length inputs are not different.  */
++  TEST_COMPARE_STRING (NULL, NULL);
++  TEST_COMPARE_STRING ("", "");
++  TEST_COMPARE_STRING (buffer_abc_1, buffer_abc_2);
++  TEST_COMPARE_STRING (buffer_abc_1, "abc");
++
++  struct support_capture_subprocess proc = support_capture_subprocess
++    (&subprocess, NULL);
++
++  /* Discard the reported error.  */
++  support_record_failure_reset ();
++
++  puts ("info: *** subprocess output starts ***");
++  fputs (proc.out.buffer, stdout);
++  puts ("info: *** subprocess output ends ***");
++
++  TEST_VERIFY
++    (strcmp (proc.out.buffer,
++"tst-test_compare_string.c:29: error: blob comparison failed\n"
++"  left string: 0 bytes\n"
++"  right string: NULL\n"
++"tst-test_compare_string.c:30: error: blob comparison failed\n"
++"  left string: 1 bytes\n"
++"  right string: 0 bytes\n"
++"  left (evaluated from \"X\"):\n"
++"      \"X\"\n"
++"      58\n"
++"tst-test_compare_string.c:31: error: blob comparison failed\n"
++"  left string: NULL\n"
++"  right string: 1 bytes\n"
++"  right (evaluated from \"X\"):\n"
++"      \"X\"\n"
++"      58\n"
++"tst-test_compare_string.c:32: error: blob comparison failed\n"
++"  string length: 4 bytes\n"
++"  left (evaluated from \"abcd\"):\n"
++"      \"abcd\"\n"
++"      61 62 63 64\n"
++"  right (evaluated from \"abcD\"):\n"
++"      \"abcD\"\n"
++"      61 62 63 44\n"
++"tst-test_compare_string.c:33: error: blob comparison failed\n"
++"  left string: 4 bytes\n"
++"  right string: NULL\n"
++"  left (evaluated from \"abcd\"):\n"
++"      \"abcd\"\n"
++"      61 62 63 64\n"
++"tst-test_compare_string.c:34: error: blob comparison failed\n"
++"  left string: NULL\n"
++"  right string: 4 bytes\n"
++"  right (evaluated from \"abcd\"):\n"
++"      \"abcd\"\n"
++"      61 62 63 64\n"
++             ) == 0);
++
++  /* Check that there is no output on standard error.  */
++  support_capture_subprocess_check (&proc, "TEST_COMPARE_STRING",
++                                    0, sc_allow_stdout);
++
++  return 0;
++}
++
++#include <support/test-driver.c>

@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "benh@amazon.com" <benh@amazon.com>
+Date: Tue, 18 May 2021 13:17:30 +1000
+Subject: [PATCH] glibc-fedora-i386-tls-direct-seg-refs.patch
+
+All these were from the glibc-fedora.patch mega-patch and need another
+round of reviewing.  Ideally they'll either be submitted upstream or
+dropped.
+
+diff --git a/sysdeps/i386/Makefile b/sysdeps/i386/Makefile
+index e30e1339f0554dd53be1ab881cb4df04de820792..a6e060a17f519b249aefa939d0ecec39e5c09ed3 100644
+--- a/sysdeps/i386/Makefile
++++ b/sysdeps/i386/Makefile
+@@ -67,6 +67,14 @@ endif
+ 
+ ifneq (,$(filter -mno-tls-direct-seg-refs,$(CFLAGS)))
+ defines += -DNO_TLS_DIRECT_SEG_REFS
++else
++# .a libraries are not performance critical and so we
++# build them without direct TLS segment references
++# always.
++CPPFLAGS-.o += -DNO_TLS_DIRECT_SEG_REFS
++CFLAGS-.o += -mno-tls-direct-seg-refs
++CPPFLAGS-.oS += -DNO_TLS_DIRECT_SEG_REFS
++CFLAGS-.oS += -mno-tls-direct-seg-refs
+ endif
+ 
+ ifeq ($(subdir),elf)

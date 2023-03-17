@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date: Mon, 23 Oct 2017 12:15:40 +0100
+Subject: [PATCH] Mark lazy tlsdesc helper functions unused to avoid warnings
+
+These static functions are not needed if a target does not do lazy
+tlsdesc initialization.
+
+        * elf/tlsdeschtab.h (_dl_tls_resolve_early_return_p): Mark unused.
+        (_dl_tlsdesc_wake_up_held_fixups): Likewise.
+
+(cherry picked from commit 0cc5b022f817eeaa81735ae58717b5dabae92941)
+Signed-of-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/elf/tlsdeschtab.h b/elf/tlsdeschtab.h
+index 3091d8b420a19f40114867812b89c9a360d7ed4b..94d1fb3984e303d136b8cd98956092174a603280 100644
+--- a/elf/tlsdeschtab.h
++++ b/elf/tlsdeschtab.h
+@@ -138,6 +138,7 @@ _dl_make_tlsdesc_dynamic (struct link_map *map, size_t ti_offset)
+    avoid introducing such dependencies.  */
+ 
+ static int
++__attribute__ ((unused))
+ _dl_tlsdesc_resolve_early_return_p (struct tlsdesc volatile *td, void *caller)
+ {
+   if (caller != atomic_load_relaxed (&td->entry))
+@@ -156,6 +157,7 @@ _dl_tlsdesc_resolve_early_return_p (struct tlsdesc volatile *td, void *caller)
+ }
+ 
+ static void
++__attribute__ ((unused))
+ _dl_tlsdesc_wake_up_held_fixups (void)
+ {
+   __rtld_lock_unlock_recursive (GL(dl_load_lock));

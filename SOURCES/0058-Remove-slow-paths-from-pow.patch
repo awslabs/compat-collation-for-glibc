@@ -1,0 +1,964 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Wilco Dijkstra <wdijkstr@arm.com>
+Date: Mon, 12 Feb 2018 10:42:42 +0000
+Subject: [PATCH] Remove slow paths from pow
+
+Remove the slow paths from pow.  Like several other double precision math
+functions, pow is exactly rounded.  This is not required from math functions
+and causes major overheads as it requires multiple fallbacks using higher
+precision arithmetic if a result is close to 0.5ULP.  Ridiculous slowdowns
+of up to 100000x have been reported when the highest precision path triggers.
+
+All GLIBC math tests pass on AArch64 and x64 (with ULP of pow set to 1).
+The worst case error is ~0.506ULP.  A simple test over a few hundred million
+values shows pow is 10% faster on average.  This fixes BZ #13932.
+
+          [BZ #13932]
+          * sysdeps/ieee754/dbl-64/uexp.h (err_1): Remove.
+          * benchtests/pow-inputs: Update comment for slow path cases.
+          * manual/probes.texi (slowpow_p10): Delete removed probe.
+          (slowpow_p10): Likewise.
+          * math/Makefile: Remove halfulp.c and slowpow.c.
+          * sysdeps/aarch64/libm-test-ulps: Set ULP of pow to 1.
+          * sysdeps/generic/math_private.h (__exp1): Remove error argument.
+          (__halfulp): Remove.
+          (__slowpow): Remove.
+          * sysdeps/i386/fpu/halfulp.c: Delete file.
+          * sysdeps/i386/fpu/slowpow.c: Likewise.
+          * sysdeps/ia64/fpu/halfulp.c: Likewise.
+          * sysdeps/ia64/fpu/slowpow.c: Likewise.
+          * sysdeps/ieee754/dbl-64/e_exp.c (__exp1): Remove error argument,
+          improve comments and add error analysis.
+          * sysdeps/ieee754/dbl-64/e_pow.c (__ieee754_pow): Add error analysis.
+          (power1): Remove function:
+          (log1): Remove error argument, add error analysis.
+          (my_log2): Remove function.
+          * sysdeps/ieee754/dbl-64/halfulp.c: Delete file.
+          * sysdeps/ieee754/dbl-64/slowpow.c: Likewise.
+          * sysdeps/m68k/m680x0/fpu/halfulp.c: Likewise.
+          * sysdeps/m68k/m680x0/fpu/slowpow.c: Likewise.
+          * sysdeps/powerpc/power4/fpu/Makefile: Remove CPPFLAGS-slowpow.c.
+          * sysdeps/x86_64/fpu/libm-test-ulps: Set ULP of pow to 1.
+          * sysdeps/x86_64/fpu/multiarch/Makefile: Remove slowpow-fma.c,
+          slowpow-fma4.c, halfulp-fma.c, halfulp-fma4.c.
+          * sysdeps/x86_64/fpu/multiarch/e_pow-fma.c (__slowpow): Remove define.
+          * sysdeps/x86_64/fpu/multiarch/e_pow-fma4.c (__slowpow): Likewise.
+          * sysdeps/x86_64/fpu/multiarch/halfulp-fma.c: Delete file.
+          * sysdeps/x86_64/fpu/multiarch/halfulp-fma4.c: Likewise.
+          * sysdeps/x86_64/fpu/multiarch/slowpow-fma.c: Likewise.
+          * sysdeps/x86_64/fpu/multiarch/slowpow-fma4.c: Likewise.
+
+(cherry picked from commit c3d466cba1692708a19c6ff829d0386c83a0c6e5
+        contextual conflicts resolved;
+	partial backport: drop fma related only fma4 exists)
+Signed-off-by: Anchal Agarwal <anchalag@amazon.com>
+
+diff --git a/benchtests/pow-inputs b/benchtests/pow-inputs
+index 78f8ac73d53e039a39a842bb6e7c80543c92e7cd..4a51aacb8618eea3f48901b37d9aa3304ff7a892 100644
+--- a/benchtests/pow-inputs
++++ b/benchtests/pow-inputs
+@@ -302,8 +302,7 @@
+ 0x1.c004d2256a5b8p402, -0x1.a01df480fdcb7p98
+ 0x1.52b9d41aaa1e9p-589, -0x1.292cb15f1459dp46
+ -0x1.ea9ca6fa0919ep-279, -0x1.601e44b6a588cp40
+-# pow slow path at 240 bits
+-# Implemented in sysdeps/ieee754/dbl-64/slowpow.c
++# old pow slow path at 240 bits
+ ## name: 240bits
+ 0x1.01fcd33493ea3p596, -0x1.724bd4e887783p-14
+ 0x1.032ff59ab34fdp-540, -0x1.61e3632080b87p-24
+@@ -405,8 +404,7 @@
+ 0x1.fae913d4f952ep-809, -0x1.4b649402fce63p-6
+ 0x1.fe6d725408f24p484, -0x1.25f4f6441d2e4p-12
+ 0x1.ff6393f9150ccp-718, 0x1.a0cb50a9bf2f3p-31
+-# pow slowest path at 768 bits
+-# Implemented in sysdeps/ieee754/dbl-64/slowpow.c
++# old pow slowest path at 768 bits
+ ## name: 768bits
+ 1.0000000000000020, 1.5
+ 0x1.006777b4b61dep843, -0x1.67e3145491872p-1
+diff --git a/manual/probes.texi b/manual/probes.texi
+index 8ab67562d77e2879e7baa85c093847ba7660a1b9..4047df29a5e856bf95923674d58b529f30843f2d 100644
+--- a/manual/probes.texi
++++ b/manual/probes.texi
+@@ -272,22 +272,6 @@ input that results in multiple precision computation with precision
+ computed output.
+ @end deftp
+ 
+-@deftp Probe slowpow_p10 (double @var{$arg1}, double @var{$arg2}, double @var{$arg3}, double @var{$arg4})
+-This probe is triggered when the @code{pow} function is called with
+-inputs that result in multiple precision computation with precision
+-10.  Arguments @var{$arg1} and @var{$arg2} are the input values,
+-@code{$arg3} is the value computed in the fast phase of the algorithm
+-and @code{$arg4} is the final accurate value.
+-@end deftp
+-
+-@deftp Probe slowpow_p32 (double @var{$arg1}, double @var{$arg2}, double @var{$arg3}, double @var{$arg4})
+-This probe is triggered when the @code{pow} function is called with an
+-input that results in multiple precision computation with precision
+-32.  Arguments @var{$arg1} and @var{$arg2} are the input values,
+-@code{$arg3} is the value computed in the fast phase of the algorithm
+-and @code{$arg4} is the final accurate value.
+-@end deftp
+-
+ @deftp Probe slowlog (int @var{$arg1}, double @var{$arg2}, double @var{$arg3})
+ This probe is triggered when the @code{log} function is called with an
+ input that results in multiple precision computation.  Argument
+diff --git a/math/Makefile b/math/Makefile
+index 1039985ea6b6b44b606406c7133491f35b4504f1..e9e9c1d11052fb12bfb1005287b2729f94766ee6 100644
+--- a/math/Makefile
++++ b/math/Makefile
+@@ -110,9 +110,9 @@ type-ldouble-yes := ldouble
+ 
+ # double support
+ type-double-suffix :=
+-type-double-routines := branred doasin dosincos halfulp mpa mpatan2	\
++type-double-routines := branred doasin dosincos mpa mpatan2	\
+ 		       mpatan mpexp mplog mpsqrt mptan sincos32 slowexp	\
+-		       slowpow sincostab k_rem_pio2
++		       sincostab k_rem_pio2
+ 
+ # float support
+ type-float-suffix := f
+diff --git a/sysdeps/aarch64/libm-test-ulps b/sysdeps/aarch64/libm-test-ulps
+index 1453e8ff36da2fccd3ef2f8ba6cc62298c249ccc..afe638ec55c2e282fb8f0fd376678669f554aaca 100644
+--- a/sysdeps/aarch64/libm-test-ulps
++++ b/sysdeps/aarch64/libm-test-ulps
+@@ -1938,7 +1938,9 @@ ildouble: 1
+ ldouble: 1
+ 
+ Function: "pow":
++double: 1
+ float: 1
++idouble: 1
+ ifloat: 1
+ ildouble: 2
+ ldouble: 2
+diff --git a/sysdeps/generic/math_private.h b/sysdeps/generic/math_private.h
+index 1418bbda27dcaa83c98d308689cd825ccb5075b2..e4cc8a6c28568d0f035e6e6c9a3f38509fd33e6e 100644
+--- a/sysdeps/generic/math_private.h
++++ b/sysdeps/generic/math_private.h
+@@ -255,20 +255,18 @@ extern float __kernel_standard_f (float,float,int);
+ extern long double __kernel_standard_l (long double,long double,int);
+ 
+ /* Prototypes for functions of the IBM Accurate Mathematical Library.  */
+-extern double __exp1 (double __x, double __xx, double __error);
++extern double __exp1 (double __x, double __xx);
+ extern double __sin (double __x);
+ extern double __cos (double __x);
+ extern int __branred (double __x, double *__a, double *__aa);
+ extern void __doasin (double __x, double __dx, double __v[]);
+ extern void __dubsin (double __x, double __dx, double __v[]);
+ extern void __dubcos (double __x, double __dx, double __v[]);
+-extern double __halfulp (double __x, double __y);
+ extern double __sin32 (double __x, double __res, double __res1);
+ extern double __cos32 (double __x, double __res, double __res1);
+ extern double __mpsin (double __x, double __dx, bool __range_reduce);
+ extern double __mpcos (double __x, double __dx, bool __range_reduce);
+ extern double __slowexp (double __x);
+-extern double __slowpow (double __x, double __y, double __z);
+ extern void __docos (double __x, double __dx, double __v[]);
+ 
+ #ifndef math_opt_barrier
+diff --git a/sysdeps/i386/fpu/halfulp.c b/sysdeps/i386/fpu/halfulp.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/i386/fpu/halfulp.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/i386/fpu/slowpow.c b/sysdeps/i386/fpu/slowpow.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/i386/fpu/slowpow.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/ia64/fpu/halfulp.c b/sysdeps/ia64/fpu/halfulp.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/ia64/fpu/halfulp.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/ia64/fpu/slowpow.c b/sysdeps/ia64/fpu/slowpow.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/ia64/fpu/slowpow.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/ieee754/dbl-64/e_exp.c b/sysdeps/ieee754/dbl-64/e_exp.c
+index 6757a14ce1c132d3a4363badcfd59ca4a5435c27..bf79917104c14efeabc64fa8c8a74630ea217ece 100644
+--- a/sysdeps/ieee754/dbl-64/e_exp.c
++++ b/sysdeps/ieee754/dbl-64/e_exp.c
+@@ -233,13 +233,10 @@ ret:
+ strong_alias (__ieee754_exp, __exp_finite)
+ #endif
+ 
+-/* Compute e^(x+xx).  The routine also receives bound of error of previous
+-   calculation.  If after computing exp the error exceeds the allowed bounds,
+-   the routine returns a non-positive number.  Otherwise it returns the
+-   computed result, which is always positive.  */
++/* Compute e^(x+xx).  */
+ double
+ SECTION
+-__exp1 (double x, double xx, double error)
++__exp1 (double x, double xx)
+ {
+   double bexp, t, eps, del, base, y, al, bet, res, rem, cor;
+   mynumber junk1, junk2, binexp = {{0, 0}};
+@@ -249,6 +246,7 @@ __exp1 (double x, double xx, double error)
+   m = junk1.i[HIGH_HALF];
+   n = m & hugeint;		/* no sign */
+ 
++  /* fabs (x) > 5.551112e-17 and fabs (x) < 7.080010e+02.  */
+   if (n > smallint && n < bigint)
+     {
+       y = x * log2e.x + three51.x;
+@@ -276,11 +274,9 @@ __exp1 (double x, double xx, double error)
+ 
+       rem = (bet + bet * eps) + al * eps;
+       res = al + rem;
+-      cor = (al - res) + rem;
+-      if (res == (res + cor * (1.0 + error + err_1)))
+-	return res * binexp.x;
+-      else
+-	return -10.0;
++      /* Maximum relative error before rounding is 8.8e-22 (69.9 bits).
++	 Maximum ULP error is 0.500008.  */
++      return res * binexp.x;
+     }
+ 
+   if (n <= smallint)
+@@ -318,6 +314,7 @@ __exp1 (double x, double xx, double error)
+   cor = (al - res) + rem;
+   if (m >> 31)
+     {
++      /* x < 0.  */
+       ex = junk1.i[LOW_HALF];
+       if (res < 1.0)
+ 	{
+@@ -328,34 +325,25 @@ __exp1 (double x, double xx, double error)
+       if (ex >= -1022)
+ 	{
+ 	  binexp.i[HIGH_HALF] = (1023 + ex) << 20;
+-	  if (res == (res + cor * (1.0 + error + err_1)))
+-	    return res * binexp.x;
+-	  else
+-	    return -10.0;
++	  /* Maximum ULP error is 0.500008.  */
++	  return res * binexp.x;
+ 	}
++      /* Denormal case - ex < -1022.  */
+       ex = -(1022 + ex);
+       binexp.i[HIGH_HALF] = (1023 - ex) << 20;
+       res *= binexp.x;
+       cor *= binexp.x;
+-      eps = 1.00000000001 + (error + err_1) * binexp.x;
+       t = 1.0 + res;
+       y = ((1.0 - t) + res) + cor;
+       res = t + y;
+-      cor = (t - res) + y;
+-      if (res == (res + eps * cor))
+-	{
+-	  binexp.i[HIGH_HALF] = 0x00100000;
+-	  return (res - 1.0) * binexp.x;
+-	}
+-      else
+-	return -10.0;
++      binexp.i[HIGH_HALF] = 0x00100000;
++      /* Maximum ULP error is 0.500004.  */
++      return (res - 1.0) * binexp.x;
+     }
+   else
+     {
+       binexp.i[HIGH_HALF] = (junk1.i[LOW_HALF] + 767) << 20;
+-      if (res == (res + cor * (1.0 + error + err_1)))
+-	return res * binexp.x * t256.x;
+-      else
+-	return -10.0;
++      /* Maximum ULP error is 0.500008.  */
++      return res * binexp.x * t256.x;
+     }
+ }
+diff --git a/sysdeps/ieee754/dbl-64/e_pow.c b/sysdeps/ieee754/dbl-64/e_pow.c
+index 9f6439ee42a8970c40a0373d2eeee00f6aaadf69..a42454a585bebf8640dc7c93e471014888766f53 100644
+--- a/sysdeps/ieee754/dbl-64/e_pow.c
++++ b/sysdeps/ieee754/dbl-64/e_pow.c
+@@ -20,13 +20,9 @@
+ /*  MODULE_NAME: upow.c                                                    */
+ /*                                                                         */
+ /*  FUNCTIONS: upow                                                        */
+-/*             power1                                                      */
+-/*             my_log2                                                     */
+ /*             log1                                                        */
+ /*             checkint                                                    */
+ /* FILES NEEDED: dla.h endian.h mpa.h mydefs.h                             */
+-/*               halfulp.c mpexp.c mplog.c slowexp.c slowpow.c mpa.c       */
+-/*                          uexp.c  upow.c				   */
+ /*               root.tbl uexp.tbl upow.tbl                                */
+ /* An ultimate power routine. Given two IEEE double machine numbers y,x    */
+ /* it computes the correctly rounded (to nearest) value of x^y.            */
+@@ -50,11 +46,8 @@
+ 
+ static const double huge = 1.0e300, tiny = 1.0e-300;
+ 
+-double __exp1 (double x, double xx, double error);
+-static double log1 (double x, double *delta, double *error);
+-static double my_log2 (double x, double *delta, double *error);
+-double __slowpow (double x, double y, double z);
+-static double power1 (double x, double y);
++double __exp1 (double x, double xx);
++static double log1 (double x, double *delta);
+ static int checkint (double x);
+ 
+ /* An ultimate power routine. Given two IEEE double machine numbers y, x it
+@@ -63,7 +56,7 @@ double
+ SECTION
+ __ieee754_pow (double x, double y)
+ {
+-  double z, a, aa, error, t, a1, a2, y1, y2;
++  double z, a, aa, t, a1, a2, y1, y2;
+   mynumber u, v;
+   int k;
+   int4 qx, qy;
+@@ -100,7 +93,7 @@ __ieee754_pow (double x, double y)
+ 	   not matter if |y| <= 2**-64.  */
+ 	if (fabs (y) < 0x1p-64)
+ 	  y = y < 0 ? -0x1p-64 : 0x1p-64;
+-	z = log1 (x, &aa, &error);	/* x^y  =e^(y log (X)) */
++	z = log1 (x, &aa);	/* x^y  =e^(y log (X)) */
+ 	t = y * CN;
+ 	y1 = t - (t - y);
+ 	y2 = y - y1;
+@@ -111,9 +104,16 @@ __ieee754_pow (double x, double y)
+ 	aa = y2 * a1 + y * a2;
+ 	a1 = a + aa;
+ 	a2 = (a - a1) + aa;
+-	error = error * fabs (y);
+-	t = __exp1 (a1, a2, 1.9e16 * error);	/* return -10 or 0 if wasn't computed exactly */
+-	retval = (t > 0) ? t : power1 (x, y);
++
++	/* Maximum relative error RElog of log1 is 1.0e-21 (69.7 bits).
++	   Maximum relative error REexp of __exp1 is 8.8e-22 (69.9 bits).
++	   We actually compute exp ((1 + RElog) * log (x) * y) * (1 + REexp).
++	   Since RElog/REexp are tiny and log (x) * y is at most log (DBL_MAX),
++	   this is equivalent to pow (x, y) * (1 + 710 * RElog + REexp).
++	   So the relative error is 710 * 1.0e-21 + 8.8e-22 = 7.1e-19
++	   (60.2 bits).  The worst-case ULP error is 0.5064.  */
++
++	retval = __exp1 (a1, a2);
+       }
+ 
+       if (isinf (retval))
+@@ -218,33 +218,11 @@ __ieee754_pow (double x, double y)
+ strong_alias (__ieee754_pow, __pow_finite)
+ #endif
+ 
+-/* Compute x^y using more accurate but more slow log routine.  */
+-static double
+-SECTION
+-power1 (double x, double y)
+-{
+-  double z, a, aa, error, t, a1, a2, y1, y2;
+-  z = my_log2 (x, &aa, &error);
+-  t = y * CN;
+-  y1 = t - (t - y);
+-  y2 = y - y1;
+-  t = z * CN;
+-  a1 = t - (t - z);
+-  a2 = z - a1;
+-  a = y * z;
+-  aa = ((y1 * a1 - a) + y1 * a2 + y2 * a1) + y2 * a2 + aa * y;
+-  a1 = a + aa;
+-  a2 = (a - a1) + aa;
+-  error = error * fabs (y);
+-  t = __exp1 (a1, a2, 1.9e16 * error);
+-  return (t >= 0) ? t : __slowpow (x, y, z);
+-}
+-
+ /* Compute log(x) (x is left argument). The result is the returned double + the
+-   parameter DELTA.  The result is bounded by ERROR.  */
++   parameter DELTA.  */
+ static double
+ SECTION
+-log1 (double x, double *delta, double *error)
++log1 (double x, double *delta)
+ {
+   unsigned int i, j;
+   int m;
+@@ -260,9 +238,7 @@ log1 (double x, double *delta, double *error)
+ 
+   u.x = x;
+   m = u.i[HIGH_HALF];
+-  *error = 0;
+-  *delta = 0;
+-  if (m < 0x00100000)		/*  1<x<2^-1007 */
++  if (m < 0x00100000)		/* Handle denormal x.  */
+     {
+       x = x * t52.x;
+       add = -52.0;
+@@ -284,7 +260,7 @@ log1 (double x, double *delta, double *error)
+   v.x = u.x + bigu.x;
+   uu = v.x - bigu.x;
+   i = (v.i[LOW_HALF] & 0x000003ff) << 2;
+-  if (two52.i[LOW_HALF] == 1023)	/* nx = 0              */
++  if (two52.i[LOW_HALF] == 1023)	/* Exponent of x is 0.  */
+     {
+       if (i > 1192 && i < 1208)	/* |x-1| < 1.5*2**-10  */
+ 	{
+@@ -296,8 +272,8 @@ log1 (double x, double *delta, double *error)
+ 							   * (r7 + t * r8)))))
+ 		- 0.5 * t2 * (t + t1));
+ 	  res = e1 + e2;
+-	  *error = 1.0e-21 * fabs (t);
+ 	  *delta = (e1 - res) + e2;
++	  /* Max relative error is 1.464844e-24, so accurate to 79.1 bits.  */
+ 	  return res;
+ 	}			/* |x-1| < 1.5*2**-10  */
+       else
+@@ -316,12 +292,12 @@ log1 (double x, double *delta, double *error)
+ 	  t2 = ((((t - t1) + e) + (ui.x[i + 3] + vj.x[j + 2])) + e2 + e * e
+ 		* (p2 + e * (p3 + e * p4)));
+ 	  res = t1 + t2;
+-	  *error = 1.0e-24;
+ 	  *delta = (t1 - res) + t2;
++	  /* Max relative error is 1.0e-24, so accurate to 79.7 bits.  */
+ 	  return res;
+ 	}
+-    }				/* nx = 0 */
+-  else				/* nx != 0   */
++    }
++  else				/* Exponent of x != 0.  */
+     {
+       eps = u.x - uu;
+       nx = (two52.x - two52e.x) + add;
+@@ -334,113 +310,13 @@ log1 (double x, double *delta, double *error)
+       t2 = ((((t - t1) + e) + nx * ln2b.x + ui.x[i + 3] + e2) + e * e
+ 	    * (q2 + e * (q3 + e * (q4 + e * (q5 + e * q6)))));
+       res = t1 + t2;
+-      *error = 1.0e-21;
+-      *delta = (t1 - res) + t2;
+-      return res;
+-    }				/* nx != 0   */
+-}
+-
+-/* Slower but more accurate routine of log.  The returned result is double +
+-   DELTA.  The result is bounded by ERROR.  */
+-static double
+-SECTION
+-my_log2 (double x, double *delta, double *error)
+-{
+-  unsigned int i, j;
+-  int m;
+-  double uu, vv, eps, nx, e, e1, e2, t, t1, t2, res, add = 0;
+-  double ou1, ou2, lu1, lu2, ov, lv1, lv2, a, a1, a2;
+-  double y, yy, z, zz, j1, j2, j7, j8;
+-#ifndef DLA_FMS
+-  double j3, j4, j5, j6;
+-#endif
+-  mynumber u, v;
+-#ifdef BIG_ENDI
+-  mynumber /**/ two52 = {{0x43300000, 0x00000000}};	/* 2**52  */
+-#else
+-# ifdef LITTLE_ENDI
+-  mynumber /**/ two52 = {{0x00000000, 0x43300000}};	/* 2**52  */
+-# endif
+-#endif
+-
+-  u.x = x;
+-  m = u.i[HIGH_HALF];
+-  *error = 0;
+-  *delta = 0;
+-  add = 0;
+-  if (m < 0x00100000)
+-    {				/* x < 2^-1022 */
+-      x = x * t52.x;
+-      add = -52.0;
+-      u.x = x;
+-      m = u.i[HIGH_HALF];
+-    }
+-
+-  if ((m & 0x000fffff) < 0x0006a09e)
+-    {
+-      u.i[HIGH_HALF] = (m & 0x000fffff) | 0x3ff00000;
+-      two52.i[LOW_HALF] = (m >> 20);
+-    }
+-  else
+-    {
+-      u.i[HIGH_HALF] = (m & 0x000fffff) | 0x3fe00000;
+-      two52.i[LOW_HALF] = (m >> 20) + 1;
+-    }
+-
+-  v.x = u.x + bigu.x;
+-  uu = v.x - bigu.x;
+-  i = (v.i[LOW_HALF] & 0x000003ff) << 2;
+-  /*------------------------------------- |x-1| < 2**-11-------------------------------  */
+-  if ((two52.i[LOW_HALF] == 1023) && (i == 1200))
+-    {
+-      t = x - 1.0;
+-      EMULV (t, s3, y, yy, j1, j2, j3, j4, j5);
+-      ADD2 (-0.5, 0, y, yy, z, zz, j1, j2);
+-      MUL2 (t, 0, z, zz, y, yy, j1, j2, j3, j4, j5, j6, j7, j8);
+-      MUL2 (t, 0, y, yy, z, zz, j1, j2, j3, j4, j5, j6, j7, j8);
+-
+-      e1 = t + z;
+-      e2 = ((((t - e1) + z) + zz) + t * t * t
+-	    * (ss3 + t * (s4 + t * (s5 + t * (s6 + t * (s7 + t * s8))))));
+-      res = e1 + e2;
+-      *error = 1.0e-25 * fabs (t);
+-      *delta = (e1 - res) + e2;
+-      return res;
+-    }
+-  /*----------------------------- |x-1| > 2**-11  --------------------------  */
+-  else
+-    {				/*Computing log(x) according to log table                        */
+-      nx = (two52.x - two52e.x) + add;
+-      ou1 = ui.x[i];
+-      ou2 = ui.x[i + 1];
+-      lu1 = ui.x[i + 2];
+-      lu2 = ui.x[i + 3];
+-      v.x = u.x * (ou1 + ou2) + bigv.x;
+-      vv = v.x - bigv.x;
+-      j = v.i[LOW_HALF] & 0x0007ffff;
+-      j = j + j + j;
+-      eps = u.x - uu * vv;
+-      ov = vj.x[j];
+-      lv1 = vj.x[j + 1];
+-      lv2 = vj.x[j + 2];
+-      a = (ou1 + ou2) * (1.0 + ov);
+-      a1 = (a + 1.0e10) - 1.0e10;
+-      a2 = a * (1.0 - a1 * uu * vv);
+-      e1 = eps * a1;
+-      e2 = eps * a2;
+-      e = e1 + e2;
+-      e2 = (e1 - e) + e2;
+-      t = nx * ln2a.x + lu1 + lv1;
+-      t1 = t + e;
+-      t2 = ((((t - t1) + e) + (lu2 + lv2 + nx * ln2b.x + e2)) + e * e
+-	    * (p2 + e * (p3 + e * p4)));
+-      res = t1 + t2;
+-      *error = 1.0e-27;
+       *delta = (t1 - res) + t2;
++      /* Max relative error is 1.0e-21, so accurate to 69.7 bits.  */
+       return res;
+     }
+ }
+ 
++
+ /* This function receives a double x and checks if it is an integer.  If not,
+    it returns 0, else it returns 1 if even or -1 if odd.  */
+ static int
+diff --git a/sysdeps/ieee754/dbl-64/halfulp.c b/sysdeps/ieee754/dbl-64/halfulp.c
+deleted file mode 100644
+index d5f8a010e280bbaf383f80a2b50f04184f58c08f..0000000000000000000000000000000000000000
+--- a/sysdeps/ieee754/dbl-64/halfulp.c
++++ /dev/null
+@@ -1,152 +0,0 @@
+-/*
+- * IBM Accurate Mathematical Library
+- * written by International Business Machines Corp.
+- * Copyright (C) 2001-2017 Free Software Foundation, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU Lesser General Public License as published by
+- * the Free Software Foundation; either version 2.1 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU Lesser General Public License for more details.
+- *
+- * You should have received a copy of the GNU Lesser General Public License
+- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+- */
+-/************************************************************************/
+-/*                                                                      */
+-/* MODULE_NAME:halfulp.c                                                */
+-/*                                                                      */
+-/*  FUNCTIONS:halfulp                                                   */
+-/*  FILES NEEDED: mydefs.h dla.h endian.h                               */
+-/*                uroot.c                                               */
+-/*                                                                      */
+-/*Routine halfulp(double x, double y) computes x^y where result does    */
+-/*not need rounding. If the result is closer to 0 than can be           */
+-/*represented it returns 0.                                             */
+-/*     In the following cases the function does not compute anything    */
+-/*and returns a negative number:                                        */
+-/*1. if the result needs rounding,                                      */
+-/*2. if y is outside the interval [0,  2^20-1],                         */
+-/*3. if x can be represented by  x=2**n for some integer n.             */
+-/************************************************************************/
+-
+-#include "endian.h"
+-#include "mydefs.h"
+-#include <dla.h>
+-#include <math_private.h>
+-
+-#ifndef SECTION
+-# define SECTION
+-#endif
+-
+-static const int4 tab54[32] = {
+-  262143, 11585,  1782, 511, 210, 107, 63, 42,
+-  30,     22,     17,   14,  12,  10,  9, 7,
+-  7,      6,      5,    5,   5,   4,   4, 4,
+-  3,      3,      3,    3,   3,   3,   3, 3
+-};
+-
+-
+-double
+-SECTION
+-__halfulp (double x, double y)
+-{
+-  mynumber v;
+-  double z, u, uu;
+-#ifndef DLA_FMS
+-  double j1, j2, j3, j4, j5;
+-#endif
+-  int4 k, l, m, n;
+-  if (y <= 0)                 /*if power is negative or zero */
+-    {
+-      v.x = y;
+-      if (v.i[LOW_HALF] != 0)
+-	return -10.0;
+-      v.x = x;
+-      if (v.i[LOW_HALF] != 0)
+-	return -10.0;
+-      if ((v.i[HIGH_HALF] & 0x000fffff) != 0)
+-	return -10;                                     /* if x =2 ^ n */
+-      k = ((v.i[HIGH_HALF] & 0x7fffffff) >> 20) - 1023; /* find this n */
+-      z = (double) k;
+-      return (z * y == -1075.0) ? 0 : -10.0;
+-    }
+-  /* if y > 0  */
+-  v.x = y;
+-  if (v.i[LOW_HALF] != 0)
+-    return -10.0;
+-
+-  v.x = x;
+-  /*  case where x = 2**n for some integer n */
+-  if (((v.i[HIGH_HALF] & 0x000fffff) | v.i[LOW_HALF]) == 0)
+-    {
+-      k = (v.i[HIGH_HALF] >> 20) - 1023;
+-      return (((double) k) * y == -1075.0) ? 0 : -10.0;
+-    }
+-
+-  v.x = y;
+-  k = v.i[HIGH_HALF];
+-  m = k << 12;
+-  l = 0;
+-  while (m)
+-    {
+-      m = m << 1; l++;
+-    }
+-  n = (k & 0x000fffff) | 0x00100000;
+-  n = n >> (20 - l);                       /*   n is the odd integer of y    */
+-  k = ((k >> 20) - 1023) - l;               /*   y = n*2**k                   */
+-  if (k > 5)
+-    return -10.0;
+-  if (k > 0)
+-    for (; k > 0; k--)
+-      n *= 2;
+-  if (n > 34)
+-    return -10.0;
+-  k = -k;
+-  if (k > 5)
+-    return -10.0;
+-
+-  /*   now treat x        */
+-  while (k > 0)
+-    {
+-      z = __ieee754_sqrt (x);
+-      EMULV (z, z, u, uu, j1, j2, j3, j4, j5);
+-      if (((u - x) + uu) != 0)
+-	break;
+-      x = z;
+-      k--;
+-    }
+-  if (k)
+-    return -10.0;
+-
+-  /* it is impossible that n == 2,  so the mantissa of x must be short  */
+-
+-  v.x = x;
+-  if (v.i[LOW_HALF])
+-    return -10.0;
+-  k = v.i[HIGH_HALF];
+-  m = k << 12;
+-  l = 0;
+-  while (m)
+-    {
+-      m = m << 1; l++;
+-    }
+-  m = (k & 0x000fffff) | 0x00100000;
+-  m = m >> (20 - l);                       /*   m is the odd integer of x    */
+-
+-  /*   now check whether the length of m**n is at most 54 bits */
+-
+-  if (m > tab54[n - 3])
+-    return -10.0;
+-
+-  /* yes, it is - now compute x**n by simple multiplications  */
+-
+-  u = x;
+-  for (k = 1; k < n; k++)
+-    u = u * x;
+-  return u;
+-}
+diff --git a/sysdeps/ieee754/dbl-64/slowpow.c b/sysdeps/ieee754/dbl-64/slowpow.c
+deleted file mode 100644
+index 1176b2689ce09d50a97ef5dd529b2a804fcc1e40..0000000000000000000000000000000000000000
+--- a/sysdeps/ieee754/dbl-64/slowpow.c
++++ /dev/null
+@@ -1,125 +0,0 @@
+-/*
+- * IBM Accurate Mathematical Library
+- * written by International Business Machines Corp.
+- * Copyright (C) 2001-2017 Free Software Foundation, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU Lesser General Public License as published by
+- * the Free Software Foundation; either version 2.1 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU Lesser General Public License for more details.
+- *
+- * You should have received a copy of the GNU Lesser General Public License
+- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+- */
+-/*************************************************************************/
+-/* MODULE_NAME:slowpow.c                                                 */
+-/*                                                                       */
+-/* FUNCTION:slowpow                                                      */
+-/*                                                                       */
+-/*FILES NEEDED:mpa.h                                                     */
+-/*             mpa.c mpexp.c mplog.c halfulp.c                           */
+-/*                                                                       */
+-/* Given two IEEE double machine numbers y,x , routine  computes the     */
+-/* correctly  rounded (to nearest) value of x^y. Result calculated  by   */
+-/* multiplication (in halfulp.c) or if result isn't accurate enough      */
+-/* then routine converts x and y into multi-precision doubles     and    */
+-/* calls to mpexp routine                                                */
+-/*************************************************************************/
+-
+-#include "mpa.h"
+-#include <math_private.h>
+-
+-#include <stap-probe.h>
+-
+-#ifndef SECTION
+-# define SECTION
+-#endif
+-
+-void __mpexp (mp_no *x, mp_no *y, int p);
+-void __mplog (mp_no *x, mp_no *y, int p);
+-double ulog (double);
+-double __halfulp (double x, double y);
+-
+-double
+-SECTION
+-__slowpow (double x, double y, double z)
+-{
+-  double res, res1;
+-  mp_no mpx, mpy, mpz, mpw, mpp, mpr, mpr1;
+-  static const mp_no eps = {-3, {1.0, 4.0}};
+-  int p;
+-
+-  /* __HALFULP returns -10 or X^Y.  */
+-  res = __halfulp (x, y);
+-
+-  /* Return if the result was computed by __HALFULP.  */
+-  if (res >= 0)
+-    return res;
+-
+-  /* Compute pow as long double.  This is currently only used by powerpc, where
+-     one may get 106 bits of accuracy.  */
+-#ifdef USE_LONG_DOUBLE_FOR_MP
+-  long double ldw, ldz, ldpp;
+-  static const long double ldeps = 0x4.0p-96;
+-
+-  ldz = __ieee754_logl ((long double) x);
+-  ldw = (long double) y *ldz;
+-  ldpp = __ieee754_expl (ldw);
+-  res = (double) (ldpp + ldeps);
+-  res1 = (double) (ldpp - ldeps);
+-
+-  /* Return the result if it is accurate enough.  */
+-  if (res == res1)
+-    return res;
+-#endif
+-
+-  /* Or else, calculate using multiple precision.  P = 10 implies accuracy of
+-     240 bits accuracy, since MP_NO has a radix of 2^24.  */
+-  p = 10;
+-  __dbl_mp (x, &mpx, p);
+-  __dbl_mp (y, &mpy, p);
+-  __dbl_mp (z, &mpz, p);
+-
+-  /* z = x ^ y
+-     log (z) = y * log (x)
+-     z = exp (y * log (x))  */
+-  __mplog (&mpx, &mpz, p);
+-  __mul (&mpy, &mpz, &mpw, p);
+-  __mpexp (&mpw, &mpp, p);
+-
+-  /* Add and subtract EPS to ensure that the result remains unchanged, i.e. we
+-     have last bit accuracy.  */
+-  __add (&mpp, &eps, &mpr, p);
+-  __mp_dbl (&mpr, &res, p);
+-  __sub (&mpp, &eps, &mpr1, p);
+-  __mp_dbl (&mpr1, &res1, p);
+-  if (res == res1)
+-    {
+-      /* Track how often we get to the slow pow code plus
+-	 its input/output values.  */
+-      LIBC_PROBE (slowpow_p10, 4, &x, &y, &z, &res);
+-      return res;
+-    }
+-
+-  /* If we don't, then we repeat using a higher precision.  768 bits of
+-     precision ought to be enough for anybody.  */
+-  p = 32;
+-  __dbl_mp (x, &mpx, p);
+-  __dbl_mp (y, &mpy, p);
+-  __dbl_mp (z, &mpz, p);
+-  __mplog (&mpx, &mpz, p);
+-  __mul (&mpy, &mpz, &mpw, p);
+-  __mpexp (&mpw, &mpp, p);
+-  __mp_dbl (&mpp, &res, p);
+-
+-  /* Track how often we get to the uber-slow pow code plus
+-     its input/output values.  */
+-  LIBC_PROBE (slowpow_p32, 4, &x, &y, &z, &res);
+-
+-  return res;
+-}
+diff --git a/sysdeps/ieee754/dbl-64/uexp.h b/sysdeps/ieee754/dbl-64/uexp.h
+index 83f9b618f6b99b61578955b6a626a82abe71d39d..4788814d21b5771936f86bcef0dfa6fcb961d1d7 100644
+--- a/sysdeps/ieee754/dbl-64/uexp.h
++++ b/sysdeps/ieee754/dbl-64/uexp.h
+@@ -30,7 +30,7 @@
+ #include "mydefs.h"
+ 
+ const static double zero = 0.0, hhuge = 1.0e300, tiny = 1.0e-300,
+-err_0 = 1.000014, err_1 = 0.000016;
++err_0 = 1.000014;
+ const static int4 bigint = 0x40862002,
+              badint = 0x40876000,smallint = 0x3C8fffff;
+ const static int4 hugeint = 0x7FFFFFFF, infint = 0x7ff00000;
+diff --git a/sysdeps/m68k/m680x0/fpu/halfulp.c b/sysdeps/m68k/m680x0/fpu/halfulp.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/m68k/m680x0/fpu/halfulp.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/m68k/m680x0/fpu/slowpow.c b/sysdeps/m68k/m680x0/fpu/slowpow.c
+deleted file mode 100644
+index 1cc8931700702e65d29a6e2af287175d23c6b182..0000000000000000000000000000000000000000
+--- a/sysdeps/m68k/m680x0/fpu/slowpow.c
++++ /dev/null
+@@ -1 +0,0 @@
+-/* Not needed.  */
+diff --git a/sysdeps/powerpc/power4/fpu/Makefile b/sysdeps/powerpc/power4/fpu/Makefile
+index e17d32f30e65bd11a37c1c3f242ab2611e20a9ed..fa1b070a00269d3e3efbe62b97a1c36f655c2afc 100644
+--- a/sysdeps/powerpc/power4/fpu/Makefile
++++ b/sysdeps/powerpc/power4/fpu/Makefile
+@@ -2,6 +2,5 @@
+ 
+ ifeq ($(subdir),math)
+ CFLAGS-mpa.c += --param max-unroll-times=4 -funroll-loops -fpeel-loops
+-CPPFLAGS-slowpow.c += -DUSE_LONG_DOUBLE_FOR_MP=1
+ CPPFLAGS-slowexp.c += -DUSE_LONG_DOUBLE_FOR_MP=1
+ endif
+diff --git a/sysdeps/x86_64/fpu/libm-test-ulps b/sysdeps/x86_64/fpu/libm-test-ulps
+index e7ec433b7b492aaa26b4e3da8af5c1ff136988dd..896950c05106f3a51f6f5b00098fd32c28fa6e18 100644
+--- a/sysdeps/x86_64/fpu/libm-test-ulps
++++ b/sysdeps/x86_64/fpu/libm-test-ulps
+@@ -2464,8 +2464,10 @@ Function: "log_vlen8_avx2":
+ float: 2
+ 
+ Function: "pow":
++double: 1
+ float: 1
+ float128: 2
++idouble: 1
+ ifloat: 1
+ ifloat128: 2
+ ildouble: 1
+diff --git a/sysdeps/x86_64/fpu/multiarch/Makefile b/sysdeps/x86_64/fpu/multiarch/Makefile
+index 34542155aa4f98b4b3f32a3402af38501d14301c..58d924fd9366dcac0ef3509c33de2918c58c5439 100644
+--- a/sysdeps/x86_64/fpu/multiarch/Makefile
++++ b/sysdeps/x86_64/fpu/multiarch/Makefile
+@@ -4,9 +4,9 @@ libm-sysdep_routines += s_floor-c s_ceil-c s_floorf-c s_ceilf-c \
+ 
+ libm-sysdep_routines += e_exp-fma4 e_log-fma4 e_pow-fma4 s_atan-fma4 \
+ 			e_asin-fma4 e_atan2-fma4 s_sin-fma4 s_tan-fma4 \
+-			mplog-fma4 mpa-fma4 slowexp-fma4 slowpow-fma4 \
++			mplog-fma4 mpa-fma4 slowexp-fma4 \
+ 			sincos32-fma4 doasin-fma4 dosincos-fma4 \
+-			halfulp-fma4 mpexp-fma4 \
++			mpexp-fma4 \
+ 			mpatan2-fma4 mpatan-fma4 mpsqrt-fma4 mptan-fma4
+ 
+ CFLAGS-doasin-fma4.c = -mfma4
+@@ -16,7 +16,6 @@ CFLAGS-e_atan2-fma4.c = -mfma4
+ CFLAGS-e_exp-fma4.c = -mfma4
+ CFLAGS-e_log-fma4.c = -mfma4
+ CFLAGS-e_pow-fma4.c = -mfma4 $(config-cflags-nofma)
+-CFLAGS-halfulp-fma4.c = -mfma4
+ CFLAGS-mpa-fma4.c = -mfma4
+ CFLAGS-mpatan-fma4.c = -mfma4
+ CFLAGS-mpatan2-fma4.c = -mfma4
+@@ -27,7 +26,6 @@ CFLAGS-mptan-fma4.c = -mfma4
+ CFLAGS-s_atan-fma4.c = -mfma4
+ CFLAGS-sincos32-fma4.c = -mfma4
+ CFLAGS-slowexp-fma4.c = -mfma4
+-CFLAGS-slowpow-fma4.c = -mfma4
+ CFLAGS-s_sin-fma4.c = -mfma4
+ CFLAGS-s_tan-fma4.c = -mfma4
+ 
+diff --git a/sysdeps/x86_64/fpu/multiarch/e_pow-fma4.c b/sysdeps/x86_64/fpu/multiarch/e_pow-fma4.c
+index 5b3ea8e103690ea94c51210957b1143c42450f65..8971b655ca9935f442e50aaad2641ca8cb722696 100644
+--- a/sysdeps/x86_64/fpu/multiarch/e_pow-fma4.c
++++ b/sysdeps/x86_64/fpu/multiarch/e_pow-fma4.c
+@@ -1,6 +1,5 @@
+ #define __ieee754_pow __ieee754_pow_fma4
+ #define __exp1 __exp1_fma4
+-#define __slowpow __slowpow_fma4
+ #define SECTION __attribute__ ((section (".text.fma4")))
+ 
+ #include <sysdeps/ieee754/dbl-64/e_pow.c>
+diff --git a/sysdeps/x86_64/fpu/multiarch/halfulp-fma4.c b/sysdeps/x86_64/fpu/multiarch/halfulp-fma4.c
+deleted file mode 100644
+index a00c17c0161ff887635e2219052db1da26e88356..0000000000000000000000000000000000000000
+--- a/sysdeps/x86_64/fpu/multiarch/halfulp-fma4.c
++++ /dev/null
+@@ -1,4 +0,0 @@
+-#define __halfulp __halfulp_fma4
+-#define SECTION __attribute__ ((section (".text.fma4")))
+-
+-#include <sysdeps/ieee754/dbl-64/halfulp.c>
+diff --git a/sysdeps/x86_64/fpu/multiarch/slowpow-fma4.c b/sysdeps/x86_64/fpu/multiarch/slowpow-fma4.c
+deleted file mode 100644
+index 69d69823bbea5231c2f01871712d98251bcf0675..0000000000000000000000000000000000000000
+--- a/sysdeps/x86_64/fpu/multiarch/slowpow-fma4.c
++++ /dev/null
+@@ -1,11 +0,0 @@
+-#define __slowpow __slowpow_fma4
+-#define __add __add_fma4
+-#define __dbl_mp __dbl_mp_fma4
+-#define __mpexp __mpexp_fma4
+-#define __mplog __mplog_fma4
+-#define __mul __mul_fma4
+-#define __sub __sub_fma4
+-#define __halfulp __halfulp_fma4
+-#define SECTION __attribute__ ((section (".text.fma4")))
+-
+-#include <sysdeps/ieee754/dbl-64/slowpow.c>

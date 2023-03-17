@@ -1,0 +1,64 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Benjamin Herrenschmidt <benh@amazon.com>
+Date: Fri, 17 Sep 2021 17:55:30 +1000
+Subject: [PATCH] Fix crash when statically linked programs try to use
+ nss_files
+
+In patch "Fix nss_files problem due to new symbols dependencies", in
+order to solve a problem when a new glibc is installed (and thus new
+libnss_files.so) while a program already has the old libc.so.6 in memory,
+we end up calling __libc_dlopen() and __libc_dlsym() from libnss_files.so
+in order to determine what variant of the main libc is available.
+
+Unfortunately, I chose to do that symbol lookup in a "constructor" callback
+of libnss_files.so.
+
+It appears that when invoked from a statically linked program, this is too
+early, causing a crash.
+
+This fixes it by doing a lazy initialization when the actual underlying
+getent function is invoked.
+
+diff --git a/nss/nss_files/files-XXX.c b/nss/nss_files/files-XXX.c
+index 9c561a3ba625ac3e23dbf1459ae8b6f09363922f..b9c3619ebba00811913f51b324ce10cfa6763222 100644
+--- a/nss/nss_files/files-XXX.c
++++ b/nss/nss_files/files-XXX.c
+@@ -321,8 +321,29 @@ internal_getent_new (FILE *stream, struct STRUCTURE *result,
+ 
+ static struct link_map *glibc_handle;
+ 
+-static void __attribute__((constructor)) init_nss_files(void)
++/*
++ * Do not use __attribute__((constructor)) ! The reason is complicated:
++
++ * When invoked from a statically linked executable, a dynamic libc.so and ld.so are
++ * loaded by the static libc to satisfy this module dependencies. However, that ld.so
++ * is not properly initialized. For example, the lock/unlock function pointers are
++ * not initialized (they would be setup by dl_main() and later overriden by libpthread
++ * if it was loaded, but it's not. So things like __libc_dlopen() below will crash.
++ *
++ * To solve this and allow modules such as this one to still call __libc_dlopen()
++ * and friend, the static glibc first installs some "hooks" into the dynamically
++ * loaded ld.so, which will use these instead of its own variants of dlopen() etc...
++ * effectively the loaded libc just calls back into the static one.
++ *
++ * However, those hooks are installed *after* the constructors have been called
++ * (after dlopen of this nss module successfully completes).
++ *
++ * So we need to ensure we only call this function later.
++ */
++static void init_nss_files(void)
+ {
++    if (glibc_handle)
++      return;
+     glibc_handle = __libc_dlopen (LIBC_SO);
+     if (!glibc_handle)
+       return;
+@@ -346,6 +367,7 @@ internal_getent (FILE *stream, struct STRUCTURE *result,
+ 		 char *buffer, size_t buflen, int *errnop H_ERRNO_PROTO
+ 		 EXTRA_ARGS_DECL)
+ {
++    init_nss_files();
+     if (__libc_readline_unlocked_p)
+       return internal_getent_new(stream, result, buffer, buflen, errnop H_ERRNO_ARG EXTRA_ARGS);
+     else
