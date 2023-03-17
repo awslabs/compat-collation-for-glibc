@@ -16,6 +16,15 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __mmap64(a,b,c,d,e,f)	mmap64(a,b,c,d,e,f)
+#define __munmap(a,b)		munmap(a,b)
+#define __sysconf(a)		sysconf(a)
+#define __strchrnul(a,b)	strchrnul(a,b)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <locale.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -33,6 +42,23 @@
 #include "localeinfo.h"
 #include "locarchive.h"
 #include <not-cancel.h>
+
+#ifdef LIBCOMPATCOLL_MODE
+
+/* Uncancelable open.  */
+#ifdef __NR_open
+# define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (open, 3, name, flags, mode)
+# define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (open, 2, name, flags)
+#else
+# define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
+# define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
+#endif
+
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* Define the hash function.  We define the function as static inline.  */
 #define compute_hashval static inline compute_hashval

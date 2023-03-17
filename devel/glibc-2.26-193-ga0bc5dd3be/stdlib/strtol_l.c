@@ -524,7 +524,9 @@ noconv:
   return 0L;
 }
 #if defined _LIBC && !defined USE_WIDE_CHAR
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (INTERNAL (__strtol_l))
+#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 /* External user entry point.  */
@@ -546,5 +548,7 @@ __strtol_l (const STRING_TYPE *nptr, STRING_TYPE **endptr,
 {
   return INTERNAL (__strtol_l) (nptr, endptr, base, 0, loc);
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__strtol_l)
+#endif /* LIBCOMPATCOLL_MODE */
 weak_alias (__strtol_l, strtol_l)

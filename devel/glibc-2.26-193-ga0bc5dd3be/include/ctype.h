@@ -5,7 +5,9 @@
 #ifndef _ISOMAC
 /* Initialize ctype locale data.  */
 extern void __ctype_init (void);
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__ctype_init)
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* ctype/ctype.h defined this as a macro and we don't want to #undef it.
    So defeat macro expansion with parens for this declaration.  */

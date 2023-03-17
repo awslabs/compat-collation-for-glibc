@@ -28,10 +28,82 @@ This branch `2.26-59.amzn2` is for glibc version 2.26-59 included with Amazon Li
 * SOURCES folder contains original sources which are used by rpmbuild for building the collation compatibility library rpm.
 * SPEC folder has the glibc.spec
 * devel folder has extracted source code (rpmbuild -bp ...)
+* glibc-compatcollation.sh script to help with various tasks related to development and packaging
 
 ### Tags
 
 * 2.26-59.amzn2-BASELINE - original source from glibc-2.26-59.amzn2.src.rpm
+* 2.26-59.amzn2-v1.5 - Release 1.5 for collation compatibility library
+
+### For Package Builder
+ 
+#### Building RPM
+
+* Build with default options
+
+`./glibc-compatcollation.sh build`
+
+* Set extra args for rpmbuild
+
+`RPMBUILD_EXTRAS="--define 'compatprefix /opt'" ./glibc-compatcollation.sh build`
+
+### For patch developers
+
+Patch development steps as follows:
+
+1. Setup build environment
+
+`./glibc-compatcollation.sh build`
+
+2. Update code in devel/ directory or SPECS/glibc.spec
+
+3. Build the library
+
+`./glibc-compatcollation.sh rebuild`
+
+4. Test libraries
+
+5. Generate patch files
+
+`./glibc-compatcollation.sh rpmpatch`
+
+6. Commit changes
+
+7. Build RPM
+
+`./glibc-compatcollation.sh build`
+
+8. Test RPM
+
+9. Commit and TAG
+
+10. Push upstream
+
+### Show code changes
+
+* Show git diff since last release (includes uncommitted changes)
+
+`./glibc-compatcollation.sh diff`
+
+* Show git diff between last release and given TAG or COMMMIT
+
+`./glibc-compatcollation.sh diff <TAG|COMMIT>`
+
+Example:
+
+`./glibc-compatcollation.sh diff HEAD`
+
+| This will show all the committed changes since last release
+
+* Show git diff between two TAGS or COMMITS
+
+`./glibc-compatcollation.sh diff <TAG1|COMMIT1> <TAG2|COMMIT2>`
+
+Example:
+
+`./glibc-compatcollation.sh diff 2.26-59.amzn2-BASELINE 2.26-59.amzn2-v1.5`
+
+`./glibc-compatcollation.sh diff 2.26-59.amzn2-v1.5 2.26-59.amzn2-v1.7`
 
 ## Help & feedback
 

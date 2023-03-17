@@ -16,6 +16,12 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __strnlen(s,n)		strnlen(s,n)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>

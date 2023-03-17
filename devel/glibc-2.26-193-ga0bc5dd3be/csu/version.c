@@ -20,9 +20,31 @@
 #include <libc-abis.h>
 #include <gnu/libc-version.h>
 
+#ifdef LIBCOMPATCOLL_MODE
+static const char __libc_release[] = RELEASE " (compatcollation)";
+static const char __libc_version[] = VERSION "-" GLIBCRELEASE;
+
+/* the following copied from elf/rtld.c to support aarch64 */
+#ifndef THREAD_SET_STACK_GUARD
+/* Only exported for architectures that don't store the stack guard canary
+   in thread local area.  */
+uintptr_t __stack_chk_guard attribute_relro;
+#endif
+
+/* Only exported for architectures that don't store the pointer guard
+   value in thread local area.  */
+uintptr_t __pointer_chk_guard_local
+     attribute_relro attribute_hidden __attribute__ ((nocommon));
+#ifndef THREAD_SET_POINTER_GUARD
+strong_alias (__pointer_chk_guard_local, __pointer_chk_guard)
+#endif
+
+#else
 static const char __libc_release[] = RELEASE;
 static const char __libc_version[] = VERSION;
+#endif /* LIBCOMPATCOLL_MODE */
 
+#ifndef LIBCOMPATCOLL_MODE
 static const char banner[] =
 "GNU C Library "PKGVERSION RELEASE" release version "VERSION", by Roland McGrath et al.\n\
 Copyright (C) 2017 Free Software Foundation, Inc.\n\
@@ -45,6 +67,7 @@ __libc_print_version (void)
 {
   __write (STDOUT_FILENO, banner, sizeof banner - 1);
 }
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern const char *__gnu_get_libc_release (void);
 const char *
@@ -65,6 +88,7 @@ weak_alias (__gnu_get_libc_version, gnu_get_libc_version)
 /* This function is the entry point for the shared object.
    Running the library as a program will get here.  */
 
+#ifndef LIBCOMPATCOLL_MODE
 extern void __libc_main (void) __attribute__ ((noreturn));
 void
 __libc_main (void)
@@ -72,3 +96,4 @@ __libc_main (void)
   __libc_print_version ();
   _exit (0);
 }
+#endif /* LIBCOMPATCOLL_MODE */

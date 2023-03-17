@@ -17,6 +17,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifndef LIBCOMPATCOLL_MODE
 /* Define multiple versions only for the definition in libc.  */
 #if IS_IN (libc)
 # define wmemcmp __redirect_wmemcmp
@@ -28,3 +29,4 @@
 
 libc_ifunc_redirected (__redirect_wmemcmp, wmemcmp, IFUNC_SELECTOR ());
 #endif
+#endif /* LIBCOMPATCOLL_MODE */

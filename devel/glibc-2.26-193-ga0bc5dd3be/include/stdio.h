@@ -8,7 +8,9 @@ extern int __fcloseall (void);
 extern int __snprintf (char *__restrict __s, size_t __maxlen,
 		       const char *__restrict __format, ...)
      __attribute__ ((__format__ (__printf__, 3, 4)));
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__snprintf)
+#endif /* LIBCOMPATCOLL_MODE */
 extern int __vsnprintf (char *__restrict __s, size_t __maxlen,
 			const char *__restrict __format, _G_va_list __arg)
      __attribute__ ((__format__ (__printf__, 3, 0)));
@@ -139,6 +141,7 @@ libc_hidden_proto (__libc_readline_unlocked);
 extern const char *const _sys_errlist_internal[] attribute_hidden;
 extern int _sys_nerr_internal attribute_hidden;
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__asprintf)
 #  if IS_IN (libc)
 extern _IO_FILE *_IO_new_fopen (const char*, const char*);
@@ -155,10 +158,14 @@ extern int _IO_new_fsetpos (_IO_FILE *, const _IO_fpos_t *);
 extern int _IO_new_fgetpos (_IO_FILE *, _IO_fpos_t *);
 #   define fgetpos(fp, posp) _IO_new_fgetpos (fp, posp)
 #  endif
+#endif /* LIBCOMPATCOLL_MODE */
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (dprintf)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (dprintf) __dprintf
      __attribute__ ((__format__ (__printf__, 2, 3)));
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__dprintf)
 libc_hidden_proto (fprintf)
 libc_hidden_proto (vfprintf)
@@ -169,33 +176,51 @@ libc_hidden_proto (perror)
 libc_hidden_proto (remove)
 libc_hidden_proto (rewind)
 libc_hidden_proto (fileno)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fileno) __fileno;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fileno)
 libc_hidden_proto (fwrite)
 libc_hidden_proto (fseek)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (ftello) __ftello;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__ftello)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fseeko64) __fseeko64;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fseeko64)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (ftello64) __ftello64;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__ftello64)
 libc_hidden_proto (fflush)
 libc_hidden_proto (fflush_unlocked)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fflush_unlocked) __fflush_unlocked;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fflush_unlocked)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fread_unlocked) __fread_unlocked;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fread_unlocked)
 libc_hidden_proto (fwrite_unlocked)
 libc_hidden_proto (fgets_unlocked)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fgets_unlocked) __fgets_unlocked;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fgets_unlocked)
 libc_hidden_proto (fputs_unlocked)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fputs_unlocked) __fputs_unlocked;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fputs_unlocked)
 libc_hidden_proto (fmemopen)
+#endif /* LIBCOMPATCOLL_MODE */
 /* The prototype needs repeating instead of using __typeof to use
    __THROW in C++ tests.  */
 extern FILE *__open_memstream (char **, size_t *) __THROW __wur;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__open_memstream)
 libc_hidden_proto (__libc_fatal)
 rtld_hidden_proto (__libc_fatal)
@@ -205,6 +230,7 @@ libc_hidden_proto (__vfprintf_chk)
 libc_hidden_proto (__vasprintf_chk)
 libc_hidden_proto (__vdprintf_chk)
 libc_hidden_proto (__obstack_vprintf_chk)
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern FILE * __fmemopen (void *buf, size_t len, const char *mode);
 libc_hidden_proto (__fmemopen)

@@ -17,6 +17,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifndef LIBCOMPATCOLL_MODE
 /* Define multiple versions only for the definition in libc.  */
 #if IS_IN (libc)
 # define __wcslen __redirect_wcslen
@@ -29,3 +30,4 @@
 libc_ifunc_redirected (__redirect_wcslen, __wcslen, IFUNC_SELECTOR ());
 weak_alias (__wcslen, wcslen);
 #endif
+#endif /* LIBCOMPATCOLL_MODE */

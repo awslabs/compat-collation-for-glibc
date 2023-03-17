@@ -32,6 +32,10 @@ WCSCHR (const wchar_t *wcs, const wchar_t wc)
 
   return NULL;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__wcschr)
 weak_alias (__wcschr, wcschr)
 libc_hidden_weak (wcschr)
+#else
+weak_alias (__wcschr, wcschr)
+#endif /* LIBCOMPATCOLL_MODE */

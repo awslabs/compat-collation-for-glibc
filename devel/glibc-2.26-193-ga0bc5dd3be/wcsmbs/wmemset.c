@@ -52,6 +52,10 @@ __wmemset (wchar_t *s, wchar_t c, size_t n)
 
   return s;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__wmemset)
 weak_alias (__wmemset, wmemset)
 libc_hidden_weak (wmemset)
+#else
+weak_alias (__wmemset, wmemset)
+#endif /* LIBCOMPATCOLL_MODE */

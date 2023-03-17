@@ -41,5 +41,7 @@ WCSCMP (const wchar_t *s1, const wchar_t *s2)
 
   return c1 < c2 ? -1 : 1;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (WCSCMP)
+#endif /* LIBCOMPATCOLL_MODE */
 weak_alias (WCSCMP, wcscmp)

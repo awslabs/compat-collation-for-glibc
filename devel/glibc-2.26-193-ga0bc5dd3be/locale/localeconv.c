@@ -65,8 +65,12 @@ __localeconv (void)
   return &result;
 }
 
+#ifdef LIBCOMPATCOLL_MODE
+weak_alias (__localeconv, localeconv)
+#else
 versioned_symbol (libc, __localeconv, localeconv, GLIBC_2_2);
 #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_2)
 strong_alias (__localeconv, __localeconv20)
 compat_symbol (libc, __localeconv20, localeconv, GLIBC_2_0);
 #endif
+#endif /* LIBCOMPATCOLL_MODE */

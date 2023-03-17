@@ -16,6 +16,12 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __memmem(a,b,c,d)	memmem(a,b,c,d)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <errno.h>
 #include <locale.h>

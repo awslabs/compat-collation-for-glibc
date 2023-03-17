@@ -15,6 +15,22 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+/* How many days come before each month (0-12).  */
+#ifndef _LIBC
+static
+#endif 
+const unsigned short int __mon_yday[2][13] =
+  {     
+    /* Normal years.  */
+    { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
+    /* Leap years.  */
+    { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
+  };
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -35,7 +51,9 @@
 
 #if ! HAVE_LOCALTIME_R && ! defined localtime_r
 # ifdef _LIBC
+#ifndef LIBCOMPATCOLL_MODE
 #  define localtime_r __localtime_r
+#endif /* LIBCOMPATCOLL_MODE */
 # else
 /* Approximate localtime_r as best we can in its absence.  */
 #  define localtime_r my_localtime_r

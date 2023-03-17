@@ -81,6 +81,23 @@
 # define PRI_MACROS_BROKEN 0
 #endif
 
+#ifdef LIBCOMPATCOLL_MODE
+
+/* Uncancelable open.  */
+#ifdef __NR_open
+# define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (open, 3, name, flags, mode)
+# define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (open, 2, name, flags)
+#else
+# define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
+# define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
+#endif
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 /* Provide fallback values for macros that ought to be defined in <inttypes.h>.
    Note that our fallback values need not be literal strings, because we don't
    use them with preprocessor string concatenation.  */
@@ -441,6 +458,7 @@
 
 /* @@ end of prolog @@ */
 
+#ifndef LIBCOMPATCOLL_MODE
 #ifdef _LIBC
 /* Rename the non ISO C functions.  This is required by the standard
    because some ISO C functions will require linking with this object
@@ -452,6 +470,7 @@
   __mmap (addr, len, prot, flags, fd, offset)
 # define munmap(addr, len)	__munmap (addr, len)
 #endif
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* For systems that distinguish between text and binary I/O.
    O_BINARY is usually declared in <fcntl.h>. */

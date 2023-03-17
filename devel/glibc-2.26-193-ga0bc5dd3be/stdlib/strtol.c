@@ -97,7 +97,9 @@ INTERNAL (strtol) (const STRING_TYPE *nptr, STRING_TYPE **endptr,
 {
   return INTERNAL (__strtol_l) (nptr, endptr, base, group, _NL_CURRENT_LOCALE);
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (INTERNAL (strtol))
+#endif /* LIBCOMPATCOLL_MODE */
 
 
 INT
@@ -106,4 +108,6 @@ __strtol (const STRING_TYPE *nptr, STRING_TYPE **endptr, int base)
   return INTERNAL (__strtol_l) (nptr, endptr, base, 0, _NL_CURRENT_LOCALE);
 }
 weak_alias (__strtol, strtol)
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_weak (strtol)
+#endif /* LIBCOMPATCOLL_MODE */

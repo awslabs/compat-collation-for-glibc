@@ -17,6 +17,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifndef LIBCOMPATCOLL_MODE
 /* Define multiple versions only for the definition in libc.  */
 #if IS_IN (libc)
 # define wmemchr __redirect_wmemchr
@@ -37,3 +38,4 @@ __hidden_ver1 (wmemchr, __GI_wmemchr, __redirect_wmemchr)
   __attribute__((weak, visibility ("hidden")));
 # endif
 #endif
+#endif /* LIBCOMPATCOLL_MODE */

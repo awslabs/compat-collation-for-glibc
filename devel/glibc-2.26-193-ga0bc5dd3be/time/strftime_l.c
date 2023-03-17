@@ -15,6 +15,13 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __wmemcpy(d,s,n)	wmemcpy(d,s,n)
+#define __wcslen(s)		wcslen(s)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -154,11 +161,12 @@ extern char *tzname[];
   ((year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0))
 #endif
 
-
+#ifndef LIBCOMPATCOLL_MODE
 #ifdef _LIBC
 # define tzname __tzname
 # define tzset __tzset
 #endif
+#endif /* LIBCOMPATCOLL_MODE */
 
 #if !HAVE_TM_GMTOFF
 /* Portable standalone applications should supply a "time_r.h" that
@@ -460,7 +468,9 @@ my_strftime (CHAR_T *s, size_t maxsize, const CHAR_T *format,
 			      ut_argument LOCALE_ARG);
 }
 #ifdef _LIBC
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (my_strftime)
+#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 static size_t

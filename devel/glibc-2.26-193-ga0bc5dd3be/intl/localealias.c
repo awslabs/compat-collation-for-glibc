@@ -95,7 +95,11 @@ char *alloca ();
 /* Some optimizations for glibc.  */
 #ifdef _LIBC
 # define FEOF(fp)		feof_unlocked (fp)
+#ifndef LIBCOMPATCOLL_MODE
 # define FGETS(buf, n, fp)	__fgets_unlocked (buf, n, fp)
+#else
+# define FGETS(buf, n, fp)      fgets_unlocked (buf, n, fp)
+#endif /* LIBCOMPATCOLL_MODE */
 #else
 # define FEOF(fp)		feof (fp)
 # define FGETS(buf, n, fp)	fgets (buf, n, fp)

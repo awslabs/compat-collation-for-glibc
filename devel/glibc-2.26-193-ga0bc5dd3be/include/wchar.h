@@ -16,6 +16,7 @@ extern __typeof (wcstod_l) __wcstod_l;
 extern __typeof (wcstof_l) __wcstof_l;
 extern __typeof (wcstold_l) __wcstold_l;
 extern __typeof (wcsftime_l) __wcsftime_l;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcstol_l)
 libc_hidden_proto (__wcstoul_l)
 libc_hidden_proto (__wcstoll_l)
@@ -24,7 +25,7 @@ libc_hidden_proto (__wcstod_l)
 libc_hidden_proto (__wcstof_l)
 libc_hidden_proto (__wcstold_l)
 libc_hidden_proto (__wcsftime_l)
-
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern double __wcstod_internal (const wchar_t *__restrict __nptr,
 				 wchar_t **__restrict __endptr, int __group)
@@ -55,6 +56,7 @@ extern unsigned long long int __wcstoull_internal (const wchar_t *
 extern unsigned long long int ____wcstoull_l_internal (const wchar_t *,
 						       wchar_t **, int, int,
 						       locale_t);
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcstof_internal)
 libc_hidden_proto (__wcstod_internal)
 libc_hidden_proto (__wcstold_internal)
@@ -69,6 +71,7 @@ libc_hidden_proto (wcstol)
 libc_hidden_proto (wcstoll)
 libc_hidden_proto (wcstoul)
 libc_hidden_proto (wcstoull)
+#endif /* LIBCOMPATCOLL_MODE */
 
 #if __HAVE_DISTINCT_FLOAT128
 extern __typeof (wcstof128_l) __wcstof128_l;
@@ -81,6 +84,7 @@ libc_hidden_proto (__wcstof128_internal)
 libc_hidden_proto (wcstof128)
 #endif
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcscasecmp_l)
 libc_hidden_proto (__wcsncasecmp_l)
 
@@ -95,12 +99,15 @@ libc_hidden_proto (vswscanf)
 
 libc_hidden_proto (mbrtowc)
 libc_hidden_proto (wcrtomb)
+#endif /* LIBCOMPATCOLL_MODE */
 extern int __wcscmp (const wchar_t *__s1, const wchar_t *__s2)
      __THROW __attribute_pure__;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcscmp)
 libc_hidden_proto (wcsftime)
 libc_hidden_proto (wcsspn)
 libc_hidden_proto (wcschr)
+#endif /* LIBCOMPATCOLL_MODE */
 /* The C++ overloading of wcschr means we have to repeat the type to
    declare __wcschr instead of using typeof, to avoid errors in C++
    tests; in addition, __THROW cannot be used with a function type
@@ -108,18 +115,24 @@ libc_hidden_proto (wcschr)
    __THROW, to __wcscmp and __wcscoll.  */
 extern wchar_t *__wcschr (const wchar_t *__wcs, wchar_t __wc)
      __THROW __attribute_pure__;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcschr)
+#endif /* LIBCOMPATCOLL_MODE */
 extern int __wcscoll (const wchar_t *__s1, const wchar_t *__s2) __THROW;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcscoll)
 libc_hidden_proto (wcspbrk)
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern __typeof (wmemset) __wmemset;
 extern wchar_t *__wmemchr (const wchar_t *__s, wchar_t __c, size_t __n)
      __THROW __attribute_pure__;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (wmemchr)
 libc_hidden_proto (__wmemchr)
 libc_hidden_proto (wmemset)
 libc_hidden_proto (__wmemset)
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* Now define the internal interfaces.  */
 extern int __wcscasecmp (const wchar_t *__s1, const wchar_t *__s2)
@@ -136,8 +149,10 @@ extern int __mbsinit (const __mbstate_t *__ps);
 extern size_t __mbrtowc (wchar_t *__restrict __pwc,
 			 const char *__restrict __s, size_t __n,
 			 __mbstate_t *__restrict __p);
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__mbrtowc)
 libc_hidden_proto (__mbrlen)
+#endif /* LIBCOMPATCOLL_MODE */
 extern size_t __wcrtomb (char *__restrict __s, wchar_t __wc,
 			 __mbstate_t *__restrict __ps);
 extern size_t __mbsrtowcs (wchar_t *__restrict __dst,

@@ -19,5 +19,7 @@
 #define USE_IN_EXTENDED_LOCALE_MODEL	1
 #include <wcsncase.c>
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__wcsncasecmp_l)
+#endif /* LIBCOMPATCOLL_MODE */
 weak_alias (__wcsncasecmp_l, wcsncasecmp_l)

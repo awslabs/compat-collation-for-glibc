@@ -119,9 +119,13 @@ __mbrtowc (wchar_t *pwc, const char *s, size_t n, mbstate_t *ps)
 
   return result;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__mbrtowc)
+#endif /* LIBCOMPATCOLL_MODE */
 weak_alias (__mbrtowc, mbrtowc)
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_weak (mbrtowc)
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* There should be no difference between the UTF-32 handling required
    by mbrtoc32 and the wchar_t handling which has long since been

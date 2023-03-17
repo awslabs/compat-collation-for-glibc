@@ -16,6 +16,13 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __wcslen(s)             wcslen(s)
+#define __wcsnlen(s,n)             wcsnlen(s,n)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <dlfcn.h>
 #include <errno.h>

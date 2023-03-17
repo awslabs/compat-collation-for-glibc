@@ -1,0 +1,2107 @@
+diff'ing sysdeps/generic/unsecvars.h
+*** a/sysdeps/generic/unsecvars.h	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/generic/unsecvars.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 9,14 ****
+--- 9,15 ----
+     with a '\0' explicitly.  */
+  #define UNSECURE_ENVVARS \
+    "GCONV_PATH\0"							      \
++   "COMPAT_GCONV_PATH\0"							      \
+    "GETCONF_DIR\0"							      \
+    GLIBC_TUNABLES_ENVVAR							      \
+    "HOSTALIASES\0"							      \
+***************
+*** 25,30 ****
+--- 26,32 ----
+    "LD_USE_LOAD_BIAS\0"							      \
+    "LOCALDOMAIN\0"							      \
+    "LOCPATH\0"								      \
++   "COMPAT_LOCPATH\0"                                                          \
+    "MALLOC_TRACE\0"							      \
+    "NIS_PATH\0"								      \
+    "NLSPATH\0"								      \
+diff'ing bits/dlfcn.h
+*** a/bits/dlfcn.h	2018-11-27 20:35:31.000000000 +0000
+--- b/bits/dlfcn.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 51,58 ****
+--- 51,62 ----
+     into
+          foo = DL_CALL_FCT (fctp, (arg1, arg2));
+  */
++ #ifdef LIBCOMPATCOLL_MODE
++ # define DL_CALL_FCT(fctp, args)  ((*(fctp)) args)
++ #else
+  # define DL_CALL_FCT(fctp, args) \
+    (_dl_mcount_wrapper_check ((void *) (fctp)), (*(fctp)) args)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  __BEGIN_DECLS
+  
+diff'ing csu/version.c
+*** a/csu/version.c	2018-11-27 20:35:31.000000000 +0000
+--- b/csu/version.c	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 20,28 ****
+--- 20,50 ----
+  #include <libc-abis.h>
+  #include <gnu/libc-version.h>
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ static const char __libc_release[] = RELEASE " (compatcollation)";
++ static const char __libc_version[] = VERSION "-" GLIBCRELEASE;
++ 
++ /* the following copied from elf/rtld.c to support aarch64 */
++ #ifndef THREAD_SET_STACK_GUARD
++ /* Only exported for architectures that don't store the stack guard canary
++    in thread local area.  */
++ uintptr_t __stack_chk_guard attribute_relro;
++ #endif
++ 
++ /* Only exported for architectures that don't store the pointer guard
++    value in thread local area.  */
++ uintptr_t __pointer_chk_guard_local
++      attribute_relro attribute_hidden __attribute__ ((nocommon));
++ #ifndef THREAD_SET_POINTER_GUARD
++ strong_alias (__pointer_chk_guard_local, __pointer_chk_guard)
++ #endif
++ 
++ #else
+  static const char __libc_release[] = RELEASE;
+  static const char __libc_version[] = VERSION;
++ #endif /* LIBCOMPATCOLL_MODE */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  static const char banner[] =
+  "GNU C Library "PKGVERSION RELEASE" release version "VERSION", by Roland McGrath et al.\n\
+  Copyright (C) 2017 Free Software Foundation, Inc.\n\
+***************
+*** 45,50 ****
+--- 67,73 ----
+  {
+    __write (STDOUT_FILENO, banner, sizeof banner - 1);
+  }
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern const char *__gnu_get_libc_release (void);
+  const char *
+***************
+*** 65,70 ****
+--- 88,94 ----
+  /* This function is the entry point for the shared object.
+     Running the library as a program will get here.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  extern void __libc_main (void) __attribute__ ((noreturn));
+  void
+  __libc_main (void)
+***************
+*** 72,74 ****
+--- 96,99 ----
+    __libc_print_version ();
+    _exit (0);
+  }
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing ctype/ctype.h
+diff'ing ctype/ctype-info.c
+*** a/ctype/ctype-info.c	2018-11-27 20:35:31.000000000 +0000
+--- b/ctype/ctype-info.c	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 24,29 ****
+--- 24,32 ----
+  __libc_tsd_define (, const int32_t *, CTYPE_TOUPPER)
+  
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ __attribute__((constructor))
++ #endif /* LIBCOMPATCOLL_MODE */
+  void
+  __ctype_init (void)
+  {
+***************
+*** 34,40 ****
+--- 37,45 ----
+    const int32_t **lp = __libc_tsd_address (const int32_t *, CTYPE_TOLOWER);
+    *lp = ((int32_t *) _NL_CURRENT (LC_CTYPE, _NL_CTYPE_TOLOWER) + 128);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__ctype_init)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  
+  #include <shlib-compat.h>
+***************
+*** 67,77 ****
+--- 72,84 ----
+  const __uint32_t *__ctype32_tolower = b (__uint32_t, tolower, 128);
+  const __uint32_t *__ctype32_toupper = b (__uint32_t, toupper, 128);
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  compat_symbol (libc, __ctype_b, __ctype_b, GLIBC_2_0);
+  compat_symbol (libc, __ctype_tolower, __ctype_tolower, GLIBC_2_0);
+  compat_symbol (libc, __ctype_toupper, __ctype_toupper, GLIBC_2_0);
+  compat_symbol (libc, __ctype32_b, __ctype32_b, GLIBC_2_0);
+  compat_symbol (libc, __ctype32_tolower, __ctype32_tolower, GLIBC_2_2);
+  compat_symbol (libc, __ctype32_toupper, __ctype32_toupper, GLIBC_2_2);
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #endif
+diff'ing iconv/gconv_db.c
+*** a/iconv/gconv_db.c	2022-11-02 02:07:14.947516029 +0000
+--- b/iconv/gconv_db.c	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 17,22 ****
+--- 17,30 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __tsearch(a,b,c)        tsearch(a,b,c)
++ #define __tfind(a,b,c)          tfind(a,b,c)
++ #define __tdestroy(a,b)		tdestroy(a,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <limits.h>
+  #include <search.h>
+diff'ing iconv/gconv_cache.c
+*** a/iconv/gconv_cache.c	2022-11-02 02:07:14.947516029 +0000
+--- b/iconv/gconv_cache.c	2022-11-04 16:36:06.936377351 +0000
+***************
+*** 17,22 ****
+--- 17,30 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __mmap(a,b,c,d,e,f)		mmap(a,b,c,d,e,f)
++ #define __munmap(a,b)			munmap(a,b)
++ #define __read(a,b,c)			read(a,b,c)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <dlfcn.h>
+  #include <errno.h>
+  #include <fcntl.h>
+***************
+*** 30,35 ****
+--- 38,60 ----
+  #include <iconvconfig.h>
+  #include <not-cancel.h>
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ /* Uncancelable open.  */
++ #ifdef __NR_open
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (open, 3, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (open, 2, name, flags)
++ #else
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
++ #endif
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include "../intl/hash-string.h"
+  
+  static void *gconv_cache;
+***************
+*** 54,60 ****
+--- 79,89 ----
+  
+    /* We cannot use the cache if the GCONV_PATH environment variable is
+       set.  */
++ #ifndef LIBCOMPATCOLL_MODE
+    __gconv_path_envvar = getenv ("GCONV_PATH");
++ #else
++   __gconv_path_envvar = getenv ("COMPAT_GCONV_PATH");
++ #endif /* LIBCOMPATCOLL_MODE */
+    if (__gconv_path_envvar != NULL)
+      return -1;
+  
+diff'ing iconv/gconv_conf.c
+*** a/iconv/gconv_conf.c	2018-11-27 20:35:31.000000000 +0000
+--- b/iconv/gconv_conf.c	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 17,22 ****
+--- 17,31 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __tsearch(a,b,c)	tsearch(a,b,c)
++ #define __tfind(a,b,c)		tfind(a,b,c)
++ #define __getcwd(a,b)		getcwd(a,b)
++ #define __getdelim(line, len, c, fp) getdelim (line, len, c, fp)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <ctype.h>
+  #include <errno.h>
+***************
+*** 89,96 ****
+--- 98,107 ----
+  #undef BUILTIN_ALIAS
+  };
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  #include <libio/libioP.h>
+  #define __getdelim(line, len, c, fp) _IO_getdelim (line, len, c, fp)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  
+  /* Value of the GCONV_PATH environment variable.  */
+diff'ing iconv/gconv_dl.c
+*** a/iconv/gconv_dl.c	2022-11-02 02:07:14.947516029 +0000
+--- b/iconv/gconv_dl.c	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 17,24 ****
+--- 17,47 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __tsearch(a,b,c)        tsearch(a,b,c)
++ #define __tfind(a,b,c)          tfind(a,b,c)
++ #define __twalk(a,b)		twalk(a,b)
++ #define __tdestroy(a,b)		tdestroy(a,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <dlfcn.h>
++ #ifdef LIBCOMPATCOLL_MODE
++ #ifdef __libc_dlopen
++ #undef __libc_dlopen
++ #endif
++ #define __libc_dlopen(n)        dlopen (n, RTLD_LAZY)
++ #ifdef __libc_dlclose
++ #undef __libc_dlclose
++ #endif
++ #define __libc_dlclose(h)       dlclose(h)
++ #ifdef __libc_dlsym
++ #undef __libc_dlsym
++ #endif
++ #define __libc_dlsym(h,s)       dlsym(h,s)
++ #endif /* LIBCOMPATCOLL_MODE */
+  #include <inttypes.h>
+  #include <search.h>
+  #include <stdlib.h>
+diff'ing include/assert.h
+*** a/include/assert.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/assert.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 21,27 ****
+--- 21,29 ----
+       __THROW  __attribute__ ((__noreturn__));
+  
+  # if IS_IN (libc) || IS_IN (rtld)
++ #ifndef LIBCOMPATCOLL_MODE
+  hidden_proto (__assert_fail)
+  hidden_proto (__assert_perror_fail)
++ #endif /* LIBCOMPATCOLL_MODE */
+  # endif
+  #endif
+diff'ing include/ctype.h
+*** a/include/ctype.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/ctype.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 5,11 ****
+--- 5,13 ----
+  #ifndef _ISOMAC
+  /* Initialize ctype locale data.  */
+  extern void __ctype_init (void);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__ctype_init)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* ctype/ctype.h defined this as a macro and we don't want to #undef it.
+     So defeat macro expansion with parens for this declaration.  */
+diff'ing include/errno.h
+*** a/include/errno.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/errno.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 26,32 ****
+--- 26,36 ----
+  
+  #  undef  errno
+  #  if IS_IN (libc)
++ #ifndef LIBCOMPATCOLL_MODE
+  #   define errno __libc_errno
++ #else
++ #   define errno errno
++ #endif /* LIBCOMPATCOLL_MODE */
+  #  else
+  #   define errno errno		/* For #ifndef errno tests.  */
+  #  endif
+***************
+*** 41,47 ****
+--- 45,53 ----
+       attribute_hidden
+  #  endif
+  ;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__errno_location)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #endif /* !_ISOMAC && !__ASSEMBLER__ */
+  #endif /* !_ERRNO_H */
+diff'ing include/libc-symbols.h
+*** a/include/libc-symbols.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/libc-symbols.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 518,524 ****
+  # define hidden_nolink(name, lib, version)
+  #endif
+  
+! #if IS_IN (libc)
+  # define libc_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
+  # define libc_hidden_tls_proto(name, attrs...) hidden_tls_proto (name, ##attrs)
+  # define libc_hidden_def(name) hidden_def (name)
+--- 518,524 ----
+  # define hidden_nolink(name, lib, version)
+  #endif
+  
+! #if IS_IN (libc) /* && !defined LIBCOMPATCOLL_MODE */
+  # define libc_hidden_proto(name, attrs...) hidden_proto (name, ##attrs)
+  # define libc_hidden_tls_proto(name, attrs...) hidden_tls_proto (name, ##attrs)
+  # define libc_hidden_def(name) hidden_def (name)
+diff'ing include/shlib-compat.h
+diff'ing include/search.h
+*** a/include/search.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/search.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 14,28 ****
+--- 14,34 ----
+  extern void __hdestroy (void);
+  extern void *__tsearch (const void *__key, void **__rootp,
+  			__compar_fn_t compar);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__tsearch)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern void *__tfind (const void *__key, void *const *__rootp,
+  		      __compar_fn_t compar);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__tfind)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern void *__tdelete (const void *__key, void **__rootp,
+  			__compar_fn_t compar);
+  libc_hidden_proto (__tdelete)
+  extern void __twalk (const void *__root, __action_fn_t action);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__twalk)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern void __tdestroy (void *__root, __free_fn_t freefct);
+  #endif
+  #endif
+diff'ing include/signal.h
+*** a/include/signal.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/signal.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 9,15 ****
+--- 9,17 ----
+  libc_hidden_proto (sigismember)
+  extern int __sigpause (int sig_or_mask, int is_sig);
+  libc_hidden_proto (__sigpause)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (raise)
++ #endif /* LIBCOMPATCOLL_MODE */
+  libc_hidden_proto (__libc_current_sigrtmin)
+  libc_hidden_proto (__libc_current_sigrtmax)
+  libc_hidden_proto (_sys_siglist)
+diff'ing include/stdlib.h
+*** a/include/stdlib.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/stdlib.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 16,21 ****
+--- 16,22 ----
+  extern __typeof (strtod_l) __strtod_l;
+  extern __typeof (strtof_l) __strtof_l;
+  extern __typeof (strtold_l) __strtold_l;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strtol_l)
+  libc_hidden_proto (__strtoul_l)
+  libc_hidden_proto (__strtoll_l)
+***************
+*** 27,38 ****
+--- 28,42 ----
+  libc_hidden_proto (exit)
+  libc_hidden_proto (abort)
+  libc_hidden_proto (getenv)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (secure_getenv) __libc_secure_getenv;
+  libc_hidden_proto (__libc_secure_getenv)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (bsearch)
+  libc_hidden_proto (qsort)
+  extern __typeof (qsort_r) __qsort_r;
+  libc_hidden_proto (__qsort_r)
++ #endif /* LIBCOMPATCOLL_MODE */
+  libc_hidden_proto (lrand48_r)
+  libc_hidden_proto (wctomb)
+  
+***************
+*** 146,151 ****
+--- 150,156 ----
+  						   char **__restrict __endptr,
+  						   int __base, int __group)
+       __THROW __nonnull ((1)) __wur;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strtof_internal)
+  libc_hidden_proto (__strtod_internal)
+  libc_hidden_proto (__strtold_internal)
+***************
+*** 153,158 ****
+--- 158,164 ----
+  libc_hidden_proto (__strtoll_internal)
+  libc_hidden_proto (__strtoul_internal)
+  libc_hidden_proto (__strtoull_internal)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern double ____strtod_l_internal (const char *__restrict __nptr,
+  				     char **__restrict __endptr, int __group,
+***************
+*** 185,190 ****
+--- 191,197 ----
+  						       int __base, int __group,
+  						       locale_t __loc);
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (____strtof_l_internal)
+  libc_hidden_proto (____strtod_l_internal)
+  libc_hidden_proto (____strtold_l_internal)
+***************
+*** 200,206 ****
+  libc_hidden_proto (strtoll)
+  libc_hidden_proto (strtoul)
+  libc_hidden_proto (strtoull)
+! 
+  extern float __strtof_nan (const char *, char **, char) internal_function;
+  extern double __strtod_nan (const char *, char **, char) internal_function;
+  extern long double __strtold_nan (const char *, char **, char)
+--- 207,214 ----
+  libc_hidden_proto (strtoll)
+  libc_hidden_proto (strtoul)
+  libc_hidden_proto (strtoull)
+! #endif /* LIBCOMPATCOLL_MODE */
+! 	
+  extern float __strtof_nan (const char *, char **, char) internal_function;
+  extern double __strtod_nan (const char *, char **, char) internal_function;
+  extern long double __strtold_nan (const char *, char **, char)
+***************
+*** 212,223 ****
+--- 220,233 ----
+  extern long double __wcstold_nan (const wchar_t *, wchar_t **, wchar_t)
+       internal_function;
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strtof_nan)
+  libc_hidden_proto (__strtod_nan)
+  libc_hidden_proto (__strtold_nan)
+  libc_hidden_proto (__wcstof_nan)
+  libc_hidden_proto (__wcstod_nan)
+  libc_hidden_proto (__wcstold_nan)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* Enable _FloatN bits as needed.  */
+  #include <bits/floatn.h>
+***************
+*** 225,251 ****
+--- 235,269 ----
+  #if __HAVE_DISTINCT_FLOAT128
+  extern __typeof (strtof128_l) __strtof128_l;
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strtof128_l)
+  libc_hidden_proto (strtof128)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern _Float128 __strtof128_nan (const char *, char **, char)
+       internal_function;
+  extern _Float128 __wcstof128_nan (const wchar_t *, wchar_t **, wchar_t)
+       internal_function;
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strtof128_nan)
+  libc_hidden_proto (__wcstof128_nan)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern _Float128 __strtof128_internal (const char *__restrict __nptr,
+  				       char **__restrict __endptr,
+  				       int __group);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strtof128_internal)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern _Float128 ____strtof128_l_internal (const char *__restrict __nptr,
+  					   char **__restrict __endptr,
+  					   int __group, locale_t __loc);
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (____strtof128_l_internal)
++ #endif /* LIBCOMPATCOLL_MODE */
+  #endif
+  
+  extern char *__ecvt (double __value, int __ndigit, int *__restrict __decpt,
+***************
+*** 277,283 ****
+--- 295,303 ----
+  # endif
+  
+  extern void *__default_morecore (ptrdiff_t) __THROW;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__default_morecore)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  struct abort_msg_s
+  {
+***************
+*** 285,291 ****
+--- 305,313 ----
+    char msg[0];
+  };
+  extern struct abort_msg_s *__abort_msg;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__abort_msg)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  # if IS_IN (rtld)
+  extern __typeof (unsetenv) unsetenv attribute_hidden;
+diff'ing include/string.h
+*** a/include/string.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/string.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 64,69 ****
+--- 64,70 ----
+  /* Alternative version which doesn't pollute glibc's namespace.  */
+  #if IS_IN (libc)
+  # undef strndupa
++ #ifndef LIBCOMPATCOLL_MODE
+  # define strndupa(s, n)							      \
+    (__extension__							      \
+      ({									      \
+***************
+*** 73,80 ****
+        __new[__len] = '\0';						      \
+        (char *) memcpy (__new, __old, __len);				      \
+      }))
+! #endif
+  
+  libc_hidden_proto (__mempcpy)
+  #ifndef __NO_STRING_INLINES
+  # define __mempcpy(dest, src, n) __builtin_mempcpy (dest, src, n)
+--- 74,93 ----
+        __new[__len] = '\0';						      \
+        (char *) memcpy (__new, __old, __len);				      \
+      }))
+! #else
+! # define strndupa(s, n)							      \
+!   (__extension__							      \
+!     ({									      \
+!       const char *__old = (s);						      \
+!       size_t __len = strnlen (__old, (n));				      \
+!       char *__new = (char *) __builtin_alloca (__len + 1);		      \
+!       __new[__len] = '\0';						      \
+!       (char *) memcpy (__new, __old, __len);				      \
+!     }))
+! #endif /* LIBCOMPATCOLL_MODE */
+! #endif /* IS_IN (libc) */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__mempcpy)
+  #ifndef __NO_STRING_INLINES
+  # define __mempcpy(dest, src, n) __builtin_mempcpy (dest, src, n)
+***************
+*** 92,114 ****
+--- 105,136 ----
+  libc_hidden_proto (__strncat)
+  libc_hidden_proto (__strdup)
+  libc_hidden_proto (__strndup)
++ #endif /* LIBCOMPATCOLL_MODE */
+  libc_hidden_proto (__strerror_r)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strverscmp)
+  libc_hidden_proto (basename)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern char *__basename (const char *__filename) __THROW __nonnull ((1));
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__basename)
+  libc_hidden_proto (strcoll)
+  libc_hidden_proto (__strcoll_l)
+  libc_hidden_proto (__strxfrm_l)
+  libc_hidden_proto (__strtok_r)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern char *__strsep_g (char **__stringp, const char *__delim);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strsep_g)
+  libc_hidden_proto (strnlen)
+  libc_hidden_proto (__strnlen)
+  libc_hidden_proto (memmem)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (memmem) __memmem;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__memmem)
+  libc_hidden_proto (__ffs)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #if IS_IN (libc)
+  /* Avoid hidden reference to IFUNC symbol __explicit_bzero_chk.  */
+***************
+*** 121,126 ****
+--- 143,149 ----
+  # define explicit_bzero(buf, len) __explicit_bzero_chk (buf, len, __bos0 (buf))
+  #endif
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_builtin_proto (memchr)
+  libc_hidden_builtin_proto (memcpy)
+  libc_hidden_builtin_proto (mempcpy)
+***************
+*** 141,146 ****
+--- 164,170 ----
+  libc_hidden_builtin_proto (strspn)
+  libc_hidden_builtin_proto (strstr)
+  libc_hidden_builtin_proto (ffs)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #if IS_IN (rtld)
+  extern __typeof (__stpcpy) __stpcpy attribute_hidden;
+diff'ing include/stdio.h
+*** a/include/stdio.h	2022-11-02 02:07:15.251513590 +0000
+--- b/include/stdio.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 8,14 ****
+--- 8,16 ----
+  extern int __snprintf (char *__restrict __s, size_t __maxlen,
+  		       const char *__restrict __format, ...)
+       __attribute__ ((__format__ (__printf__, 3, 4)));
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__snprintf)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern int __vsnprintf (char *__restrict __s, size_t __maxlen,
+  			const char *__restrict __format, _G_va_list __arg)
+       __attribute__ ((__format__ (__printf__, 3, 0)));
+***************
+*** 139,144 ****
+--- 141,147 ----
+  extern const char *const _sys_errlist_internal[] attribute_hidden;
+  extern int _sys_nerr_internal attribute_hidden;
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__asprintf)
+  #  if IS_IN (libc)
+  extern _IO_FILE *_IO_new_fopen (const char*, const char*);
+***************
+*** 155,164 ****
+--- 158,171 ----
+  extern int _IO_new_fgetpos (_IO_FILE *, _IO_fpos_t *);
+  #   define fgetpos(fp, posp) _IO_new_fgetpos (fp, posp)
+  #  endif
++ #endif /* LIBCOMPATCOLL_MODE */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (dprintf)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (dprintf) __dprintf
+       __attribute__ ((__format__ (__printf__, 2, 3)));
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__dprintf)
+  libc_hidden_proto (fprintf)
+  libc_hidden_proto (vfprintf)
+***************
+*** 169,201 ****
+--- 176,226 ----
+  libc_hidden_proto (remove)
+  libc_hidden_proto (rewind)
+  libc_hidden_proto (fileno)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (fileno) __fileno;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__fileno)
+  libc_hidden_proto (fwrite)
+  libc_hidden_proto (fseek)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (ftello) __ftello;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__ftello)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (fseeko64) __fseeko64;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__fseeko64)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (ftello64) __ftello64;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__ftello64)
+  libc_hidden_proto (fflush)
+  libc_hidden_proto (fflush_unlocked)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (fflush_unlocked) __fflush_unlocked;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__fflush_unlocked)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (fread_unlocked) __fread_unlocked;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__fread_unlocked)
+  libc_hidden_proto (fwrite_unlocked)
+  libc_hidden_proto (fgets_unlocked)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (fgets_unlocked) __fgets_unlocked;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__fgets_unlocked)
+  libc_hidden_proto (fputs_unlocked)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (fputs_unlocked) __fputs_unlocked;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__fputs_unlocked)
+  libc_hidden_proto (fmemopen)
++ #endif /* LIBCOMPATCOLL_MODE */
+  /* The prototype needs repeating instead of using __typeof to use
+     __THROW in C++ tests.  */
+  extern FILE *__open_memstream (char **, size_t *) __THROW __wur;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__open_memstream)
+  libc_hidden_proto (__libc_fatal)
+  rtld_hidden_proto (__libc_fatal)
+***************
+*** 205,210 ****
+--- 230,236 ----
+  libc_hidden_proto (__vasprintf_chk)
+  libc_hidden_proto (__vdprintf_chk)
+  libc_hidden_proto (__obstack_vprintf_chk)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern FILE * __fmemopen (void *buf, size_t len, const char *mode);
+  libc_hidden_proto (__fmemopen)
+diff'ing include/sys/mman.h
+*** a/include/sys/mman.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/sys/mman.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 5,16 ****
+--- 5,22 ----
+  /* Now define the internal interfaces.  */
+  extern void *__mmap (void *__addr, size_t __len, int __prot,
+  		     int __flags, int __fd, __off_t __offset);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__mmap)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern void *__mmap64 (void *__addr, size_t __len, int __prot,
+  		       int __flags, int __fd, __off64_t __offset);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__mmap64)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern int __munmap (void *__addr, size_t __len);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__munmap)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern int __mprotect (void *__addr, size_t __len, int __prot);
+  libc_hidden_proto (__mprotect)
+  
+diff'ing include/sys/stat.h
+*** a/include/sys/stat.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/sys/stat.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 14,20 ****
+--- 14,22 ----
+  		    __mode_t __mode, __dev_t __dev);
+  #if IS_IN (libc) || IS_IN (rtld)
+  hidden_proto (__fxstat)
++ #ifndef LIBCOMPATCOLL_MODE
+  hidden_proto (__fxstat64)
++ #endif /* LIBCOMPATCOLL_MODE */
+  hidden_proto (__lxstat)
+  hidden_proto (__lxstat64)
+  hidden_proto (__xstat)
+diff'ing include/time.h
+*** a/include/time.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/time.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 5,20 ****
+--- 5,28 ----
+  # include <bits/types/locale_t.h>
+  
+  extern __typeof (strftime_l) __strftime_l;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__strftime_l)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __typeof (strptime_l) __strptime_l;
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (time)
++ #endif /* LIBCOMPATCOLL_MODE */
+  libc_hidden_proto (asctime)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (mktime)
+  libc_hidden_proto (timelocal)
+  libc_hidden_proto (localtime)
++ #endif /* LIBCOMPATCOLL_MODE */
+  libc_hidden_proto (strftime)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (strptime)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern __typeof (clock_getres) __clock_getres;
+  extern __typeof (clock_gettime) __clock_gettime;
+***************
+*** 55,62 ****
+--- 63,76 ----
+  				 struct tm *(*__func) (const time_t *,
+  						       struct tm *),
+  				 time_t *__offset);
++ #ifndef LIBCOMPATCOLL_MODE
+  extern struct tm *__localtime_r (const time_t *__timer,
+  				 struct tm *__tp) attribute_hidden;
++ #else
++ extern struct tm *__localtime_r (const time_t *__timer,
++                                  struct tm *__tp);
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  
+  extern struct tm *__gmtime_r (const time_t *__restrict __timer,
+  			      struct tm *__restrict __tp);
+diff'ing include/unistd.h
+*** a/include/unistd.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/unistd.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 3,10 ****
+--- 3,12 ----
+  
+  # ifndef _ISOMAC
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (_exit, __noreturn__)
+  rtld_hidden_proto (_exit, __noreturn__)
++ #endif /* LIBCOMPATCOLL_MODE */
+  libc_hidden_proto (alarm)
+  libc_hidden_proto (confstr)
+  libc_hidden_proto (execl)
+***************
+*** 52,61 ****
+--- 54,67 ----
+  				__off64_t __offset) attribute_hidden;
+  extern ssize_t __libc_read (int __fd, void *__buf, size_t __n);
+  libc_hidden_proto (__libc_read)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (read)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern ssize_t __libc_write (int __fd, const void *__buf, size_t __n);
+  libc_hidden_proto (__libc_write)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (write)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern int __pipe (int __pipedes[2]);
+  libc_hidden_proto (__pipe)
+  extern int __pipe2 (int __pipedes[2], int __flags);
+***************
+*** 95,101 ****
+--- 101,109 ----
+  extern long int __pathconf (const char *__path, int __name);
+  extern long int __fpathconf (int __fd, int __name);
+  extern long int __sysconf (int __name);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__sysconf)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __pid_t __getpid (void);
+  libc_hidden_proto (__getpid)
+  extern __pid_t __getppid (void);
+***************
+*** 138,146 ****
+--- 146,158 ----
+  libc_hidden_proto (__close)
+  extern int __libc_close (int __fd);
+  extern ssize_t __read (int __fd, void *__buf, size_t __nbytes);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__read)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern ssize_t __write (int __fd, const void *__buf, size_t __n);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__write)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern __pid_t __fork (void);
+  libc_hidden_proto (__fork)
+  extern int __getpagesize (void) __attribute__ ((__const__));
+diff'ing include/wchar.h
+*** a/include/wchar.h	2018-11-27 20:35:31.000000000 +0000
+--- b/include/wchar.h	2022-11-04 16:05:37.034454533 +0000
+***************
+*** 16,21 ****
+--- 16,22 ----
+  extern __typeof (wcstof_l) __wcstof_l;
+  extern __typeof (wcstold_l) __wcstold_l;
+  extern __typeof (wcsftime_l) __wcsftime_l;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__wcstol_l)
+  libc_hidden_proto (__wcstoul_l)
+  libc_hidden_proto (__wcstoll_l)
+***************
+*** 24,30 ****
+  libc_hidden_proto (__wcstof_l)
+  libc_hidden_proto (__wcstold_l)
+  libc_hidden_proto (__wcsftime_l)
+! 
+  
+  extern double __wcstod_internal (const wchar_t *__restrict __nptr,
+  				 wchar_t **__restrict __endptr, int __group)
+--- 25,31 ----
+  libc_hidden_proto (__wcstof_l)
+  libc_hidden_proto (__wcstold_l)
+  libc_hidden_proto (__wcsftime_l)
+! #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern double __wcstod_internal (const wchar_t *__restrict __nptr,
+  				 wchar_t **__restrict __endptr, int __group)
+***************
+*** 55,60 ****
+--- 56,62 ----
+  extern unsigned long long int ____wcstoull_l_internal (const wchar_t *,
+  						       wchar_t **, int, int,
+  						       locale_t);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__wcstof_internal)
+  libc_hidden_proto (__wcstod_internal)
+  libc_hidden_proto (__wcstold_internal)
+***************
+*** 69,74 ****
+--- 71,77 ----
+  libc_hidden_proto (wcstoll)
+  libc_hidden_proto (wcstoul)
+  libc_hidden_proto (wcstoull)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #if __HAVE_DISTINCT_FLOAT128
+  extern __typeof (wcstof128_l) __wcstof128_l;
+***************
+*** 81,86 ****
+--- 84,90 ----
+  libc_hidden_proto (wcstof128)
+  #endif
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__wcscasecmp_l)
+  libc_hidden_proto (__wcsncasecmp_l)
+  
+***************
+*** 95,106 ****
+--- 99,113 ----
+  
+  libc_hidden_proto (mbrtowc)
+  libc_hidden_proto (wcrtomb)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern int __wcscmp (const wchar_t *__s1, const wchar_t *__s2)
+       __THROW __attribute_pure__;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__wcscmp)
+  libc_hidden_proto (wcsftime)
+  libc_hidden_proto (wcsspn)
+  libc_hidden_proto (wcschr)
++ #endif /* LIBCOMPATCOLL_MODE */
+  /* The C++ overloading of wcschr means we have to repeat the type to
+     declare __wcschr instead of using typeof, to avoid errors in C++
+     tests; in addition, __THROW cannot be used with a function type
+***************
+*** 108,125 ****
+--- 115,138 ----
+     __THROW, to __wcscmp and __wcscoll.  */
+  extern wchar_t *__wcschr (const wchar_t *__wcs, wchar_t __wc)
+       __THROW __attribute_pure__;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__wcschr)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern int __wcscoll (const wchar_t *__s1, const wchar_t *__s2) __THROW;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__wcscoll)
+  libc_hidden_proto (wcspbrk)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  extern __typeof (wmemset) __wmemset;
+  extern wchar_t *__wmemchr (const wchar_t *__s, wchar_t __c, size_t __n)
+       __THROW __attribute_pure__;
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (wmemchr)
+  libc_hidden_proto (__wmemchr)
+  libc_hidden_proto (wmemset)
+  libc_hidden_proto (__wmemset)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* Now define the internal interfaces.  */
+  extern int __wcscasecmp (const wchar_t *__s1, const wchar_t *__s2)
+***************
+*** 136,143 ****
+--- 149,158 ----
+  extern size_t __mbrtowc (wchar_t *__restrict __pwc,
+  			 const char *__restrict __s, size_t __n,
+  			 __mbstate_t *__restrict __p);
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_proto (__mbrtowc)
+  libc_hidden_proto (__mbrlen)
++ #endif /* LIBCOMPATCOLL_MODE */
+  extern size_t __wcrtomb (char *__restrict __s, wchar_t __wc,
+  			 __mbstate_t *__restrict __ps);
+  extern size_t __mbsrtowcs (wchar_t *__restrict __dst,
+diff'ing intl/dcigettext.c
+*** a/intl/dcigettext.c	2022-11-02 02:07:15.179514168 +0000
+--- b/intl/dcigettext.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 14,19 ****
+--- 14,28 ----
+     You should have received a copy of the GNU Lesser General Public License
+     along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __tfind(a,b,c)          tfind(a,b,c)
++ #define __tdestroy(a,b)		tdestroy(a,b)
++ #define __getcwd(a,b)           getcwd(a,b)
++ int __libc_enable_secure = 1;
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  /* Tell glibc's <string.h> to provide a prototype for mempcpy().
+     This must come before <config.h> because <config.h> may include
+     <features.h>, and once <features.h> has been included, it's too late.  */
+***************
+*** 28,34 ****
+--- 37,45 ----
+  #include <sys/types.h>
+  
+  #ifdef __GNUC__
++ #ifndef LIBCOMPATCOLL_MODE
+  # define alloca __builtin_alloca
++ #endif /* LIBCOMPATCOLL_MODE */
+  # define HAVE_ALLOCA 1
+  #else
+  # ifdef _MSC_VER
+***************
+*** 128,133 ****
+--- 139,145 ----
+  
+  /* @@ end of prolog @@ */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  #ifdef _LIBC
+  /* Rename the non ANSI C functions.  This is required by the standard
+     because some ANSI C functions will require linking with this object
+***************
+*** 156,161 ****
+--- 168,174 ----
+  static void *mempcpy (void *dest, const void *src, size_t n);
+  # endif
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* Use a replacement if the system does not provide the `tsearch' function
+     family.  */
+***************
+*** 169,177 ****
+--- 182,192 ----
+  # include "tsearch.h"
+  #endif
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  #ifdef _LIBC
+  # define tsearch __tsearch
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* Amount to increase buffer size by in each try.  */
+  #define PATH_INCR 32
+diff'ing intl/loadmsgcat.c
+*** a/intl/loadmsgcat.c	2018-11-27 20:35:31.000000000 +0000
+--- b/intl/loadmsgcat.c	2022-11-04 16:36:32.596182270 +0000
+***************
+*** 81,86 ****
+--- 81,103 ----
+  # define PRI_MACROS_BROKEN 0
+  #endif
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ /* Uncancelable open.  */
++ #ifdef __NR_open
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (open, 3, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (open, 2, name, flags)
++ #else
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
++ #endif
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  /* Provide fallback values for macros that ought to be defined in <inttypes.h>.
+     Note that our fallback values need not be literal strings, because we don't
+     use them with preprocessor string concatenation.  */
+***************
+*** 441,446 ****
+--- 458,464 ----
+  
+  /* @@ end of prolog @@ */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  #ifdef _LIBC
+  /* Rename the non ISO C functions.  This is required by the standard
+     because some ISO C functions will require linking with this object
+***************
+*** 452,457 ****
+--- 470,476 ----
+    __mmap (addr, len, prot, flags, fd, offset)
+  # define munmap(addr, len)	__munmap (addr, len)
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* For systems that distinguish between text and binary I/O.
+     O_BINARY is usually declared in <fcntl.h>. */
+diff'ing intl/localealias.c
+*** a/intl/localealias.c	2018-11-27 20:35:31.000000000 +0000
+--- b/intl/localealias.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 95,102 ****
+--- 95,106 ----
+  /* Some optimizations for glibc.  */
+  #ifdef _LIBC
+  # define FEOF(fp)		feof_unlocked (fp)
++ #ifndef LIBCOMPATCOLL_MODE
+  # define FGETS(buf, n, fp)	__fgets_unlocked (buf, n, fp)
+  #else
++ # define FGETS(buf, n, fp)      fgets_unlocked (buf, n, fp)
++ #endif /* LIBCOMPATCOLL_MODE */
++ #else
+  # define FEOF(fp)		feof (fp)
+  # define FGETS(buf, n, fp)	fgets (buf, n, fp)
+  #endif
+diff'ing locale/localeconv.c
+*** a/locale/localeconv.c	2018-11-27 20:35:31.000000000 +0000
+--- b/locale/localeconv.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 65,72 ****
+--- 65,76 ----
+    return &result;
+  }
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ weak_alias (__localeconv, localeconv)
++ #else
+  versioned_symbol (libc, __localeconv, localeconv, GLIBC_2_2);
+  #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_2)
+  strong_alias (__localeconv, __localeconv20)
+  compat_symbol (libc, __localeconv20, localeconv, GLIBC_2_0);
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing locale/findlocale.c
+*** a/locale/findlocale.c	2018-11-27 20:35:31.000000000 +0000
+--- b/locale/findlocale.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 16,21 ****
+--- 16,27 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __memmem(a,b,c,d)	memmem(a,b,c,d)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <errno.h>
+  #include <locale.h>
+diff'ing locale/setlocale.c
+*** a/locale/setlocale.c	2018-11-27 20:35:31.000000000 +0000
+--- b/locale/setlocale.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 251,257 ****
+--- 251,261 ----
+    locale_path = NULL;
+    locale_path_len = 0;
+  
++ #ifndef LIBCOMPATCOLL_MODE
+    locpath_var = getenv ("LOCPATH");
++ #else
++   locpath_var = getenv ("COMPAT_LOCPATH");
++ #endif /* LIBCOMPATCOLL_MODE */
+    if (locpath_var != NULL && locpath_var[0] != '\0')
+      {
+        if (__argz_create_sep (locpath_var, ':',
+diff'ing locale/loadarchive.c
+*** a/locale/loadarchive.c	2018-11-27 20:35:31.000000000 +0000
+--- b/locale/loadarchive.c	2022-11-04 16:36:55.992005702 +0000
+***************
+*** 16,21 ****
+--- 16,30 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __mmap64(a,b,c,d,e,f)	mmap64(a,b,c,d,e,f)
++ #define __munmap(a,b)		munmap(a,b)
++ #define __sysconf(a)		sysconf(a)
++ #define __strchrnul(a,b)	strchrnul(a,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <locale.h>
+  #include <stddef.h>
+  #include <stdlib.h>
+***************
+*** 34,39 ****
+--- 43,65 ----
+  #include "locarchive.h"
+  #include <not-cancel.h>
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ /* Uncancelable open.  */
++ #ifdef __NR_open
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (open, 3, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (open, 2, name, flags)
++ #else
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
++ #endif
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  /* Define the hash function.  We define the function as static inline.  */
+  #define compute_hashval static inline compute_hashval
+  #define hashval_t uint32_t
+diff'ing locale/loadlocale.c
+*** a/locale/loadlocale.c	2022-11-02 02:07:14.935516126 +0000
+--- b/locale/loadlocale.c	2022-11-04 16:37:20.783817791 +0000
+***************
+*** 17,22 ****
+--- 17,29 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __mmap(a,b,c,d,e,f)             mmap(a,b,c,d,e,f)
++ #define __munmap(a,b)                   munmap(a,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <errno.h>
+  #include <fcntl.h>
+***************
+*** 32,37 ****
+--- 39,60 ----
+  #include <not-cancel.h>
+  #include "localeinfo.h"
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ /* Uncancelable open.  */
++ #ifdef __NR_open
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (open, 3, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (open, 2, name, flags)
++ #else
++ # define open_not_cancel(name, flags, mode) \
++    INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
++ # define open_not_cancel_2(name, flags) \
++    INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
++ #endif
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  static const size_t _nl_category_num_items[] =
+  {
+diff'ing locale/newlocale.c
+*** a/locale/newlocale.c	2018-11-27 20:35:31.000000000 +0000
+--- b/locale/newlocale.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 102,108 ****
+--- 102,112 ----
+    locale_path = NULL;
+    locale_path_len = 0;
+  
++ #ifndef LIBCOMPATCOLL_MODE  
+    locpath_var = getenv ("LOCPATH");
++ #else
++   locpath_var = getenv ("COMPAT_LOCPATH");
++ #endif /* LIBCOMPATCOLL_MODE */
+    if (locpath_var != NULL && locpath_var[0] != '\0')
+      {
+        if (__argz_create_sep (locpath_var, ':',
+diff'ing string/argz-stringify.c
+*** a/string/argz-stringify.c	2018-11-27 20:35:31.000000000 +0000
+--- b/string/argz-stringify.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 17,22 ****
+--- 17,28 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __strnlen(a,n)		strnlen(a,n)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <argz.h>
+  #include <string.h>
+  
+diff'ing string/strcoll.c
+*** a/string/strcoll.c	2018-11-27 20:35:31.000000000 +0000
+--- b/string/strcoll.c	2022-11-04 16:05:37.038454502 +0000
+***************
+*** 34,39 ****
+--- 34,41 ----
+    return STRCOLL_L (s1, s2, _NL_CURRENT_LOCALE);
+  }
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  #ifdef USE_HIDDEN_DEF
+  libc_hidden_def (STRCOLL)
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing string/strcoll_l.c
+*** a/string/strcoll_l.c	2022-11-02 02:07:15.495511633 +0000
+--- b/string/strcoll_l.c	2022-11-04 16:05:37.042454471 +0000
+***************
+*** 16,21 ****
+--- 16,26 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __wcslen(s)             wcslen(s)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #include <assert.h>
+  #include <langinfo.h>
+***************
+*** 647,653 ****
+--- 652,660 ----
+  
+    return result;
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (STRCOLL)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #ifndef WIDE_CHAR_VERSION
+  weak_alias (__strcoll_l, strcoll_l)
+diff'ing string/_strerror.c
+diff'ing string/strerror.c
+diff'ing string/strerror_l.c
+diff'ing string/strxfrm.c
+diff'ing string/strxfrm_l.c
+*** a/string/strxfrm_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/string/strxfrm_l.c	2022-11-04 16:05:37.042454471 +0000
+***************
+*** 16,21 ****
+--- 16,27 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __wcslen(s)             wcslen(s)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <langinfo.h>
+  #include <locale.h>
+***************
+*** 740,746 ****
+--- 746,754 ----
+    else
+      return do_xfrm (usrc, dest, n, &l_data);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (STRXFRM)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #ifndef WIDE_CHAR_VERSION
+  weak_alias (__strxfrm_l, strxfrm_l)
+diff'ing stdlib/strtod.c
+*** a/stdlib/strtod.c	2018-11-27 20:35:31.000000000 +0000
+--- b/stdlib/strtod.c	2022-11-04 16:05:37.042454471 +0000
+***************
+*** 51,57 ****
+--- 51,59 ----
+    return INTERNAL(STRTOF_L) (nptr, endptr, group, _NL_CURRENT_LOCALE);
+  }
+  #if defined _LIBC
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (INTERNAL (STRTOF))
++ #endif /* LIBCOMPATCOLL_MODE */
+  #endif
+  
+  
+***************
+*** 64,70 ****
+--- 66,74 ----
+    return INTERNAL(STRTOF_L) (nptr, endptr, 0, _NL_CURRENT_LOCALE);
+  }
+  #if defined _LIBC
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (STRTOF)
++ #endif /* LIBCOMPATCOLL_MODE */
+  #endif
+  
+  #ifdef LONG_DOUBLE_COMPAT
+diff'ing stdlib/strtod_l.c
+*** a/stdlib/strtod_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/stdlib/strtod_l.c	2022-11-04 16:05:37.042454471 +0000
+***************
+*** 1749,1755 ****
+--- 1749,1757 ----
+    /* NOTREACHED */
+  }
+  #if defined _LIBC && !defined USE_WIDE_CHAR
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (____STRTOF_INTERNAL)
++ #endif /* LIBCOMPATCOLL_MODE */
+  #endif
+  
+  /* External user entry point.  */
+***************
+*** 1762,1771 ****
+--- 1764,1775 ----
+  {
+    return ____STRTOF_INTERNAL (nptr, endptr, 0, loc);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  #if defined _LIBC
+  libc_hidden_def (__STRTOF)
+  libc_hidden_ver (__STRTOF, STRTOF)
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (__STRTOF, STRTOF)
+  
+  #ifdef LONG_DOUBLE_COMPAT
+diff'ing stdlib/strtod_nan_main.c
+*** a/stdlib/strtod_nan_main.c	2018-11-27 20:35:31.000000000 +0000
+--- b/stdlib/strtod_nan_main.c	2022-11-04 16:05:37.042454471 +0000
+***************
+*** 60,63 ****
+--- 60,65 ----
+      *endptr = (STRING_TYPE *) cp;
+    return retval;
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (STRTOD_NAN)
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing stdlib/strtol.c
+*** a/stdlib/strtol.c	2018-11-27 20:35:31.000000000 +0000
+--- b/stdlib/strtol.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 97,103 ****
+--- 97,105 ----
+  {
+    return INTERNAL (__strtol_l) (nptr, endptr, base, group, _NL_CURRENT_LOCALE);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (INTERNAL (strtol))
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  
+  INT
+***************
+*** 106,109 ****
+--- 108,113 ----
+    return INTERNAL (__strtol_l) (nptr, endptr, base, 0, _NL_CURRENT_LOCALE);
+  }
+  weak_alias (__strtol, strtol)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_weak (strtol)
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing stdlib/strtol_l.c
+*** a/stdlib/strtol_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/stdlib/strtol_l.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 524,530 ****
+--- 524,532 ----
+    return 0L;
+  }
+  #if defined _LIBC && !defined USE_WIDE_CHAR
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (INTERNAL (__strtol_l))
++ #endif /* LIBCOMPATCOLL_MODE */
+  #endif
+  
+  /* External user entry point.  */
+***************
+*** 546,550 ****
+--- 548,554 ----
+  {
+    return INTERNAL (__strtol_l) (nptr, endptr, base, 0, loc);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__strtol_l)
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (__strtol_l, strtol_l)
+diff'ing stdlib/strtoll.c
+diff'ing stdlib/strtoll_l.c
+diff'ing sysdeps/generic/symbol-hacks.h
+*** a/sysdeps/generic/symbol-hacks.h	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/generic/symbol-hacks.h	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 1,9 ****
+--- 1,11 ----
+  /* Some compiler optimizations may transform loops into memset/memmove
+     calls and without proper declaration it may generate PLT calls.  */
+  #if !defined __ASSEMBLER__ && IS_IN (libc) && defined SHARED
++ #ifndef LIBCOMPATCOLL_MODE
+  asm ("memmove = __GI_memmove");
+  asm ("memset = __GI_memset");
+  asm ("memcpy = __GI_memcpy");
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* Some targets do not use __stack_chk_fail_local.  In libc.so,
+     redirect __stack_chk_fail to a hidden reference
+***************
+*** 11,19 ****
+--- 13,24 ----
+     __stack_chk_fail itself is a global symbol, exported from libc.so,
+     and cannot be made hidden.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  # if IS_IN (libc) && defined SHARED && \
+    defined STACK_PROTECTOR_LEVEL && STACK_PROTECTOR_LEVEL > 0
+  asm (".hidden __stack_chk_fail_local\n"
+       "__stack_chk_fail = __stack_chk_fail_local");
+  # endif
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #endif
+diff'ing sysdeps/x86_64/multiarch/wcschr.c
+*** a/sysdeps/x86_64/multiarch/wcschr.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wcschr.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define wcschr __redirect_wcschr
+***************
+*** 37,39 ****
+--- 38,41 ----
+    __attribute__((weak, visibility ("hidden")));
+  # endif
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wcscpy.c
+*** a/sysdeps/x86_64/multiarch/wcscpy.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wcscpy.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define wcscpy __redirect_wcscpy
+***************
+*** 42,44 ****
+--- 43,46 ----
+  
+  libc_ifunc_redirected (__redirect_wcscpy, wcscpy, IFUNC_SELECTOR ());
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wcslen.c
+*** a/sysdeps/x86_64/multiarch/wcslen.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wcslen.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define __wcslen __redirect_wcslen
+***************
+*** 29,31 ****
+--- 30,33 ----
+  libc_ifunc_redirected (__redirect_wcslen, __wcslen, IFUNC_SELECTOR ());
+  weak_alias (__wcslen, wcslen);
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wcsnlen.c
+*** a/sysdeps/x86_64/multiarch/wcsnlen.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wcsnlen.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define __wcsnlen __redirect_wcsnlen
+***************
+*** 49,51 ****
+--- 50,53 ----
+  libc_ifunc_redirected (__redirect_wcsnlen, __wcsnlen, IFUNC_SELECTOR ());
+  weak_alias (__wcsnlen, wcsnlen);
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wmemchr.c
+*** a/sysdeps/x86_64/multiarch/wmemchr.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wmemchr.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define wmemchr __redirect_wmemchr
+***************
+*** 37,39 ****
+--- 38,41 ----
+    __attribute__((weak, visibility ("hidden")));
+  # endif
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wmemcmp.c
+*** a/sysdeps/x86_64/multiarch/wmemcmp.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wmemcmp.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define wmemcmp __redirect_wmemcmp
+***************
+*** 28,30 ****
+--- 29,32 ----
+  
+  libc_ifunc_redirected (__redirect_wmemcmp, wmemcmp, IFUNC_SELECTOR ());
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wmemset.c
+*** a/sysdeps/x86_64/multiarch/wmemset.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wmemset.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.  */
+  #if IS_IN (libc)
+  # define wmemset __redirect_wmemset
+***************
+*** 38,40 ****
+--- 39,42 ----
+    __attribute__ ((visibility ("hidden")));
+  # endif
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/x86_64/multiarch/wmemset_chk.c
+*** a/sysdeps/x86_64/multiarch/wmemset_chk.c	2018-11-27 20:35:31.000000000 +0000
+--- b/sysdeps/x86_64/multiarch/wmemset_chk.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,23 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  /* Define multiple versions only for the definition in libc.so.  */
+  #if IS_IN (libc) && defined SHARED
+  # define __wmemset_chk __redirect_wmemset_chk
+***************
+*** 29,31 ****
+--- 30,33 ----
+  libc_ifunc_redirected (__redirect_wmemset_chk, __wmemset_chk,
+  		       IFUNC_SELECTOR ());
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing sysdeps/unix/sysv/linux/openat.c
+diff'ing sysdeps/unix/sysv/linux/openat64.c
+diff'ing time/alt_digit.c
+*** a/time/alt_digit.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/alt_digit.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 16,21 ****
+--- 16,27 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __wcschr(a,b)		wcschr(a,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include "../locale/localeinfo.h"
+  #include <libc-lock.h>
+  #include <stdlib.h>
+diff'ing time/asctime.c
+*** a/time/asctime.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/asctime.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 15,20 ****
+--- 15,26 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __snprintf(s,n,f,...)		snprintf(s,n,f,__VA_ARGS__)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include "../locale/localeinfo.h"
+  #include <errno.h>
+  #include <limits.h>
+diff'ing time/ctime_r.c
+*** a/time/ctime_r.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/ctime_r.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 17,22 ****
+--- 17,29 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __localtime_r(t,r)              localtime_r(t,r)
++ #define __asctime_r(t,b)		asctime_r(t,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <time.h>
+  
+  /* Return a string as returned by asctime which is the representation
+diff'ing time/era.c
+*** a/time/era.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/era.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 16,21 ****
+--- 16,27 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __wcschr(a,b)           wcschr(a,b)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include "../locale/localeinfo.h"
+  #include <libc-lock.h>
+  #include <stdlib.h>
+diff'ing time/strftime_l.c
+*** a/time/strftime_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/strftime_l.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 15,20 ****
+--- 15,27 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __wmemcpy(d,s,n)	wmemcpy(d,s,n)
++ #define __wcslen(s)		wcslen(s)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #ifdef HAVE_CONFIG_H
+  # include <config.h>
+  #endif
+***************
+*** 154,164 ****
+    ((year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0))
+  #endif
+  
+! 
+  #ifdef _LIBC
+  # define tzname __tzname
+  # define tzset __tzset
+  #endif
+  
+  #if !HAVE_TM_GMTOFF
+  /* Portable standalone applications should supply a "time_r.h" that
+--- 161,172 ----
+    ((year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0))
+  #endif
+  
+! #ifndef LIBCOMPATCOLL_MODE
+  #ifdef _LIBC
+  # define tzname __tzname
+  # define tzset __tzset
+  #endif
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  #if !HAVE_TM_GMTOFF
+  /* Portable standalone applications should supply a "time_r.h" that
+***************
+*** 460,466 ****
+--- 468,476 ----
+  			      ut_argument LOCALE_ARG);
+  }
+  #ifdef _LIBC
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (my_strftime)
++ #endif /* LIBCOMPATCOLL_MODE */
+  #endif
+  
+  static size_t
+diff'ing time/strptime.c
+*** a/time/strptime.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/strptime.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 31,34 ****
+--- 31,36 ----
+  {
+    return __strptime_internal (buf, format, tm, NULL, _NL_CURRENT_LOCALE);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (strptime)
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing time/strptime_l.c
+*** a/time/strptime_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/strptime_l.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 15,20 ****
+--- 15,36 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ /* How many days come before each month (0-12).  */
++ #ifndef _LIBC
++ static
++ #endif 
++ const unsigned short int __mon_yday[2][13] =
++   {     
++     /* Normal years.  */
++     { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
++     /* Leap years.  */
++     { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
++   };
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #ifdef HAVE_CONFIG_H
+  # include <config.h>
+  #endif
+***************
+*** 35,41 ****
+--- 51,59 ----
+  
+  #if ! HAVE_LOCALTIME_R && ! defined localtime_r
+  # ifdef _LIBC
++ #ifndef LIBCOMPATCOLL_MODE
+  #  define localtime_r __localtime_r
++ #endif /* LIBCOMPATCOLL_MODE */
+  # else
+  /* Approximate localtime_r as best we can in its absence.  */
+  #  define localtime_r my_localtime_r
+diff'ing time/wcsftime.c
+*** a/time/wcsftime.c	2018-11-27 20:35:31.000000000 +0000
+--- b/time/wcsftime.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 25,28 ****
+--- 25,30 ----
+  {
+    return __wcsftime_l (s, maxsize, format, tp, _NL_CURRENT_LOCALE);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (wcsftime)
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing wcsmbs/mbrlen.c
+*** a/wcsmbs/mbrlen.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/mbrlen.c	2022-11-04 16:05:37.046454440 +0000
+***************
+*** 28,32 ****
+--- 28,34 ----
+  {
+    return __mbrtowc (NULL, s, n, ps ?: &internal);
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__mbrlen)
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (__mbrlen, mbrlen)
+diff'ing wcsmbs/mbrtowc.c
+*** a/wcsmbs/mbrtowc.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/mbrtowc.c	2022-11-04 16:05:37.050454409 +0000
+***************
+*** 119,127 ****
+--- 119,131 ----
+  
+    return result;
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__mbrtowc)
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (__mbrtowc, mbrtowc)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_weak (mbrtowc)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* There should be no difference between the UTF-32 handling required
+     by mbrtoc32 and the wchar_t handling which has long since been
+diff'ing wcsmbs/mbsrtowcs_l.c
+*** a/wcsmbs/mbsrtowcs_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/mbsrtowcs_l.c	2022-11-04 16:05:37.054454377 +0000
+***************
+*** 16,21 ****
+--- 16,27 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __strnlen(s,n)		strnlen(s,n)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <ctype.h>
+  #include <string.h>
+diff'ing wcsmbs/wcrtomb.c
+*** a/wcsmbs/wcrtomb.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wcrtomb.c	2022-11-04 16:05:37.054454377 +0000
+***************
+*** 112,118 ****
+--- 112,120 ----
+    return result;
+  }
+  weak_alias (__wcrtomb, wcrtomb)
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_weak (wcrtomb)
++ #endif /* LIBCOMPATCOLL_MODE */
+  
+  /* There should be no difference between the UTF-32 handling required
+     by c32rtomb and the wchar_t handling which has long since been
+diff'ing wcsmbs/wcsncase_l.c
+*** a/wcsmbs/wcsncase_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wcsncase_l.c	2022-11-04 16:05:37.058454346 +0000
+***************
+*** 19,23 ****
+--- 19,25 ----
+  #define USE_IN_EXTENDED_LOCALE_MODEL	1
+  #include <wcsncase.c>
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__wcsncasecmp_l)
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (__wcsncasecmp_l, wcsncasecmp_l)
+diff'ing wcsmbs/wcstol.c
+diff'ing wcsmbs/wcstol_l.c
+diff'ing wcsmbs/wcstold.c
+diff'ing wcsmbs/wcstold_l.c
+diff'ing wcsmbs/wcsrtombs.c
+*** a/wcsmbs/wcsrtombs.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wcsrtombs.c	2022-11-04 16:05:37.062454315 +0000
+***************
+*** 16,21 ****
+--- 16,28 ----
+     License along with the GNU C Library; if not, see
+     <http://www.gnu.org/licenses/>.  */
+  
++ #ifdef LIBCOMPATCOLL_MODE
++ 
++ #define __wcslen(s)             wcslen(s)
++ #define __wcsnlen(s,n)             wcsnlen(s,n)
++ 
++ #endif /* LIBCOMPATCOLL_MODE */
++ 
+  #include <assert.h>
+  #include <dlfcn.h>
+  #include <errno.h>
+diff'ing wcsmbs/wcschr.c
+*** a/wcsmbs/wcschr.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wcschr.c	2022-11-04 16:05:37.066454284 +0000
+***************
+*** 32,37 ****
+--- 32,41 ----
+  
+    return NULL;
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__wcschr)
+  weak_alias (__wcschr, wcschr)
+  libc_hidden_weak (wcschr)
++ #else
++ weak_alias (__wcschr, wcschr)
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing wcsmbs/wcscmp.c
+*** a/wcsmbs/wcscmp.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wcscmp.c	2022-11-04 16:05:37.066454284 +0000
+***************
+*** 41,45 ****
+--- 41,47 ----
+  
+    return c1 < c2 ? -1 : 1;
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (WCSCMP)
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (WCSCMP, wcscmp)
+diff'ing wcsmbs/wmemset.c
+*** a/wcsmbs/wmemset.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wmemset.c	2022-11-04 16:05:37.066454284 +0000
+***************
+*** 52,57 ****
+--- 52,61 ----
+  
+    return s;
+  }
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__wmemset)
+  weak_alias (__wmemset, wmemset)
+  libc_hidden_weak (wmemset)
++ #else
++ weak_alias (__wmemset, wmemset)
++ #endif /* LIBCOMPATCOLL_MODE */
+diff'ing wcsmbs/wcscasecmp_l.c
+*** a/wcsmbs/wcscasecmp_l.c	2018-11-27 20:35:31.000000000 +0000
+--- b/wcsmbs/wcscasecmp_l.c	2022-11-04 16:05:37.070454253 +0000
+***************
+*** 19,23 ****
+--- 19,25 ----
+  #define USE_IN_EXTENDED_LOCALE_MODEL	1
+  #include <wcscasecmp.c>
+  
++ #ifndef LIBCOMPATCOLL_MODE
+  libc_hidden_def (__wcscasecmp_l)
++ #endif /* LIBCOMPATCOLL_MODE */
+  weak_alias (__wcscasecmp_l, wcscasecmp_l)

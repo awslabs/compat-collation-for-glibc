@@ -17,6 +17,7 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifndef LIBCOMPATCOLL_MODE
 /* Define multiple versions only for the definition in libc.  */
 #if IS_IN (libc)
 # define wmemset __redirect_wmemset
@@ -38,3 +39,4 @@ __hidden_ver1 (wmemset, __GI_wmemset, __redirect_wmemset)
   __attribute__ ((visibility ("hidden")));
 # endif
 #endif
+#endif /* LIBCOMPATCOLL_MODE */

@@ -9,7 +9,9 @@ libc_hidden_proto (sigdelset)
 libc_hidden_proto (sigismember)
 extern int __sigpause (int sig_or_mask, int is_sig);
 libc_hidden_proto (__sigpause)
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (raise)
+#endif /* LIBCOMPATCOLL_MODE */
 libc_hidden_proto (__libc_current_sigrtmin)
 libc_hidden_proto (__libc_current_sigrtmax)
 libc_hidden_proto (_sys_siglist)

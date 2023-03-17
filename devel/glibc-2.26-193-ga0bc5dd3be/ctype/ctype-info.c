@@ -24,6 +24,9 @@ __libc_tsd_define (, const int32_t *, CTYPE_TOLOWER)
 __libc_tsd_define (, const int32_t *, CTYPE_TOUPPER)
 
 
+#ifdef LIBCOMPATCOLL_MODE
+__attribute__((constructor))
+#endif /* LIBCOMPATCOLL_MODE */
 void
 __ctype_init (void)
 {
@@ -34,7 +37,9 @@ __ctype_init (void)
   const int32_t **lp = __libc_tsd_address (const int32_t *, CTYPE_TOLOWER);
   *lp = ((int32_t *) _NL_CURRENT (LC_CTYPE, _NL_CTYPE_TOLOWER) + 128);
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__ctype_init)
+#endif /* LIBCOMPATCOLL_MODE */
 
 
 #include <shlib-compat.h>
@@ -67,11 +72,13 @@ const __int32_t *__ctype_toupper = b (__int32_t, toupper, 128);
 const __uint32_t *__ctype32_tolower = b (__uint32_t, tolower, 128);
 const __uint32_t *__ctype32_toupper = b (__uint32_t, toupper, 128);
 
+#ifndef LIBCOMPATCOLL_MODE
 compat_symbol (libc, __ctype_b, __ctype_b, GLIBC_2_0);
 compat_symbol (libc, __ctype_tolower, __ctype_tolower, GLIBC_2_0);
 compat_symbol (libc, __ctype_toupper, __ctype_toupper, GLIBC_2_0);
 compat_symbol (libc, __ctype32_b, __ctype32_b, GLIBC_2_0);
 compat_symbol (libc, __ctype32_tolower, __ctype32_tolower, GLIBC_2_2);
 compat_symbol (libc, __ctype32_toupper, __ctype32_toupper, GLIBC_2_2);
+#endif /* LIBCOMPATCOLL_MODE */
 
 #endif

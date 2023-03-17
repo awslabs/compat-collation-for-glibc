@@ -17,6 +17,14 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __mmap(a,b,c,d,e,f)		mmap(a,b,c,d,e,f)
+#define __munmap(a,b)			munmap(a,b)
+#define __read(a,b,c)			read(a,b,c)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -29,6 +37,23 @@
 #include <gconv_int.h>
 #include <iconvconfig.h>
 #include <not-cancel.h>
+
+#ifdef LIBCOMPATCOLL_MODE
+
+/* Uncancelable open.  */
+#ifdef __NR_open
+# define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (open, 3, name, flags, mode)
+# define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (open, 2, name, flags)
+#else
+# define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (openat, 4, AT_FDCWD, name, flags, mode)
+# define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (openat, 3, AT_FDCWD, name, flags)
+#endif
+
+#endif /* LIBCOMPATCOLL_MODE */
 
 #include "../intl/hash-string.h"
 
@@ -54,7 +79,11 @@ __gconv_load_cache (void)
 
   /* We cannot use the cache if the GCONV_PATH environment variable is
      set.  */
+#ifndef LIBCOMPATCOLL_MODE
   __gconv_path_envvar = getenv ("GCONV_PATH");
+#else
+  __gconv_path_envvar = getenv ("COMPAT_GCONV_PATH");
+#endif /* LIBCOMPATCOLL_MODE */
   if (__gconv_path_envvar != NULL)
     return -1;
 

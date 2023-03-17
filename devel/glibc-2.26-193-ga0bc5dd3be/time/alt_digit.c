@@ -16,6 +16,12 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __wcschr(a,b)		wcschr(a,b)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include "../locale/localeinfo.h"
 #include <libc-lock.h>
 #include <stdlib.h>
