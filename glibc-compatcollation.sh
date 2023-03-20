@@ -4,7 +4,7 @@ TOPDIR=$(rpm --eval '%{_topdir}')
 RPMBUILD=$(which rpmbuild)
 BRANCH=2.26-59.amzn2
 BASELINE_TAG=${BRANCH}-BASELINE
-LAST_RELEASE_TAG=${BASELINE_TAG}
+LAST_RELEASE_TAG=${BRANCH}-v1.5
 GLIBC_DIR=glibc-2.26-193-ga0bc5dd3be
 DEV_DIR=devel/${GLIBC_DIR}
 

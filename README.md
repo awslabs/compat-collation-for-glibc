@@ -34,6 +34,7 @@ This branch `2.26-59.amzn2` is for glibc version 2.26-59 included with Amazon Li
 
 * 2.26-59.amzn2-BASELINE - original source from glibc-2.26-59.amzn2.src.rpm
 * 2.26-59.amzn2-v1.5 - Release 1.5 for collation compatibility library
+* 2.26-59.amzn2-v1.7 - Release 1.7 for collation compatibility library
 
 ### For Package Builder
  

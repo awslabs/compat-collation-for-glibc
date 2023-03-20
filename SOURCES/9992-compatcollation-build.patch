@@ -1,787 +1,787 @@
-diff -cNr a/compatcollation/build-compatcollation.sh b/compatcollation/build-compatcollation.sh
-*** a/compatcollation/build-compatcollation.sh	1970-01-01 00:00:00.000000000 +0000
---- b/compatcollation/build-compatcollation.sh	2022-12-06 17:32:17.404354151 +0000
-***************
-*** 0 ****
---- 1,260 ----
-+ #!/bin/bash
-+ err_exit() {
-+   if [ ${1} -gt 0 ]; then
-+     echo "************* Failed      *************"
-+     echo "************* Exit Code $? *************"
-+     exit $1
-+   fi
-+ }
-+ 
-+ skip_comment() {
-+   line="$1"
-+   if [[ ${line::1} == "#" ]]
-+   then
-+     continue
-+   fi
-+ }
-+ 
-+ if [ -z "${COMPATPREFIX}" ] ; then
-+   echo "COMPATPREFIX is undefined"
-+   exit 1
-+ fi
-+ if [ -z "${BUILDROOT}" ] ; then
-+   echo "BUILDROOT is undefined"
-+   exit 1
-+ fi
-+ if [ -z "${BUILDDIR}" ] ; then
-+   echo "BUILDDIR is undefined"
-+   exit 1
-+ fi
-+ if [ -z "${GLIBCVERSION}" ] ; then
-+   echo "GLIBCVERSION is undefined"
-+   exit 1
-+ fi
-+ if [ -z "${GLIBCRELEASE}" ] ; then
-+   echo "GLIBCRELEASE is undefined"
-+   exit 1
-+ fi
-+ if [ -z "${COMPATCOLLATIONVERSION}" ] ; then
-+   echo "COMPATCOLLATIONVERSION is undefined"
-+   exit 1
-+ fi
-+ 
-+ GLIBCRELEASE_STR="'\"${GLIBCRELEASE}\"'"
-+ BUILDOUT="${BUILDROOT}/compatcollation/glibc-rpmbuild.out"
-+ BUILDFILES="${BUILDROOT}/compatcollation/buildfiles.txt"
-+ 
-+ mkdir -p ${BUILDDIR}/compatcollation
-+ 
-+ ULL="/usr/lib/locale"
-+ ULLC="${COMPATPREFIX}/lib/locale-compatcollation${COMPATCOLLATIONVERSION}"
-+ USL="/usr/share/locale"
-+ USLC="${COMPATPREFIX}/share/locale-compatcollation${COMPATCOLLATIONVERSION}"
-+ ULG="/usr/lib64/gconv"
-+ ULGC="${COMPATPREFIX}/lib64/gconv-compatcollation${COMPATCOLLATIONVERSION}"
-+ ULeG="/usr/libexec/getconf"
-+ ULeGC="${COMPATPREFIX}/libexec/getconf-compatcollation${COMPATCOLLATIONVERSION}"
-+ GCCSRCVER="7"
-+ GCCTGTVER="7"
-+ 
-+ if [[ "$1" == "" ]]
-+ then
-+ lastdir=""
-+ while read currpath
-+ do
-+   skip_comment "${currpath}"
-+   currdir=$(dirname ${currpath})
-+   currbase=$(basename ${currpath})
-+   if [[ ${currdir} != ${lastdir} ]]
-+   then
-+     echo "changing directory to ${BUILDROOT}/${currdir}"
-+     cd ${BUILDROOT}/${currdir}
-+   fi
-+   lastdir=${currdir}
-+ 
-+   # special cases
-+   if [[ "${currdir}/${currbase}" == "misc/mremap" || 
-+         "${currdir}/${currbase}" == "misc/munmap" ||
-+         "${currdir}/${currbase}" == "posix/sched_yield" ||
-+         "${currdir}/${currbase}" == "socket/socket" ||
-+         "${currdir}/${currbase}" == "misc/madvise" ||
-+         "${currdir}/${currbase}" == "misc/mprotect"
-+      ]]
-+   then
-+     GCCCOMPSTR="$(grep -B6 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   elif [[ "${currdir}/${currbase}" == "misc/syscall_clock_gettime" ]]
-+   then
-+     GCCCOMPSTR="$(grep -B5 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   elif [[ "${currdir}/${currbase}" == "misc/sysinfo" ]]
-+   then
-+     GCCCOMPSTR="$(grep -B4 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   elif [[ "${currdir}/${currbase}" == "io/open" ]]
-+   then
-+     GCCCOMPSTR="$(grep -B13 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   elif [[ "${currdir}/${currbase}" == "resource/getrlimit" ]]
-+   then
-+     GCCCOMPSTR="$(grep -B8 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   elif [[ "${currdir}/${currbase}" == "io/read" ||
-+           "${currdir}/${currbase}" == "io/write" ||
-+           "${currdir}/${currbase}" == "io/close" ||
-+           "${currdir}/${currbase}" == "socket/connect"
-+        ]]
-+   then
-+     GCCCOMPSTR="$(grep -B9 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   elif [[ "${currdir}/${currbase}" == "misc/llseek" ]]
-+   then
-+     GCCCOMPSTR="$(grep -B19 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
-+ 
-+     # decruft the string
-+     DIN="\; \\\\"
-+     DOU="\; "
-+     GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+   # Now process the usual suspects
-+   else
-+     GCCCOMPSTR=$(grep -E "^gcc.+?${currbase}\.(c|S).+?${currdir}/${currbase}.os\s?$" ${BUILDOUT})
-+     # some source files are *.S for assembly
-+   fi
-+ 
-+   # fix buildtime defined paths
-+   DIN="DCOMPLOCALEDIR='\"${ULL}\"'"
-+   DOU="DCOMPLOCALEDIR='\"${ULLC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="DLOCALEDIR='\"${ULL}\"'"
-+   DOU="DLOCALEDIR='\"${ULLC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="DLOCALE_ALIAS_PATH='\"${USL}\"'"
-+   DOU="DLOCALE_ALIAS_PATH='\"${USLC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="D'LOCALE_ALIAS_PATH=\"${USL}\"'"
-+   DOU="D'LOCALE_ALIAS_PATH=\"${USLC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="D'LOCALEDIR=\"${USL}\"'"
-+   DOU="D'LOCALEDIR=\"${USLC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="DGCONV_DIR='\"${ULG}\"'"
-+   DOU="DGCONV_DIR='\"${ULGC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="DGCONV_PATH='\"${ULG}\"'"
-+   DOU="DGCONV_PATH='\"${ULGC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   DIN="DGETCONF_DIR='\"${ULeG}\"'"
-+   DOU="DGETCONF_DIR='\"${ULeGC}\"'"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   # fix system include path based on gcc version
-+   DIN="usr/lib/gcc/x86_64-redhat-linux/${GCCSRCVER}/include"
-+   DOU="usr/lib/gcc/x86_64-redhat-linux/${GCCTGTVER}/include"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   # inject -DLIBCOMPATCOLL_MODE and version string suffix
-+   DIN="\-DMODULE_NAME=libc"
-+   DOU="\-DMODULE_NAME=libc \-DLIBCOMPATCOLL_MODE \-DGLIBCRELEASE=$(echo ${GLIBCRELEASE_STR})"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   # modify the object extension to our own
-+   DIN="${currdir}/${currbase}.os"
-+   DOU="${currdir}/${currbase}.oc"
-+   GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
-+ 
-+   # output for the record
-+   echo ${GCCCOMPSTR}
-+   # and run it
-+   eval ${GCCCOMPSTR}
-+   err_exit $?
-+ done <<< "$(cat ${BUILDFILES})"
-+ cd ${BUILDROOT}
-+ fi #skip if arg passed
-+ 
-+ arstr=""
-+ while read currpath
-+ do
-+   skip_comment "${currpath}"
-+   currdir=$(dirname ${currpath})
-+   currbase=$(basename ${currpath})
-+ 
-+   arstr="${arstr} ${currdir}/${currbase}.oc"
-+ done <<< "$(cat ${BUILDFILES})"
-+ cd ${BUILDROOT}
-+ 
-+ # create object archive
-+ cd ${BUILDDIR}
-+ echo "ar cruv libcompatcollation_pic.a ${arstr}"
-+ rm -f libcompatcollation_pic.a
-+ ar cruv libcompatcollation_pic.a $(echo ${arstr})
-+ err_exit $?
-+ 
-+ # create libcompatcollation_pic.os
-+ gcc -nostdlib -nostartfiles -r \
-+ -Wl,-d -Wl,--whole-archive ${BUILDDIR}/libcompatcollation_pic.a \
-+ -o ${BUILDDIR}/libcompatcollation_pic.os
-+ err_exit $?
-+ 
-+ # build libcompatcollation.so library
-+ cd ${BUILDROOT}
-+ 
-+ ENABLE_LD_PRELOAD=0
-+ if [[ "${ENABLE_LD_PRELOAD}" == "1" ]]
-+ then
-+   VERSIONMAP="${BUILDDIR}/libc.map"
-+ else
-+   VERSIONMAP="${BUILDROOT}/compatcollation/libcompatcollation.map"
-+ fi
-+ 
-+ # link
-+ GCCCOMPSTR="gcc -shared -Wl,-Bsymbolic \
-+ -Wl,-O1 -Wl,-z,defs -fPIC \
-+ -Wl,--version-script=${VERSIONMAP} \
-+ -Wl,-soname=libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so -Wl,-z,combreloc \
-+ -Wl,-z,relro -Wl,--hash-style=both -Wl,-z,now \
-+ -L${BUILDDIR} -L${BUILDDIR}/math -L${BUILDDIR}/elf -L${BUILDDIR}/dlfcn \
-+ -L${BUILDDIR}/nss -L${BUILDDIR}/nis -L${BUILDDIR}/rt -L${BUILDDIR}/resolv -L${BUILDDIR}/crypt \
-+ -L${BUILDDIR}/support -L${BUILDDIR}/nptl \
-+ -Wl,-rpath-link=${BUILDDIR}:${BUILDDIR}/math:${BUILDDIR}/elf:${BUILDDIR}/dlfcn:${BUILDDIR}/nss:${BUILDDIR}/nis:${BUILDDIR}/rt:${BUILDDIR}/resolv:${BUILDDIR}/crypt:${BUILDDIR}/support:${BUILDDIR}/nptl \
-+ -o ${BUILDDIR}/libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so \
-+ ${BUILDDIR}/libcompatcollation_pic.os -ldl"
-+ 
-+ # output for the record
-+ echo ${GCCCOMPSTR}
-+ # and run it
-+ eval ${GCCCOMPSTR}
-+ 
-+ err_exit $?
-+ 
-+ echo "Created: ${BUILDDIR}/libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so"
-diff -cNr a/compatcollation/buildfiles.txt b/compatcollation/buildfiles.txt
-*** a/compatcollation/buildfiles.txt	1970-01-01 00:00:00.000000000 +0000
---- b/compatcollation/buildfiles.txt	2022-11-04 20:48:55.139819915 +0000
-***************
-*** 0 ****
---- 1,210 ----
-+ # Intentionally skipped. Unused in PostgreSQL,
-+ # cause issues for the compatcollation library
-+ #######################
-+ #strfmon
-+ #strfmon_l
-+ #strcasecmp
-+ #strcasecmp_l
-+ #strncasecmp
-+ #strncasecmp_l
-+ #libio/genops
-+ #libio/stdfiles
-+ #libio/strops
-+ #######################
-+ nptl/libc_multiple_threads
-+ nptl/libc-lowlevellock
-+ nptl/forward
-+ nptl/alloca_cutoff
-+ csu/version
-+ ctype/ctype
-+ ctype/ctype-extn
-+ ctype/ctype-info
-+ ctype/ctype_l
-+ ctype/ctype-c99
-+ ctype/ctype-c99_l
-+ ctype/isctype
-+ iconv/gconv
-+ iconv/gconv_builtin
-+ iconv/gconv_cache
-+ iconv/gconv_close
-+ iconv/gconv_conf
-+ iconv/gconv_db
-+ iconv/gconv_dl
-+ iconv/gconv_open
-+ iconv/gconv_simple
-+ iconv/gconv_trans
-+ intl/bindtextdom
-+ intl/dgettext
-+ intl/dcgettext
-+ intl/dcigettext
-+ intl/dcngettext
-+ intl/dngettext
-+ intl/explodename
-+ intl/finddomain
-+ intl/gettext
-+ intl/hash-string
-+ intl/l10nflist
-+ intl/loadmsgcat
-+ intl/localealias
-+ intl/ngettext
-+ intl/plural
-+ intl/plural-exp
-+ intl/textdomain
-+ locale/C-address
-+ locale/C-collate
-+ locale/C-ctype
-+ locale/C-identification
-+ locale/C-measurement
-+ locale/C-messages
-+ locale/C-monetary
-+ locale/C-name
-+ locale/C-numeric
-+ locale/C-paper
-+ locale/C-telephone
-+ locale/C-time
-+ locale/C_name
-+ locale/SYS_libc
-+ locale/coll-lookup
-+ locale/duplocale
-+ locale/findlocale
-+ locale/freelocale
-+ locale/global-locale
-+ locale/lc-ctype
-+ locale/loadarchive
-+ locale/loadlocale
-+ locale/localeconv
-+ locale/localename
-+ locale/newlocale
-+ locale/nl_langinfo
-+ locale/nl_langinfo_l
-+ locale/setlocale
-+ locale/uselocale
-+ locale/xlocale
-+ stdio-common/errlist
-+ stdio-common/_itoa
-+ stdio-common/itoa-digits
-+ stdio-common/itoa-udigits
-+ stdlib/add_n
-+ stdlib/addmul_1
-+ stdlib/cmp
-+ stdlib/dbl2mpn
-+ stdlib/divrem
-+ stdlib/fpioconst
-+ stdlib/grouping
-+ stdlib/groupingwc
-+ stdlib/ldbl2mpn
-+ stdlib/lshift
-+ stdlib/mblen
-+ stdlib/mbstowcs
-+ stdlib/mbtowc
-+ stdlib/mpn2dbl
-+ stdlib/mpn2flt
-+ stdlib/mpn2ldbl
-+ stdlib/mul
-+ stdlib/mul_1
-+ stdlib/mul_n
-+ stdlib/rshift
-+ stdlib/strtod
-+ stdlib/strtod_l
-+ stdlib/strtod_nan
-+ stdlib/strtof
-+ stdlib/strtof_l
-+ stdlib/strtof_nan
-+ stdlib/strtol
-+ stdlib/strtol_l
-+ stdlib/strtold
-+ stdlib/strtold_l
-+ stdlib/strtold_nan
-+ stdlib/strtoll
-+ stdlib/strtoll_l
-+ stdlib/strtoul
-+ stdlib/strtoul_l
-+ stdlib/strtoull
-+ stdlib/strtoull_l
-+ stdlib/sub_n
-+ stdlib/submul_1
-+ stdlib/tens_in_limb
-+ stdlib/wcstombs
-+ stdlib/wctomb
-+ string/argz-addsep
-+ string/argz-append
-+ string/argz-count
-+ string/argz-create
-+ string/argz-ctsep
-+ string/argz-delete
-+ string/argz-extract
-+ string/argz-insert
-+ string/argz-next
-+ string/argz-replace
-+ string/argz-stringify
-+ string/strcoll
-+ string/strcoll_l
-+ string/_strerror
-+ string/strerror
-+ string/strerror_l
-+ string/strxfrm
-+ string/strxfrm_l
-+ time/alt_digit
-+ time/asctime
-+ time/ctime
-+ time/ctime_r
-+ time/era
-+ time/lc-time-cleanup
-+ time/strftime
-+ time/strftime_l
-+ time/strptime
-+ time/strptime_l
-+ time/wcsftime
-+ time/wcsftime_l
-+ wcsmbs/btowc
-+ wcsmbs/mbrlen
-+ wcsmbs/mbrtowc
-+ wcsmbs/mbsrtowcs
-+ wcsmbs/mbsrtowcs_l
-+ wcsmbs/wcpncpy
-+ wcsmbs/wcrtomb
-+ wcsmbs/wcscasecmp
-+ wcsmbs/wcscasecmp_l
-+ wcsmbs/wcschr
-+ wcsmbs/wcschrnul
-+ wcsmbs/wcscmp
-+ wcsmbs/wcscoll
-+ wcsmbs/wcscoll_l
-+ wcsmbs/wcslen
-+ wcsmbs/wcsmbsload
-+ wcsmbs/wcsncase_l
-+ wcsmbs/wcsnlen
-+ wcsmbs/wcsrtombs
-+ wcsmbs/wcstod
-+ wcsmbs/wcstod_l
-+ wcsmbs/wcstod_nan
-+ wcsmbs/wcstof
-+ wcsmbs/wcstof_l
-+ wcsmbs/wcstof_nan
-+ wcsmbs/wcstol
-+ wcsmbs/wcstold
-+ wcsmbs/wcstold_l
-+ wcsmbs/wcstold_nan
-+ wcsmbs/wcstol_l
-+ wcsmbs/wcstoll
-+ wcsmbs/wcstoll_l
-+ wcsmbs/wcstoul
-+ wcsmbs/wcstoul_l
-+ wcsmbs/wcstoull
-+ wcsmbs/wcstoull_l
-+ wcsmbs/wcsxfrm
-+ wcsmbs/wcsxfrm_l
-+ wcsmbs/wmemcpy
-+ wcsmbs/wmemmove
-+ wcsmbs/wmempcpy
-+ wcsmbs/wmemset
-+ wctype/iswctype
-+ wctype/iswctype_l
-+ wctype/towctrans
-+ wctype/towctrans_l
-+ wctype/wcfuncs
-+ wctype/wcfuncs_l
-+ wctype/wctrans
-+ wctype/wctrans_l
-+ wctype/wctype
-+ wctype/wctype_l
-diff -cNr a/compatcollation/libcompatcollation.map b/compatcollation/libcompatcollation.map
-*** a/compatcollation/libcompatcollation.map	1970-01-01 00:00:00.000000000 +0000
---- b/compatcollation/libcompatcollation.map	2022-11-04 20:48:55.151818183 +0000
-***************
-*** 0 ****
---- 1,260 ----
-+ GLIBC_2.2.5 {
-+   local:
-+     *;
-+ };
-+ GLIBC_2.2.6 {
-+   local:
-+     *;
-+ } GLIBC_2.2.5;
-+ GLIBC_2.3 {
-+   local:
-+     *;
-+ } GLIBC_2.2.6;
-+ GLIBC_2.3.2 {
-+   local:
-+     *;
-+ } GLIBC_2.3;
-+ GLIBC_2.3.3 {
-+   local:
-+     *;
-+ } GLIBC_2.3.2;
-+ GLIBC_2.3.4 {
-+   local:
-+     *;
-+ } GLIBC_2.3.3;
-+ GLIBC_2.4 {
-+   local:
-+     *;
-+ } GLIBC_2.3.4;
-+ GLIBC_2.5 {
-+   local:
-+     *;
-+ } GLIBC_2.4;
-+ GLIBC_2.6 {
-+   local:
-+     *;
-+ } GLIBC_2.5;
-+ GLIBC_2.7 {
-+   local:
-+     *;
-+ } GLIBC_2.6;
-+ GLIBC_2.8 {
-+   local:
-+     *;
-+ } GLIBC_2.7;
-+ GLIBC_2.9 {
-+   local:
-+     *;
-+ } GLIBC_2.8;
-+ GLIBC_2.10 {
-+   local:
-+     *;
-+ } GLIBC_2.9;
-+ GLIBC_2.11 {
-+   local:
-+     *;
-+ } GLIBC_2.10;
-+ GLIBC_2.12 {
-+   local:
-+     *;
-+ } GLIBC_2.11;
-+ GLIBC_2.13 {
-+   local:
-+     *;
-+ } GLIBC_2.12;
-+ GLIBC_2.14 {
-+   local:
-+     *;
-+ } GLIBC_2.13;
-+ GLIBC_2.15 {
-+   local:
-+     *;
-+ } GLIBC_2.14;
-+ GLIBC_2.16 {
-+   local:
-+     *;
-+ } GLIBC_2.15;
-+ GLIBC_2.17 {
-+   local:
-+     *;
-+ } GLIBC_2.16;
-+ GLIBC_2.18 {
-+   local:
-+     *;
-+ } GLIBC_2.17;
-+ GLIBC_2.22 {
-+   local:
-+     *;
-+ } GLIBC_2.18;
-+ GLIBC_2.23 {
-+   local:
-+     *;
-+ } GLIBC_2.22;
-+ GLIBC_2.24 {
-+   local:
-+     *;
-+ } GLIBC_2.23;
-+ GLIBC_2.25 {
-+   local:
-+     *;
-+ } GLIBC_2.24;
-+ COMPATCOLL_1.0 {
-+   global:
-+     __ctype_b_loc;
-+     __ctype_init;
-+     __ctype_tolower;
-+     __ctype_toupper;
-+     _tolower;
-+     _toupper;
-+     asctime;
-+     asctime_r;
-+     bind_textdomain_codeset;
-+     bindtextdomain;
-+     ctime;
-+     ctime_r;
-+     dcgettext;
-+     dcngettext;
-+     dgettext;
-+     dngettext;
-+     duplocale;
-+     freelocale;
-+     gettext;
-+     gnu_get_libc_version;
-+     isalnum;
-+     isalnum_l;
-+     isalpha;
-+     isalpha_l;
-+     isascii;
-+     isblank;
-+     isblank_l;
-+     iscntrl;
-+     iscntrl_l;
-+     __isctype;
-+     isctype;
-+     isdigit;
-+     isdigit_l;
-+     isgraph;
-+     isgraph_l;
-+     islower;
-+     islower_l;
-+     isprint;
-+     isprint_l;
-+     ispunct;
-+     ispunct_l;
-+     isspace;
-+     isspace_l;
-+     isupper;
-+     isupper_l;
-+     iswalnum;
-+     iswalnum_l;
-+     iswalpha;
-+     iswalpha_l;
-+     iswblank;
-+     iswblank_l;
-+     iswcntrl;
-+     iswcntrl_l;
-+     iswctype;
-+     iswdigit;
-+     iswdigit_l;
-+     iswgraph;
-+     iswgraph_l;
-+     iswlower;
-+     iswlower_l;
-+     iswprint;
-+     iswprint_l;
-+     iswpunct;
-+     iswpunct_l;
-+     iswspace;
-+     iswspace_l;
-+     iswupper;
-+     iswupper_l;
-+     iswxdigit;
-+     iswxdigit_l;
-+     isxdigit;
-+     isxdigit_l;
-+     localeconv;
-+     mblen;
-+     mbstowcs;
-+     mbtowc;
-+     newlocale;
-+     ngettext;
-+     nl_langinfo;
-+     nl_langinfo_l;
-+     setlocale;
-+     strcasecmp;
-+     strcasecmp_l;
-+     strcoll;
-+     strcoll_l;
-+     strerror;
-+     strerror_l;
-+     strerror_r;
-+     strfmon;
-+     strfmon_l;
-+     strftime;
-+     strncasecmp;
-+     strncasecmp_l;
-+     strptime;
-+     strptime_l;
-+     strtod;
-+     strtod_l;
-+     strtof;
-+     strtof_l;
-+     strtol;
-+     strtol_l;
-+     strtold;
-+     strtold_l;
-+     strtoll;
-+     strtoll_l;
-+     strtoul;
-+     strtoul_l;
-+     strtoull;
-+     strtoull_l;
-+     strxfrm;
-+     strxfrm_l;
-+     textdomain;
-+     toascii;
-+     tolower;
-+     tolower_l;
-+     toupper;
-+     toupper_l;
-+     towctrans;
-+     towlower;
-+     towlower_l;
-+     towupper;
-+     towupper_l;
-+     uselocale;
-+     wcscasecmp;
-+     wcscasecmp_l;
-+     wcscoll;
-+     wcscoll_l;
-+     wcsftime;
-+     wcsncasecmp;
-+     wcsncasecmp_l;
-+     wcstod;
-+     wcstod_l;
-+     wcstof;
-+     wcstof_l;
-+     wcstol;
-+     wcstol_l;
-+     wcstold;
-+     wcstold_l;
-+     wcstoll;
-+     wcstoll_l;
-+     wcstombs;
-+     wcstoul;
-+     wcstoul_l;
-+     wcstoull;
-+     wcstoull_l;
-+     wcsxfrm;
-+     wcsxfrm_l;
-+     wctomb;
-+     wctrans;
-+     wctype;
-+   local:
-+     *;
-+ } GLIBC_2.25;
-+ GLIBC_PRIVATE {
-+   local:
-+     *;
-+ } COMPATCOLL_1.0;
-+ 
-diff -cNr a/compatcollation/Makefile b/compatcollation/Makefile
-*** a/compatcollation/Makefile	1970-01-01 00:00:00.000000000 +0000
---- b/compatcollation/Makefile	2022-12-06 17:32:33.713983308 +0000
-***************
-*** 0 ****
---- 1,33 ----
-+ ###############################
-+ # Build compatcollation lib and so
-+ ###############################
-+ .PHONY: clean install
-+ 
-+ COMPATPREFIX ?= $(error COMPATPREFIX is undefined)
-+ BUILDROOT ?= $(error BUILDROOT is undefined)
-+ BUILDDIR ?= $(error BUILDDIR is undefined)
-+ INSTALLROOT ?= $(error INSTALLROOT is undefined)
-+ GLIBCVERSION ?= $(error GLIBCVERSION is undefined)
-+ GLIBCRELEASE ?= $(error GLIBCRELEASE is undefined)
-+ COMPATCOLLATIONVERSION ?= $(error COMPATCOLLATIONVERSION is undefined)
-+ 
-+ 
-+ all: $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so
-+ 
-+ clean:
-+ 	rm -f $(BUILDDIR)/compatcollation/compatcollation.os $(BUILDDIR)/libccompat_pic.a $(BUILDDIR)/libccompat_pic.os $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so
-+ 
-+ install:
-+ 	mkdir -p $(INSTALLROOT)$(COMPATPREFIX)/lib64/gconv-compatcollation$(COMPATCOLLATIONVERSION) $(INSTALLROOT)$(COMPATPREFIX)/lib/locale-compatcollation$(COMPATCOLLATIONVERSION) $(INSTALLROOT)$(COMPATPREFIX)/share/locale-compatcollation$(COMPATCOLLATIONVERSION) && \
-+ 	cp -r $(INSTALLROOT)/usr/lib64/gconv/* $(INSTALLROOT)$(COMPATPREFIX)/lib64/gconv-compatcollation$(COMPATCOLLATIONVERSION)/ && \
-+ 	cp -r $(INSTALLROOT)/usr/lib/locale/C.utf8 $(INSTALLROOT)$(COMPATPREFIX)/lib/locale-compatcollation$(COMPATCOLLATIONVERSION)/ && \
-+ 	cp -r $(INSTALLROOT)/usr/lib/locale/locale* $(INSTALLROOT)$(COMPATPREFIX)/lib/locale-compatcollation$(COMPATCOLLATIONVERSION)/ && \
-+ 	cp -r $(INSTALLROOT)/usr/share/locale/* $(INSTALLROOT)$(COMPATPREFIX)/share/locale-compatcollation$(COMPATCOLLATIONVERSION)/ && \
-+ 	cp $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so $(INSTALLROOT)$(COMPATPREFIX)/lib64/
-+ 
-+ $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so:
-+ 	mkdir -p $(BUILDDIR)/compatcollation && \
-+ 	cd $(BUILDROOT)/compatcollation && \
-+ 	chmod 755 ./build-compatcollation.sh && \
-+ 	./build-compatcollation.sh | tee glibc-rpmbuild-compat.out
-+ 
+diff --git a/compatcollation/Makefile b/compatcollation/Makefile
+new file mode 100644
+index 0000000..89d8293
+--- /dev/null
++++ b/compatcollation/Makefile
+@@ -0,0 +1,33 @@
++###############################
++# Build compatcollation lib and so
++###############################
++.PHONY: clean install
++
++COMPATPREFIX ?= $(error COMPATPREFIX is undefined)
++BUILDROOT ?= $(error BUILDROOT is undefined)
++BUILDDIR ?= $(error BUILDDIR is undefined)
++INSTALLROOT ?= $(error INSTALLROOT is undefined)
++GLIBCVERSION ?= $(error GLIBCVERSION is undefined)
++GLIBCRELEASE ?= $(error GLIBCRELEASE is undefined)
++COMPATCOLLATIONVERSION ?= $(error COMPATCOLLATIONVERSION is undefined)
++
++
++all: $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so
++
++clean:
++	rm -f $(BUILDDIR)/compatcollation/compatcollation.os $(BUILDDIR)/libccompat_pic.a $(BUILDDIR)/libccompat_pic.os $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so
++
++install:
++	mkdir -p $(INSTALLROOT)$(COMPATPREFIX)/lib64/gconv-compatcollation$(COMPATCOLLATIONVERSION) $(INSTALLROOT)$(COMPATPREFIX)/lib/locale-compatcollation$(COMPATCOLLATIONVERSION) $(INSTALLROOT)$(COMPATPREFIX)/share/locale-compatcollation$(COMPATCOLLATIONVERSION) && \
++	cp -r $(INSTALLROOT)/usr/lib64/gconv/* $(INSTALLROOT)$(COMPATPREFIX)/lib64/gconv-compatcollation$(COMPATCOLLATIONVERSION)/ && \
++	cp -r $(INSTALLROOT)/usr/lib/locale/C.utf8 $(INSTALLROOT)$(COMPATPREFIX)/lib/locale-compatcollation$(COMPATCOLLATIONVERSION)/ && \
++	cp -r $(INSTALLROOT)/usr/lib/locale/locale* $(INSTALLROOT)$(COMPATPREFIX)/lib/locale-compatcollation$(COMPATCOLLATIONVERSION)/ && \
++	cp -r $(INSTALLROOT)/usr/share/locale/* $(INSTALLROOT)$(COMPATPREFIX)/share/locale-compatcollation$(COMPATCOLLATIONVERSION)/ && \
++	cp $(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so $(INSTALLROOT)$(COMPATPREFIX)/lib64/
++
++$(BUILDDIR)/libcompatcollation.$(GLIBCVERSION)-$(GLIBCRELEASE).so:
++	mkdir -p $(BUILDDIR)/compatcollation && \
++	cd $(BUILDROOT)/compatcollation && \
++	chmod 755 ./build-compatcollation.sh && \
++	./build-compatcollation.sh | tee glibc-rpmbuild-compat.out
++
+diff --git a/compatcollation/build-compatcollation.sh b/compatcollation/build-compatcollation.sh
+new file mode 100644
+index 0000000..c0e4a8a
+--- /dev/null
++++ b/compatcollation/build-compatcollation.sh
+@@ -0,0 +1,260 @@
++#!/bin/bash
++err_exit() {
++  if [ ${1} -gt 0 ]; then
++    echo "************* Failed      *************"
++    echo "************* Exit Code $? *************"
++    exit $1
++  fi
++}
++
++skip_comment() {
++  line="$1"
++  if [[ ${line::1} == "#" ]]
++  then
++    continue
++  fi
++}
++
++if [ -z "${COMPATPREFIX}" ] ; then
++  echo "COMPATPREFIX is undefined"
++  exit 1
++fi
++if [ -z "${BUILDROOT}" ] ; then
++  echo "BUILDROOT is undefined"
++  exit 1
++fi
++if [ -z "${BUILDDIR}" ] ; then
++  echo "BUILDDIR is undefined"
++  exit 1
++fi
++if [ -z "${GLIBCVERSION}" ] ; then
++  echo "GLIBCVERSION is undefined"
++  exit 1
++fi
++if [ -z "${GLIBCRELEASE}" ] ; then
++  echo "GLIBCRELEASE is undefined"
++  exit 1
++fi
++if [ -z "${COMPATCOLLATIONVERSION}" ] ; then
++  echo "COMPATCOLLATIONVERSION is undefined"
++  exit 1
++fi
++
++GLIBCRELEASE_STR="'\"${GLIBCRELEASE}\"'"
++BUILDOUT="${BUILDROOT}/compatcollation/glibc-rpmbuild.out"
++BUILDFILES="${BUILDROOT}/compatcollation/buildfiles.txt"
++
++mkdir -p ${BUILDDIR}/compatcollation
++
++ULL="/usr/lib/locale"
++ULLC="${COMPATPREFIX}/lib/locale-compatcollation${COMPATCOLLATIONVERSION}"
++USL="/usr/share/locale"
++USLC="${COMPATPREFIX}/share/locale-compatcollation${COMPATCOLLATIONVERSION}"
++ULG="/usr/lib64/gconv"
++ULGC="${COMPATPREFIX}/lib64/gconv-compatcollation${COMPATCOLLATIONVERSION}"
++ULeG="/usr/libexec/getconf"
++ULeGC="${COMPATPREFIX}/libexec/getconf-compatcollation${COMPATCOLLATIONVERSION}"
++GCCSRCVER="7"
++GCCTGTVER="7"
++
++if [[ "$1" == "" ]]
++then
++lastdir=""
++while read currpath
++do
++  skip_comment "${currpath}"
++  currdir=$(dirname ${currpath})
++  currbase=$(basename ${currpath})
++  if [[ ${currdir} != ${lastdir} ]]
++  then
++    echo "changing directory to ${BUILDROOT}/${currdir}"
++    cd ${BUILDROOT}/${currdir}
++  fi
++  lastdir=${currdir}
++
++  # special cases
++  if [[ "${currdir}/${currbase}" == "misc/mremap" || 
++        "${currdir}/${currbase}" == "misc/munmap" ||
++        "${currdir}/${currbase}" == "posix/sched_yield" ||
++        "${currdir}/${currbase}" == "socket/socket" ||
++        "${currdir}/${currbase}" == "misc/madvise" ||
++        "${currdir}/${currbase}" == "misc/mprotect"
++     ]]
++  then
++    GCCCOMPSTR="$(grep -B6 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  elif [[ "${currdir}/${currbase}" == "misc/syscall_clock_gettime" ]]
++  then
++    GCCCOMPSTR="$(grep -B5 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  elif [[ "${currdir}/${currbase}" == "misc/sysinfo" ]]
++  then
++    GCCCOMPSTR="$(grep -B4 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  elif [[ "${currdir}/${currbase}" == "io/open" ]]
++  then
++    GCCCOMPSTR="$(grep -B13 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  elif [[ "${currdir}/${currbase}" == "resource/getrlimit" ]]
++  then
++    GCCCOMPSTR="$(grep -B8 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  elif [[ "${currdir}/${currbase}" == "io/read" ||
++          "${currdir}/${currbase}" == "io/write" ||
++          "${currdir}/${currbase}" == "io/close" ||
++          "${currdir}/${currbase}" == "socket/connect"
++       ]]
++  then
++    GCCCOMPSTR="$(grep -B9 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  elif [[ "${currdir}/${currbase}" == "misc/llseek" ]]
++  then
++    GCCCOMPSTR="$(grep -B19 -Ee '^\) \| gcc \-c.+?'${currdir}/${currbase}.os'\s$' ${BUILDOUT})"
++
++    # decruft the string
++    DIN="\; \\\\"
++    DOU="\; "
++    GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++  # Now process the usual suspects
++  else
++    GCCCOMPSTR=$(grep -E "^gcc.+?${currbase}\.(c|S).+?${currdir}/${currbase}.os\s?$" ${BUILDOUT})
++    # some source files are *.S for assembly
++  fi
++
++  # fix buildtime defined paths
++  DIN="DCOMPLOCALEDIR='\"${ULL}\"'"
++  DOU="DCOMPLOCALEDIR='\"${ULLC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="DLOCALEDIR='\"${ULL}\"'"
++  DOU="DLOCALEDIR='\"${ULLC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="DLOCALE_ALIAS_PATH='\"${USL}\"'"
++  DOU="DLOCALE_ALIAS_PATH='\"${USLC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="D'LOCALE_ALIAS_PATH=\"${USL}\"'"
++  DOU="D'LOCALE_ALIAS_PATH=\"${USLC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="D'LOCALEDIR=\"${USL}\"'"
++  DOU="D'LOCALEDIR=\"${USLC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="DGCONV_DIR='\"${ULG}\"'"
++  DOU="DGCONV_DIR='\"${ULGC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="DGCONV_PATH='\"${ULG}\"'"
++  DOU="DGCONV_PATH='\"${ULGC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  DIN="DGETCONF_DIR='\"${ULeG}\"'"
++  DOU="DGETCONF_DIR='\"${ULeGC}\"'"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  # fix system include path based on gcc version
++  DIN="usr/lib/gcc/x86_64-redhat-linux/${GCCSRCVER}/include"
++  DOU="usr/lib/gcc/x86_64-redhat-linux/${GCCTGTVER}/include"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  # inject -DLIBCOMPATCOLL_MODE and version string suffix
++  DIN="\-DMODULE_NAME=libc"
++  DOU="\-DMODULE_NAME=libc \-DLIBCOMPATCOLL_MODE \-DGLIBCRELEASE=$(echo ${GLIBCRELEASE_STR})"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  # modify the object extension to our own
++  DIN="${currdir}/${currbase}.os"
++  DOU="${currdir}/${currbase}.oc"
++  GCCCOMPSTR=$(sed -e "s:${DIN}:${DOU}:g" <<< "${GCCCOMPSTR}")
++
++  # output for the record
++  echo ${GCCCOMPSTR}
++  # and run it
++  eval ${GCCCOMPSTR}
++  err_exit $?
++done <<< "$(cat ${BUILDFILES})"
++cd ${BUILDROOT}
++fi #skip if arg passed
++
++arstr=""
++while read currpath
++do
++  skip_comment "${currpath}"
++  currdir=$(dirname ${currpath})
++  currbase=$(basename ${currpath})
++
++  arstr="${arstr} ${currdir}/${currbase}.oc"
++done <<< "$(cat ${BUILDFILES})"
++cd ${BUILDROOT}
++
++# create object archive
++cd ${BUILDDIR}
++echo "ar cruv libcompatcollation_pic.a ${arstr}"
++rm -f libcompatcollation_pic.a
++ar cruv libcompatcollation_pic.a $(echo ${arstr})
++err_exit $?
++
++# create libcompatcollation_pic.os
++gcc -nostdlib -nostartfiles -r \
++-Wl,-d -Wl,--whole-archive ${BUILDDIR}/libcompatcollation_pic.a \
++-o ${BUILDDIR}/libcompatcollation_pic.os
++err_exit $?
++
++# build libcompatcollation.so library
++cd ${BUILDROOT}
++
++ENABLE_LD_PRELOAD=0
++if [[ "${ENABLE_LD_PRELOAD}" == "1" ]]
++then
++  VERSIONMAP="${BUILDDIR}/libc.map"
++else
++  VERSIONMAP="${BUILDROOT}/compatcollation/libcompatcollation.map"
++fi
++
++# link
++GCCCOMPSTR="gcc -shared -Wl,-Bsymbolic \
++-Wl,-O1 -Wl,-z,defs -fPIC \
++-Wl,--version-script=${VERSIONMAP} \
++-Wl,-soname=libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so -Wl,-z,combreloc \
++-Wl,-z,relro -Wl,--hash-style=both -Wl,-z,now \
++-L${BUILDDIR} -L${BUILDDIR}/math -L${BUILDDIR}/elf -L${BUILDDIR}/dlfcn \
++-L${BUILDDIR}/nss -L${BUILDDIR}/nis -L${BUILDDIR}/rt -L${BUILDDIR}/resolv -L${BUILDDIR}/crypt \
++-L${BUILDDIR}/support -L${BUILDDIR}/nptl \
++-Wl,-rpath-link=${BUILDDIR}:${BUILDDIR}/math:${BUILDDIR}/elf:${BUILDDIR}/dlfcn:${BUILDDIR}/nss:${BUILDDIR}/nis:${BUILDDIR}/rt:${BUILDDIR}/resolv:${BUILDDIR}/crypt:${BUILDDIR}/support:${BUILDDIR}/nptl \
++-o ${BUILDDIR}/libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so \
++${BUILDDIR}/libcompatcollation_pic.os -ldl"
++
++# output for the record
++echo ${GCCCOMPSTR}
++# and run it
++eval ${GCCCOMPSTR}
++
++err_exit $?
++
++echo "Created: ${BUILDDIR}/libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so"
+diff --git a/compatcollation/buildfiles.txt b/compatcollation/buildfiles.txt
+new file mode 100644
+index 0000000..cb4c2f7
+--- /dev/null
++++ b/compatcollation/buildfiles.txt
+@@ -0,0 +1,210 @@
++# Intentionally skipped. Unused in PostgreSQL,
++# cause issues for the compatcollation library
++#######################
++#strfmon
++#strfmon_l
++#strcasecmp
++#strcasecmp_l
++#strncasecmp
++#strncasecmp_l
++#libio/genops
++#libio/stdfiles
++#libio/strops
++#######################
++nptl/libc_multiple_threads
++nptl/libc-lowlevellock
++nptl/forward
++nptl/alloca_cutoff
++csu/version
++ctype/ctype
++ctype/ctype-extn
++ctype/ctype-info
++ctype/ctype_l
++ctype/ctype-c99
++ctype/ctype-c99_l
++ctype/isctype
++iconv/gconv
++iconv/gconv_builtin
++iconv/gconv_cache
++iconv/gconv_close
++iconv/gconv_conf
++iconv/gconv_db
++iconv/gconv_dl
++iconv/gconv_open
++iconv/gconv_simple
++iconv/gconv_trans
++intl/bindtextdom
++intl/dgettext
++intl/dcgettext
++intl/dcigettext
++intl/dcngettext
++intl/dngettext
++intl/explodename
++intl/finddomain
++intl/gettext
++intl/hash-string
++intl/l10nflist
++intl/loadmsgcat
++intl/localealias
++intl/ngettext
++intl/plural
++intl/plural-exp
++intl/textdomain
++locale/C-address
++locale/C-collate
++locale/C-ctype
++locale/C-identification
++locale/C-measurement
++locale/C-messages
++locale/C-monetary
++locale/C-name
++locale/C-numeric
++locale/C-paper
++locale/C-telephone
++locale/C-time
++locale/C_name
++locale/SYS_libc
++locale/coll-lookup
++locale/duplocale
++locale/findlocale
++locale/freelocale
++locale/global-locale
++locale/lc-ctype
++locale/loadarchive
++locale/loadlocale
++locale/localeconv
++locale/localename
++locale/newlocale
++locale/nl_langinfo
++locale/nl_langinfo_l
++locale/setlocale
++locale/uselocale
++locale/xlocale
++stdio-common/errlist
++stdio-common/_itoa
++stdio-common/itoa-digits
++stdio-common/itoa-udigits
++stdlib/add_n
++stdlib/addmul_1
++stdlib/cmp
++stdlib/dbl2mpn
++stdlib/divrem
++stdlib/fpioconst
++stdlib/grouping
++stdlib/groupingwc
++stdlib/ldbl2mpn
++stdlib/lshift
++stdlib/mblen
++stdlib/mbstowcs
++stdlib/mbtowc
++stdlib/mpn2dbl
++stdlib/mpn2flt
++stdlib/mpn2ldbl
++stdlib/mul
++stdlib/mul_1
++stdlib/mul_n
++stdlib/rshift
++stdlib/strtod
++stdlib/strtod_l
++stdlib/strtod_nan
++stdlib/strtof
++stdlib/strtof_l
++stdlib/strtof_nan
++stdlib/strtol
++stdlib/strtol_l
++stdlib/strtold
++stdlib/strtold_l
++stdlib/strtold_nan
++stdlib/strtoll
++stdlib/strtoll_l
++stdlib/strtoul
++stdlib/strtoul_l
++stdlib/strtoull
++stdlib/strtoull_l
++stdlib/sub_n
++stdlib/submul_1
++stdlib/tens_in_limb
++stdlib/wcstombs
++stdlib/wctomb
++string/argz-addsep
++string/argz-append
++string/argz-count
++string/argz-create
++string/argz-ctsep
++string/argz-delete
++string/argz-extract
++string/argz-insert
++string/argz-next
++string/argz-replace
++string/argz-stringify
++string/strcoll
++string/strcoll_l
++string/_strerror
++string/strerror
++string/strerror_l
++string/strxfrm
++string/strxfrm_l
++time/alt_digit
++time/asctime
++time/ctime
++time/ctime_r
++time/era
++time/lc-time-cleanup
++time/strftime
++time/strftime_l
++time/strptime
++time/strptime_l
++time/wcsftime
++time/wcsftime_l
++wcsmbs/btowc
++wcsmbs/mbrlen
++wcsmbs/mbrtowc
++wcsmbs/mbsrtowcs
++wcsmbs/mbsrtowcs_l
++wcsmbs/wcpncpy
++wcsmbs/wcrtomb
++wcsmbs/wcscasecmp
++wcsmbs/wcscasecmp_l
++wcsmbs/wcschr
++wcsmbs/wcschrnul
++wcsmbs/wcscmp
++wcsmbs/wcscoll
++wcsmbs/wcscoll_l
++wcsmbs/wcslen
++wcsmbs/wcsmbsload
++wcsmbs/wcsncase_l
++wcsmbs/wcsnlen
++wcsmbs/wcsrtombs
++wcsmbs/wcstod
++wcsmbs/wcstod_l
++wcsmbs/wcstod_nan
++wcsmbs/wcstof
++wcsmbs/wcstof_l
++wcsmbs/wcstof_nan
++wcsmbs/wcstol
++wcsmbs/wcstold
++wcsmbs/wcstold_l
++wcsmbs/wcstold_nan
++wcsmbs/wcstol_l
++wcsmbs/wcstoll
++wcsmbs/wcstoll_l
++wcsmbs/wcstoul
++wcsmbs/wcstoul_l
++wcsmbs/wcstoull
++wcsmbs/wcstoull_l
++wcsmbs/wcsxfrm
++wcsmbs/wcsxfrm_l
++wcsmbs/wmemcpy
++wcsmbs/wmemmove
++wcsmbs/wmempcpy
++wcsmbs/wmemset
++wctype/iswctype
++wctype/iswctype_l
++wctype/towctrans
++wctype/towctrans_l
++wctype/wcfuncs
++wctype/wcfuncs_l
++wctype/wctrans
++wctype/wctrans_l
++wctype/wctype
++wctype/wctype_l
+diff --git a/compatcollation/libcompatcollation.map b/compatcollation/libcompatcollation.map
+new file mode 100644
+index 0000000..0fc9f38
+--- /dev/null
++++ b/compatcollation/libcompatcollation.map
+@@ -0,0 +1,260 @@
++GLIBC_2.2.5 {
++  local:
++    *;
++};
++GLIBC_2.2.6 {
++  local:
++    *;
++} GLIBC_2.2.5;
++GLIBC_2.3 {
++  local:
++    *;
++} GLIBC_2.2.6;
++GLIBC_2.3.2 {
++  local:
++    *;
++} GLIBC_2.3;
++GLIBC_2.3.3 {
++  local:
++    *;
++} GLIBC_2.3.2;
++GLIBC_2.3.4 {
++  local:
++    *;
++} GLIBC_2.3.3;
++GLIBC_2.4 {
++  local:
++    *;
++} GLIBC_2.3.4;
++GLIBC_2.5 {
++  local:
++    *;
++} GLIBC_2.4;
++GLIBC_2.6 {
++  local:
++    *;
++} GLIBC_2.5;
++GLIBC_2.7 {
++  local:
++    *;
++} GLIBC_2.6;
++GLIBC_2.8 {
++  local:
++    *;
++} GLIBC_2.7;
++GLIBC_2.9 {
++  local:
++    *;
++} GLIBC_2.8;
++GLIBC_2.10 {
++  local:
++    *;
++} GLIBC_2.9;
++GLIBC_2.11 {
++  local:
++    *;
++} GLIBC_2.10;
++GLIBC_2.12 {
++  local:
++    *;
++} GLIBC_2.11;
++GLIBC_2.13 {
++  local:
++    *;
++} GLIBC_2.12;
++GLIBC_2.14 {
++  local:
++    *;
++} GLIBC_2.13;
++GLIBC_2.15 {
++  local:
++    *;
++} GLIBC_2.14;
++GLIBC_2.16 {
++  local:
++    *;
++} GLIBC_2.15;
++GLIBC_2.17 {
++  local:
++    *;
++} GLIBC_2.16;
++GLIBC_2.18 {
++  local:
++    *;
++} GLIBC_2.17;
++GLIBC_2.22 {
++  local:
++    *;
++} GLIBC_2.18;
++GLIBC_2.23 {
++  local:
++    *;
++} GLIBC_2.22;
++GLIBC_2.24 {
++  local:
++    *;
++} GLIBC_2.23;
++GLIBC_2.25 {
++  local:
++    *;
++} GLIBC_2.24;
++COMPATCOLL_1.0 {
++  global:
++    __ctype_b_loc;
++    __ctype_init;
++    __ctype_tolower;
++    __ctype_toupper;
++    _tolower;
++    _toupper;
++    asctime;
++    asctime_r;
++    bind_textdomain_codeset;
++    bindtextdomain;
++    ctime;
++    ctime_r;
++    dcgettext;
++    dcngettext;
++    dgettext;
++    dngettext;
++    duplocale;
++    freelocale;
++    gettext;
++    gnu_get_libc_version;
++    isalnum;
++    isalnum_l;
++    isalpha;
++    isalpha_l;
++    isascii;
++    isblank;
++    isblank_l;
++    iscntrl;
++    iscntrl_l;
++    __isctype;
++    isctype;
++    isdigit;
++    isdigit_l;
++    isgraph;
++    isgraph_l;
++    islower;
++    islower_l;
++    isprint;
++    isprint_l;
++    ispunct;
++    ispunct_l;
++    isspace;
++    isspace_l;
++    isupper;
++    isupper_l;
++    iswalnum;
++    iswalnum_l;
++    iswalpha;
++    iswalpha_l;
++    iswblank;
++    iswblank_l;
++    iswcntrl;
++    iswcntrl_l;
++    iswctype;
++    iswdigit;
++    iswdigit_l;
++    iswgraph;
++    iswgraph_l;
++    iswlower;
++    iswlower_l;
++    iswprint;
++    iswprint_l;
++    iswpunct;
++    iswpunct_l;
++    iswspace;
++    iswspace_l;
++    iswupper;
++    iswupper_l;
++    iswxdigit;
++    iswxdigit_l;
++    isxdigit;
++    isxdigit_l;
++    localeconv;
++    mblen;
++    mbstowcs;
++    mbtowc;
++    newlocale;
++    ngettext;
++    nl_langinfo;
++    nl_langinfo_l;
++    setlocale;
++    strcasecmp;
++    strcasecmp_l;
++    strcoll;
++    strcoll_l;
++    strerror;
++    strerror_l;
++    strerror_r;
++    strfmon;
++    strfmon_l;
++    strftime;
++    strncasecmp;
++    strncasecmp_l;
++    strptime;
++    strptime_l;
++    strtod;
++    strtod_l;
++    strtof;
++    strtof_l;
++    strtol;
++    strtol_l;
++    strtold;
++    strtold_l;
++    strtoll;
++    strtoll_l;
++    strtoul;
++    strtoul_l;
++    strtoull;
++    strtoull_l;
++    strxfrm;
++    strxfrm_l;
++    textdomain;
++    toascii;
++    tolower;
++    tolower_l;
++    toupper;
++    toupper_l;
++    towctrans;
++    towlower;
++    towlower_l;
++    towupper;
++    towupper_l;
++    uselocale;
++    wcscasecmp;
++    wcscasecmp_l;
++    wcscoll;
++    wcscoll_l;
++    wcsftime;
++    wcsncasecmp;
++    wcsncasecmp_l;
++    wcstod;
++    wcstod_l;
++    wcstof;
++    wcstof_l;
++    wcstol;
++    wcstol_l;
++    wcstold;
++    wcstold_l;
++    wcstoll;
++    wcstoll_l;
++    wcstombs;
++    wcstoul;
++    wcstoul_l;
++    wcstoull;
++    wcstoull_l;
++    wcsxfrm;
++    wcsxfrm_l;
++    wctomb;
++    wctrans;
++    wctype;
++  local:
++    *;
++} GLIBC_2.25;
++GLIBC_PRIVATE {
++  local:
++    *;
++} COMPATCOLL_1.0;
++
