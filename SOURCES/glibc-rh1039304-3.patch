@@ -1,0 +1,40 @@
+commit 9e0ad3049dbae88d615bfb038e53bf365a39a634
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Sat Nov 11 11:41:45 2017 +0100
+
+    resolv: ns_name_pton should report trailing \ as error [BZ #22413]
+
+diff --git a/resolv/ns_name.c b/resolv/ns_name.c
+index 08a75e2fe0b4edd6..73213fee2dca530b 100644
+--- a/resolv/ns_name.c
++++ b/resolv/ns_name.c
+@@ -222,6 +222,11 @@ ns_name_pton(const char *src, u_char *dst, size_t dstsiz)
+ 		}
+ 		*bp++ = (u_char)c;
+ 	}
++	if (escaped) {
++		/* Trailing backslash.  */
++		__set_errno (EMSGSIZE);
++		return -1;
++	}
+ 	c = (bp - label - 1);
+ 	if ((c & NS_CMPRSFLGS) != 0) {		/*%< Label too big. */
+ 		__set_errno (EMSGSIZE);
+diff --git a/resolv/tst-ns_name_pton.c b/resolv/tst-ns_name_pton.c
+index 879d97c9d3816210..73bdb05e08e405dc 100644
+--- a/resolv/tst-ns_name_pton.c
++++ b/resolv/tst-ns_name_pton.c
+@@ -127,6 +127,13 @@ static const struct test_case tests[] =
+       "\377\377", NULL, },
+     { STRING63OCT "." STRING63OCT "." STRING63OCT "." STRING60OCT
+       "\377\377\377", NULL, },
++    { "\\", NULL, },
++    { "\\\\", "\\\\", false },
++    { "\\\\.", "\\\\", true },
++    { "\\\\\\", NULL, },
++    { "a\\", NULL, },
++    { "a.\\", NULL, },
++    { "a.b\\", NULL, },
+   };
+ 
+ static int

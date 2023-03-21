@@ -1,0 +1,591 @@
+Backport of the following upstream commits:
+
+commit c04af6068b2c2c65c92b3360cbc4b51ad9843f21
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Apr 7 13:46:28 2016 +0200
+
+    scratch_buffer_set_array_size: Include <limits.h>
+
+    It is needed for CHAR_BIT.
+
+commit dbb7600658d8ea633083ee99572622b04ef23a3f
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Oct 29 12:46:22 2015 +0000
+
+    Use max_align_t from <stddef.h>.
+
+    Now that we build with -std=gnu11 and can rely on a compiler providing
+    max_align_t in <stddef.h>, we no longer need our own version
+    libc_max_align_t.  This patch removes it and replaces the single user
+    with a use of max_align_t.
+
+    Tested for x86_64 and x86 (testsuite, and that installed stripped
+    shared libraries are unchanged by the patch for x86_64; for x86, I see
+    some code reordering of no significance).
+
+            * include/libc-internal.h (libc_max_align_t): Remove typedef.
+            * include/scratch_buffer.h: Include <stddef.h> instead of
+            <libc-internal.h>.
+            (struct scratch_buffer): Use max_align_t instead of
+            libc_max_align_t.
+
+(The above is a partial backport.  It depends on max_align_t addition to
+<include/sys/cdefs.h> because glibc 2.17 is not compiled in C11 mode, so
+GCC's <stddef.h> does not provide it.)
+
+commit 2902af1631c0c74c2f0c0edd7a85a523370e5027
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Apr 9 17:12:42 2015 +0200
+
+    scratch_buffer: Suppress truncation warning on 32-bit
+
+commit 72301304a5655662baf2bae88a7aceeabc4a753e
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Tue Apr 7 17:46:58 2015 +0200
+
+    scratch_buffer_grow_preserve: Add missing #include <string.h>
+
+commit cfcfd4614b8b01b2782ac4dcafb21d14d74d5184
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Tue Apr 7 11:03:43 2015 +0200
+
+    Add struct scratch_buffer and its internal helper functions
+
+    These will be used from NSS modules, so they have to be exported.
+
+diff --git a/include/scratch_buffer.h b/include/scratch_buffer.h
+new file mode 100644
+index 0000000000000000..dd17a4a7e13596aa
+--- /dev/null
++++ b/include/scratch_buffer.h
+@@ -0,0 +1,136 @@
++/* Variable-sized buffer with on-stack default allocation.
++   Copyright (C) 2015-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifndef _SCRATCH_BUFFER_H
++#define _SCRATCH_BUFFER_H
++
++/* Scratch buffers with a default stack allocation and fallback to
++   heap allocation.  It is expected that this function is used in this
++   way:
++
++     struct scratch_buffer tmpbuf;
++     scratch_buffer_init (&tmpbuf);
++
++     while (!function_that_uses_buffer (tmpbuf.data, tmpbuf.length))
++       if (!scratch_buffer_grow (&tmpbuf))
++	 return -1;
++
++     scratch_buffer_free (&tmpbuf);
++     return 0;
++
++   The allocation functions (scratch_buffer_grow,
++   scratch_buffer_grow_preserve, scratch_buffer_set_array_size) make
++   sure that the heap allocation, if any, is freed, so that the code
++   above does not have a memory leak.  The buffer still remains in a
++   state that can be deallocated using scratch_buffer_free, so a loop
++   like this is valid as well:
++
++     struct scratch_buffer tmpbuf;
++     scratch_buffer_init (&tmpbuf);
++
++     while (!function_that_uses_buffer (tmpbuf.data, tmpbuf.length))
++       if (!scratch_buffer_grow (&tmpbuf))
++	 break;
++
++     scratch_buffer_free (&tmpbuf);
++
++   scratch_buffer_grow and scratch_buffer_grow_preserve are guaranteed
++   to grow the buffer by at least 512 bytes.  This means that when
++   using the scratch buffer as a backing store for a non-character
++   array whose element size, in bytes, is 512 or smaller, the scratch
++   buffer only has to grow once to make room for at least one more
++   element.
++*/
++
++#include <stdbool.h>
++#include <stddef.h>
++#include <stdlib.h>
++
++/* Scratch buffer.  Must be initialized with scratch_buffer_init
++   before its use.  */
++struct scratch_buffer {
++  void *data;    /* Pointer to the beginning of the scratch area.  */
++  size_t length; /* Allocated space at the data pointer, in bytes.  */
++  char __space[1024]
++    __attribute__ ((aligned (__alignof__ (max_align_t))));
++};
++
++/* Initializes *BUFFER so that BUFFER->data points to BUFFER->__space
++   and BUFFER->length reflects the available space.  */
++static inline void
++scratch_buffer_init (struct scratch_buffer *buffer)
++{
++  buffer->data = buffer->__space;
++  buffer->length = sizeof (buffer->__space);
++}
++
++/* Deallocates *BUFFER (if it was heap-allocated).  */
++static inline void
++scratch_buffer_free (struct scratch_buffer *buffer)
++{
++  if (buffer->data != buffer->__space)
++    free (buffer->data);
++}
++
++/* Grow *BUFFER by some arbitrary amount.  The buffer contents is NOT
++   preserved.  Return true on success, false on allocation failure (in
++   which case the old buffer is freed).  On success, the new buffer is
++   larger than the previous size.  On failure, *BUFFER is deallocated,
++   but remains in a free-able state, and errno is set.  */
++bool __libc_scratch_buffer_grow (struct scratch_buffer *buffer);
++libc_hidden_proto (__libc_scratch_buffer_grow)
++
++/* Alias for __libc_scratch_buffer_grow.  */
++static __always_inline bool
++scratch_buffer_grow (struct scratch_buffer *buffer)
++{
++  return __glibc_likely (__libc_scratch_buffer_grow (buffer));
++}
++
++/* Like __libc_scratch_buffer_grow, but preserve the old buffer
++   contents on success, as a prefix of the new buffer.  */
++bool __libc_scratch_buffer_grow_preserve (struct scratch_buffer *buffer);
++libc_hidden_proto (__libc_scratch_buffer_grow_preserve)
++
++/* Alias for __libc_scratch_buffer_grow_preserve.  */
++static __always_inline bool
++scratch_buffer_grow_preserve (struct scratch_buffer *buffer)
++{
++  return __glibc_likely (__libc_scratch_buffer_grow_preserve (buffer));
++}
++
++/* Grow *BUFFER so that it can store at least NELEM elements of SIZE
++   bytes.  The buffer contents are NOT preserved.  Both NELEM and SIZE
++   can be zero.  Return true on success, false on allocation failure
++   (in which case the old buffer is freed, but *BUFFER remains in a
++   free-able state, and errno is set).  It is unspecified whether this
++   function can reduce the array size.  */
++bool __libc_scratch_buffer_set_array_size (struct scratch_buffer *buffer,
++					   size_t nelem, size_t size);
++libc_hidden_proto (__libc_scratch_buffer_set_array_size)
++
++/* Alias for __libc_scratch_set_array_size.  */
++static __always_inline bool
++scratch_buffer_set_array_size (struct scratch_buffer *buffer,
++			       size_t nelem, size_t size)
++{
++  return __glibc_likely (__libc_scratch_buffer_set_array_size
++			 (buffer, nelem, size));
++}
++
++#endif /* _SCRATCH_BUFFER_H */
+diff --git a/malloc/Makefile b/malloc/Makefile
+index 70e3cefa7b06157e..38aa9e0993d4880c 100644
+--- a/malloc/Makefile
++++ b/malloc/Makefile
+@@ -33,6 +33,7 @@ tests := mallocbug tst-malloc tst-valloc tst-calloc tst-obstack \
+ 	 tst-interpose-thread \
+ 	 tst-interpose-static-nothread \
+ 	 tst-interpose-static-thread \
++	 tst-scratch_buffer \
+ 
+ tests-static := \
+ 	 tst-interpose-static-nothread \
+@@ -40,7 +41,11 @@ tests-static := \
+ 
+ test-srcs = tst-mtrace
+ 
+-routines = malloc morecore mcheck mtrace obstack
++routines = malloc morecore mcheck mtrace obstack \
++  scratch_buffer_grow \
++  scratch_buffer_grow_preserve \
++  scratch_buffer_set_array_size \
++
+ 
+ install-lib := libmcheck.a
+ non-lib.a := libmcheck.a
+diff --git a/malloc/Versions b/malloc/Versions
+index 7ca9bdf25fcafdf2..f3c3d8a0934bdcd3 100644
+--- a/malloc/Versions
++++ b/malloc/Versions
+@@ -67,5 +67,10 @@ libc {
+ 
+     # Internal destructor hook for libpthread.
+     __libc_thread_freeres;
++
++    # struct scratch_buffer support
++    __libc_scratch_buffer_grow;
++    __libc_scratch_buffer_grow_preserve;
++    __libc_scratch_buffer_set_array_size;
+   }
+ }
+diff --git a/malloc/scratch_buffer_grow.c b/malloc/scratch_buffer_grow.c
+new file mode 100644
+index 0000000000000000..22bae506a1946eb4
+--- /dev/null
++++ b/malloc/scratch_buffer_grow.c
+@@ -0,0 +1,52 @@
++/* Variable-sized buffer with on-stack default allocation.
++   Copyright (C) 2015-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <scratch_buffer.h>
++#include <errno.h>
++
++bool
++__libc_scratch_buffer_grow (struct scratch_buffer *buffer)
++{
++  void *new_ptr;
++  size_t new_length = buffer->length * 2;
++
++  /* Discard old buffer.  */
++  scratch_buffer_free (buffer);
++
++  /* Check for overflow.  */
++  if (__glibc_likely (new_length >= buffer->length))
++    new_ptr = malloc (new_length);
++  else
++    {
++      __set_errno (ENOMEM);
++      new_ptr = NULL;
++    }
++
++  if (__glibc_unlikely (new_ptr == NULL))
++    {
++      /* Buffer must remain valid to free.  */
++      scratch_buffer_init (buffer);
++      return false;
++    }
++
++  /* Install new heap-based buffer.  */
++  buffer->data = new_ptr;
++  buffer->length = new_length;
++  return true;
++}
++libc_hidden_def (__libc_scratch_buffer_grow);
+diff --git a/malloc/scratch_buffer_grow_preserve.c b/malloc/scratch_buffer_grow_preserve.c
+new file mode 100644
+index 0000000000000000..18543ef85b7a48e1
+--- /dev/null
++++ b/malloc/scratch_buffer_grow_preserve.c
+@@ -0,0 +1,63 @@
++/* Variable-sized buffer with on-stack default allocation.
++   Copyright (C) 2015-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <scratch_buffer.h>
++#include <errno.h>
++#include <string.h>
++
++bool
++__libc_scratch_buffer_grow_preserve (struct scratch_buffer *buffer)
++{
++  size_t new_length = 2 * buffer->length;
++  void *new_ptr;
++
++  if (buffer->data == buffer->__space)
++    {
++      /* Move buffer to the heap.  No overflow is possible because
++	 buffer->length describes a small buffer on the stack.  */
++      new_ptr = malloc (new_length);
++      if (new_ptr == NULL)
++	return false;
++      memcpy (new_ptr, buffer->__space, buffer->length);
++    }
++  else
++    {
++      /* Buffer was already on the heap.  Check for overflow.  */
++      if (__glibc_likely (new_length >= buffer->length))
++	new_ptr = realloc (buffer->data, new_length);
++      else
++	{
++	  __set_errno (ENOMEM);
++	  new_ptr = NULL;
++	}
++
++      if (__glibc_unlikely (new_ptr == NULL))
++	{
++	  /* Deallocate, but buffer must remain valid to free.  */
++	  free (buffer->data);
++	  scratch_buffer_init (buffer);
++	  return false;
++	}
++    }
++
++  /* Install new heap-based buffer.  */
++  buffer->data = new_ptr;
++  buffer->length = new_length;
++  return true;
++}
++libc_hidden_def (__libc_scratch_buffer_grow_preserve);
+diff --git a/malloc/scratch_buffer_set_array_size.c b/malloc/scratch_buffer_set_array_size.c
+new file mode 100644
+index 0000000000000000..8ab6d9d300d5c10d
+--- /dev/null
++++ b/malloc/scratch_buffer_set_array_size.c
+@@ -0,0 +1,60 @@
++/* Variable-sized buffer with on-stack default allocation.
++   Copyright (C) 2015-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <scratch_buffer.h>
++#include <errno.h>
++#include <limits.h>
++
++bool
++__libc_scratch_buffer_set_array_size (struct scratch_buffer *buffer,
++				      size_t nelem, size_t size)
++{
++  size_t new_length = nelem * size;
++
++  /* Avoid overflow check if both values are small. */
++  if ((nelem | size) >> (sizeof (size_t) * CHAR_BIT / 2) != 0
++      && nelem != 0 && size != new_length / nelem)
++    {
++      /* Overflow.  Discard the old buffer, but it must remain valid
++	 to free.  */
++      scratch_buffer_free (buffer);
++      scratch_buffer_init (buffer);
++      __set_errno (ENOMEM);
++      return false;
++    }
++
++  if (new_length <= buffer->length)
++    return true;
++
++  /* Discard old buffer.  */
++  scratch_buffer_free (buffer);
++
++  char *new_ptr = malloc (new_length);
++  if (new_ptr == NULL)
++    {
++      /* Buffer must remain valid to free.  */
++      scratch_buffer_init (buffer);
++      return false;
++    }
++
++  /* Install new heap-based buffer.  */
++  buffer->data = new_ptr;
++  buffer->length = new_length;
++  return true;
++}
++libc_hidden_def (__libc_scratch_buffer_set_array_size);
+diff --git a/malloc/tst-scratch_buffer.c b/malloc/tst-scratch_buffer.c
+new file mode 100644
+index 0000000000000000..5c9f3442ae8d6ef9
+--- /dev/null
++++ b/malloc/tst-scratch_buffer.c
+@@ -0,0 +1,155 @@
++/*
++   Copyright (C) 2015-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <scratch_buffer.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <string.h>
++
++static bool
++unchanged_array_size (struct scratch_buffer *buf, size_t a, size_t b)
++{
++  size_t old_length = buf->length;
++  if (!scratch_buffer_set_array_size (buf, a, b))
++    {
++      printf ("scratch_buffer_set_array_size failed: %zu %zu\n",
++	      a, b);
++      return false;
++    }
++  if (old_length != buf->length)
++    {
++      printf ("scratch_buffer_set_array_size did not preserve size: %zu %zu\n",
++	      a, b);
++      return false;
++    }
++  return true;
++}
++
++static bool
++array_size_must_fail (size_t a, size_t b)
++{
++  for (int pass = 0; pass < 2; ++pass)
++    {
++      struct scratch_buffer buf;
++      scratch_buffer_init (&buf);
++      if (pass > 0)
++	if (!scratch_buffer_grow (&buf))
++	  {
++	    printf ("scratch_buffer_grow in array_size_must_fail failed\n");
++	    return false;
++	  }
++      if (scratch_buffer_set_array_size (&buf, a, b))
++	{
++	  printf ("scratch_buffer_set_array_size passed: %d %zu %zu\n",
++		  pass, a, b);
++	  return false;
++	}
++      if (buf.data != buf.__space)
++	{
++	  printf ("scratch_buffer_set_array_size did not free: %d %zu %zu\n",
++		  pass, a, b);
++	  return false;
++	}
++    }
++  return true;
++}
++
++static int
++do_test (void)
++{
++  {
++    struct scratch_buffer buf;
++    scratch_buffer_init (&buf);
++    memset (buf.data, ' ', buf.length);
++    scratch_buffer_free (&buf);
++  }
++  {
++    struct scratch_buffer buf;
++    scratch_buffer_init (&buf);
++    memset (buf.data, ' ', buf.length);
++    size_t old_length = buf.length;
++    scratch_buffer_grow (&buf);
++    if (buf.length <= old_length)
++      {
++	printf ("scratch_buffer_grow did not enlarge buffer\n");
++	return 1;
++      }
++    memset (buf.data, ' ', buf.length);
++    scratch_buffer_free (&buf);
++  }
++  {
++    struct scratch_buffer buf;
++    scratch_buffer_init (&buf);
++    memset (buf.data, '@', buf.length);
++    strcpy (buf.data, "prefix");
++    size_t old_length = buf.length;
++    scratch_buffer_grow_preserve (&buf);
++    if (buf.length <= old_length)
++      {
++	printf ("scratch_buffer_grow_preserve did not enlarge buffer\n");
++	return 1;
++      }
++    if (strcmp (buf.data, "prefix") != 0)
++      {
++	printf ("scratch_buffer_grow_preserve did not copy buffer\n");
++	return 1;
++      }
++    for (unsigned i = 7; i < old_length; ++i)
++      if (((char *)buf.data)[i] != '@')
++	{
++	  printf ("scratch_buffer_grow_preserve did not copy buffer (%u)\n",
++		  i);
++	  return 1;
++	}
++    scratch_buffer_free (&buf);
++  }
++  {
++    struct scratch_buffer buf;
++    scratch_buffer_init (&buf);
++    for (int pass = 0; pass < 4; ++pass)
++      {
++	if (!(unchanged_array_size (&buf, 0, 0)
++	      && unchanged_array_size (&buf, 1, 0)
++	      && unchanged_array_size (&buf, 0, 1)
++	      && unchanged_array_size (&buf, -1, 0)
++	      && unchanged_array_size (&buf, 0, -1)
++	      && unchanged_array_size (&buf, 1ULL << 16, 0)
++	      && unchanged_array_size (&buf, 0, 1ULL << 16)
++	      && unchanged_array_size (&buf, (size_t) (1ULL << 32), 0)
++	      && unchanged_array_size (&buf, 0, (size_t) (1ULL << 32))))
++	  return 1;
++	if (!scratch_buffer_grow (&buf))
++	  {
++	    printf ("scratch_buffer_grow_failed (pass %d)\n", pass);
++	  }
++      }
++    scratch_buffer_free (&buf);
++  }
++  {
++    if (!(array_size_must_fail (-1, 1)
++	  && array_size_must_fail (-1, -1)
++	  && array_size_must_fail (1, -1)
++	  && array_size_must_fail (((size_t)-1) / 4, 4)
++	  && array_size_must_fail (4, ((size_t)-1) / 4)))
++	return 1;
++  }
++  return 0;
++}
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"

@@ -1,0 +1,304 @@
+commit c2d549290d24aeae30a328a6b4061f60f095dea2
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Jan 31 22:57:06 2013 +0000
+
+    Remove bp-thunks code.
+
+Conflicts:
+	sysdeps/generic/bp-thunks.h
+
+Copyright header change; file removed manually.
+
+diff --git a/Makerules b/Makerules
+index 9e572f48728b0f56..9bd7d603fc28a4de 100644
+--- a/Makerules
++++ b/Makerules
+@@ -419,19 +419,15 @@ static-only-routines =
+ endif
+ endif
+ 
+-# Bounded pointer thunks are only built for *.ob
+-elide-bp-thunks = $(addprefix $(bppfx),$(bp-thunks))
+-
+ elide-routines.oS += $(filter-out $(static-only-routines),\
+-				  $(routines) $(aux) $(sysdep_routines)) \
+-		     $(elide-bp-thunks)
+-elide-routines.os += $(static-only-routines) $(elide-bp-thunks)
++				  $(routines) $(aux) $(sysdep_routines))
++elide-routines.os += $(static-only-routines)
+ 
+ # If we have versioned code we don't need the old versions in any of the
+ # static libraries.
+-elide-routines.o  += $(shared-only-routines) $(elide-bp-thunks)
+-elide-routines.op += $(shared-only-routines) $(elide-bp-thunks)
+-elide-routines.og += $(shared-only-routines) $(elide-bp-thunks)
++elide-routines.o  += $(shared-only-routines)
++elide-routines.op += $(shared-only-routines)
++elide-routines.og += $(shared-only-routines)
+ elide-routines.ob += $(shared-only-routines)
+ 
+ # Shared library building.
+@@ -639,11 +635,7 @@ headers := $(headers) $(sysdep_headers)
+ 
+ # This is the list of all object files, gotten by
+ # replacing every ".c" in `sources' with a ".o".
+-# We also add bounded-pointer thunks, which are later
+-# elided for all suffixes except for `.ob'.
+-override objects := $(addprefix $(objpfx),$(sources:.c=.o) \
+-		      $(patsubst %,$(bppfx)%.o,\
+-			$(filter $(routines) $(sysdep_routines),$(bp-thunks))))
++override objects := $(addprefix $(objpfx),$(sources:.c=.o))
+ 
+ 
+ # The makefile may define $(extra-libs) with `libfoo libbar'
+diff --git a/sysdeps/generic/bp-thunks.h b/sysdeps/generic/bp-thunks.h
+deleted file mode 100644
+index 1c9bba21c80387a5..0000000000000000
+--- a/sysdeps/generic/bp-thunks.h
++++ /dev/null
+@@ -1,69 +0,0 @@
+-/* Bounded-pointer syscall thunk support.
+-   Copyright (C) 2000, 2003 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _bpthunks_h_
+-#define _bpthunks_h_
+-
+-#ifndef __ASSEMBLER__
+-
+-/* This header is included by the syscall BP thunks defined in
+-   sysd-syscalls, as created by sysdeps/unix/make-syscalls.sh.  It
+-   includes all headers that contain prototype declarations for system
+-   call functions.  */
+-
+-#include <libc-symbols.h>
+-#include <bp-sym.h>
+-#include <bp-checks.h>
+-
+-/* Get `struct timeval' definition for select.  */
+-#define __need_timeval
+-#include <bits/time.h>
+-
+-#include <stddef.h>
+-#include <unistd.h>
+-#include <sched.h>
+-#include <signal.h>
+-#include <fcntl.h>
+-#include <time.h>
+-#include <utime.h>
+-#include <stdio.h>
+-
+-#include <sys/types.h>
+-#include <sys/ioctl.h>
+-#include <sys/klog.h>
+-#include <sys/mman.h>
+-#include <sys/mount.h>
+-#include <sys/quota.h>
+-#include <sys/resource.h>
+-#include <sys/select.h>
+-#include <io/sys/sendfile.h>
+-#include <sys/socket.h>
+-#include <sys/stat.h>
+-#include <sys/statfs.h>
+-#include <sys/swap.h>
+-#include <sys/sysinfo.h>
+-#include <sys/time.h>
+-#include <sys/times.h>
+-#include <sys/timex.h>
+-#include <sys/utsname.h>
+-#include <sys/wait.h>
+-
+-#endif /* Not __ASSEMBLER__.  */
+-
+-#endif /* _bpthunks_h_ */
+diff --git a/sysdeps/unix/Makefile b/sysdeps/unix/Makefile
+index 0ba5dcbcac323bb0..b369128d0cb6c2e7 100644
+--- a/sysdeps/unix/Makefile
++++ b/sysdeps/unix/Makefile
+@@ -89,21 +89,10 @@ $(common-objpfx)sysd-syscalls: $(..)sysdeps/unix/make-syscalls.sh \
+ 	mv -f $@T $@
+ endif
+ 
+-# The $(bppfx)syscall.ob objects depend on s-proto-bp.d, which are
+-# generated to specify dependencies generated BP stubs have on headers.
+-# These deps use file names relative to a subdir, so don't
+-# include them in the parent directory.
+-ifneq (,$(filter $(unix-syscalls),$(routines) $(sysdep_routines) $(aux)))
+-ifndef no_deps
+--include $(common-objpfx)s-proto-bp.d
+-endif
+-endif
+-
+ $(common-objpfx)s-%.d: $(..)sysdeps/unix/s-%.S \
+ 		       $(wildcard $(+sysdep_dirs:%=%/syscalls.list))
+ 	$(+make-deps)
+ 
+-common-generated += s-proto-bp.d
+ postclean-generated += sysd-syscalls
+ 
+ endif
+diff --git a/sysdeps/unix/make-syscalls.sh b/sysdeps/unix/make-syscalls.sh
+index 2c701a2bf59183b2..4ec17c99bc16eaee 100644
+--- a/sysdeps/unix/make-syscalls.sh
++++ b/sysdeps/unix/make-syscalls.sh
+@@ -36,10 +36,6 @@
+ # W: wait status, optionally-NULL pointer to int (e.g., 2nd arg of wait4)
+ #
+ 
+-ptr='[abBfFINpPsSWV]'	# all pointer keyletters
+-int='[inv]'		# all scalar keyletters
+-typ='[ifnNpP]'		# typed-arg keyletters: we capture type for use in thunk
+-
+ ##############################################################################
+ 
+ thisdir=$1; shift
+@@ -313,114 +309,4 @@ while read file srcfile caller syscall args strong weak; do
+  ;;
+  esac
+ 
+-  case x"$callnum",$srcfile,$args in
+-  x[_-],-,* | x*,*.[sS],*V*) ;;
+-  x*,-,*$ptr* | x*,*.[sS],*$ptr*)
+-
+-    nv_weak=`for name in $weak; do
+-		case $name in
+-		*@*) ;;
+-		*) echo $name;;
+-	        esac; done`
+-
+-    # choose the name with the fewest leading underscores, preferably none
+-    set `echo $strong $nv_weak |tr '@ \t' ' \n\n' |sort -r`
+-    callname=$1
+-
+-    # convert signature string to individual numbered arg names
+-    # e.g., i:ipbN -> i0 i1 p2 b3 N4
+-    set `echo $args |
+-	sed -e 's/^\(.\):\(.*\)/\2 <\10>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\11>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\12>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\13>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\14>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\15>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\16>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\17>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\18>/' \
+-	    -e 's/^\([^ ]\)\(.*\)/\2 <\19>/'`
+-    rtn=$1; shift
+-    args=$*
+-    arglist=`echo $* |sed 's/ /, /g'`
+-
+-    # The best way to understand what's going on here is to examine
+-    # the output in BUILDDIR/sysd-syscalls.
+-
+-    # generate makefile envelope & rule head
+-    echo "ifeq (,\$(filter $file,\$(bp-thunks)))"
+-    echo "bp-thunks += $file"
+-    echo "\$(objpfx)\$(bppfx)$file.ob: \$(common-objpfx)s-proto-bp.d"
+-
+-    # generate macro head
+-    echo "	(echo '#define $callname(`echo $arglist | \
+-	    sed -e 's/[<>]//g'`) `echo $rtn | \
+-	    sed -e 's/<\('$typ'0\)>/\1v;/g' \
+-		-e 's/<\(b0\)>/x0; extern char \1v;/g'` \\'; \\"
+-
+-    # generate extern decls of dummy variables for each arg
+-    echo "	 echo '`echo $args | \
+-	    sed -e 's/<\('$typ'[1-9]\)>/extern \1, \1v;/g' \
+-		-e 's/<\([abBFIsSV][1-9]\)>/extern char \1v;/g' \
+-		-e 's/<\([Wv][1-9]\)>/extern int \1v;/g'` \\'; \\"
+-
+-    # generate bounded-pointer thunk declarator
+-    echo "	 echo '`echo $rtn | \
+-	    sed -e 's/<\('$ptr'0\)>/__typeof (\1v) *__bounded/g' \
+-		-e 's/<\('$int'0\)>/__typeof (\1v)/g'` BP_SYM ($strong) (`echo $arglist | \
+-	    sed -e 's/<\('$ptr'[1-9]\)>/__typeof (\1v) *__bounded \1a/g' \
+-		-e 's/<\('$int'[1-9]\)>/__typeof (\1v) \1a/g'`) { \\'; \\"
+-
+-    # generate extern primitive syscall declaration
+-    echo "	 echo '  extern `echo $rtn | \
+-	    sed -e 's/<\('$ptr'0\)>/__typeof (\1v) *__unbounded/g' \
+-		-e 's/<\('$int'0\)>/__typeof (\1v)/g'` ($callname) (`echo $arglist | \
+-	    sed -e 's/<\('$ptr'[1-9]\)>/__typeof (\1v) *__unbounded/g' \
+-		-e 's/<\('$int'[1-9]\)>/__typeof (\1v)/g'`); \\'; \\"
+-
+-    # generate call the primtive system call, optionally wrapping bounds
+-    # around the result if the signature's return keyletter is `b'.
+-    echo "	 echo '  return `echo $rtn |
+-	    sed -e 's/<b0>/BOUNDED_N (/' \
+-		-e 's/<.0>//'`($callname) (`echo $arglist | \
+-	    sed -e 's/<\(a[1-9]\)>/__ptrvalue (\1a)/g' \
+-		-e 's/<\(n[1-9]\)>, <\(V[1-9]\)>/\1a, CHECK_N_PAGES (\2a, \1a)/g' \
+-		-e 's/<\(b[1-9]\)>, <\(n[1-9]\)>/CHECK_N (\1a, \2a), \2a/g' \
+-		-e 's/<\(b[1-9]\)>, <\(N[1-9]\)>/CHECK_N (\1a, *CHECK_1 (\2a)), __ptrvalue (\2a)/g' \
+-		-e 's/<\(B[1-9]\)>, <\(n[1-9]\)>/CHECK_N_NULL_OK (\1a, \2a), \2a/g' \
+-		-e 's/<\(B[1-9]\)>, <\(N[1-9]\)>/CHECK_N_NULL_OK (\1a, *CHECK_1 (\2a)), __ptrvalue (\2a)/g' \
+-		-e 's/<\(f[1-9]\)>/CHECK_N (\1a, 2)/g' \
+-		-e 's/<\(i[1-9]\)>, <\(F[1-9]\)>/\1a, CHECK_FCNTL (\2a, \1a)/g' \
+-		-e 's/<\(i[1-9]\)>, <\(I[1-9]\)>/\1a, CHECK_IOCTL (\2a, \1a)/g' \
+-		-e 's/<\(p[1-9]\)>/CHECK_1 (\1a)/g' \
+-		-e 's/<\([PW][1-9]\)>/CHECK_1_NULL_OK (\1a)/g' \
+-		-e 's/<\(s[1-9]\)>/CHECK_STRING (\1a)/g' \
+-		-e 's/<\(S[1-9]\)>/CHECK_STRING_NULL_OK (\1a)/g' \
+-		-e 's/<\([ivn][1-9]\)>/\1a/g'`)`echo $rtn $args |
+-	    sed -e 's/<b0>.*<\(n[1-9]\)>.*/, \1a)/' \
+-		-e 's/<.0>.*//'`; \\'; \\"
+-
+-    echo "	 echo '} \\'; \\"
+-
+-    echo "	 echo 'libc_hidden_def (BP_SYM ($strong)) \\'; \\"
+-
+-    # generate thunk aliases
+-    for name in $nv_weak; do
+-      echo "	 echo 'weak_alias (BP_SYM ($strong), BP_SYM ($name)) \\'; \\"
+-      echo "	 echo 'libc_hidden_weak (BP_SYM ($name)) \\'; \\"
+-    done
+-
+-    # wrap up
+-    echo "\
+-	 echo ''; \\
+-	 echo '#include <bp-thunks.h>'; \\
+-	) | \$(COMPILE.c) -x c -o \$@ -"
+-### Use this for debugging intermediate output:
+-### 	) >\$(@:.ob=.c)
+-### 	\$(subst -c,-E,\$(COMPILE.c)) -o \$(@:.ob=.ib) \$(@:.ob=.c)
+-### 	\$(COMPILE.c) -x cpp-output -o \$@ \$(@:.ob=.ib)"
+-    echo endif
+-    ;;
+-  esac
+-
+ done
+diff --git a/sysdeps/unix/s-proto-bp.S b/sysdeps/unix/s-proto-bp.S
+deleted file mode 100644
+index ba0363e16ffc4bd8..0000000000000000
+--- a/sysdeps/unix/s-proto-bp.S
++++ /dev/null
+@@ -1,4 +0,0 @@
+-/* This file exists just to have its dependencies determined.
+-   Those dependencies are then used for the bp thunk objects.  */
+-
+-#include <bp-thunks.h>
+diff --git a/sysdeps/unix/sysv/linux/i386/bp-thunks.h b/sysdeps/unix/sysv/linux/i386/bp-thunks.h
+deleted file mode 100644
+index 59a42ddefe8ed33e..0000000000000000
+--- a/sysdeps/unix/sysv/linux/i386/bp-thunks.h
++++ /dev/null
+@@ -1,4 +0,0 @@
+-#ifndef __ASSEMBLER__
+-# include <sysdeps/generic/bp-thunks.h>
+-# include <sys/vm86.h>
+-#endif

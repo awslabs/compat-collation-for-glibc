@@ -1,0 +1,86 @@
+commit 82374e65d745c3c94258ad81c38f8af34b9f9113
+Author: Will Newton <will.newton@linaro.org>
+Date:   Mon Jul 7 15:14:26 2014 +0100
+
+    Fix -Wundef warnings for SHARED
+    
+    The definition of SHARED is tested with #ifdef pretty much everywhere
+    apart from these few places. The tlsdesc.c code seems to be copy and
+    pasted to a few architectures and there is one instance in the hppa
+    startup code.
+    
+    ChangeLog:
+    
+    2014-07-09  Will Newton  <will.newton@linaro.org>
+    
+            * sysdeps/aarch64/tlsdesc.c (_dl_unmap): Test SHARED with #ifdef.
+            * sysdeps/arm/tlsdesc.c (_dl_unmap): Likewise.
+            * sysdeps/i386/tlsdesc.c (_dl_unmap): Likewise.
+            * sysdeps/x86_64/tlsdesc.c (_dl_unmap): Likewise.
+            * sysdeps/hppa/start.S (_start): Likewise.
+
+diff --git a/sysdeps/aarch64/tlsdesc.c b/sysdeps/aarch64/tlsdesc.c
+index 606ce797c66ce84d..1543064999964dd9 100644
+--- a/sysdeps/aarch64/tlsdesc.c
++++ b/sysdeps/aarch64/tlsdesc.c
+@@ -147,7 +147,7 @@ _dl_unmap (struct link_map *map)
+   __munmap ((void *) (map)->l_map_start,
+ 	    (map)->l_map_end - (map)->l_map_start);
+ 
+-#if SHARED
++#ifdef SHARED
+   if (map->l_mach.tlsdesc_table)
+     htab_delete (map->l_mach.tlsdesc_table);
+ #endif
+diff --git a/sysdeps/arm/tlsdesc.c b/sysdeps/arm/tlsdesc.c
+index c5e69a8755147361..dd8d340d740876d9 100644
+--- a/sysdeps/arm/tlsdesc.c
++++ b/sysdeps/arm/tlsdesc.c
+@@ -149,7 +149,7 @@ _dl_unmap (struct link_map *map)
+   __munmap ((void *) (map)->l_map_start,
+ 	    (map)->l_map_end - (map)->l_map_start);
+ 
+-#if SHARED
++#ifdef SHARED
+   /* _dl_unmap is only called for dlopen()ed libraries, for which
+      calling free() is safe, or before we've completed the initial
+      relocation, in which case calling free() is probably pointless,
+diff --git a/sysdeps/hppa/start.S b/sysdeps/hppa/start.S
+index 97196bd52df23391..08b13ee4f4a0937c 100644
+--- a/sysdeps/hppa/start.S
++++ b/sysdeps/hppa/start.S
+@@ -93,7 +93,7 @@ _start:
+ 	stw	%r23, -56(%sp)
+ 	/* Need to setup 1, 4, 5, and 7th arguments */
+ 
+-#if SHARED
++#ifdef SHARED
+ 	/* load main (1st argument) */
+ 	addil	LT'.Lpmain, %r19
+ 	ldw	RT'.Lpmain(%r1), %r26
+diff --git a/sysdeps/i386/tlsdesc.c b/sysdeps/i386/tlsdesc.c
+index 2d55c63cdb976d79..cfde1a684850e04c 100644
+--- a/sysdeps/i386/tlsdesc.c
++++ b/sysdeps/i386/tlsdesc.c
+@@ -261,7 +261,7 @@ _dl_unmap (struct link_map *map)
+   __munmap ((void *) (map)->l_map_start,
+ 	    (map)->l_map_end - (map)->l_map_start);
+ 
+-#if SHARED
++#ifdef SHARED
+   if (map->l_mach.tlsdesc_table)
+     htab_delete (map->l_mach.tlsdesc_table);
+ #endif
+diff --git a/sysdeps/x86_64/tlsdesc.c b/sysdeps/x86_64/tlsdesc.c
+index 19d55a7c91992439..8def142e87c298be 100644
+--- a/sysdeps/x86_64/tlsdesc.c
++++ b/sysdeps/x86_64/tlsdesc.c
+@@ -139,7 +139,7 @@ _dl_unmap (struct link_map *map)
+   __munmap ((void *) (map)->l_map_start,
+ 	    (map)->l_map_end - (map)->l_map_start);
+ 
+-#if SHARED
++#ifdef SHARED
+   /* _dl_unmap is only called for dlopen()ed libraries, for which
+      calling free() is safe, or before we've completed the initial
+      relocation, in which case calling free() is probably pointless,

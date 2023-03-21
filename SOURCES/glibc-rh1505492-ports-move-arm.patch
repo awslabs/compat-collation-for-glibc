@@ -1,0 +1,959 @@
+Recreation of this upstream patch, using the indicated git commands:
+
+commit c6bfe5c4d756913297db03f55e42016d1c48918c
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sat Feb 8 01:49:39 2014 +0000
+
+    Move arm from ports to libc.
+
+    I've moved the ARM port from ports to the main sysdeps hierarchy.
+    Beyond the README update, the move of the files was simply
+
+    git mv ports/sysdeps/arm sysdeps/arm
+    git mv ports/sysdeps/unix/arm sysdeps/unix/arm
+    git mv ports/sysdeps/unix/sysv/linux/arm sysdeps/unix/sysv/linux/arm
+
+diff --git a/ports/sysdeps/arm/Implies b/sysdeps/arm/Implies
+similarity index 100%
+rename from ports/sysdeps/arm/Implies
+rename to sysdeps/arm/Implies
+diff --git a/ports/sysdeps/arm/Makefile b/sysdeps/arm/Makefile
+similarity index 100%
+rename from ports/sysdeps/arm/Makefile
+rename to sysdeps/arm/Makefile
+diff --git a/ports/sysdeps/arm/Versions b/sysdeps/arm/Versions
+similarity index 100%
+rename from ports/sysdeps/arm/Versions
+rename to sysdeps/arm/Versions
+diff --git a/ports/sysdeps/arm/__longjmp.S b/sysdeps/arm/__longjmp.S
+similarity index 100%
+rename from ports/sysdeps/arm/__longjmp.S
+rename to sysdeps/arm/__longjmp.S
+diff --git a/ports/sysdeps/arm/abi-note.S b/sysdeps/arm/abi-note.S
+similarity index 100%
+rename from ports/sysdeps/arm/abi-note.S
+rename to sysdeps/arm/abi-note.S
+diff --git a/ports/sysdeps/arm/aeabi_assert.c b/sysdeps/arm/aeabi_assert.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_assert.c
+rename to sysdeps/arm/aeabi_assert.c
+diff --git a/ports/sysdeps/arm/aeabi_atexit.c b/sysdeps/arm/aeabi_atexit.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_atexit.c
+rename to sysdeps/arm/aeabi_atexit.c
+diff --git a/ports/sysdeps/arm/aeabi_errno_addr.c b/sysdeps/arm/aeabi_errno_addr.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_errno_addr.c
+rename to sysdeps/arm/aeabi_errno_addr.c
+diff --git a/ports/sysdeps/arm/aeabi_lcsts.c b/sysdeps/arm/aeabi_lcsts.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_lcsts.c
+rename to sysdeps/arm/aeabi_lcsts.c
+diff --git a/ports/sysdeps/arm/aeabi_localeconv.c b/sysdeps/arm/aeabi_localeconv.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_localeconv.c
+rename to sysdeps/arm/aeabi_localeconv.c
+diff --git a/ports/sysdeps/arm/aeabi_math.c b/sysdeps/arm/aeabi_math.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_math.c
+rename to sysdeps/arm/aeabi_math.c
+diff --git a/ports/sysdeps/arm/aeabi_mb_cur_max.c b/sysdeps/arm/aeabi_mb_cur_max.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_mb_cur_max.c
+rename to sysdeps/arm/aeabi_mb_cur_max.c
+diff --git a/ports/sysdeps/arm/aeabi_memclr.c b/sysdeps/arm/aeabi_memclr.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_memclr.c
+rename to sysdeps/arm/aeabi_memclr.c
+diff --git a/ports/sysdeps/arm/aeabi_memcpy.c b/sysdeps/arm/aeabi_memcpy.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_memcpy.c
+rename to sysdeps/arm/aeabi_memcpy.c
+diff --git a/ports/sysdeps/arm/aeabi_memmove.c b/sysdeps/arm/aeabi_memmove.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_memmove.c
+rename to sysdeps/arm/aeabi_memmove.c
+diff --git a/ports/sysdeps/arm/aeabi_memset.c b/sysdeps/arm/aeabi_memset.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_memset.c
+rename to sysdeps/arm/aeabi_memset.c
+diff --git a/ports/sysdeps/arm/aeabi_sighandlers.S b/sysdeps/arm/aeabi_sighandlers.S
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_sighandlers.S
+rename to sysdeps/arm/aeabi_sighandlers.S
+diff --git a/ports/sysdeps/arm/aeabi_unwind_cpp_pr1.c b/sysdeps/arm/aeabi_unwind_cpp_pr1.c
+similarity index 100%
+rename from ports/sysdeps/arm/aeabi_unwind_cpp_pr1.c
+rename to sysdeps/arm/aeabi_unwind_cpp_pr1.c
+diff --git a/ports/sysdeps/arm/arm-features.h b/sysdeps/arm/arm-features.h
+similarity index 100%
+rename from ports/sysdeps/arm/arm-features.h
+rename to sysdeps/arm/arm-features.h
+diff --git a/ports/sysdeps/arm/arm-mcount.S b/sysdeps/arm/arm-mcount.S
+similarity index 100%
+rename from ports/sysdeps/arm/arm-mcount.S
+rename to sysdeps/arm/arm-mcount.S
+diff --git a/ports/sysdeps/arm/armv6t2/memchr.S b/sysdeps/arm/armv6t2/memchr.S
+similarity index 100%
+rename from ports/sysdeps/arm/armv6t2/memchr.S
+rename to sysdeps/arm/armv6t2/memchr.S
+diff --git a/ports/sysdeps/arm/armv7/Implies b/sysdeps/arm/armv7/Implies
+similarity index 100%
+rename from ports/sysdeps/arm/armv7/Implies
+rename to sysdeps/arm/armv7/Implies
+diff --git a/ports/sysdeps/arm/backtrace.c b/sysdeps/arm/backtrace.c
+similarity index 100%
+rename from ports/sysdeps/arm/backtrace.c
+rename to sysdeps/arm/backtrace.c
+diff --git a/ports/sysdeps/arm/bits/atomic.h b/sysdeps/arm/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/atomic.h
+rename to sysdeps/arm/bits/atomic.h
+diff --git a/ports/sysdeps/arm/bits/endian.h b/sysdeps/arm/bits/endian.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/endian.h
+rename to sysdeps/arm/bits/endian.h
+diff --git a/ports/sysdeps/arm/bits/fenv.h b/sysdeps/arm/bits/fenv.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/fenv.h
+rename to sysdeps/arm/bits/fenv.h
+diff --git a/ports/sysdeps/arm/bits/link.h b/sysdeps/arm/bits/link.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/link.h
+rename to sysdeps/arm/bits/link.h
+diff --git a/ports/sysdeps/arm/bits/linkmap.h b/sysdeps/arm/bits/linkmap.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/linkmap.h
+rename to sysdeps/arm/bits/linkmap.h
+diff --git a/ports/sysdeps/arm/bits/mathdef.h b/sysdeps/arm/bits/mathdef.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/mathdef.h
+rename to sysdeps/arm/bits/mathdef.h
+diff --git a/ports/sysdeps/arm/bits/setjmp.h b/sysdeps/arm/bits/setjmp.h
+similarity index 100%
+rename from ports/sysdeps/arm/bits/setjmp.h
+rename to sysdeps/arm/bits/setjmp.h
+diff --git a/ports/sysdeps/arm/bsd-_setjmp.S b/sysdeps/arm/bsd-_setjmp.S
+similarity index 100%
+rename from ports/sysdeps/arm/bsd-_setjmp.S
+rename to sysdeps/arm/bsd-_setjmp.S
+diff --git a/ports/sysdeps/arm/bsd-setjmp.S b/sysdeps/arm/bsd-setjmp.S
+similarity index 100%
+rename from ports/sysdeps/arm/bsd-setjmp.S
+rename to sysdeps/arm/bsd-setjmp.S
+diff --git a/ports/sysdeps/arm/configure b/sysdeps/arm/configure
+similarity index 100%
+rename from ports/sysdeps/arm/configure
+rename to sysdeps/arm/configure
+diff --git a/ports/sysdeps/arm/configure.in b/sysdeps/arm/configure.in
+similarity index 100%
+rename from ports/sysdeps/arm/configure.in
+rename to sysdeps/arm/configure.in
+diff --git a/ports/sysdeps/arm/crti.S b/sysdeps/arm/crti.S
+similarity index 100%
+rename from ports/sysdeps/arm/crti.S
+rename to sysdeps/arm/crti.S
+diff --git a/ports/sysdeps/arm/crtn.S b/sysdeps/arm/crtn.S
+similarity index 100%
+rename from ports/sysdeps/arm/crtn.S
+rename to sysdeps/arm/crtn.S
+diff --git a/ports/sysdeps/arm/dl-irel.h b/sysdeps/arm/dl-irel.h
+similarity index 100%
+rename from ports/sysdeps/arm/dl-irel.h
+rename to sysdeps/arm/dl-irel.h
+diff --git a/ports/sysdeps/arm/dl-lookupcfg.h b/sysdeps/arm/dl-lookupcfg.h
+similarity index 100%
+rename from ports/sysdeps/arm/dl-lookupcfg.h
+rename to sysdeps/arm/dl-lookupcfg.h
+diff --git a/ports/sysdeps/arm/dl-machine.h b/sysdeps/arm/dl-machine.h
+similarity index 100%
+rename from ports/sysdeps/arm/dl-machine.h
+rename to sysdeps/arm/dl-machine.h
+diff --git a/ports/sysdeps/arm/dl-sysdep.h b/sysdeps/arm/dl-sysdep.h
+similarity index 100%
+rename from ports/sysdeps/arm/dl-sysdep.h
+rename to sysdeps/arm/dl-sysdep.h
+diff --git a/ports/sysdeps/arm/dl-tls.h b/sysdeps/arm/dl-tls.h
+similarity index 100%
+rename from ports/sysdeps/arm/dl-tls.h
+rename to sysdeps/arm/dl-tls.h
+diff --git a/ports/sysdeps/arm/dl-tlsdesc.S b/sysdeps/arm/dl-tlsdesc.S
+similarity index 100%
+rename from ports/sysdeps/arm/dl-tlsdesc.S
+rename to sysdeps/arm/dl-tlsdesc.S
+diff --git a/ports/sysdeps/arm/dl-tlsdesc.h b/sysdeps/arm/dl-tlsdesc.h
+similarity index 100%
+rename from ports/sysdeps/arm/dl-tlsdesc.h
+rename to sysdeps/arm/dl-tlsdesc.h
+diff --git a/ports/sysdeps/arm/dl-trampoline.S b/sysdeps/arm/dl-trampoline.S
+similarity index 100%
+rename from ports/sysdeps/arm/dl-trampoline.S
+rename to sysdeps/arm/dl-trampoline.S
+diff --git a/ports/sysdeps/arm/fclrexcpt.c b/sysdeps/arm/fclrexcpt.c
+similarity index 100%
+rename from ports/sysdeps/arm/fclrexcpt.c
+rename to sysdeps/arm/fclrexcpt.c
+diff --git a/ports/sysdeps/arm/fedisblxcpt.c b/sysdeps/arm/fedisblxcpt.c
+similarity index 100%
+rename from ports/sysdeps/arm/fedisblxcpt.c
+rename to sysdeps/arm/fedisblxcpt.c
+diff --git a/ports/sysdeps/arm/feenablxcpt.c b/sysdeps/arm/feenablxcpt.c
+similarity index 100%
+rename from ports/sysdeps/arm/feenablxcpt.c
+rename to sysdeps/arm/feenablxcpt.c
+diff --git a/ports/sysdeps/arm/fegetenv.c b/sysdeps/arm/fegetenv.c
+similarity index 100%
+rename from ports/sysdeps/arm/fegetenv.c
+rename to sysdeps/arm/fegetenv.c
+diff --git a/ports/sysdeps/arm/fegetexcept.c b/sysdeps/arm/fegetexcept.c
+similarity index 100%
+rename from ports/sysdeps/arm/fegetexcept.c
+rename to sysdeps/arm/fegetexcept.c
+diff --git a/ports/sysdeps/arm/fegetround.c b/sysdeps/arm/fegetround.c
+similarity index 100%
+rename from ports/sysdeps/arm/fegetround.c
+rename to sysdeps/arm/fegetround.c
+diff --git a/ports/sysdeps/arm/feholdexcpt.c b/sysdeps/arm/feholdexcpt.c
+similarity index 100%
+rename from ports/sysdeps/arm/feholdexcpt.c
+rename to sysdeps/arm/feholdexcpt.c
+diff --git a/ports/sysdeps/arm/fesetenv.c b/sysdeps/arm/fesetenv.c
+similarity index 100%
+rename from ports/sysdeps/arm/fesetenv.c
+rename to sysdeps/arm/fesetenv.c
+diff --git a/ports/sysdeps/arm/fesetround.c b/sysdeps/arm/fesetround.c
+similarity index 100%
+rename from ports/sysdeps/arm/fesetround.c
+rename to sysdeps/arm/fesetround.c
+diff --git a/ports/sysdeps/arm/feupdateenv.c b/sysdeps/arm/feupdateenv.c
+similarity index 100%
+rename from ports/sysdeps/arm/feupdateenv.c
+rename to sysdeps/arm/feupdateenv.c
+diff --git a/ports/sysdeps/arm/fgetexcptflg.c b/sysdeps/arm/fgetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/arm/fgetexcptflg.c
+rename to sysdeps/arm/fgetexcptflg.c
+diff --git a/ports/sysdeps/arm/find_exidx.c b/sysdeps/arm/find_exidx.c
+similarity index 100%
+rename from ports/sysdeps/arm/find_exidx.c
+rename to sysdeps/arm/find_exidx.c
+diff --git a/ports/sysdeps/arm/fpu_control.h b/sysdeps/arm/fpu_control.h
+similarity index 100%
+rename from ports/sysdeps/arm/fpu_control.h
+rename to sysdeps/arm/fpu_control.h
+diff --git a/ports/sysdeps/arm/fraiseexcpt.c b/sysdeps/arm/fraiseexcpt.c
+similarity index 100%
+rename from ports/sysdeps/arm/fraiseexcpt.c
+rename to sysdeps/arm/fraiseexcpt.c
+diff --git a/ports/sysdeps/arm/frame.h b/sysdeps/arm/frame.h
+similarity index 100%
+rename from ports/sysdeps/arm/frame.h
+rename to sysdeps/arm/frame.h
+diff --git a/ports/sysdeps/arm/framestate.c b/sysdeps/arm/framestate.c
+similarity index 100%
+rename from ports/sysdeps/arm/framestate.c
+rename to sysdeps/arm/framestate.c
+diff --git a/ports/sysdeps/arm/fsetexcptflg.c b/sysdeps/arm/fsetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/arm/fsetexcptflg.c
+rename to sysdeps/arm/fsetexcptflg.c
+diff --git a/ports/sysdeps/arm/ftestexcept.c b/sysdeps/arm/ftestexcept.c
+similarity index 100%
+rename from ports/sysdeps/arm/ftestexcept.c
+rename to sysdeps/arm/ftestexcept.c
+diff --git a/ports/sysdeps/arm/gccframe.h b/sysdeps/arm/gccframe.h
+similarity index 100%
+rename from ports/sysdeps/arm/gccframe.h
+rename to sysdeps/arm/gccframe.h
+diff --git a/ports/sysdeps/arm/get-rounding-mode.h b/sysdeps/arm/get-rounding-mode.h
+similarity index 100%
+rename from ports/sysdeps/arm/get-rounding-mode.h
+rename to sysdeps/arm/get-rounding-mode.h
+diff --git a/ports/sysdeps/arm/gmp-mparam.h b/sysdeps/arm/gmp-mparam.h
+similarity index 100%
+rename from ports/sysdeps/arm/gmp-mparam.h
+rename to sysdeps/arm/gmp-mparam.h
+diff --git a/ports/sysdeps/arm/jmpbuf-offsets.h b/sysdeps/arm/jmpbuf-offsets.h
+similarity index 100%
+rename from ports/sysdeps/arm/jmpbuf-offsets.h
+rename to sysdeps/arm/jmpbuf-offsets.h
+diff --git a/ports/sysdeps/arm/jmpbuf-unwind.h b/sysdeps/arm/jmpbuf-unwind.h
+similarity index 100%
+rename from ports/sysdeps/arm/jmpbuf-unwind.h
+rename to sysdeps/arm/jmpbuf-unwind.h
+diff --git a/ports/sysdeps/arm/ldsodefs.h b/sysdeps/arm/ldsodefs.h
+similarity index 100%
+rename from ports/sysdeps/arm/ldsodefs.h
+rename to sysdeps/arm/ldsodefs.h
+diff --git a/ports/sysdeps/arm/libc-tls.c b/sysdeps/arm/libc-tls.c
+similarity index 100%
+rename from ports/sysdeps/arm/libc-tls.c
+rename to sysdeps/arm/libc-tls.c
+diff --git a/ports/sysdeps/arm/libm-test-ulps b/sysdeps/arm/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/arm/libm-test-ulps
+rename to sysdeps/arm/libm-test-ulps
+diff --git a/ports/sysdeps/arm/machine-gmon.h b/sysdeps/arm/machine-gmon.h
+similarity index 100%
+rename from ports/sysdeps/arm/machine-gmon.h
+rename to sysdeps/arm/machine-gmon.h
+diff --git a/ports/sysdeps/arm/memcpy.S b/sysdeps/arm/memcpy.S
+similarity index 100%
+rename from ports/sysdeps/arm/memcpy.S
+rename to sysdeps/arm/memcpy.S
+diff --git a/ports/sysdeps/arm/memmove.S b/sysdeps/arm/memmove.S
+similarity index 100%
+rename from ports/sysdeps/arm/memmove.S
+rename to sysdeps/arm/memmove.S
+diff --git a/ports/sysdeps/arm/memset.S b/sysdeps/arm/memset.S
+similarity index 100%
+rename from ports/sysdeps/arm/memset.S
+rename to sysdeps/arm/memset.S
+diff --git a/ports/sysdeps/arm/memusage.h b/sysdeps/arm/memusage.h
+similarity index 100%
+rename from ports/sysdeps/arm/memusage.h
+rename to sysdeps/arm/memusage.h
+diff --git a/ports/sysdeps/arm/nptl/Makefile b/sysdeps/arm/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/arm/nptl/Makefile
+rename to sysdeps/arm/nptl/Makefile
+diff --git a/ports/sysdeps/arm/nptl/pthread_spin_lock.c b/sysdeps/arm/nptl/pthread_spin_lock.c
+similarity index 100%
+rename from ports/sysdeps/arm/nptl/pthread_spin_lock.c
+rename to sysdeps/arm/nptl/pthread_spin_lock.c
+diff --git a/ports/sysdeps/arm/nptl/pthreaddef.h b/sysdeps/arm/nptl/pthreaddef.h
+similarity index 100%
+rename from ports/sysdeps/arm/nptl/pthreaddef.h
+rename to sysdeps/arm/nptl/pthreaddef.h
+diff --git a/ports/sysdeps/arm/nptl/tcb-offsets.sym b/sysdeps/arm/nptl/tcb-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/arm/nptl/tcb-offsets.sym
+rename to sysdeps/arm/nptl/tcb-offsets.sym
+diff --git a/ports/sysdeps/arm/nptl/tls.h b/sysdeps/arm/nptl/tls.h
+similarity index 100%
+rename from ports/sysdeps/arm/nptl/tls.h
+rename to sysdeps/arm/nptl/tls.h
+diff --git a/ports/sysdeps/arm/preconfigure b/sysdeps/arm/preconfigure
+similarity index 100%
+rename from ports/sysdeps/arm/preconfigure
+rename to sysdeps/arm/preconfigure
+diff --git a/ports/sysdeps/arm/rtld-global-offsets.sym b/sysdeps/arm/rtld-global-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/arm/rtld-global-offsets.sym
+rename to sysdeps/arm/rtld-global-offsets.sym
+diff --git a/ports/sysdeps/arm/setfpucw.c b/sysdeps/arm/setfpucw.c
+similarity index 100%
+rename from ports/sysdeps/arm/setfpucw.c
+rename to sysdeps/arm/setfpucw.c
+diff --git a/ports/sysdeps/arm/setjmp.S b/sysdeps/arm/setjmp.S
+similarity index 100%
+rename from ports/sysdeps/arm/setjmp.S
+rename to sysdeps/arm/setjmp.S
+diff --git a/ports/sysdeps/arm/shlib-versions b/sysdeps/arm/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/arm/shlib-versions
+rename to sysdeps/arm/shlib-versions
+diff --git a/ports/sysdeps/arm/sotruss-lib.c b/sysdeps/arm/sotruss-lib.c
+similarity index 100%
+rename from ports/sysdeps/arm/sotruss-lib.c
+rename to sysdeps/arm/sotruss-lib.c
+diff --git a/ports/sysdeps/arm/stackinfo.h b/sysdeps/arm/stackinfo.h
+similarity index 100%
+rename from ports/sysdeps/arm/stackinfo.h
+rename to sysdeps/arm/stackinfo.h
+diff --git a/ports/sysdeps/arm/start.S b/sysdeps/arm/start.S
+similarity index 100%
+rename from ports/sysdeps/arm/start.S
+rename to sysdeps/arm/start.S
+diff --git a/ports/sysdeps/arm/static-stubs.c b/sysdeps/arm/static-stubs.c
+similarity index 100%
+rename from ports/sysdeps/arm/static-stubs.c
+rename to sysdeps/arm/static-stubs.c
+diff --git a/ports/sysdeps/arm/strlen.S b/sysdeps/arm/strlen.S
+similarity index 100%
+rename from ports/sysdeps/arm/strlen.S
+rename to sysdeps/arm/strlen.S
+diff --git a/ports/sysdeps/arm/sys/ucontext.h b/sysdeps/arm/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/arm/sys/ucontext.h
+rename to sysdeps/arm/sys/ucontext.h
+diff --git a/ports/sysdeps/arm/sysdep.h b/sysdeps/arm/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/arm/sysdep.h
+rename to sysdeps/arm/sysdep.h
+diff --git a/ports/sysdeps/arm/tls-macros.h b/sysdeps/arm/tls-macros.h
+similarity index 100%
+rename from ports/sysdeps/arm/tls-macros.h
+rename to sysdeps/arm/tls-macros.h
+diff --git a/ports/sysdeps/arm/tlsdesc.c b/sysdeps/arm/tlsdesc.c
+similarity index 100%
+rename from ports/sysdeps/arm/tlsdesc.c
+rename to sysdeps/arm/tlsdesc.c
+diff --git a/ports/sysdeps/arm/tlsdesc.sym b/sysdeps/arm/tlsdesc.sym
+similarity index 100%
+rename from ports/sysdeps/arm/tlsdesc.sym
+rename to sysdeps/arm/tlsdesc.sym
+diff --git a/ports/sysdeps/arm/tst-audit.h b/sysdeps/arm/tst-audit.h
+similarity index 100%
+rename from ports/sysdeps/arm/tst-audit.h
+rename to sysdeps/arm/tst-audit.h
+diff --git a/ports/sysdeps/arm/unwind-dw2-fde-glibc.c b/sysdeps/arm/unwind-dw2-fde-glibc.c
+similarity index 100%
+rename from ports/sysdeps/arm/unwind-dw2-fde-glibc.c
+rename to sysdeps/arm/unwind-dw2-fde-glibc.c
+diff --git a/ports/sysdeps/arm/unwind-pe.c b/sysdeps/arm/unwind-pe.c
+similarity index 100%
+rename from ports/sysdeps/arm/unwind-pe.c
+rename to sysdeps/arm/unwind-pe.c
+diff --git a/ports/sysdeps/unix/arm/sysdep.S b/sysdeps/unix/arm/sysdep.S
+similarity index 100%
+rename from ports/sysdeps/unix/arm/sysdep.S
+rename to sysdeps/unix/arm/sysdep.S
+diff --git a/ports/sysdeps/unix/arm/sysdep.h b/sysdeps/unix/arm/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/arm/sysdep.h
+rename to sysdeps/unix/arm/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/Makefile b/sysdeps/unix/sysv/linux/arm/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/Makefile
+rename to sysdeps/unix/sysv/linux/arm/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/Versions b/sysdeps/unix/sysv/linux/arm/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/Versions
+rename to sysdeps/unix/sysv/linux/arm/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/____longjmp_chk.S b/sysdeps/unix/sysv/linux/arm/____longjmp_chk.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/____longjmp_chk.S
+rename to sysdeps/unix/sysv/linux/arm/____longjmp_chk.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/aeabi_read_tp.S b/sysdeps/unix/sysv/linux/arm/aeabi_read_tp.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/aeabi_read_tp.S
+rename to sysdeps/unix/sysv/linux/arm/aeabi_read_tp.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/alphasort64.c b/sysdeps/unix/sysv/linux/arm/alphasort64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/alphasort64.c
+rename to sysdeps/unix/sysv/linux/arm/alphasort64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/arm-features.h b/sysdeps/unix/sysv/linux/arm/arm-features.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/arm-features.h
+rename to sysdeps/unix/sysv/linux/arm/arm-features.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/bits/atomic.h b/sysdeps/unix/sysv/linux/arm/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/bits/atomic.h
+rename to sysdeps/unix/sysv/linux/arm/bits/atomic.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/bits/fcntl.h b/sysdeps/unix/sysv/linux/arm/bits/fcntl.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/bits/fcntl.h
+rename to sysdeps/unix/sysv/linux/arm/bits/fcntl.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/bits/hwcap.h b/sysdeps/unix/sysv/linux/arm/bits/hwcap.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/bits/hwcap.h
+rename to sysdeps/unix/sysv/linux/arm/bits/hwcap.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/bits/mman.h b/sysdeps/unix/sysv/linux/arm/bits/mman.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/bits/mman.h
+rename to sysdeps/unix/sysv/linux/arm/bits/mman.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/bits/shm.h b/sysdeps/unix/sysv/linux/arm/bits/shm.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/bits/shm.h
+rename to sysdeps/unix/sysv/linux/arm/bits/shm.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/brk.c b/sysdeps/unix/sysv/linux/arm/brk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/brk.c
+rename to sysdeps/unix/sysv/linux/arm/brk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/clone.S b/sysdeps/unix/sysv/linux/arm/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/clone.S
+rename to sysdeps/unix/sysv/linux/arm/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/configure b/sysdeps/unix/sysv/linux/arm/configure
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/configure
+rename to sysdeps/unix/sysv/linux/arm/configure
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/configure.in b/sysdeps/unix/sysv/linux/arm/configure.in
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/configure.in
+rename to sysdeps/unix/sysv/linux/arm/configure.in
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/dl-cache.h b/sysdeps/unix/sysv/linux/arm/dl-cache.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/dl-cache.h
+rename to sysdeps/unix/sysv/linux/arm/dl-cache.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/dl-machine.h b/sysdeps/unix/sysv/linux/arm/dl-machine.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/dl-machine.h
+rename to sysdeps/unix/sysv/linux/arm/dl-machine.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/dl-procinfo.c b/sysdeps/unix/sysv/linux/arm/dl-procinfo.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/dl-procinfo.c
+rename to sysdeps/unix/sysv/linux/arm/dl-procinfo.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/dl-procinfo.h b/sysdeps/unix/sysv/linux/arm/dl-procinfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/dl-procinfo.h
+rename to sysdeps/unix/sysv/linux/arm/dl-procinfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/fchown.c b/sysdeps/unix/sysv/linux/arm/fchown.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/fchown.c
+rename to sysdeps/unix/sysv/linux/arm/fchown.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/fcntl.c b/sysdeps/unix/sysv/linux/arm/fcntl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/fcntl.c
+rename to sysdeps/unix/sysv/linux/arm/fcntl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/ftruncate64.c b/sysdeps/unix/sysv/linux/arm/ftruncate64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/ftruncate64.c
+rename to sysdeps/unix/sysv/linux/arm/ftruncate64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/fxstat.c b/sysdeps/unix/sysv/linux/arm/fxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/fxstat.c
+rename to sysdeps/unix/sysv/linux/arm/fxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/fxstatat.c b/sysdeps/unix/sysv/linux/arm/fxstatat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/fxstatat.c
+rename to sysdeps/unix/sysv/linux/arm/fxstatat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getcontext.S b/sysdeps/unix/sysv/linux/arm/getcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getcontext.S
+rename to sysdeps/unix/sysv/linux/arm/getcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getdents64.c b/sysdeps/unix/sysv/linux/arm/getdents64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getdents64.c
+rename to sysdeps/unix/sysv/linux/arm/getdents64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getegid.c b/sysdeps/unix/sysv/linux/arm/getegid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getegid.c
+rename to sysdeps/unix/sysv/linux/arm/getegid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/geteuid.c b/sysdeps/unix/sysv/linux/arm/geteuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/geteuid.c
+rename to sysdeps/unix/sysv/linux/arm/geteuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getgid.c b/sysdeps/unix/sysv/linux/arm/getgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getgid.c
+rename to sysdeps/unix/sysv/linux/arm/getgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getgroups.c b/sysdeps/unix/sysv/linux/arm/getgroups.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getgroups.c
+rename to sysdeps/unix/sysv/linux/arm/getgroups.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getresgid.c b/sysdeps/unix/sysv/linux/arm/getresgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getresgid.c
+rename to sysdeps/unix/sysv/linux/arm/getresgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getresuid.c b/sysdeps/unix/sysv/linux/arm/getresuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getresuid.c
+rename to sysdeps/unix/sysv/linux/arm/getresuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getrlimit64.c b/sysdeps/unix/sysv/linux/arm/getrlimit64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getrlimit64.c
+rename to sysdeps/unix/sysv/linux/arm/getrlimit64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/getuid.c b/sysdeps/unix/sysv/linux/arm/getuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/getuid.c
+rename to sysdeps/unix/sysv/linux/arm/getuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/glob64.c b/sysdeps/unix/sysv/linux/arm/glob64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/glob64.c
+rename to sysdeps/unix/sysv/linux/arm/glob64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/internal_accept4.S b/sysdeps/unix/sysv/linux/arm/internal_accept4.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/internal_accept4.S
+rename to sysdeps/unix/sysv/linux/arm/internal_accept4.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/internal_recvmmsg.S b/sysdeps/unix/sysv/linux/arm/internal_recvmmsg.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/internal_recvmmsg.S
+rename to sysdeps/unix/sysv/linux/arm/internal_recvmmsg.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/internal_sendmmsg.S b/sysdeps/unix/sysv/linux/arm/internal_sendmmsg.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/internal_sendmmsg.S
+rename to sysdeps/unix/sysv/linux/arm/internal_sendmmsg.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/ioperm.c b/sysdeps/unix/sysv/linux/arm/ioperm.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/ioperm.c
+rename to sysdeps/unix/sysv/linux/arm/ioperm.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/kernel-features.h b/sysdeps/unix/sysv/linux/arm/kernel-features.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/kernel-features.h
+rename to sysdeps/unix/sysv/linux/arm/kernel-features.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/lchown.c b/sysdeps/unix/sysv/linux/arm/lchown.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/lchown.c
+rename to sysdeps/unix/sysv/linux/arm/lchown.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/ldconfig.h b/sysdeps/unix/sysv/linux/arm/ldconfig.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/ldconfig.h
+rename to sysdeps/unix/sysv/linux/arm/ldconfig.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/ldsodefs.h b/sysdeps/unix/sysv/linux/arm/ldsodefs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/ldsodefs.h
+rename to sysdeps/unix/sysv/linux/arm/ldsodefs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/libc-aeabi_read_tp.S b/sysdeps/unix/sysv/linux/arm/libc-aeabi_read_tp.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/libc-aeabi_read_tp.S
+rename to sysdeps/unix/sysv/linux/arm/libc-aeabi_read_tp.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/libc-do-syscall.S b/sysdeps/unix/sysv/linux/arm/libc-do-syscall.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/libc-do-syscall.S
+rename to sysdeps/unix/sysv/linux/arm/libc-do-syscall.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/lockf64.c b/sysdeps/unix/sysv/linux/arm/lockf64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/lockf64.c
+rename to sysdeps/unix/sysv/linux/arm/lockf64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/lxstat.c b/sysdeps/unix/sysv/linux/arm/lxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/lxstat.c
+rename to sysdeps/unix/sysv/linux/arm/lxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/makecontext.c b/sysdeps/unix/sysv/linux/arm/makecontext.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/makecontext.c
+rename to sysdeps/unix/sysv/linux/arm/makecontext.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/mmap.S b/sysdeps/unix/sysv/linux/arm/mmap.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/mmap.S
+rename to sysdeps/unix/sysv/linux/arm/mmap.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/mmap64.S b/sysdeps/unix/sysv/linux/arm/mmap64.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/mmap64.S
+rename to sysdeps/unix/sysv/linux/arm/mmap64.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/msgctl.c b/sysdeps/unix/sysv/linux/arm/msgctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/msgctl.c
+rename to sysdeps/unix/sysv/linux/arm/msgctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/Makefile b/sysdeps/unix/sysv/linux/arm/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/Makefile
+rename to sysdeps/unix/sysv/linux/arm/nptl/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/Versions b/sysdeps/unix/sysv/linux/arm/nptl/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/Versions
+rename to sysdeps/unix/sysv/linux/arm/nptl/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/bits/pthreadtypes.h b/sysdeps/unix/sysv/linux/arm/nptl/bits/pthreadtypes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/bits/pthreadtypes.h
+rename to sysdeps/unix/sysv/linux/arm/nptl/bits/pthreadtypes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/bits/semaphore.h b/sysdeps/unix/sysv/linux/arm/nptl/bits/semaphore.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/bits/semaphore.h
+rename to sysdeps/unix/sysv/linux/arm/nptl/bits/semaphore.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/c++-types.data b/sysdeps/unix/sysv/linux/arm/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/arm/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/clone.S b/sysdeps/unix/sysv/linux/arm/nptl/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/clone.S
+rename to sysdeps/unix/sysv/linux/arm/nptl/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/configure b/sysdeps/unix/sysv/linux/arm/nptl/configure
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/configure
+rename to sysdeps/unix/sysv/linux/arm/nptl/configure
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/configure.in b/sysdeps/unix/sysv/linux/arm/nptl/configure.in
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/configure.in
+rename to sysdeps/unix/sysv/linux/arm/nptl/configure.in
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/createthread.c b/sysdeps/unix/sysv/linux/arm/nptl/createthread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/createthread.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/createthread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/fork.c b/sysdeps/unix/sysv/linux/arm/nptl/fork.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/fork.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/fork.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/ld.abilist b/sysdeps/unix/sysv/linux/arm/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libc.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libm.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/librt.abilist b/sysdeps/unix/sysv/linux/arm/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/arm/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/arm/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/localplt.data b/sysdeps/unix/sysv/linux/arm/nptl/localplt.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/localplt.data
+rename to sysdeps/unix/sysv/linux/arm/nptl/localplt.data
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.c b/sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.h b/sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.h
+rename to sysdeps/unix/sysv/linux/arm/nptl/lowlevellock.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/nptl-aeabi_unwind_cpp_pr1.c b/sysdeps/unix/sysv/linux/arm/nptl/nptl-aeabi_unwind_cpp_pr1.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/nptl-aeabi_unwind_cpp_pr1.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/nptl-aeabi_unwind_cpp_pr1.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/pt-vfork.S b/sysdeps/unix/sysv/linux/arm/nptl/pt-vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/pt-vfork.S
+rename to sysdeps/unix/sysv/linux/arm/nptl/pt-vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/arm/nptl/pthread_once.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/pthread_once.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/pthread_once.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/rt-aeabi_unwind_cpp_pr1.c b/sysdeps/unix/sysv/linux/arm/nptl/rt-aeabi_unwind_cpp_pr1.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/rt-aeabi_unwind_cpp_pr1.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/rt-aeabi_unwind_cpp_pr1.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/sysdep-cancel.h b/sysdeps/unix/sysv/linux/arm/nptl/sysdep-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/sysdep-cancel.h
+rename to sysdeps/unix/sysv/linux/arm/nptl/sysdep-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c b/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c b/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c
+rename to sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind.h b/sysdeps/unix/sysv/linux/arm/nptl/unwind.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/unwind.h
+rename to sysdeps/unix/sysv/linux/arm/nptl/unwind.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/vfork.S b/sysdeps/unix/sysv/linux/arm/nptl/vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/nptl/vfork.S
+rename to sysdeps/unix/sysv/linux/arm/nptl/vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/oldgetrlimit.c b/sysdeps/unix/sysv/linux/arm/oldgetrlimit.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/oldgetrlimit.c
+rename to sysdeps/unix/sysv/linux/arm/oldgetrlimit.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/oldgetrlimit64.c b/sysdeps/unix/sysv/linux/arm/oldgetrlimit64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/oldgetrlimit64.c
+rename to sysdeps/unix/sysv/linux/arm/oldgetrlimit64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/oldsetrlimit.c b/sysdeps/unix/sysv/linux/arm/oldsetrlimit.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/oldsetrlimit.c
+rename to sysdeps/unix/sysv/linux/arm/oldsetrlimit.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/posix_fadvise.c b/sysdeps/unix/sysv/linux/arm/posix_fadvise.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/posix_fadvise.c
+rename to sysdeps/unix/sysv/linux/arm/posix_fadvise.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/posix_fadvise64.c b/sysdeps/unix/sysv/linux/arm/posix_fadvise64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/posix_fadvise64.c
+rename to sysdeps/unix/sysv/linux/arm/posix_fadvise64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pread.c b/sysdeps/unix/sysv/linux/arm/pread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/pread.c
+rename to sysdeps/unix/sysv/linux/arm/pread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pread64.c b/sysdeps/unix/sysv/linux/arm/pread64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/pread64.c
+rename to sysdeps/unix/sysv/linux/arm/pread64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/profil-counter.h b/sysdeps/unix/sysv/linux/arm/profil-counter.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/profil-counter.h
+rename to sysdeps/unix/sysv/linux/arm/profil-counter.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pwrite.c b/sysdeps/unix/sysv/linux/arm/pwrite.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/pwrite.c
+rename to sysdeps/unix/sysv/linux/arm/pwrite.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pwrite64.c b/sysdeps/unix/sysv/linux/arm/pwrite64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/pwrite64.c
+rename to sysdeps/unix/sysv/linux/arm/pwrite64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/readahead.c b/sysdeps/unix/sysv/linux/arm/readahead.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/readahead.c
+rename to sysdeps/unix/sysv/linux/arm/readahead.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/readdir64.c b/sysdeps/unix/sysv/linux/arm/readdir64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/readdir64.c
+rename to sysdeps/unix/sysv/linux/arm/readdir64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/readdir64_r.c b/sysdeps/unix/sysv/linux/arm/readdir64_r.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/readdir64_r.c
+rename to sysdeps/unix/sysv/linux/arm/readdir64_r.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/readelflib.c b/sysdeps/unix/sysv/linux/arm/readelflib.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/readelflib.c
+rename to sysdeps/unix/sysv/linux/arm/readelflib.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/register-dump.h b/sysdeps/unix/sysv/linux/arm/register-dump.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/register-dump.h
+rename to sysdeps/unix/sysv/linux/arm/register-dump.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/scandir64.c b/sysdeps/unix/sysv/linux/arm/scandir64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/scandir64.c
+rename to sysdeps/unix/sysv/linux/arm/scandir64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/semctl.c b/sysdeps/unix/sysv/linux/arm/semctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/semctl.c
+rename to sysdeps/unix/sysv/linux/arm/semctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setcontext.S b/sysdeps/unix/sysv/linux/arm/setcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setcontext.S
+rename to sysdeps/unix/sysv/linux/arm/setcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setegid.c b/sysdeps/unix/sysv/linux/arm/setegid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setegid.c
+rename to sysdeps/unix/sysv/linux/arm/setegid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/seteuid.c b/sysdeps/unix/sysv/linux/arm/seteuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/seteuid.c
+rename to sysdeps/unix/sysv/linux/arm/seteuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setfsgid.c b/sysdeps/unix/sysv/linux/arm/setfsgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setfsgid.c
+rename to sysdeps/unix/sysv/linux/arm/setfsgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setfsuid.c b/sysdeps/unix/sysv/linux/arm/setfsuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setfsuid.c
+rename to sysdeps/unix/sysv/linux/arm/setfsuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setgid.c b/sysdeps/unix/sysv/linux/arm/setgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setgid.c
+rename to sysdeps/unix/sysv/linux/arm/setgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setgroups.c b/sysdeps/unix/sysv/linux/arm/setgroups.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setgroups.c
+rename to sysdeps/unix/sysv/linux/arm/setgroups.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setregid.c b/sysdeps/unix/sysv/linux/arm/setregid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setregid.c
+rename to sysdeps/unix/sysv/linux/arm/setregid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setresgid.c b/sysdeps/unix/sysv/linux/arm/setresgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setresgid.c
+rename to sysdeps/unix/sysv/linux/arm/setresgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setresuid.c b/sysdeps/unix/sysv/linux/arm/setresuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setresuid.c
+rename to sysdeps/unix/sysv/linux/arm/setresuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setreuid.c b/sysdeps/unix/sysv/linux/arm/setreuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setreuid.c
+rename to sysdeps/unix/sysv/linux/arm/setreuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setrlimit.c b/sysdeps/unix/sysv/linux/arm/setrlimit.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setrlimit.c
+rename to sysdeps/unix/sysv/linux/arm/setrlimit.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/setuid.c b/sysdeps/unix/sysv/linux/arm/setuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/setuid.c
+rename to sysdeps/unix/sysv/linux/arm/setuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/shmctl.c b/sysdeps/unix/sysv/linux/arm/shmctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/shmctl.c
+rename to sysdeps/unix/sysv/linux/arm/shmctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sigaction.c b/sysdeps/unix/sysv/linux/arm/sigaction.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sigaction.c
+rename to sysdeps/unix/sysv/linux/arm/sigaction.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sigcontextinfo.h b/sysdeps/unix/sysv/linux/arm/sigcontextinfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sigcontextinfo.h
+rename to sysdeps/unix/sysv/linux/arm/sigcontextinfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sigrestorer.S b/sysdeps/unix/sysv/linux/arm/sigrestorer.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sigrestorer.S
+rename to sysdeps/unix/sysv/linux/arm/sigrestorer.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/swapcontext.S b/sysdeps/unix/sysv/linux/arm/swapcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/swapcontext.S
+rename to sysdeps/unix/sysv/linux/arm/swapcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sys/elf.h b/sysdeps/unix/sysv/linux/arm/sys/elf.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sys/elf.h
+rename to sysdeps/unix/sysv/linux/arm/sys/elf.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sys/io.h b/sysdeps/unix/sysv/linux/arm/sys/io.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sys/io.h
+rename to sysdeps/unix/sysv/linux/arm/sys/io.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sys/procfs.h b/sysdeps/unix/sysv/linux/arm/sys/procfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sys/procfs.h
+rename to sysdeps/unix/sysv/linux/arm/sys/procfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sys/ucontext.h b/sysdeps/unix/sysv/linux/arm/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sys/ucontext.h
+rename to sysdeps/unix/sysv/linux/arm/sys/ucontext.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sys/user.h b/sysdeps/unix/sysv/linux/arm/sys/user.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sys/user.h
+rename to sysdeps/unix/sysv/linux/arm/sys/user.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/syscall.S b/sysdeps/unix/sysv/linux/arm/syscall.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/syscall.S
+rename to sysdeps/unix/sysv/linux/arm/syscall.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/syscalls.list b/sysdeps/unix/sysv/linux/arm/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/syscalls.list
+rename to sysdeps/unix/sysv/linux/arm/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sysdep.S b/sysdeps/unix/sysv/linux/arm/sysdep.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sysdep.S
+rename to sysdeps/unix/sysv/linux/arm/sysdep.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sysdep.h b/sysdeps/unix/sysv/linux/arm/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/sysdep.h
+rename to sysdeps/unix/sysv/linux/arm/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/truncate64.c b/sysdeps/unix/sysv/linux/arm/truncate64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/truncate64.c
+rename to sysdeps/unix/sysv/linux/arm/truncate64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/ucontext_i.sym b/sysdeps/unix/sysv/linux/arm/ucontext_i.sym
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/ucontext_i.sym
+rename to sysdeps/unix/sysv/linux/arm/ucontext_i.sym
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/umount.c b/sysdeps/unix/sysv/linux/arm/umount.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/umount.c
+rename to sysdeps/unix/sysv/linux/arm/umount.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/versionsort64.c b/sysdeps/unix/sysv/linux/arm/versionsort64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/versionsort64.c
+rename to sysdeps/unix/sysv/linux/arm/versionsort64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/vfork.S b/sysdeps/unix/sysv/linux/arm/vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/vfork.S
+rename to sysdeps/unix/sysv/linux/arm/vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/xstat.c b/sysdeps/unix/sysv/linux/arm/xstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/arm/xstat.c
+rename to sysdeps/unix/sysv/linux/arm/xstat.c

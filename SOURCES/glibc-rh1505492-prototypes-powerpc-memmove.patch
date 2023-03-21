@@ -1,0 +1,25 @@
+Introduce prototype-style function definition for POWER memmove.
+Upstream removed the old-style definition in:
+
+commit d6f68bbef4427850c2901728a1d13efc0e687297
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Tue Jun 24 06:42:31 2014 -0500
+
+    PowerPC: memmove default implementation cleanup
+
+diff --git a/sysdeps/powerpc/memmove.c b/sysdeps/powerpc/memmove.c
+index 50734e45458352c5..7d736bc0b0eb7d63 100644
+--- a/sysdeps/powerpc/memmove.c
++++ b/sysdeps/powerpc/memmove.c
+@@ -40,10 +40,7 @@
+ #endif
+ 
+ rettype
+-MEMMOVE (a1, a2, len)
+-     a1const void *a1;
+-     a2const void *a2;
+-     size_t len;
++MEMMOVE (a1const void *a1, a2const void *a2, size_t len)
+ {
+   unsigned long int dstp = (long int) dest;
+   unsigned long int srcp = (long int) src;

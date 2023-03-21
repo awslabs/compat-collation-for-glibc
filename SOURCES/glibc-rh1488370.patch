@@ -1,0 +1,61 @@
+Partial backport of the following Fedora Rawhide patches:
+    
+commit a747c093bbee95a3bdf1d7ef052bd248c95fadc5
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Jun 1 12:05:26 2018 +0200
+    
+    Modernise nsswitch.conf defaults (#1581809)
+    
+(backported the line which adds sss description).
+    
+commit 82a97343d6405772541d754aeb4bab79612bd839
+Author: Carlos O'Donell <carlos@redhat.com>
+Date:   Thu Feb 7 17:15:12 2019 -0500
+    
+    Add warnings and notes to /etc/nsswitch.conf and /etc/nscd.conf.
+    
+(backported fully with adjustments for releng/nsswitch.conf).
+
+diff --git a/nscd/nscd.conf b/nscd/nscd.conf
+index 3730835c50a349c4..d7c0ee590466b0d4 100644
+--- a/nscd/nscd.conf
++++ b/nscd/nscd.conf
+@@ -3,6 +3,9 @@
+ #
+ # An example Name Service Cache config file.  This file is needed by nscd.
+ #
++# WARNING: Running nscd with a secondary caching service like sssd may lead to
++#          unexpected behaviour, especially with how long entries are cached.
++#
+ # Legal entries are:
+ #
+ #	logfile			<file>
+@@ -22,7 +25,12 @@
+ #       suggested-size		<service> <prime number>
+ #	check-files		<service> <yes|no>
+ #	persistent		<service> <yes|no>
++#
+ #	shared			<service> <yes|no>
++#	NOTE: Setting 'shared' to a value of 'yes' will accelerate the lookup
++#	      with the help of the client, but these lookups will not be
++#	      counted as cache hits i.e. 'nscd -g' may show '0%'.
++#
+ #	max-db-size		<service> <number bytes>
+ #	auto-propagate		<service> <yes|no>
+ #
+diff --git a/releng/nsswitch.conf b/releng/nsswitch.conf
+index 0a02e5717d906387..4b120bf9e6f94e5f 100644
+--- a/releng/nsswitch.conf
++++ b/releng/nsswitch.conf
+@@ -19,8 +19,11 @@
+ #	db			Use the local database (.db) files
+ #	compat			Use NIS on compat mode
+ #	hesiod			Use Hesiod for user lookups
++#	sss			Use sssd (System Security Services Daemon)
+ #	[NOTFOUND=return]	Stop searching if not found so far
+ #
++# WARNING: Running nscd with a secondary caching service like sssd may lead to
++# 	   unexpected behaviour, especially with how long entries are cached.
+ 
+ # To use db, put the "db" in front of "files" for entries you want to be
+ # looked up first in the databases

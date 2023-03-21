@@ -1,0 +1,19 @@
+Declare elision_available in elision_init under the preprocessor
+conditional, to avoid an unused variable warning.
+
+Upstream, this has been obsoleted by other elision-related changes.
+
+diff --git a/nptl/sysdeps/unix/sysv/linux/x86/elision-conf.c b/nptl/sysdeps/unix/sysv/linux/x86/elision-conf.c
+index 69b4fa4c66e89bc6..cc5efb811352adf1 100644
+--- a/nptl/sysdeps/unix/sysv/linux/x86/elision-conf.c
++++ b/nptl/sysdeps/unix/sysv/linux/x86/elision-conf.c
+@@ -66,8 +66,8 @@ elision_init (int argc __attribute__ ((unused)),
+ 	      char **argv  __attribute__ ((unused)),
+ 	      char **environ)
+ {
+-  int elision_available = HAS_CPU_FEATURE (RTM);
+ #ifdef ENABLE_LOCK_ELISION
++  int elision_available = HAS_CPU_FEATURE (RTM);
+   if (!__libc_enable_secure && elision_available)
+     {
+       /* RHEL 7 specific change: Check if elision is enabled for the

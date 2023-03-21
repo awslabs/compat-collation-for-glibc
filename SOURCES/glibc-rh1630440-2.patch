@@ -1,0 +1,48 @@
+nptl/tst-audit-threads: Switch to <support/test-driver.c>
+
+The downstream version of test-skeleton.c does not include
+<support/support.h> for backwards compatibility reasons, leading to a
+compilation failure:
+
+tst-audit-threads.c: In function 'do_test':
+tst-audit-threads.c:87:3: error: implicit declaration of function 'xcalloc' [-Werror=implicit-function-declaration]
+   threads = (pthread_t *) xcalloc (num_threads, sizeof(pthread_t));
+   ^
+tst-audit-threads.c:87:13: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   threads = (pthread_t *) xcalloc (num_threads, sizeof(pthread_t));
+             ^
+
+diff --git a/nptl/tst-audit-threads.c b/nptl/tst-audit-threads.c
+index e4bf433bd85f3715..42742d51e4bc06a3 100644
+--- a/nptl/tst-audit-threads.c
++++ b/nptl/tst-audit-threads.c
+@@ -25,19 +25,12 @@
+    the relocation resolution caching code in the dynamic loader i.e.
+    _dl_runtime_profile and _dl_profile_fixup.  */
+ 
++#include <support/support.h>
+ #include <support/xthread.h>
+ #include <strings.h>
+ #include <stdlib.h>
+ #include <sys/sysinfo.h>
+ 
+-static int do_test (void);
+-
+-/* This test usually takes less than 3s to run.  However, there are cases that
+-   take up to 30s.  */
+-#define TIMEOUT 60
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+-
+ /* Declare the functions we are going to call.  */
+ #define externnum
+ #include "tst-audit-threads.h"
+@@ -95,3 +88,8 @@ do_test (void)
+ 
+   return 0;
+ }
++
++/* This test usually takes less than 3s to run.  However, there are cases that
++   take up to 30s.  */
++#define TIMEOUT 60
++#include <support/test-driver.c>

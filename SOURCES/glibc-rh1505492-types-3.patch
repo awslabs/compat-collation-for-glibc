@@ -1,0 +1,30 @@
+commit 59ef17152b1ad9a4c4d618ec085586e3e14f6e94
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Nov 26 16:07:39 2014 +0000
+
+    Fix nptl/tst-cancel-self-cancelstate.c warning.
+    
+    This patch fixes "../sysdeps/nptl/pthread.h:670:26: warning:
+    initialization discards 'volatile' qualifier from pointer target type"
+    arising when building nptl/tst-cancel-self-cancelstate.c.  The problem
+    is passing a volatile int * to a macro expecting void *; the patch
+    adds an explicit cast.
+    
+    Tested for x86_64.
+    
+            * nptl/tst-cancel-self-cancelstate.c (do_test): Cast argument of
+            pthread_cleanup_push to void *.
+
+diff --git a/nptl/tst-cancel-self-cancelstate.c b/nptl/tst-cancel-self-cancelstate.c
+index c82e6f3cedd1745b..21314a2efb00dbf1 100644
+--- a/nptl/tst-cancel-self-cancelstate.c
++++ b/nptl/tst-cancel-self-cancelstate.c
+@@ -29,7 +29,7 @@ do_test (void)
+   int ret = 0;
+   volatile int should_fail = 1;
+ 
+-  pthread_cleanup_push (cleanup, &should_fail);
++  pthread_cleanup_push (cleanup, (void *) &should_fail);
+ 
+   if ((ret = pthread_setcancelstate (PTHREAD_CANCEL_DISABLE, NULL)) != 0)
+     {

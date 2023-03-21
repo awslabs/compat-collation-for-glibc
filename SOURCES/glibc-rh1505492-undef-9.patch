@@ -1,0 +1,32 @@
+commit fcd89ebe4f5ea948ff4c796771b918cde8960721
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Mon Mar 17 19:31:46 2014 +0530
+
+    Get rid of __LT_SPINLOCK_INIT
+    
+    We got rid of LinuxThreads in 2005, but we didn't remove
+    __LT_SPINLOCK_INIT back then.  Do it now.
+    
+            * nptl/sysdeps/pthread/bits/libc-lockP.h [defined NOT_IN_libc
+            && !defined IS_IN_libpthread && __LT_SPINNOCK_INIT != 0]:
+            Remove.
+
+diff --git a/nptl/sysdeps/pthread/bits/libc-lockP.h b/nptl/sysdeps/pthread/bits/libc-lockP.h
+index 962a292308f92267..07e0ef62909b9e9e 100644
+--- a/nptl/sysdeps/pthread/bits/libc-lockP.h
++++ b/nptl/sysdeps/pthread/bits/libc-lockP.h
+@@ -78,13 +78,8 @@ typedef pthread_key_t __libc_key_t;
+   CLASS __libc_lock_t NAME = LLL_LOCK_INITIALIZER;
+ # endif
+ #else
+-# if __LT_SPINLOCK_INIT == 0
+-#  define __libc_lock_define_initialized(CLASS,NAME) \
++# define __libc_lock_define_initialized(CLASS,NAME) \
+   CLASS __libc_lock_t NAME;
+-# else
+-#  define __libc_lock_define_initialized(CLASS,NAME) \
+-  CLASS __libc_lock_t NAME = PTHREAD_MUTEX_INITIALIZER;
+-# endif
+ #endif
+ 
+ #define __libc_rwlock_define_initialized(CLASS,NAME) \

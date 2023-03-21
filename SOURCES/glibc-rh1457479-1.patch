@@ -1,0 +1,339 @@
+commit 521c6785e1fc94d1f501743e9a40af9e02797df3
+Author: Andreas Jaeger <aj@suse.de>
+Date:   Thu Jul 4 09:45:12 2013 +0200
+
+    Sync sys/ptrace with Linux 3.10
+
+diff -rup a/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h b/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h	2018-05-08 22:10:50.628796132 -0400
++++ b/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h	2018-05-08 22:33:59.528930354 -0400
+@@ -21,6 +21,7 @@
+ #define _SYS_PTRACE_H	1
+ 
+ #include <features.h>
++#include <bits/types.h>
+ 
+ __BEGIN_DECLS
+ 
+@@ -123,7 +124,11 @@ enum __ptrace_request
+ #define PTRACE_INTERRUPT PTRACE_INTERRUPT
+ 
+   /* Wait for next group event.  */
+-  PTRACE_LISTEN = 0x4208
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -159,6 +164,20 @@ enum __ptrace_eventcodes
+   PTRACE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++};
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be
+diff -rup a/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h b/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h	2018-05-08 22:10:51.979794763 -0400
++++ b/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h	2018-05-08 22:33:59.532930337 -0400
+@@ -21,6 +21,7 @@
+ 
+ #include <features.h>
+ #include <sys/ucontext.h>
++#include <bits/types.h>
+ 
+ __BEGIN_DECLS
+ 
+@@ -128,7 +129,11 @@ enum __ptrace_request
+ #define PTRACE_INTERRUPT PTRACE_INTERRUPT
+ 
+   /* Wait for next group event.  */
+-  PTRACE_LISTEN = 0x4208
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -179,6 +184,20 @@ enum __ptrace_eventcodes
+   PTRACE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++};
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be
+diff -rup a/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h b/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h	2018-05-08 22:33:59.539930307 -0400
+@@ -20,6 +20,7 @@
+ #define _SYS_PTRACE_H	1
+ 
+ #include <features.h>
++#include <bits/types.h>
+ 
+ __BEGIN_DECLS
+ 
+@@ -115,7 +116,11 @@ enum __ptrace_request
+ #define PTRACE_INTERRUPT PTRACE_INTERRUPT
+ 
+   /* Wait for next group event.  */
+-  PTRACE_LISTEN = 0x4208
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -151,6 +156,20 @@ enum __ptrace_eventcodes
+   PTRACE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++};
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be
+diff -rup a/sysdeps/unix/sysv/linux/s390/sys/ptrace.h b/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/s390/sys/ptrace.h	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/s390/sys/ptrace.h	2018-05-08 22:33:59.542930293 -0400
+@@ -21,6 +21,7 @@
+ #define _SYS_PTRACE_H	1
+ 
+ #include <features.h>
++#include <bits/types.h>
+ 
+ __BEGIN_DECLS
+ #ifdef _LINUX_PTRACE_H
+@@ -154,7 +155,11 @@ enum __ptrace_request
+ #define PTRACE_INTERRUPT PTRACE_INTERRUPT
+ 
+   /* Wait for next group event.  */
+-  PTRACE_LISTEN = 0x4208
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -190,6 +195,20 @@ enum __ptrace_eventcodes
+   PTRACE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++};
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be
+diff -rup a/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h b/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h	2018-05-08 22:33:59.546930276 -0400
+@@ -20,7 +20,7 @@
+ #define _SYS_PTRACE_H	1
+ 
+ #include <features.h>
+-
++#include <bits/types.h>
+ #include <bits/wordsize.h>
+ 
+ /* Linux/SPARC kernels up to 2.3.18 do not care much
+@@ -198,7 +198,11 @@ enum __ptrace_request
+ #define PTRACE_INTERRUPT PTRACE_INTERRUPT
+ 
+   /* Wait for next group event.  */
+-  PTRACE_LISTEN = 0x4208
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -234,6 +238,20 @@ enum __ptrace_eventcodes
+   PTRACE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++};
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be
+diff -rup a/sysdeps/unix/sysv/linux/sys/ptrace.h b/sysdeps/unix/sysv/linux/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/sys/ptrace.h	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/sys/ptrace.h	2018-05-08 22:33:59.550930259 -0400
+@@ -20,6 +20,7 @@
+ #define _SYS_PTRACE_H	1
+ 
+ #include <features.h>
++#include <bits/types.h>
+ 
+ __BEGIN_DECLS
+ 
+@@ -145,7 +146,11 @@ enum __ptrace_request
+ #define PTRACE_INTERRUPT PTRACE_INTERRUPT
+ 
+   /* Wait for next group event.  */
+-  PTRACE_LISTEN = 0x4208
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -181,6 +186,20 @@ enum __ptrace_eventcodes
+   PTRAVE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++};
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be
+diff -rup a/sysdeps/unix/sysv/linux/tile/sys/ptrace.h b/sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+--- a/sysdeps/unix/sysv/linux/tile/sys/ptrace.h	2018-05-08 22:10:48.688798100 -0400
++++ b/sysdeps/unix/sysv/linux/tile/sys/ptrace.h	2018-05-08 22:33:59.535930324 -0400
+@@ -20,6 +20,7 @@
+ #define _SYS_PTRACE_H	1
+ 
+ #include <features.h>
++#include <bits/types.h>
+ 
+ __BEGIN_DECLS
+ 
+@@ -101,8 +102,28 @@ enum __ptrace_request
+ #define PT_GETSIGINFO PTRACE_GETSIGINFO
+ 
+   /* Set new siginfo for process.  */
+-  PTRACE_SETSIGINFO = 0x4203
++  PTRACE_SETSIGINFO = 0x4203,
+ #define PT_SETSIGINFO PTRACE_SETSIGINFO
++
++  /* Set register content.  */
++  PTRACE_SETREGSET = 0x4205,
++#define PTRACE_SETREGSET PTRACE_SETREGSET
++
++  /* Like PTRACE_ATTACH, but do not force tracee to trap and do not affect
++     signal or group stop state.  */
++  PTRACE_SEIZE = 0x4206,
++#define PTRACE_SEIZE PTRACE_SEIZE
++
++  /* Trap seized tracee.  */
++  PTRACE_INTERRUPT = 0x4207,
++#define PTRACE_INTERRUPT PTRACE_INTERRUPT
++
++  /* Wait for next group event.  */
++  PTRACE_LISTEN = 0x4208,
++#define PTRACE_LISTEN PTRACE_LISTEN
++
++  PTRACE_PEEKSIGINFO = 0x4209
++#define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
+ };
+ 
+ 
+@@ -132,6 +153,20 @@ enum __ptrace_eventcodes
+   PTRACE_EVENT_SECCOMP  = 7
+ };
+ 
++/* Arguments for PTRACE_PEEKSIGINFO.  */
++struct __ptrace_peeksiginfo_args
++{
++  __uint64_t off;	/* From which siginfo to start.  */
++  __uint32_t flags;	/* Flags for peeksiginfo.  */
++  __int32_t nr;		/* How many siginfos to take.  */
++};
++
++enum __ptrace_peeksiginfo_flags
++{
++  /* Read signals from a shared (process wide) queue.  */
++  PTRACE_PEEKSIGINFO_SHARED = (1 << 0)
++}
++
+ /* Perform process tracing functions.  REQUEST is one of the values
+    above, and determines the action to be taken.
+    For all requests except PTRACE_TRACEME, PID specifies the process to be

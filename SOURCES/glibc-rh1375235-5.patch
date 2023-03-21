@@ -1,0 +1,388 @@
+From f69ff8906aeb1c4fd762bc9964f8a261963c30d5 Mon Sep 17 00:00:00 2001
+From: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date: Thu, 27 Jul 2017 10:53:58 +0200
+Subject: [PATCH 05/10] S390: Move utf8-utf32-z9.c to multiarch folder and use
+ s390_libc_ifunc_expr macro.
+
+upstream-commit 5ea9ce3749007348a8d12e8eef9e0ccc6fd90aec
+
+The utf8-utf32-z9.c iconv module is using ifunc and thus the ifunc part should
+be in multiarch folder.  Otherwise ifunc is used even if you configure
+with --disable-multi-arch.
+
+This patch moves the ifunc resolvers to the new file
+sysdeps/s390/multiarch/utf8-utf32-z9.c. The resolvers are now implemented
+with s390_libc_ifunc_expr macro instead of using gcc attribute ifunc directly.
+
+The ifunc versions are implemented in sysdeps/s390/utf8-utf32-z9.c.
+Each version is only implemented if needed or supported.  Therefore there is
+a block at beginning of the file which selects the versions which should be
+defined depending on support for multiarch, vector-support and used minimum
+architecture level.  This block defines HAVE_[FROM|TO]_[C|CU|VX] to 1 or 0.
+The code below is rearranged and surrounded
+by #if HAVE_[FROM|TO]_[C|CU|VX] == 1.  There is no functional change.
+
+The cu instructions are z9 zarch instructions.  As the major distros are
+already using the newer z196 as architecture level set, those instructions
+can be used as fallback version instead of the c-code.  This behaviour is
+decided at compile time via HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT.
+
+ChangeLog:
+
+	* sysdeps/s390/multiarch/utf8-utf32-z9.c: New File.
+	* sysdeps/s390/utf8-utf32-z9.c: Move ifunc resolvers to multiarch
+	folder and define ifunc versions depending on HAVE_[FROM|TO]_[C|CU|VX].
+	(HAVE_FROM_C, HAVE_FROM_CU, HAVE_FROM_VX, HAVE_TO_C, HAVE_TO_VX,
+	FROM_LOOP_DEFAULT, FROM_LOOP_C, FROM_LOOP_CU, FROM_LOOP_VX,
+	TO_LOOP_DEFAULT, TO_LOOP_C, TO_LOOP_VX): New Define.
+---
+ sysdeps/s390/multiarch/utf8-utf32-z9.c |  48 ++++++++
+ sysdeps/s390/utf8-utf32-z9.c           | 215 +++++++++++++++++----------------
+ 2 files changed, 160 insertions(+), 103 deletions(-)
+ create mode 100644 sysdeps/s390/multiarch/utf8-utf32-z9.c
+
+diff --git a/sysdeps/s390/multiarch/utf8-utf32-z9.c b/sysdeps/s390/multiarch/utf8-utf32-z9.c
+new file mode 100644
+index 0000000..faf1f46
+--- /dev/null
++++ b/sysdeps/s390/multiarch/utf8-utf32-z9.c
+@@ -0,0 +1,48 @@
++/* Conversion between UTF-8 and UTF-32 - multiarch s390 version.
++
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <sysdeps/s390/utf8-utf32-z9.c>
++#include <ifunc-resolve.h>
++
++#undef FROM_LOOP
++#define FROM_LOOP	__from_utf8_loop
++#undef TO_LOOP
++#define TO_LOOP		__to_utf8_loop
++
++#define _SINGLE_NAME(NAME) NAME##_single
++#define SINGLE_NAME(NAME) _SINGLE_NAME(NAME)
++strong_alias (SINGLE_NAME (FROM_LOOP_DEFAULT), SINGLE_NAME (FROM_LOOP))
++strong_alias (SINGLE_NAME (TO_LOOP_DEFAULT), SINGLE_NAME (TO_LOOP))
++
++/* Generate ifunc'ed loop functions for FROM/TO_LOOP.  */
++s390_libc_ifunc_expr (FROM_LOOP_DEFAULT, FROM_LOOP,
++		      (HAVE_FROM_VX && (hwcap & HWCAP_S390_VX))
++		      ? FROM_LOOP_VX
++		      : (HAVE_FROM_CU && (hwcap & HWCAP_S390_ZARCH
++					  && hwcap & HWCAP_S390_HIGH_GPRS
++					  && hwcap & HWCAP_S390_ETF3EH))
++			? FROM_LOOP_CU
++			: FROM_LOOP_DEFAULT);
++
++s390_libc_ifunc_expr (TO_LOOP_DEFAULT, TO_LOOP,
++		      (HAVE_TO_VX && (hwcap & HWCAP_S390_VX))
++		      ? TO_LOOP_VX
++		      : TO_LOOP_DEFAULT);
++
++#include <iconv/skeleton.c>
+diff --git a/sysdeps/s390/utf8-utf32-z9.c b/sysdeps/s390/utf8-utf32-z9.c
+index efae745..e06d11e 100644
+--- a/sysdeps/s390/utf8-utf32-z9.c
++++ b/sysdeps/s390/utf8-utf32-z9.c
+@@ -27,8 +27,35 @@
+ #include <dlfcn.h>
+ #include <stdint.h>
+ #include <unistd.h>
+-#include <dl-procinfo.h>
+ #include <gconv.h>
++#include <string.h>
++
++/* Select which versions should be defined depending on support
++   for multiarch, vector and used minimum architecture level.  */
++#ifdef HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT
++# define HAVE_FROM_C		0
++# define FROM_LOOP_DEFAULT	FROM_LOOP_CU
++#else
++# define HAVE_FROM_C		1
++# define FROM_LOOP_DEFAULT	FROM_LOOP_C
++#endif
++
++#define HAVE_TO_C		1
++#define TO_LOOP_DEFAULT		TO_LOOP_C
++
++#if defined HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT || defined USE_MULTIARCH
++# define HAVE_FROM_CU		1
++#else
++# define HAVE_FROM_CU		0
++#endif
++
++#if defined HAVE_S390_VX_ASM_SUPPORT && defined USE_MULTIARCH
++# define HAVE_FROM_VX		1
++# define HAVE_TO_VX		1
++#else
++# define HAVE_FROM_VX		0
++# define HAVE_TO_VX		0
++#endif
+ 
+ #if defined HAVE_S390_VX_GCC_SUPPORT
+ # define ASM_CLOBBER_VR(NR) , NR
+@@ -48,8 +75,8 @@
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		6
+ #define MIN_NEEDED_TO		4
+-#define FROM_LOOP		__from_utf8_loop
+-#define TO_LOOP			__to_utf8_loop
++#define FROM_LOOP		FROM_LOOP_DEFAULT
++#define TO_LOOP			TO_LOOP_DEFAULT
+ #define FROM_DIRECTION		(dir == from_utf8)
+ #define ONE_DIRECTION           0
+ 
+@@ -303,12 +330,9 @@ gconv_end (struct __gconv_step *data)
+     STANDARD_FROM_LOOP_ERR_HANDLER (i);					\
+   }
+ 
+-/* This hardware routine uses the Convert UTF8 to UTF32 (cu14) instruction.  */
+-#define BODY_FROM_ETF3EH BODY_FROM_HW (HARDWARE_CONVERT ("cu14 %0, %1, 1"))
+-
+-
++#if HAVE_FROM_C == 1
+ /* The software routine is copied from gconv_simple.c.  */
+-#define BODY_FROM_C							\
++# define BODY_FROM_C							\
+   {									\
+     /* Next input byte.  */						\
+     uint32_t ch = *inptr;						\
+@@ -408,7 +432,50 @@ gconv_end (struct __gconv_step *data)
+     outptr += sizeof (uint32_t);					\
+   }
+ 
+-#define HW_FROM_VX							\
++/* These definitions apply to the UTF-8 to UTF-32 direction.  The
++   software implementation for UTF-8 still supports multibyte
++   characters up to 6 bytes whereas the hardware variant does not.  */
++# define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
++# define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
++# define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
++# define FROM_LOOP_C		__from_utf8_loop_c
++# define LOOPFCT		FROM_LOOP_C
++
++# define LOOP_NEED_FLAGS
++
++# define STORE_REST		STORE_REST_COMMON
++# define UNPACK_BYTES		UNPACK_BYTES_COMMON
++# define CLEAR_STATE		CLEAR_STATE_COMMON
++# define BODY			BODY_FROM_C
++# include <iconv/loop.c>
++#else
++# define FROM_LOOP_C		NULL
++#endif /* HAVE_FROM_C != 1  */
++
++#if HAVE_FROM_CU == 1
++/* This hardware routine uses the Convert UTF8 to UTF32 (cu14) instruction.  */
++# define BODY_FROM_ETF3EH BODY_FROM_HW (HARDWARE_CONVERT ("cu14 %0, %1, 1"))
++
++/* Generate loop-function with hardware utf-convert instruction.  */
++# define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
++# define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
++# define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
++# define FROM_LOOP_CU		__from_utf8_loop_etf3eh
++# define LOOPFCT		FROM_LOOP_CU
++
++# define LOOP_NEED_FLAGS
++
++# define STORE_REST		STORE_REST_COMMON
++# define UNPACK_BYTES		UNPACK_BYTES_COMMON
++# define CLEAR_STATE		CLEAR_STATE_COMMON
++# define BODY			BODY_FROM_ETF3EH
++# include <iconv/loop.c>
++#else
++# define FROM_LOOP_CU		NULL
++#endif /* HAVE_FROM_CU != 1  */
++
++#if HAVE_FROM_VX == 1
++# define HW_FROM_VX							\
+   {									\
+     register const unsigned char* pInput asm ("8") = inptr;		\
+     register size_t inlen asm ("9") = inend - inptr;			\
+@@ -500,45 +567,14 @@ gconv_end (struct __gconv_step *data)
+     inptr = pInput;							\
+     outptr = pOutput;							\
+   }
+-#define BODY_FROM_VX BODY_FROM_HW (HW_FROM_VX)
++# define BODY_FROM_VX BODY_FROM_HW (HW_FROM_VX)
+ 
+-/* These definitions apply to the UTF-8 to UTF-32 direction.  The
+-   software implementation for UTF-8 still supports multibyte
+-   characters up to 6 bytes whereas the hardware variant does not.  */
+-#define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+-#define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
+-#define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
+-#define LOOPFCT			__from_utf8_loop_c
+-
+-#define LOOP_NEED_FLAGS
+-
+-#define STORE_REST		STORE_REST_COMMON
+-#define UNPACK_BYTES		UNPACK_BYTES_COMMON
+-#define CLEAR_STATE		CLEAR_STATE_COMMON
+-#define BODY			BODY_FROM_C
+-#include <iconv/loop.c>
+-
+-
+-/* Generate loop-function with hardware utf-convert instruction.  */
+-#define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+-#define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
+-#define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
+-#define LOOPFCT			__from_utf8_loop_etf3eh
+-
+-#define LOOP_NEED_FLAGS
+-
+-#define STORE_REST		STORE_REST_COMMON
+-#define UNPACK_BYTES		UNPACK_BYTES_COMMON
+-#define CLEAR_STATE		CLEAR_STATE_COMMON
+-#define BODY			BODY_FROM_ETF3EH
+-#include <iconv/loop.c>
+-
+-#if defined HAVE_S390_VX_ASM_SUPPORT
+-/* Generate loop-function with hardware vector instructions.  */
++/* Generate loop-function with hardware vector and utf-convert instructions.  */
+ # define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+ # define MAX_NEEDED_INPUT	MAX_NEEDED_FROM
+ # define MIN_NEEDED_OUTPUT	MIN_NEEDED_TO
+-# define LOOPFCT		__from_utf8_loop_vx
++# define FROM_LOOP_VX		__from_utf8_loop_vx
++# define LOOPFCT		FROM_LOOP_VX
+ 
+ # define LOOP_NEED_FLAGS
+ 
+@@ -547,33 +583,13 @@ gconv_end (struct __gconv_step *data)
+ # define CLEAR_STATE		CLEAR_STATE_COMMON
+ # define BODY			BODY_FROM_VX
+ # include <iconv/loop.c>
+-#endif
+-
+-
+-/* Generate ifunc'ed loop function.  */
+-__typeof(__from_utf8_loop_c)
+-__attribute__ ((ifunc ("__from_utf8_loop_resolver")))
+-__from_utf8_loop;
+-
+-static void *
+-__from_utf8_loop_resolver (unsigned long int dl_hwcap)
+-{
+-#if defined HAVE_S390_VX_ASM_SUPPORT
+-  if (dl_hwcap & HWCAP_S390_VX)
+-    return __from_utf8_loop_vx;
+-  else
+-#endif
+-  if (dl_hwcap & HWCAP_S390_ZARCH && dl_hwcap & HWCAP_S390_HIGH_GPRS
+-      && dl_hwcap & HWCAP_S390_ETF3EH)
+-    return __from_utf8_loop_etf3eh;
+-  else
+-    return __from_utf8_loop_c;
+-}
+-
+-strong_alias (__from_utf8_loop_c_single, __from_utf8_loop_single)
++#else
++# define FROM_LOOP_VX		NULL
++#endif /* HAVE_FROM_VX != 1  */
+ 
++#if HAVE_TO_C == 1
+ /* The software routine mimics the S/390 cu41 instruction.  */
+-#define BODY_TO_C						\
++# define BODY_TO_C						\
+   {								\
+     uint32_t wc = *((const uint32_t *) inptr);			\
+ 								\
+@@ -657,8 +673,22 @@ strong_alias (__from_utf8_loop_c_single, __from_utf8_loop_single)
+     inptr += 4;							\
+   }
+ 
++/* Generate loop-function with software routing.  */
++# define MIN_NEEDED_INPUT	MIN_NEEDED_TO
++# define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
++# define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
++# define TO_LOOP_C		__to_utf8_loop_c
++# define LOOPFCT		TO_LOOP_C
++# define BODY			BODY_TO_C
++# define LOOP_NEED_FLAGS
++# include <iconv/loop.c>
++#else
++# define TO_LOOP_C		NULL
++#endif /* HAVE_TO_C != 1  */
++
++#if HAVE_TO_VX == 1
+ /* The hardware routine uses the S/390 vector instructions.  */
+-#define BODY_TO_VX							\
++# define BODY_TO_VX							\
+   {									\
+     size_t inlen = inend - inptr;					\
+     size_t outlen = outend - outptr;					\
+@@ -820,43 +850,22 @@ strong_alias (__from_utf8_loop_c_single, __from_utf8_loop_single)
+     STANDARD_TO_LOOP_ERR_HANDLER (4);					\
+   }
+ 
+-/* Generate loop-function with software routing.  */
+-#define MIN_NEEDED_INPUT	MIN_NEEDED_TO
+-#define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
+-#define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
+-#define LOOPFCT			__to_utf8_loop_c
+-#define BODY			BODY_TO_C
+-#define LOOP_NEED_FLAGS
+-#include <iconv/loop.c>
+-
+-#if defined HAVE_S390_VX_ASM_SUPPORT
+-/* Generate loop-function with hardware vector and utf-convert instructions.  */
++/* Generate loop-function with hardware vector instructions.  */
+ # define MIN_NEEDED_INPUT	MIN_NEEDED_TO
+ # define MIN_NEEDED_OUTPUT	MIN_NEEDED_FROM
+ # define MAX_NEEDED_OUTPUT	MAX_NEEDED_FROM
+-# define LOOPFCT		__to_utf8_loop_vx
++# define TO_LOOP_VX		__to_utf8_loop_vx
++# define LOOPFCT		TO_LOOP_VX
+ # define BODY			BODY_TO_VX
+ # define LOOP_NEED_FLAGS
+ # include <iconv/loop.c>
++#else
++# define TO_LOOP_VX		NULL
++#endif /* HAVE_TO_VX != 1  */
++
++/* This file also exists in sysdeps/s390/multiarch/ which
++   generates ifunc resolvers for FROM/TO_LOOP functions
++   and includes iconv/skeleton.c afterwards.  */
++#if ! defined USE_MULTIARCH
++# include <iconv/skeleton.c>
+ #endif
+-
+-/* Generate ifunc'ed loop function.  */
+-__typeof(__to_utf8_loop_c)
+-__attribute__ ((ifunc ("__to_utf8_loop_resolver")))
+-__to_utf8_loop;
+-
+-static void *
+-__to_utf8_loop_resolver (unsigned long int dl_hwcap)
+-{
+-#if defined HAVE_S390_VX_ASM_SUPPORT
+-  if (dl_hwcap & HWCAP_S390_VX)
+-    return __to_utf8_loop_vx;
+-  else
+-#endif
+-    return __to_utf8_loop_c;
+-}
+-
+-strong_alias (__to_utf8_loop_c_single, __to_utf8_loop_single)
+-
+-
+-#include <iconv/skeleton.c>
+-- 
+1.8.3.1
+

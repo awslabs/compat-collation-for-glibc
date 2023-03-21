@@ -1,0 +1,1329 @@
+commit f63f2bfdfaad591305863a79c4fd2c3f50015f26
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Mon Oct 19 21:23:47 2015 +0000
+
+    Convert 69 more function definitions to prototype style (line wrap cases).
+    
+    This automatically-generated patch converts 69 function definitions in
+    glibc from old-style K&R to prototype-style.
+    
+    This patch, covering both sysdeps and non-sysdeps files, deals with
+    cases where the prototype needed to be wrapped over more than one
+    line.  Otherwise, exclusions and caveats are as for
+    <https://sourceware.org/ml/libc-alpha/2015-10/msg00594.html> and
+    <https://sourceware.org/ml/libc-alpha/2015-10/msg00599.html>.
+    
+    Tested for x86_64 and x86 (testsuite, and that installed stripped
+    shared libraries are unchanged by the patch).
+    
+            * crypt/crypt-entry.c (__crypt_r): Convert to prototype-style
+            function definition.
+            * crypt/crypt_util.c (__encrypt_r): Likewise.
+            * libio/genops.c (_IO_no_init): Likewise.
+            * libio/iofopncook.c (_IO_fopencookie): Likewise.
+            (_IO_old_fopencookie): Likewise.
+            * libio/iofwrite_u.c (fwrite_unlocked): Likewise.
+            * libio/iogetline.c (_IO_getline): Likewise.
+            (_IO_getline_info): Likewise.
+            * libio/iogetwline.c (_IO_getwline): Likewise.
+            (_IO_getwline_info): Likewise.
+            * libio/vsnprintf.c (_IO_vsnprintf): Likewise.
+            * libio/vswprintf.c (_IO_vswprintf): Likewise.
+            * locale/programs/simple-hash.c (insert_entry_2): Likewise.
+            (find_entry): Likewise.
+            (iterate_table): Likewise.
+            (lookup): Likewise.
+            * login/forkpty.c (forkpty): Likewise.
+            * misc/hsearch_r.c (__hsearch_r): Likewise.
+            * misc/select.c (__select): Likewise.
+            * nptl/cleanup_defer_compat.c (_pthread_cleanup_pop_restore):
+            Likewise.
+            * nptl/old_pthread_cond_init.c (__pthread_cond_init_2_0):
+            Likewise.
+            * nptl/old_pthread_cond_timedwait.c
+            (__pthread_cond_timedwait_2_0): Likewise.
+            * nptl/pthread_barrier_init.c (__pthread_barrier_init): Likewise.
+            * nptl/pthread_barrierattr_getpshared.c
+            (pthread_barrierattr_getpshared): Likewise.
+            * nptl/pthread_getschedparam.c (__pthread_getschedparam):
+            Likewise.
+            * nptl/pthread_mutex_setprioceiling.c
+            (pthread_mutex_setprioceiling): Likewise.
+            * nptl/pthread_mutexattr_getprioceiling.c
+            (pthread_mutexattr_getprioceiling): Likewise.
+            * nptl/pthread_rwlock_init.c (__pthread_rwlock_init): Likewise.
+            * nptl/pthread_rwlock_timedrdlock.c (pthread_rwlock_timedrdlock):
+            Likewise.
+            * nptl/pthread_rwlock_timedwrlock.c (pthread_rwlock_timedwrlock):
+            Likewise.
+            * nptl/pthread_setschedparam.c (__pthread_setschedparam):
+            Likewise.
+            * socket/recvfrom.c (__recvfrom): Likewise.
+            * socket/sendto.c (__sendto): Likewise.
+            * socket/setsockopt.c (__setsockopt): Likewise.
+            * stdio-common/_itoa.c (_itoa): Likewise.
+            * stdio-common/_itowa.c (_itowa): Likewise.
+            * stdio-common/reg-printf.c (__register_printf_specifier):
+            Likewise.
+            (__register_printf_function): Likewise.
+            * stdio-common/tempname.c (__path_search): Likewise.
+            * stdlib/addmul_1.c (mpn_addmul_1): Likewise.
+            * stdlib/mul_1.c (mpn_mul_1): Likewise.
+            * stdlib/random_r.c (__initstate_r): Likewise.
+            * stdlib/setenv.c (__add_to_environ): Likewise.
+            * stdlib/submul_1.c (mpn_submul_1): Likewise.
+            * streams/getpmsg.c (getpmsg): Likewise.
+            * streams/putmsg.c (putmsg): Likewise.
+            * streams/putpmsg.c (putpmsg): Likewise.
+            * sunrpc/clnt_raw.c (clntraw_call): Likewise.
+            * sunrpc/clnt_tcp.c (clnttcp_call): Likewise.
+            * sunrpc/clnt_udp.c (clntudp_create): Likewise.
+            * sunrpc/clnt_unix.c (clntunix_call): Likewise.
+            * sunrpc/pm_getport.c (pmap_getport): Likewise.
+            * sunrpc/svc_udp.c (cache_get): Likewise.
+            * sunrpc/xdr_array.c (xdr_vector): Likewise.
+            * sysdeps/mach/hurd/getcwd.c
+            (__canonicalize_directory_name_internal): Likewise.
+            * sysdeps/mach/hurd/pselect.c (__pselect): Likewise.
+            * sysdeps/mach/hurd/recvfrom.c (__recvfrom): Likewise.
+            * sysdeps/mach/hurd/select.c (__select): Likewise.
+            * sysdeps/posix/ttyname_r.c (getttyname_r): Likewise.
+            * sysdeps/pthread/timer_settime.c (timer_settime): Likewise.
+            * sysdeps/sparc/nptl/pthread_barrier_init.c
+            (__pthread_barrier_init): Likewise.
+            * sysdeps/unix/sysv/linux/hppa/pthread_cond_timedwait.c
+            (__pthread_cond_timedwait): Likewise.
+            * sysdeps/unix/sysv/linux/i386/putmsg.c (putmsg): Likewise.
+            * sysdeps/unix/sysv/linux/s390/semtimedop.c (semtimedop):
+            Likewise.
+            * sysdeps/unix/sysv/linux/semtimedop.c (semtimedop): Likewise.
+            * sysdeps/unix/sysv/linux/timer_settime.c (timer_settime):
+            Likewise.
+            * sysvipc/semtimedop.c (semtimedop): Likewise.
+            * time/setitimer.c (__setitimer): Likewise.
+            * time/strftime_l.c (emacs_strftime): Likewise.
+
+Conflicts:
+	misc/hsearch_r.c
+	  (Missing backport of fix for swbz#17996.)
+	nptl/pthread_barrier_init.c
+	  (Missing backport of fix for swbz#18544.)
+	sysdeps/pthread/timer_settime.c
+	  (Applied to nptl/sysdeps/pthread/timer_settime.c.)
+	sysdeps/sparc/nptl/pthread_barrier_init.c
+	  (Missing fix for swbz#18544.  Applied to
+	  nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_init.c.)
+	sysdeps/unix/sysv/linux/hppa/pthread_cond_timedwait.c
+	  (Missing backport of d83f0734e1522a5e5ea2494565f4dcd25a86d6a0,
+	  HPPA: Transition to new non-addon NPTL; files removed manually.)
+	sysdeps/unix/sysv/linux/timer_settime.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/timer_settime.c.)
+
+diff --git a/crypt/crypt-entry.c b/crypt/crypt-entry.c
+index 1ad36c7d05e7b7c1..647debc9ec98f3fb 100644
+--- a/crypt/crypt-entry.c
++++ b/crypt/crypt-entry.c
+@@ -81,10 +81,8 @@ extern struct crypt_data _ufc_foobar;
+  */
+ 
+ char *
+-__crypt_r (key, salt, data)
+-     const char *key;
+-     const char *salt;
+-     struct crypt_data * __restrict data;
++__crypt_r (const char *key, const char *salt,
++	   struct crypt_data * __restrict data)
+ {
+   ufc_long res[4];
+   char ktab[9];
+diff --git a/crypt/crypt_util.c b/crypt/crypt_util.c
+index bbb2ca2b58490e35..954bbfcfebd169b6 100644
+--- a/crypt/crypt_util.c
++++ b/crypt/crypt_util.c
+@@ -805,10 +805,8 @@ _ufc_output_conversion_r(v1, v2, salt, __data)
+  */
+ 
+ void
+-__encrypt_r(__block, __edflag, __data)
+-     char *__block;
+-     int __edflag;
+-     struct crypt_data * __restrict __data;
++__encrypt_r (char *__block, int __edflag,
++	     struct crypt_data * __restrict __data)
+ {
+   ufc_long l1, l2, r1, r2, res[4];
+   int i;
+diff --git a/libio/genops.c b/libio/genops.c
+index bad6ec65e25de31b..09a9c2eacf1fcaea 100644
+--- a/libio/genops.c
++++ b/libio/genops.c
+@@ -600,12 +600,8 @@ _IO_old_init (_IO_FILE *fp, int flags)
+ }
+ 
+ void
+-_IO_no_init (fp, flags, orientation, wd, jmp)
+-     _IO_FILE *fp;
+-     int flags;
+-     int orientation;
+-     struct _IO_wide_data *wd;
+-     const struct _IO_jump_t *jmp;
++_IO_no_init (_IO_FILE *fp, int flags, int orientation,
++	     struct _IO_wide_data *wd, const struct _IO_jump_t *jmp)
+ {
+   _IO_old_init (fp, flags);
+   fp->_mode = orientation;
+diff --git a/libio/iofopncook.c b/libio/iofopncook.c
+index d5c28f31c377905a..f1ac641ee6537fd6 100644
+--- a/libio/iofopncook.c
++++ b/libio/iofopncook.c
+@@ -170,10 +170,8 @@ _IO_cookie_init (struct _IO_cookie_file *cfile, int read_write,
+ 
+ 
+ _IO_FILE *
+-_IO_fopencookie (cookie, mode, io_functions)
+-     void *cookie;
+-     const char *mode;
+-     _IO_cookie_io_functions_t io_functions;
++_IO_fopencookie (void *cookie, const char *mode,
++		 _IO_cookie_io_functions_t io_functions)
+ {
+   int read_write;
+   struct locked_FILE
+@@ -264,10 +262,8 @@ static const struct _IO_jump_t _IO_old_cookie_jumps libio_vtable = {
+ 
+ _IO_FILE *
+ attribute_compat_text_section
+-_IO_old_fopencookie (cookie, mode, io_functions)
+-     void *cookie;
+-     const char *mode;
+-     _IO_cookie_io_functions_t io_functions;
++_IO_old_fopencookie (void *cookie, const char *mode,
++		     _IO_cookie_io_functions_t io_functions)
+ {
+   _IO_FILE *ret;
+ 
+diff --git a/libio/iofwrite_u.c b/libio/iofwrite_u.c
+index a1077eeb922640d3..99b049cc37beb6de 100644
+--- a/libio/iofwrite_u.c
++++ b/libio/iofwrite_u.c
+@@ -30,11 +30,8 @@
+ #undef fwrite_unlocked
+ 
+ _IO_size_t
+-fwrite_unlocked (buf, size, count, fp)
+-     const void *buf;
+-     _IO_size_t size;
+-     _IO_size_t count;
+-     _IO_FILE *fp;
++fwrite_unlocked (const void *buf, _IO_size_t size, _IO_size_t count,
++		 _IO_FILE *fp)
+ {
+   _IO_size_t request = size * count;
+   _IO_size_t written = 0;
+diff --git a/libio/iogetline.c b/libio/iogetline.c
+index bdb35b30fbcf1bee..a521e94949c42d4e 100644
+--- a/libio/iogetline.c
++++ b/libio/iogetline.c
+@@ -28,12 +28,8 @@
+ #include <string.h>
+ 
+ _IO_size_t
+-_IO_getline (fp, buf, n, delim, extract_delim)
+-     _IO_FILE *fp;
+-     char *buf;
+-     _IO_size_t n;
+-     int delim;
+-     int extract_delim;
++_IO_getline (_IO_FILE *fp, char *buf, _IO_size_t n, int delim,
++	     int extract_delim)
+ {
+   return _IO_getline_info (fp, buf, n, delim, extract_delim, (int *) 0);
+ }
+@@ -48,13 +44,8 @@ libc_hidden_def (_IO_getline)
+    If extract_delim > 0, insert delim in output. */
+ 
+ _IO_size_t
+-_IO_getline_info (fp, buf, n, delim, extract_delim, eof)
+-     _IO_FILE *fp;
+-     char *buf;
+-     _IO_size_t n;
+-     int delim;
+-     int extract_delim;
+-     int *eof;
++_IO_getline_info (_IO_FILE *fp, char *buf, _IO_size_t n, int delim,
++		  int extract_delim, int *eof)
+ {
+   char *ptr = buf;
+   if (eof != NULL)
+diff --git a/libio/iogetwline.c b/libio/iogetwline.c
+index 63b7da67201b3f10..b14aa615e4537fda 100644
+--- a/libio/iogetwline.c
++++ b/libio/iogetwline.c
+@@ -33,12 +33,8 @@
+ #endif
+ 
+ _IO_size_t
+-_IO_getwline (fp, buf, n, delim, extract_delim)
+-     _IO_FILE *fp;
+-     wchar_t *buf;
+-     _IO_size_t n;
+-     wint_t delim;
+-     int extract_delim;
++_IO_getwline (_IO_FILE *fp, wchar_t *buf, _IO_size_t n, wint_t delim,
++	      int extract_delim)
+ {
+   return _IO_getwline_info (fp, buf, n, delim, extract_delim, (wint_t *) 0);
+ }
+@@ -52,13 +48,8 @@ _IO_getwline (fp, buf, n, delim, extract_delim)
+    If extract_delim > 0, insert delim in output. */
+ 
+ _IO_size_t
+-_IO_getwline_info (fp, buf, n, delim, extract_delim, eof)
+-     _IO_FILE *fp;
+-     wchar_t *buf;
+-     _IO_size_t n;
+-     wint_t delim;
+-     int extract_delim;
+-     wint_t *eof;
++_IO_getwline_info (_IO_FILE *fp, wchar_t *buf, _IO_size_t n, wint_t delim,
++		   int extract_delim, wint_t *eof)
+ {
+   wchar_t *ptr = buf;
+   if (eof != NULL)
+diff --git a/libio/vsnprintf.c b/libio/vsnprintf.c
+index 4e76a8c8fc035430..8711767fb1df32e8 100644
+--- a/libio/vsnprintf.c
++++ b/libio/vsnprintf.c
+@@ -90,11 +90,8 @@ const struct _IO_jump_t _IO_strn_jumps libio_vtable attribute_hidden =
+ 
+ 
+ int
+-_IO_vsnprintf (string, maxlen, format, args)
+-     char *string;
+-     _IO_size_t maxlen;
+-     const char *format;
+-     _IO_va_list args;
++_IO_vsnprintf (char *string, _IO_size_t maxlen, const char *format,
++	       _IO_va_list args)
+ {
+   _IO_strnfile sf;
+   int ret;
+diff --git a/libio/vswprintf.c b/libio/vswprintf.c
+index 5cd58de2e88939d9..b42333822052fda4 100644
+--- a/libio/vswprintf.c
++++ b/libio/vswprintf.c
+@@ -89,11 +89,8 @@ const struct _IO_jump_t _IO_wstrn_jumps libio_vtable attribute_hidden =
+ 
+ 
+ int
+-_IO_vswprintf (string, maxlen, format, args)
+-     wchar_t *string;
+-     _IO_size_t maxlen;
+-     const wchar_t *format;
+-     _IO_va_list args;
++_IO_vswprintf (wchar_t *string, _IO_size_t maxlen, const wchar_t *format,
++	       _IO_va_list args)
+ {
+   _IO_wstrnfile sf;
+   int ret;
+diff --git a/locale/programs/simple-hash.c b/locale/programs/simple-hash.c
+index b08e60ac72185ad9..a7e2d2bb988686a7 100644
+--- a/locale/programs/simple-hash.c
++++ b/locale/programs/simple-hash.c
+@@ -120,13 +120,8 @@ insert_entry (hash_table *htab, const void *key, size_t keylen, void *data)
+ }
+ 
+ static void
+-insert_entry_2 (htab, key, keylen, hval, idx, data)
+-     hash_table *htab;
+-     const void *key;
+-     size_t keylen;
+-     unsigned long int hval;
+-     size_t idx;
+-     void *data;
++insert_entry_2 (hash_table *htab, const void *key, size_t keylen,
++		unsigned long int hval, size_t idx, void *data)
+ {
+   hash_entry *table = (hash_entry *) htab->table;
+ 
+@@ -175,11 +170,8 @@ insert_entry_2 (htab, key, keylen, hval, idx, data)
+ 
+ 
+ int
+-find_entry (htab, key, keylen, result)
+-     const hash_table *htab;
+-     const void *key;
+-     size_t keylen;
+-     void **result;
++find_entry (const hash_table *htab, const void *key, size_t keylen,
++	    void **result)
+ {
+   hash_entry *table = (hash_entry *) htab->table;
+   size_t idx = lookup (htab, key, keylen, compute_hashval (key, keylen));
+@@ -207,12 +199,8 @@ set_entry (hash_table *htab, const void *key, size_t keylen, void *newval)
+ 
+ 
+ int
+-iterate_table (htab, ptr, key, keylen, data)
+-     const hash_table *htab;
+-     void **ptr;
+-     const void **key;
+-     size_t *keylen;
+-     void **data;
++iterate_table (const hash_table *htab, void **ptr, const void **key,
++	       size_t *keylen, void **data)
+ {
+   if (*ptr == NULL)
+     {
+@@ -239,11 +227,8 @@ iterate_table (htab, ptr, key, keylen, data)
+    [Knuth]	      The Art of Computer Programming, part3 (6.4) */
+ 
+ static size_t
+-lookup (htab, key, keylen, hval)
+-     const hash_table *htab;
+-     const void *key;
+-     size_t keylen;
+-     unsigned long int hval;
++lookup (const hash_table *htab, const void *key, size_t keylen,
++	unsigned long int hval)
+ {
+   unsigned long int hash;
+   size_t idx;
+diff --git a/login/forkpty.c b/login/forkpty.c
+index e5e2873534801140..397d60dd63fc3171 100644
+--- a/login/forkpty.c
++++ b/login/forkpty.c
+@@ -23,11 +23,8 @@
+ #include <pty.h>
+ 
+ int
+-forkpty (amaster, name, termp, winp)
+-     int *amaster;
+-     char *name;
+-     const struct termios *termp;
+-     const struct winsize *winp;
++forkpty (int *amaster, char *name, const struct termios *termp,
++	 const struct winsize *winp)
+ {
+   int master, slave, pid;
+ 
+diff --git a/misc/hsearch_r.c b/misc/hsearch_r.c
+index 3509fb7b20fe524e..a71bb7d3412bf242 100644
+--- a/misc/hsearch_r.c
++++ b/misc/hsearch_r.c
+@@ -147,11 +147,8 @@ libc_hidden_def (hdestroy_r)
+    equality of the stored and the parameter value. This helps to prevent
+    unnecessary expensive calls of strcmp.  */
+ int
+-hsearch_r (item, action, retval, htab)
+-     ENTRY item;
+-     ACTION action;
+-     ENTRY **retval;
+-     struct hsearch_data *htab;
++hsearch_r (ENTRY item, ACTION action, ENTRY **retval,
++	   struct hsearch_data *htab)
+ {
+   unsigned int hval;
+   unsigned int count;
+diff --git a/misc/select.c b/misc/select.c
+index 8f5cb0d2af26b573..f134b0453d9be90c 100644
+--- a/misc/select.c
++++ b/misc/select.c
+@@ -25,12 +25,8 @@
+    after waiting the interval specified therein.  Returns the number of ready
+    descriptors, or -1 for errors.  */
+ int
+-__select (nfds, readfds, writefds, exceptfds, timeout)
+-     int nfds;
+-     fd_set *readfds;
+-     fd_set *writefds;
+-     fd_set *exceptfds;
+-     struct timeval *timeout;
++__select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
++	  struct timeval *timeout)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/nptl/cleanup_defer_compat.c b/nptl/cleanup_defer_compat.c
+index 88fd43ca8d8c45ab..e15723611c71d55a 100644
+--- a/nptl/cleanup_defer_compat.c
++++ b/nptl/cleanup_defer_compat.c
+@@ -59,9 +59,8 @@ strong_alias (_pthread_cleanup_push_defer, __pthread_cleanup_push_defer)
+ 
+ 
+ void
+-_pthread_cleanup_pop_restore (buffer, execute)
+-     struct _pthread_cleanup_buffer *buffer;
+-     int execute;
++_pthread_cleanup_pop_restore (struct _pthread_cleanup_buffer *buffer,
++			      int execute)
+ {
+   struct pthread *self = THREAD_SELF;
+ 
+diff --git a/nptl/old_pthread_cond_init.c b/nptl/old_pthread_cond_init.c
+index 5ec4cf2ea3137274..38873877107fec86 100644
+--- a/nptl/old_pthread_cond_init.c
++++ b/nptl/old_pthread_cond_init.c
+@@ -23,9 +23,8 @@
+ 
+ #if SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_3_2)
+ int
+-__pthread_cond_init_2_0 (cond, cond_attr)
+-     pthread_cond_2_0_t *cond;
+-     const pthread_condattr_t *cond_attr;
++__pthread_cond_init_2_0 (pthread_cond_2_0_t *cond,
++			 const pthread_condattr_t *cond_attr)
+ {
+   struct pthread_condattr *icond_attr = (struct pthread_condattr *) cond_attr;
+ 
+diff --git a/nptl/old_pthread_cond_timedwait.c b/nptl/old_pthread_cond_timedwait.c
+index a8d113f9a5273c0c..fe95f96d1b8ef8e5 100644
+--- a/nptl/old_pthread_cond_timedwait.c
++++ b/nptl/old_pthread_cond_timedwait.c
+@@ -25,10 +25,8 @@
+ 
+ #if SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_3_2)
+ int
+-__pthread_cond_timedwait_2_0 (cond, mutex, abstime)
+-     pthread_cond_2_0_t *cond;
+-     pthread_mutex_t *mutex;
+-     const struct timespec *abstime;
++__pthread_cond_timedwait_2_0 (pthread_cond_2_0_t *cond, pthread_mutex_t *mutex,
++			      const struct timespec *abstime)
+ {
+   if (cond->cond == NULL)
+     {
+diff --git a/nptl/pthread_barrier_init.c b/nptl/pthread_barrier_init.c
+index 8cd6f0e56ee6be1b..55849b7948e34fac 100644
+--- a/nptl/pthread_barrier_init.c
++++ b/nptl/pthread_barrier_init.c
+@@ -29,10 +29,8 @@ static const struct pthread_barrierattr default_barrierattr =
+ 
+ 
+ int
+-pthread_barrier_init (barrier, attr, count)
+-     pthread_barrier_t *barrier;
+-     const pthread_barrierattr_t *attr;
+-     unsigned int count;
++pthread_barrier_init (pthread_barrier_t *barrier,
++		      const pthread_barrierattr_t *attr, unsigned int count)
+ {
+   struct pthread_barrier *ibarrier;
+ 
+diff --git a/nptl/pthread_barrierattr_getpshared.c b/nptl/pthread_barrierattr_getpshared.c
+index 937d02428e52718a..dbe4893619cb17ef 100644
+--- a/nptl/pthread_barrierattr_getpshared.c
++++ b/nptl/pthread_barrierattr_getpshared.c
+@@ -20,9 +20,8 @@
+ 
+ 
+ int
+-pthread_barrierattr_getpshared (attr, pshared)
+-     const pthread_barrierattr_t *attr;
+-     int *pshared;
++pthread_barrierattr_getpshared (const pthread_barrierattr_t *attr,
++				int *pshared)
+ {
+   *pshared = ((const struct pthread_barrierattr *) attr)->pshared;
+ 
+diff --git a/nptl/pthread_getschedparam.c b/nptl/pthread_getschedparam.c
+index de81dbc068148ad5..dbff8a984196e6e4 100644
+--- a/nptl/pthread_getschedparam.c
++++ b/nptl/pthread_getschedparam.c
+@@ -23,10 +23,8 @@
+ 
+ 
+ int
+-__pthread_getschedparam (threadid, policy, param)
+-     pthread_t threadid;
+-     int *policy;
+-     struct sched_param *param;
++__pthread_getschedparam (pthread_t threadid, int *policy,
++			 struct sched_param *param)
+ {
+   struct pthread *pd = (struct pthread *) threadid;
+ 
+diff --git a/nptl/pthread_mutex_setprioceiling.c b/nptl/pthread_mutex_setprioceiling.c
+index a0dcc7896305daeb..f9b5609bf10cd81a 100644
+--- a/nptl/pthread_mutex_setprioceiling.c
++++ b/nptl/pthread_mutex_setprioceiling.c
+@@ -23,10 +23,8 @@
+ 
+ 
+ int
+-pthread_mutex_setprioceiling (mutex, prioceiling, old_ceiling)
+-     pthread_mutex_t *mutex;
+-     int prioceiling;
+-     int *old_ceiling;
++pthread_mutex_setprioceiling (pthread_mutex_t *mutex, int prioceiling,
++			      int *old_ceiling)
+ {
+   /* The low bits of __kind aren't ever changed after pthread_mutex_init,
+      so we don't need a lock yet.  */
+diff --git a/nptl/pthread_mutexattr_getprioceiling.c b/nptl/pthread_mutexattr_getprioceiling.c
+index 56d103278dc44c83..2fa97d9024686e24 100644
+--- a/nptl/pthread_mutexattr_getprioceiling.c
++++ b/nptl/pthread_mutexattr_getprioceiling.c
+@@ -21,9 +21,8 @@
+ 
+ 
+ int
+-pthread_mutexattr_getprioceiling (attr, prioceiling)
+-     const pthread_mutexattr_t *attr;
+-     int *prioceiling;
++pthread_mutexattr_getprioceiling (const pthread_mutexattr_t *attr,
++				  int *prioceiling)
+ {
+   const struct pthread_mutexattr *iattr;
+   int ceiling;
+diff --git a/nptl/pthread_rwlock_init.c b/nptl/pthread_rwlock_init.c
+index 2f6c8fad0f262778..0acd59b223984c37 100644
+--- a/nptl/pthread_rwlock_init.c
++++ b/nptl/pthread_rwlock_init.c
+@@ -29,9 +29,8 @@ static const struct pthread_rwlockattr default_rwlockattr =
+ 
+ 
+ int
+-__pthread_rwlock_init (rwlock, attr)
+-     pthread_rwlock_t *rwlock;
+-     const pthread_rwlockattr_t *attr;
++__pthread_rwlock_init (pthread_rwlock_t *rwlock,
++		       const pthread_rwlockattr_t *attr)
+ {
+   const struct pthread_rwlockattr *iattr;
+ 
+diff --git a/nptl/pthread_rwlock_timedrdlock.c b/nptl/pthread_rwlock_timedrdlock.c
+index b7622abfa2478283..59f871d0eebb1202 100644
+--- a/nptl/pthread_rwlock_timedrdlock.c
++++ b/nptl/pthread_rwlock_timedrdlock.c
+@@ -25,9 +25,8 @@
+ 
+ /* Try to acquire read lock for RWLOCK or return after specfied time.  */
+ int
+-pthread_rwlock_timedrdlock (rwlock, abstime)
+-     pthread_rwlock_t *rwlock;
+-     const struct timespec *abstime;
++pthread_rwlock_timedrdlock (pthread_rwlock_t *rwlock,
++			    const struct timespec *abstime)
+ {
+   int result = 0;
+ 
+diff --git a/nptl/pthread_rwlock_timedwrlock.c b/nptl/pthread_rwlock_timedwrlock.c
+index 5f2399f91e884b78..e344005f1017384e 100644
+--- a/nptl/pthread_rwlock_timedwrlock.c
++++ b/nptl/pthread_rwlock_timedwrlock.c
+@@ -25,9 +25,8 @@
+ 
+ /* Try to acquire write lock for RWLOCK or return after specfied time.	*/
+ int
+-pthread_rwlock_timedwrlock (rwlock, abstime)
+-     pthread_rwlock_t *rwlock;
+-     const struct timespec *abstime;
++pthread_rwlock_timedwrlock (pthread_rwlock_t *rwlock,
++			    const struct timespec *abstime)
+ {
+   int result = 0;
+ 
+diff --git a/nptl/pthread_setschedparam.c b/nptl/pthread_setschedparam.c
+index 15d26b4116bfc1c5..a0fa578821ceea51 100644
+--- a/nptl/pthread_setschedparam.c
++++ b/nptl/pthread_setschedparam.c
+@@ -24,10 +24,8 @@
+ 
+ 
+ int
+-__pthread_setschedparam (threadid, policy, param)
+-     pthread_t threadid;
+-     int policy;
+-     const struct sched_param *param;
++__pthread_setschedparam (pthread_t threadid, int policy,
++			 const struct sched_param *param)
+ {
+   struct pthread *pd = (struct pthread *) threadid;
+ 
+diff --git a/nptl/sysdeps/pthread/timer_settime.c b/nptl/sysdeps/pthread/timer_settime.c
+index da0908b0bcad6da7..e86d0a3d231faf09 100644
+--- a/nptl/sysdeps/pthread/timer_settime.c
++++ b/nptl/sysdeps/pthread/timer_settime.c
+@@ -25,11 +25,8 @@
+ 
+ /* Set timer TIMERID to VALUE, returning old value in OVLAUE.  */
+ int
+-timer_settime (timerid, flags, value, ovalue)
+-     timer_t timerid;
+-     int flags;
+-     const struct itimerspec *value;
+-     struct itimerspec *ovalue;
++timer_settime (timer_t timerid, int flags, const struct itimerspec *value,
++	       struct itimerspec *ovalue)
+ {
+   struct timer_node *timer;
+   struct thread_node *thread = NULL;
+diff --git a/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_init.c b/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_init.c
+index 5e3774fbd4ed3754..2782e93411ce01b8 100644
+--- a/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_init.c
++++ b/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_init.c
+@@ -21,10 +21,8 @@
+ #include <lowlevellock.h>
+ 
+ int
+-pthread_barrier_init (barrier, attr, count)
+-     pthread_barrier_t *barrier;
+-     const pthread_barrierattr_t *attr;
+-     unsigned int count;
++pthread_barrier_init (pthread_barrier_t *barrier,
++		      const pthread_barrierattr_t *attr, unsigned int count)
+ {
+   union sparc_pthread_barrier *ibarrier;
+ 
+diff --git a/nptl/sysdeps/unix/sysv/linux/timer_settime.c b/nptl/sysdeps/unix/sysv/linux/timer_settime.c
+index 5b522ec75040f12c..94acc60a0f86b72c 100644
+--- a/nptl/sysdeps/unix/sysv/linux/timer_settime.c
++++ b/nptl/sysdeps/unix/sysv/linux/timer_settime.c
+@@ -30,11 +30,8 @@
+ 
+ 
+ int
+-timer_settime (timerid, flags, value, ovalue)
+-     timer_t timerid;
+-     int flags;
+-     const struct itimerspec *value;
+-     struct itimerspec *ovalue;
++timer_settime (timer_t timerid, int flags, const struct itimerspec *value,
++	       struct itimerspec *ovalue)
+ {
+ #undef timer_settime
+   struct timer *kt = (struct timer *) timerid;
+diff --git a/socket/recvfrom.c b/socket/recvfrom.c
+index b99774f368501b55..f652b1478b7a6e32 100644
+--- a/socket/recvfrom.c
++++ b/socket/recvfrom.c
+@@ -22,13 +22,8 @@
+    at address ADDR (which is ADDR_LEN bytes long).
+    Returns the number read or -1 for errors.  */
+ ssize_t
+-__recvfrom (fd, buf, n, flags, addr, addr_len)
+-     int fd;
+-     void *buf;
+-     size_t n;
+-     int flags;
+-     __SOCKADDR_ARG addr;
+-     socklen_t *addr_len;
++__recvfrom (int fd, void *buf, size_t n, int flags, __SOCKADDR_ARG addr,
++	    socklen_t *addr_len)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/socket/sendto.c b/socket/sendto.c
+index ae06a54cc6947a7f..090fd000799c9347 100644
+--- a/socket/sendto.c
++++ b/socket/sendto.c
+@@ -21,13 +21,8 @@
+ /* Send N bytes of BUF on socket FD to peer at address ADDR (which is
+    ADDR_LEN bytes long).  Returns the number sent, or -1 for errors.  */
+ ssize_t
+-__sendto (fd, buf, n, flags, addr, addr_len)
+-     int fd;
+-     const __ptr_t buf;
+-     size_t n;
+-     int flags;
+-     __CONST_SOCKADDR_ARG addr;
+-     socklen_t addr_len;
++__sendto (int fd, const __ptr_t buf, size_t n, int flags,
++	  __CONST_SOCKADDR_ARG addr, socklen_t addr_len)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/socket/setsockopt.c b/socket/setsockopt.c
+index 9e1e7a3d800b4bdb..bf08491d63ff2292 100644
+--- a/socket/setsockopt.c
++++ b/socket/setsockopt.c
+@@ -22,12 +22,8 @@
+    to *OPTVAL (which is OPTLEN bytes long).
+    Returns 0 on success, -1 for errors.  */
+ int
+-__setsockopt (fd, level, optname, optval, optlen)
+-     int fd;
+-     int level;
+-     int optname;
+-     const __ptr_t optval;
+-     socklen_t optlen;
++__setsockopt (int fd, int level, int optname, const __ptr_t optval,
++	      socklen_t optlen)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/stdio-common/_itoa.c b/stdio-common/_itoa.c
+index 67592318866b553e..dbf4c7c72f1173c8 100644
+--- a/stdio-common/_itoa.c
++++ b/stdio-common/_itoa.c
+@@ -191,11 +191,8 @@ _itoa_word (_ITOA_WORD_TYPE value, char *buflim,
+ 
+ #if _ITOA_NEEDED
+ char *
+-_itoa (value, buflim, base, upper_case)
+-     unsigned long long int value;
+-     char *buflim;
+-     unsigned int base;
+-     int upper_case;
++_itoa (unsigned long long int value, char *buflim, unsigned int base,
++       int upper_case)
+ {
+   const char *digits = (upper_case
+ 			? _itoa_upper_digits
+diff --git a/stdio-common/_itowa.c b/stdio-common/_itowa.c
+index f50893dfcd79ea33..0cf3f773806dfc67 100644
+--- a/stdio-common/_itowa.c
++++ b/stdio-common/_itowa.c
+@@ -87,11 +87,8 @@ extern const wchar_t _itowa_upper_digits[] attribute_hidden;
+ 
+ #if _ITOA_NEEDED
+ wchar_t *
+-_itowa (value, buflim, base, upper_case)
+-     unsigned long long int value;
+-     wchar_t *buflim;
+-     unsigned int base;
+-     int upper_case;
++_itowa (unsigned long long int value, wchar_t *buflim, unsigned int base,
++	int upper_case)
+ {
+   const wchar_t *digits = (upper_case
+ 			   ? _itowa_upper_digits : _itowa_lower_digits);
+diff --git a/stdio-common/reg-printf.c b/stdio-common/reg-printf.c
+index 30bf7dadd6343874..90d8558fca86196e 100644
+--- a/stdio-common/reg-printf.c
++++ b/stdio-common/reg-printf.c
+@@ -38,10 +38,8 @@ int __register_printf_function (int, printf_function,
+ 
+ /* Register FUNC to be called to format SPEC specifiers.  */
+ int
+-__register_printf_specifier (spec, converter, arginfo)
+-     int spec;
+-     printf_function converter;
+-     printf_arginfo_size_function arginfo;
++__register_printf_specifier (int spec, printf_function converter,
++			     printf_arginfo_size_function arginfo)
+ {
+   if (spec < 0 || spec > (int) UCHAR_MAX)
+     {
+@@ -79,10 +77,8 @@ weak_alias (__register_printf_specifier, register_printf_specifier)
+ 
+ /* Register FUNC to be called to format SPEC specifiers.  */
+ int
+-__register_printf_function (spec, converter, arginfo)
+-     int spec;
+-     printf_function converter;
+-     printf_arginfo_function arginfo;
++__register_printf_function (int spec, printf_function converter,
++			    printf_arginfo_function arginfo)
+ {
+   return __register_printf_specifier (spec, converter,
+ 				      (printf_arginfo_size_function*) arginfo);
+diff --git a/stdio-common/tempname.c b/stdio-common/tempname.c
+index d600e3708d86be6c..23b64e624b11765e 100644
+--- a/stdio-common/tempname.c
++++ b/stdio-common/tempname.c
+@@ -24,12 +24,8 @@
+    template suitable for use in __gen_tempname into TMPL, bounded
+    by TMPL_LEN. */
+ int
+-__path_search (tmpl, tmpl_len, dir, pfx, try_tmpdir)
+-     char *tmpl;
+-     size_t tmpl_len;
+-     const char *dir;
+-     const char *pfx;
+-     int try_tmpdir;
++__path_search (char *tmpl, size_t tmpl_len, const char *dir, const char *pfx,
++	       int try_tmpdir)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/stdlib/addmul_1.c b/stdlib/addmul_1.c
+index 8e8342a07ff3ad5f..276a379bef7d9bf0 100644
+--- a/stdlib/addmul_1.c
++++ b/stdlib/addmul_1.c
+@@ -26,11 +26,8 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #include "longlong.h"
+ 
+ mp_limb_t
+-mpn_addmul_1 (res_ptr, s1_ptr, s1_size, s2_limb)
+-     register mp_ptr res_ptr;
+-     register mp_srcptr s1_ptr;
+-     mp_size_t s1_size;
+-     register mp_limb_t s2_limb;
++mpn_addmul_1 (register mp_ptr res_ptr, register mp_srcptr s1_ptr,
++	      mp_size_t s1_size, register mp_limb_t s2_limb)
+ {
+   register mp_limb_t cy_limb;
+   register mp_size_t j;
+diff --git a/stdlib/mul_1.c b/stdlib/mul_1.c
+index 87ab98189aef442a..9e7fcf6f27ec779e 100644
+--- a/stdlib/mul_1.c
++++ b/stdlib/mul_1.c
+@@ -24,11 +24,8 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #include "longlong.h"
+ 
+ mp_limb_t
+-mpn_mul_1 (res_ptr, s1_ptr, s1_size, s2_limb)
+-     register mp_ptr res_ptr;
+-     register mp_srcptr s1_ptr;
+-     mp_size_t s1_size;
+-     register mp_limb_t s2_limb;
++mpn_mul_1 (register mp_ptr res_ptr, register mp_srcptr s1_ptr,
++	   mp_size_t s1_size, register mp_limb_t s2_limb)
+ {
+   register mp_limb_t cy_limb;
+   register mp_size_t j;
+diff --git a/stdlib/random_r.c b/stdlib/random_r.c
+index 5fdf56275601075d..1c9addd32395a99c 100644
+--- a/stdlib/random_r.c
++++ b/stdlib/random_r.c
+@@ -227,11 +227,8 @@ weak_alias (__srandom_r, srandom_r)
+    setstate so that it doesn't matter when initstate is called.
+    Returns 0 on success, non-zero on failure.  */
+ int
+-__initstate_r (seed, arg_state, n, buf)
+-     unsigned int seed;
+-     char *arg_state;
+-     size_t n;
+-     struct random_data *buf;
++__initstate_r (unsigned int seed, char *arg_state, size_t n,
++	       struct random_data *buf)
+ {
+   if (buf == NULL)
+     goto fail;
+diff --git a/stdlib/setenv.c b/stdlib/setenv.c
+index 1a4d3c203e90ff83..45efe2e3f2b157ab 100644
+--- a/stdlib/setenv.c
++++ b/stdlib/setenv.c
+@@ -106,11 +106,8 @@ static char **last_environ;
+    to reuse values once generated for a `setenv' call since we can never
+    free the strings.  */
+ int
+-__add_to_environ (name, value, combined, replace)
+-     const char *name;
+-     const char *value;
+-     const char *combined;
+-     int replace;
++__add_to_environ (const char *name, const char *value, const char *combined,
++		  int replace)
+ {
+   char **ep;
+   size_t size;
+diff --git a/stdlib/submul_1.c b/stdlib/submul_1.c
+index 9eafe7e00b93bff3..8cad60307c3d8c75 100644
+--- a/stdlib/submul_1.c
++++ b/stdlib/submul_1.c
+@@ -26,11 +26,8 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #include "longlong.h"
+ 
+ mp_limb_t
+-mpn_submul_1 (res_ptr, s1_ptr, s1_size, s2_limb)
+-     register mp_ptr res_ptr;
+-     register mp_srcptr s1_ptr;
+-     mp_size_t s1_size;
+-     register mp_limb_t s2_limb;
++mpn_submul_1 (register mp_ptr res_ptr, register mp_srcptr s1_ptr,
++	      mp_size_t s1_size, register mp_limb_t s2_limb)
+ {
+   register mp_limb_t cy_limb;
+   register mp_size_t j;
+diff --git a/streams/getpmsg.c b/streams/getpmsg.c
+index acb25b585f5aedb2..05d90d0801c8590d 100644
+--- a/streams/getpmsg.c
++++ b/streams/getpmsg.c
+@@ -19,12 +19,8 @@
+ #include <stropts.h>
+ 
+ int
+-getpmsg (fildes, ctlptr, dataptr, bandp, flagsp)
+-     int fildes;
+-     struct strbuf *ctlptr;
+-     struct strbuf *dataptr;
+-     int *bandp;
+-     int *flagsp;
++getpmsg (int fildes, struct strbuf *ctlptr, struct strbuf *dataptr, int *bandp,
++	 int *flagsp)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/streams/putmsg.c b/streams/putmsg.c
+index 2d776bc96ab737b6..814e2a7e8c7d61a0 100644
+--- a/streams/putmsg.c
++++ b/streams/putmsg.c
+@@ -19,11 +19,8 @@
+ #include <stropts.h>
+ 
+ int
+-putmsg (fildes, ctlptr, dataptr, flags)
+-     int fildes;
+-     const struct strbuf *ctlptr;
+-     const struct strbuf *dataptr;
+-     int flags;
++putmsg (int fildes, const struct strbuf *ctlptr, const struct strbuf *dataptr,
++	int flags)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/streams/putpmsg.c b/streams/putpmsg.c
+index c2fa820e6f2adf5b..fb9bfebf2072ecf9 100644
+--- a/streams/putpmsg.c
++++ b/streams/putpmsg.c
+@@ -19,12 +19,8 @@
+ #include <stropts.h>
+ 
+ int
+-putpmsg (fildes, ctlptr, dataptr, band, flags)
+-     int fildes;
+-     const struct strbuf *ctlptr;
+-     const struct strbuf *dataptr;
+-     int band;
+-     int flags;
++putpmsg (int fildes, const struct strbuf *ctlptr, const struct strbuf *dataptr,
++	 int band, int flags)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/sunrpc/clnt_raw.c b/sunrpc/clnt_raw.c
+index 6653ee42fbc9edbe..a149bf419b1b1d09 100644
+--- a/sunrpc/clnt_raw.c
++++ b/sunrpc/clnt_raw.c
+@@ -132,14 +132,8 @@ clntraw_create (u_long prog, u_long vers)
+ libc_hidden_nolink_sunrpc (clntraw_create, GLIBC_2_0)
+ 
+ static enum clnt_stat
+-clntraw_call (h, proc, xargs, argsp, xresults, resultsp, timeout)
+-     CLIENT *h;
+-     u_long proc;
+-     xdrproc_t xargs;
+-     caddr_t argsp;
+-     xdrproc_t xresults;
+-     caddr_t resultsp;
+-     struct timeval timeout;
++clntraw_call (CLIENT *h, u_long proc, xdrproc_t xargs, caddr_t argsp,
++	      xdrproc_t xresults, caddr_t resultsp, struct timeval timeout)
+ {
+   struct clntraw_private_s *clp = clntraw_private;
+   XDR *xdrs = &clp->xdr_stream;
+diff --git a/sunrpc/clnt_tcp.c b/sunrpc/clnt_tcp.c
+index 901820397dd56cd6..99a7101d3ac816fb 100644
+--- a/sunrpc/clnt_tcp.c
++++ b/sunrpc/clnt_tcp.c
+@@ -224,14 +224,9 @@ libc_hidden_nolink_sunrpc (clnttcp_create, GLIBC_2_0)
+ #endif
+ 
+ static enum clnt_stat
+-clnttcp_call (h, proc, xdr_args, args_ptr, xdr_results, results_ptr, timeout)
+-     CLIENT *h;
+-     u_long proc;
+-     xdrproc_t xdr_args;
+-     caddr_t args_ptr;
+-     xdrproc_t xdr_results;
+-     caddr_t results_ptr;
+-     struct timeval timeout;
++clnttcp_call (CLIENT *h, u_long proc, xdrproc_t xdr_args, caddr_t args_ptr,
++	      xdrproc_t xdr_results, caddr_t results_ptr,
++	      struct timeval timeout)
+ {
+   struct ct_data *ct = (struct ct_data *) h->cl_private;
+   XDR *xdrs = &(ct->ct_xdrs);
+diff --git a/sunrpc/clnt_udp.c b/sunrpc/clnt_udp.c
+index 808603c827af6f98..1e0c7d45d33d23a1 100644
+--- a/sunrpc/clnt_udp.c
++++ b/sunrpc/clnt_udp.c
+@@ -256,12 +256,8 @@ clntudp_bufcreate (struct sockaddr_in *raddr, u_long program, u_long version,
+ libc_hidden_nolink_sunrpc (clntudp_bufcreate, GLIBC_2_0)
+ 
+ CLIENT *
+-clntudp_create (raddr, program, version, wait, sockp)
+-     struct sockaddr_in *raddr;
+-     u_long program;
+-     u_long version;
+-     struct timeval wait;
+-     int *sockp;
++clntudp_create (struct sockaddr_in *raddr, u_long program, u_long version,
++		struct timeval wait, int *sockp)
+ {
+   return __libc_clntudp_bufcreate (raddr, program, version, wait,
+ 				   sockp, UDPMSGSIZE, UDPMSGSIZE, 0);
+diff --git a/sunrpc/clnt_unix.c b/sunrpc/clnt_unix.c
+index 084669dea6819e7c..3e008353b56cf437 100644
+--- a/sunrpc/clnt_unix.c
++++ b/sunrpc/clnt_unix.c
+@@ -203,14 +203,9 @@ fooy:
+ libc_hidden_nolink_sunrpc (clntunix_create, GLIBC_2_1)
+ 
+ static enum clnt_stat
+-clntunix_call (h, proc, xdr_args, args_ptr, xdr_results, results_ptr, timeout)
+-     CLIENT *h;
+-     u_long proc;
+-     xdrproc_t xdr_args;
+-     caddr_t args_ptr;
+-     xdrproc_t xdr_results;
+-     caddr_t results_ptr;
+-     struct timeval timeout;
++clntunix_call (CLIENT *h, u_long proc, xdrproc_t xdr_args, caddr_t args_ptr,
++	       xdrproc_t xdr_results, caddr_t results_ptr,
++	       struct timeval timeout)
+ {
+   struct ct_data *ct = (struct ct_data *) h->cl_private;
+   XDR *xdrs = &(ct->ct_xdrs);
+diff --git a/sunrpc/pm_getport.c b/sunrpc/pm_getport.c
+index f10f87250d2784d7..5c43acc0609d7377 100644
+--- a/sunrpc/pm_getport.c
++++ b/sunrpc/pm_getport.c
+@@ -152,11 +152,8 @@ libc_hidden_nolink_sunrpc (__libc_rpc_getport, GLIBC_PRIVATE)
+  * Returns 0 if no map exists.
+  */
+ u_short
+-pmap_getport (address, program, version, protocol)
+-     struct sockaddr_in *address;
+-     u_long program;
+-     u_long version;
+-     u_int protocol;
++pmap_getport (struct sockaddr_in *address, u_long program, u_long version,
++	      u_int protocol)
+ {
+   return __libc_rpc_getport (address, program, version, protocol, 5, 60);
+ }
+diff --git a/sunrpc/svc_udp.c b/sunrpc/svc_udp.c
+index e99c97680676f509..d1c8788d20b6805c 100644
+--- a/sunrpc/svc_udp.c
++++ b/sunrpc/svc_udp.c
+@@ -585,11 +585,8 @@ cache_set (SVCXPRT *xprt, u_long replylen)
+  * return 1 if found, 0 if not found
+  */
+ static int
+-cache_get (xprt, msg, replyp, replylenp)
+-     SVCXPRT *xprt;
+-     struct rpc_msg *msg;
+-     char **replyp;
+-     u_long *replylenp;
++cache_get (SVCXPRT *xprt, struct rpc_msg *msg, char **replyp,
++	   u_long *replylenp)
+ {
+   u_int loc;
+   cache_ptr ent;
+diff --git a/sunrpc/xdr_array.c b/sunrpc/xdr_array.c
+index a6348612788cf338..fd9d1fb42f744844 100644
+--- a/sunrpc/xdr_array.c
++++ b/sunrpc/xdr_array.c
+@@ -141,12 +141,8 @@ libc_hidden_nolink_sunrpc (xdr_array, GLIBC_2_0)
+  * > xdr_elem: routine to XDR each element
+  */
+ bool_t
+-xdr_vector (xdrs, basep, nelem, elemsize, xdr_elem)
+-     XDR *xdrs;
+-     char *basep;
+-     u_int nelem;
+-     u_int elemsize;
+-     xdrproc_t xdr_elem;
++xdr_vector (XDR *xdrs, char *basep, u_int nelem, u_int elemsize,
++	    xdrproc_t xdr_elem)
+ {
+   u_int i;
+   char *elptr;
+diff --git a/sysdeps/mach/hurd/getcwd.c b/sysdeps/mach/hurd/getcwd.c
+index 6945e4d1c5c12237..16a3a6e3a112d9fd 100644
+--- a/sysdeps/mach/hurd/getcwd.c
++++ b/sysdeps/mach/hurd/getcwd.c
+@@ -285,10 +285,8 @@ _hurd_canonicalize_directory_name_internal (file_t thisdir,
+ }
+ 
+ char *
+-__canonicalize_directory_name_internal (thisdir, buf, size)
+-     const char *thisdir;
+-     char *buf;
+-     size_t size;
++__canonicalize_directory_name_internal (const char *thisdir, char *buf,
++					size_t size)
+ {
+   char *result;
+   file_t port = __file_name_lookup (thisdir, 0, 0);
+diff --git a/sysdeps/mach/hurd/pselect.c b/sysdeps/mach/hurd/pselect.c
+index ada99094e4e0a44d..90287f6a6dd898db 100644
+--- a/sysdeps/mach/hurd/pselect.c
++++ b/sysdeps/mach/hurd/pselect.c
+@@ -30,13 +30,8 @@
+    SIGMASK for this call.  Returns the number of ready descriptors, or -1 for
+    errors.  */
+ int
+-__pselect (nfds, readfds, writefds, exceptfds, timeout, sigmask)
+-     int nfds;
+-     fd_set *readfds;
+-     fd_set *writefds;
+-     fd_set *exceptfds;
+-     const struct timespec *timeout;
+-     const sigset_t *sigmask;
++__pselect (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
++	   const struct timespec *timeout, const sigset_t *sigmask)
+ {
+   return _hurd_select (nfds, NULL,
+ 		       readfds, writefds, exceptfds, timeout, sigmask);
+diff --git a/sysdeps/mach/hurd/recvfrom.c b/sysdeps/mach/hurd/recvfrom.c
+index 3a094aa0d2c9fda1..cde89fdcfb56ca0b 100644
+--- a/sysdeps/mach/hurd/recvfrom.c
++++ b/sysdeps/mach/hurd/recvfrom.c
+@@ -27,13 +27,8 @@
+    the sender, and store the actual size of the address in *ADDR_LEN.
+    Returns the number of bytes read or -1 for errors.  */
+ ssize_t
+-__recvfrom (fd, buf, n, flags, addrarg, addr_len)
+-     int fd;
+-     void *buf;
+-     size_t n;
+-     int flags;
+-     __SOCKADDR_ARG addrarg;
+-     socklen_t *addr_len;
++__recvfrom (int fd, void *buf, size_t n, int flags, __SOCKADDR_ARG addrarg,
++	    socklen_t *addr_len)
+ {
+   error_t err;
+   mach_port_t addrport;
+diff --git a/sysdeps/mach/hurd/select.c b/sysdeps/mach/hurd/select.c
+index e679637d95b18033..22f6e3b221fb8d82 100644
+--- a/sysdeps/mach/hurd/select.c
++++ b/sysdeps/mach/hurd/select.c
+@@ -26,12 +26,8 @@
+    after waiting the interval specified therein.  Returns the number of ready
+    descriptors, or -1 for errors.  */
+ int
+-__select (nfds, readfds, writefds, exceptfds, timeout)
+-     int nfds;
+-     fd_set *readfds;
+-     fd_set *writefds;
+-     fd_set *exceptfds;
+-     struct timeval *timeout;
++__select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
++	  struct timeval *timeout)
+ {
+   struct timespec ts, *to;
+ 
+diff --git a/sysdeps/posix/ttyname_r.c b/sysdeps/posix/ttyname_r.c
+index bf8399d36d0e4541..7d2701da33c08624 100644
+--- a/sysdeps/posix/ttyname_r.c
++++ b/sysdeps/posix/ttyname_r.c
+@@ -37,14 +37,8 @@ static int getttyname_r (int fd, char *buf, size_t buflen,
+ 
+ static int
+ internal_function
+-getttyname_r (fd, buf, buflen, mydev, myino, save, dostat)
+-     int fd;
+-     char *buf;
+-     size_t buflen;
+-     dev_t mydev;
+-     ino_t myino;
+-     int save;
+-     int *dostat;
++getttyname_r (int fd, char *buf, size_t buflen, dev_t mydev, ino_t myino,
++	      int save, int *dostat)
+ {
+   struct stat st;
+   DIR *dirstream;
+diff --git a/sysdeps/unix/sysv/linux/i386/putmsg.c b/sysdeps/unix/sysv/linux/i386/putmsg.c
+index a413d8ce77d2f35d..84d54744c6d38c9f 100644
+--- a/sysdeps/unix/sysv/linux/i386/putmsg.c
++++ b/sysdeps/unix/sysv/linux/i386/putmsg.c
+@@ -24,11 +24,8 @@
+ 
+ #ifdef __NR_putpmsg
+ int
+-putmsg (fildes, ctlptr, dataptr, flags)
+-     int fildes;
+-     const struct strbuf *ctlptr;
+-     const struct strbuf *dataptr;
+-     int flags;
++putmsg (int fildes, const struct strbuf *ctlptr, const struct strbuf *dataptr,
++	int flags)
+ {
+   return INLINE_SYSCALL (putpmsg, 5, fildes, ctlptr, dataptr, -1, flags);
+ }
+diff --git a/sysdeps/unix/sysv/linux/s390/semtimedop.c b/sysdeps/unix/sysv/linux/s390/semtimedop.c
+index 53b82324dcb9f7e4..5628171762561c2e 100644
+--- a/sysdeps/unix/sysv/linux/s390/semtimedop.c
++++ b/sysdeps/unix/sysv/linux/s390/semtimedop.c
+@@ -26,11 +26,8 @@
+ /* Perform user-defined atomical operation of array of semaphores.  */
+ 
+ int
+-semtimedop (semid, sops, nsops, timeout)
+-     int semid;
+-     struct sembuf *sops;
+-     size_t nsops;
+-     const struct timespec *timeout;
++semtimedop (int semid, struct sembuf *sops, size_t nsops,
++	    const struct timespec *timeout)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semtimedop,
+ 			 semid, (int) nsops, timeout, sops);
+diff --git a/sysdeps/unix/sysv/linux/semtimedop.c b/sysdeps/unix/sysv/linux/semtimedop.c
+index 5a43f53975aeafcc..f9f04f5d28def4e1 100644
+--- a/sysdeps/unix/sysv/linux/semtimedop.c
++++ b/sysdeps/unix/sysv/linux/semtimedop.c
+@@ -26,11 +26,8 @@
+ /* Perform user-defined atomical operation of array of semaphores.  */
+ 
+ int
+-semtimedop (semid, sops, nsops, timeout)
+-     int semid;
+-     struct sembuf *sops;
+-     size_t nsops;
+-     const struct timespec *timeout;
++semtimedop (int semid, struct sembuf *sops, size_t nsops,
++	    const struct timespec *timeout)
+ {
+   return INLINE_SYSCALL (ipc, 6, IPCOP_semtimedop,
+ 			 semid, (int) nsops, 0, sops,
+diff --git a/sysvipc/semtimedop.c b/sysvipc/semtimedop.c
+index e7c631ac94e12f6a..5d776fe2d01f8438 100644
+--- a/sysvipc/semtimedop.c
++++ b/sysvipc/semtimedop.c
+@@ -22,11 +22,8 @@
+ /* Perform user-defined atomical operation of array of semaphores.  */
+ 
+ int
+-semtimedop (semid, sops, nsops, timeout)
+-     int semid;
+-     struct sembuf *sops;
+-     size_t nsops;
+-     const struct timespec *timeout;
++semtimedop (int semid, struct sembuf *sops, size_t nsops,
++	    const struct timespec *timeout)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/time/setitimer.c b/time/setitimer.c
+index 40880f8210adc6b8..903558767fbad824 100644
+--- a/time/setitimer.c
++++ b/time/setitimer.c
+@@ -23,10 +23,8 @@
+    set *OLD to the old value of timer WHICH.
+    Returns 0 on success, -1 on errors.  */
+ int
+-__setitimer (which, new, old)
+-     enum __itimer_which which;
+-     const struct itimerval *new;
+-     struct itimerval *old;
++__setitimer (enum __itimer_which which, const struct itimerval *new,
++	     struct itimerval *old)
+ {
+   if (new == NULL)
+     {
+diff --git a/time/strftime_l.c b/time/strftime_l.c
+index 873605720b837b15..0f6ac83d34d43755 100644
+--- a/time/strftime_l.c
++++ b/time/strftime_l.c
+@@ -1438,11 +1438,8 @@ __strftime_internal (s, maxsize, format, tp, tzset_called ut_argument
+    strftime function and does not have the extra information whether the
+    TP arguments comes from a `gmtime' call or not.  */
+ size_t
+-emacs_strftime (s, maxsize, format, tp)
+-      char *s;
+-      size_t maxsize;
+-      const char *format;
+-      const struct tm *tp;
++emacs_strftime (char *s, size_t maxsize, const char *format,
++		const struct tm *tp)
+ {
+   return my_strftime (s, maxsize, format, tp, 0);
+ }

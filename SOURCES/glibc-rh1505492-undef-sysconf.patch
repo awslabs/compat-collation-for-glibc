@@ -1,0 +1,29 @@
+Fix -Wundef warning.  Upstream removed the __ASSUME_ARG_MAX_STACK_BASE
+preprocessor conditional as part of this commit:
+
+commit 637461d96563f3b7405df5b124ccfe843e537374
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Mon May 12 22:48:25 2014 +0000
+
+    Clean up kernel version conditionals for pre-2.6.32 kernels.
+    
+    This patch does some initial cleanup, following the move to 2.6.32
+    minimum kernel version, by removing __LINUX_KERNEL_VERSION
+    conditionals that are now always-true or always-false.  In the case of
+    __ASSUME_ARG_MAX_STACK_BASED, where the conditional used a kernel
+    version that was itself in a macro, the associated sysconf.c code is
+    also cleaned up and __ASSUME_ARG_MAX_STACK_BASED removed completely.
+
+diff --git a/sysdeps/unix/sysv/linux/sysconf.c b/sysdeps/unix/sysv/linux/sysconf.c
+index 47ce5ef07cce7888..05cbb0879e9748d5 100644
+--- a/sysdeps/unix/sysv/linux/sysconf.c
++++ b/sysdeps/unix/sysv/linux/sysconf.c
+@@ -88,7 +88,7 @@ __sysconf (int name)
+       return HAS_CPUCLOCK (name);
+ 
+     case _SC_ARG_MAX:
+-#if !__ASSUME_ARG_MAX_STACK_BASED
++#ifndef __ASSUME_ARG_MAX_STACK_BASED
+       /* Determine whether this is a kernel with an argument limit
+ 	 determined by the stack size.  */
+       if (GLRO(dl_discover_osversion) ()

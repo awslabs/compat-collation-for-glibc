@@ -1,0 +1,192 @@
+commit 8667f90ec51aa88146dce815a9105daf23d9bd07
+Author: Will Newton <will.newton@linaro.org>
+Date:   Mon Mar 31 13:47:56 2014 +0100
+
+    string: Cosmetic cleanup of string functions
+    
+    Clean up string functions that do not have a version in gnulib on
+    the assumption that glibc is the canonical upstream copy of this
+    code. basename has a copy in gnulib but it is largely written to
+    handle Windows paths so merging it is not really viable. The changes
+    mostly consist of switching to ANSI function prototypes and removing
+    unused includes.
+    
+    As many of these functions do not get built in a typical build due
+    to architecture optimized versions being used instead I built these
+    by hand to verify there were no build warnings and the code was
+    identical.
+    
+    2014-04-07  Will Newton  <will.newton@linaro.org>
+    
+            * string/basename.c [HAVE_CONFIG_H]: Remove #ifdef and
+            and contents.  [!_LIBC] Remove #ifndef and contents.
+            (basename): Use ANSI prototype.  [_LIBC] Remove #idef.
+            * string/memccpy.c (__memccpy): Use ANSI prototype.
+            * string/memfrob.c (memfrob): Likewise.
+            * string/strcoll.c (STRCOLL): Likewise.
+            * string/strlen.c (strlen): Likewise.
+            * string/strtok.c (STRTOK): Likewise.
+            * string/strcat.c: Remove unused #include of memcopy.h.
+            (strcat): Use ANSI prototype.
+            * string/strchr.c: Remove unused #include of memcopy.h.
+            (strchr): Use ANSI prototype.
+            * string/strcmp.c: Remove unused #include of memcopy.h.
+            (strcmp): Use ANSI prototype.
+            * string/strcpy.c: Remove unused #include of memcopy.h.
+            (strcpy): Use ANSI prototype.
+
+Conflicts:
+	string/strcat.c
+	string/strchr.c
+	string/strcmp.c
+	string/strlen.c
+
+Textual conflicts due to previous backports in glibc-rh1268008-*.patch.
+
+diff --git a/string/basename.c b/string/basename.c
+index c42b81c70fc761be..37fcebc56685e596 100644
+--- a/string/basename.c
++++ b/string/basename.c
+@@ -16,26 +16,12 @@
+    License along with the GNU C Library; if not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
+-#ifdef HAVE_CONFIG_H
+-# include <config.h>
+-#endif
+-
+ #include <string.h>
+ 
+-#ifndef _LIBC
+-/* We cannot generally use the name `basename' since XPG defines an unusable
+-   variant of the function but we cannot use it.  */
+-# define basename gnu_basename
+-#endif
+-
+-
+ char *
+-basename (filename)
+-     const char *filename;
++basename (const char *filename)
+ {
+   char *p = strrchr (filename, '/');
+   return p ? p + 1 : (char *) filename;
+ }
+-#ifdef _LIBC
+ libc_hidden_def (basename)
+-#endif
+diff --git a/string/memccpy.c b/string/memccpy.c
+index 64c3c0196845f102..b2e4e399b75b5d84 100644
+--- a/string/memccpy.c
++++ b/string/memccpy.c
+@@ -28,11 +28,7 @@
+    Return the position in DEST one byte past where C was copied, or
+    NULL if C was not found in the first N bytes of SRC.  */
+ void *
+-__memccpy (dest, src, c, n)
+-      void *dest;
+-      const void *src;
+-      int c;
+-      size_t n;
++__memccpy (void *dest, const void *src, int c, size_t n)
+ {
+   const char *s = src;
+   char *d = dest;
+diff --git a/string/memfrob.c b/string/memfrob.c
+index 6ef996ce3f70b642..320fae7e850dd05c 100644
+--- a/string/memfrob.c
++++ b/string/memfrob.c
+@@ -18,9 +18,7 @@
+ #include <string.h>
+ 
+ void *
+-memfrob (s, n)
+-     void *s;
+-     size_t n;
++memfrob (void *s, size_t n)
+ {
+   char *p = (char *) s;
+ 
+diff --git a/string/strcat.c b/string/strcat.c
+index 017bb41ebb490fbc..1ed18b5015e00a72 100644
+--- a/string/strcat.c
++++ b/string/strcat.c
+@@ -16,7 +16,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <string.h>
+-#include <memcopy.h>
+ 
+ #undef strcat
+ 
+diff --git a/string/strchr.c b/string/strchr.c
+index 69a9cd9b1bdd7368..9ca5bcd3496a5ee9 100644
+--- a/string/strchr.c
++++ b/string/strchr.c
+@@ -22,7 +22,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <string.h>
+-#include <memcopy.h>
+ #include <stdlib.h>
+ 
+ #undef strchr
+diff --git a/string/strcmp.c b/string/strcmp.c
+index 47fd2827ad9d64cf..cc96a99f7bb6ebcd 100644
+--- a/string/strcmp.c
++++ b/string/strcmp.c
+@@ -16,7 +16,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <string.h>
+-#include <memcopy.h>
+ 
+ #undef strcmp
+ 
+@@ -28,9 +27,7 @@
+    greater than zero if S1 is lexicographically less than,
+    equal to or greater than S2.  */
+ int
+-STRCMP (p1, p2)
+-     const char *p1;
+-     const char *p2;
++STRCMP (const char *p1, const char *p2)
+ {
+   const unsigned char *s1 = (const unsigned char *) p1;
+   const unsigned char *s2 = (const unsigned char *) p2;
+diff --git a/string/strcoll.c b/string/strcoll.c
+index 02cb61e8e4f45d81..80a62f37d8640325 100644
+--- a/string/strcoll.c
++++ b/string/strcoll.c
+@@ -29,9 +29,7 @@
+ 
+ 
+ int
+-STRCOLL (s1, s2)
+-     const STRING_TYPE *s1;
+-     const STRING_TYPE *s2;
++STRCOLL (const STRING_TYPE *s1, const STRING_TYPE *s2)
+ {
+   return STRCOLL_L (s1, s2, _NL_CURRENT_LOCALE);
+ }
+diff --git a/string/strcpy.c b/string/strcpy.c
+index 22467bb88dc8cef8..f726d6bd8993271c 100644
+--- a/string/strcpy.c
++++ b/string/strcpy.c
+@@ -17,15 +17,12 @@
+ 
+ #include <stddef.h>
+ #include <string.h>
+-#include <memcopy.h>
+ 
+ #undef strcpy
+ 
+ /* Copy SRC to DEST.  */
+ char *
+-strcpy (dest, src)
+-     char *dest;
+-     const char *src;
++strcpy (char *dest, const char *src)
+ {
+   char c;
+   char *s = (char *) src;

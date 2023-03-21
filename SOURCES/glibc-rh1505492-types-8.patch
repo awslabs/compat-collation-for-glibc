@@ -1,0 +1,29 @@
+commit 1b8bf3518186cdc4f22037e5f226c34ffa143b89
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Dec 10 16:03:23 2014 +0000
+
+    Fix tst-ftell-active-handler.c warning.
+    
+    A recent change to libio/tst-ftell-active-handler.c (postdating my
+    last check for warnings on x86) introduced a format warning from a
+    long int variable used with a %zu format.  This patch fixes it by
+    using %ld for the format to match the variable.
+    
+    Tested for x86.
+    
+            * libio/tst-ftell-active-handler.c (do_ftruncate_test): Use %ld
+            format for long int variable.
+
+diff --git a/libio/tst-ftell-active-handler.c b/libio/tst-ftell-active-handler.c
+index 59a4268ffb50f085..8549ccaafdf2623c 100644
+--- a/libio/tst-ftell-active-handler.c
++++ b/libio/tst-ftell-active-handler.c
+@@ -163,7 +163,7 @@ do_ftruncate_test (const char *filename)
+ 	     it.  */
+ 	  if (offset != new_offset)
+ 	    {
+-	      printf ("Incorrect offset.  Expected %zu, but got %ld\n",
++	      printf ("Incorrect offset.  Expected %ld, but got %ld\n",
+ 		      offset, new_offset);
+ 
+ 	      ret |= 1;

@@ -1,0 +1,29 @@
+commit b1aff6a41120c1d9cedc1ecedeafc79f161ce982
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Dec 2 22:03:59 2014 +0000
+
+    Fix warning in posix/tst-getopt_long1.c.
+    
+    This patch fixes a "discards qualifiers" warning in
+    posix/tst-getopt_long1.c.  glibc is built with -Wwrite-strings,
+    meaning a char * cannot be initialized directly with a string
+    constant; the patch casts the string constants to char *.
+    
+    Tested for x86_64.
+    
+            * posix/tst-getopt_long1.c (do_test): Cast elements of argv array
+            to char *.
+
+diff --git a/posix/tst-getopt_long1.c b/posix/tst-getopt_long1.c
+index e0ecd121908de5f8..3895ebd99b291917 100644
+--- a/posix/tst-getopt_long1.c
++++ b/posix/tst-getopt_long1.c
+@@ -39,7 +39,7 @@ do_test (void)
+       return 1;
+     }
+ 
+-  char *argv[] = { "program", "--on" };
++  char *argv[] = { (char *) "program", (char *) "--on" };
+   int argc = 2;
+ 
+   int c = getopt_long (argc, argv, "12345", opts, NULL);

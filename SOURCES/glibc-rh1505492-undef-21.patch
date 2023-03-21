@@ -1,0 +1,54 @@
+commit eb1ed03dafcd9a7ea6e95b958413342e20b35968
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Mon May 5 13:06:18 2014 -0700
+
+    Fix -Wundef issues in generated errlist.c.
+
+Conflicts:
+	sysdeps/gnu/errlist.awk
+	sysdeps/gnu/errlist.c
+
+Due to IS_IN backport in glibc-rh1256317-2.patch.
+
+diff --git a/sysdeps/gnu/errlist.awk b/sysdeps/gnu/errlist.awk
+index 8bad43199cd9e1c4..ebae2a6398c2697e 100644
+--- a/sysdeps/gnu/errlist.awk
++++ b/sysdeps/gnu/errlist.awk
+@@ -52,6 +52,7 @@ BEGIN {
+     print "#ifdef ERR_MAX";
+     print "# define ERRLIST_SIZE ERR_MAX + 1";
+     print "#else"
++    print "# define ERR_MAX 0";
+     print "# define ERRLIST_SIZE";
+     print "#endif";
+ 
+@@ -109,7 +110,7 @@ END {
+   print "  (sizeof _sys_errlist_internal / sizeof _sys_errlist_internal [0])";
+   print "const int _sys_nerr_internal = NERR;"
+   print "";
+-  print "#if IS_IN (libc) && !ERRLIST_NO_COMPAT";
++  print "#if IS_IN (libc) && !defined ERRLIST_NO_COMPAT";
+   print "# include <errlist-compat.c>";
+   print "#endif";
+   print "";
+diff --git a/sysdeps/gnu/errlist.c b/sysdeps/gnu/errlist.c
+index 278f7998b592e92a..4551249d723f47a6 100644
+--- a/sysdeps/gnu/errlist.c
++++ b/sysdeps/gnu/errlist.c
+@@ -13,6 +13,7 @@
+ #ifdef ERR_MAX
+ # define ERRLIST_SIZE ERR_MAX + 1
+ #else
++# define ERR_MAX 0
+ # define ERRLIST_SIZE
+ #endif
+ const char *const _sys_errlist_internal[ERRLIST_SIZE] =
+@@ -1479,7 +1480,7 @@ TRANS error; @pxref{Cancel AIO Operations}. */
+   (sizeof _sys_errlist_internal / sizeof _sys_errlist_internal [0])
+ const int _sys_nerr_internal = NERR;
+ 
+-#if IS_IN (libc) && !ERRLIST_NO_COMPAT
++#if IS_IN (libc) && !defined ERRLIST_NO_COMPAT
+ # include <errlist-compat.c>
+ #endif
+ 

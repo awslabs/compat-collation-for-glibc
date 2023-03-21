@@ -1,0 +1,49 @@
+commit 3e058c9d7eab6d6361e7cda5ba1394bc1757c9f6
+Author: H.J. Lu <hjl.tools@gmail.com>
+Date:   Fri May 22 17:46:42 2015 -0700
+
+    Don't issue an error if DT_PLTRELSZ is missing
+    
+    A shared object doesn't need PLT if there are no PLT relocations.  It
+    shouldn't be an error if DT_PLTRELSZ is missing.
+    
+    	[BZ #18410]
+    	* elf/dl-reloc.c (_dl_relocate_object): Don't issue an error
+    	for missing DT_PLTRELSZ.
+
+diff -rup a/elf/dl-reloc.c b/elf/dl-reloc.c
+--- a/elf/dl-reloc.c	2017-10-04 16:42:16.000000000 -0400
++++ b/elf/dl-reloc.c	2017-10-05 17:44:14.486358084 -0400
+@@ -259,21 +259,13 @@ _dl_relocate_object (struct link_map *l,
+     ELF_DYNAMIC_RELOCATE (l, lazy, consider_profiling, skip_ifunc);
+ 
+ #ifndef PROF
+-    if (__builtin_expect (consider_profiling, 0))
++    if (__builtin_expect (consider_profiling, 0)
++	&& l->l_info[DT_PLTRELSZ] != NULL)
+       {
+ 	/* Allocate the array which will contain the already found
+ 	   relocations.  If the shared object lacks a PLT (for example
+ 	   if it only contains lead function) the l_info[DT_PLTRELSZ]
+ 	   will be NULL.  */
+-	if (l->l_info[DT_PLTRELSZ] == NULL)
+-	  {
+-	    errstring = N_("%s: no PLTREL found in object %s\n");
+-	  fatal:
+-	    _dl_fatal_printf (errstring,
+-			      rtld_progname ?: "<program name unknown>",
+-			      l->l_name);
+-	  }
+-
+ 	size_t sizeofrel = l->l_info[DT_PLTREL]->d_un.d_val == DT_RELA
+ 			   ? sizeof (ElfW(Rela))
+ 			   : sizeof (ElfW(Rel));
+@@ -284,7 +276,7 @@ _dl_relocate_object (struct link_map *l,
+ 	  {
+ 	    errstring = N_("\
+ %s: out of memory to store relocation results for %s\n");
+-	    goto fatal;
++	    _dl_fatal_printf (errstring, rtld_progname, l->l_name);
+ 	  }
+       }
+ #endif

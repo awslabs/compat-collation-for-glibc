@@ -1,0 +1,35 @@
+Upstream x86_64 uses the generic lll_futex_timed_wait_bitset, but for
+rhel-7 we have not yet backported the larger generic futex cleanups.
+To keep x86_64 using the tested code paths we add a generic
+lll_futex_timed_wait_bitset.  We do not do the same for i686, where we
+let the code use the lll_futex_timed_wait fallback.  For i686 it would
+be harder to add lll_futex_timed_wait_bitset because it requires more
+complex 6-argument syscall handling backports, so we do not do that.
+
+Not needed upstream.
+
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.h
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.h
++++ glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.h
+@@ -223,6 +223,20 @@ LLL_STUB_UNWIND_INFO_END
+     __status;								      \
+   })
+ 
++#define lll_futex_timed_wait_bitset(futexp, val, timespec, clockbit, private) \
++  ({									      \
++    INTERNAL_SYSCALL_DECL (__err);					      \
++    long int __ret;							      \
++    int __op = FUTEX_WAIT_BITSET | clockbit;				      \
++									      \
++    __ret = INTERNAL_SYSCALL (futex, __err, 6, (futexp),		      \
++			      __lll_private_flag (__op, private),	      \
++			      (val), (timespec), NULL /* Unused.  */, 	      \
++			      FUTEX_BITSET_MATCH_ANY);			      \
++    (__glibc_unlikely (INTERNAL_SYSCALL_ERROR_P (__ret, __err))		      \
++	? -INTERNAL_SYSCALL_ERRNO (__ret, __err) : 0);			      \
++  })
++
+ 
+ #define lll_futex_wake(futex, nr, private) \
+   ({									      \

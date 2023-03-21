@@ -1,0 +1,125 @@
+Fix type errors in string tests introduced by the patches to implement
+rhbz#1268008.
+
+Patch originally from Stefan Liebler <STLI@de.ibm.com>.
+
+diff --git a/benchtests/bench-stpncpy.c b/benchtests/bench-stpncpy.c
+index e428102f5db30cfc..d37b401e303fd4bc 100644
+--- a/benchtests/bench-stpncpy.c
++++ b/benchtests/bench-stpncpy.c
+@@ -74,4 +74,5 @@ STUPID_STPNCPY (CHAR *dst, const CHAR *src, size_t n)
+   return dst + nc;
+ }
+ 
++#undef CHAR
+ #include "bench-strncpy.c"
+diff --git a/benchtests/bench-strncpy.c b/benchtests/bench-strncpy.c
+index 2cfd56ab5ab2cb06..94f66f93acfd18fc 100644
+--- a/benchtests/bench-strncpy.c
++++ b/benchtests/bench-strncpy.c
+@@ -144,6 +144,8 @@ do_test (size_t align1, size_t align2, size_t len, size_t n, int max_char)
+   size_t i;
+   CHAR *s1, *s2;
+ 
++/* For wcsncpy: align1 and align2 here mean alignment not in bytes,
++   but in wchar_ts, in bytes it will equal to align * (sizeof (wchar_t)).  */
+   align1 &= 7;
+   if ((align1 + len) * sizeof (CHAR) >= page_size)
+     return;
+@@ -152,8 +154,8 @@ do_test (size_t align1, size_t align2, size_t len, size_t n, int max_char)
+   if ((align2 + len) * sizeof (CHAR) >= page_size)
+     return;
+ 
+-  s1 = (CHAR *) (buf1 + align1);
+-  s2 = (CHAR *) (buf2 + align2);
++  s1 = (CHAR *) (buf1) + align1;
++  s2 = (CHAR *) (buf2) + align2;
+ 
+   for (i = 0; i < len; ++i)
+     s1[i] = 32 + 23 * i % (max_char - 32);
+diff --git a/benchtests/bench-strspn.c b/benchtests/bench-strspn.c
+index e1f227278480ac7a..39039d09915e191e 100644
+--- a/benchtests/bench-strspn.c
++++ b/benchtests/bench-strspn.c
+@@ -139,7 +139,7 @@ do_test (size_t align, size_t pos, size_t len)
+   for (i = 0; i < pos; ++i)
+     s[i] = acc[random () % len];
+   s[pos] = random () & BIG_CHAR;
+-  if (strchr (acc, s[pos]))
++  if (STRCHR (acc, s[pos]))
+     s[pos] = '\0';
+   else
+     {
+diff --git a/string/test-stpncpy.c b/string/test-stpncpy.c
+index 69c8181269523def..f35340957f7092a9 100644
+--- a/string/test-stpncpy.c
++++ b/string/test-stpncpy.c
+@@ -75,4 +75,5 @@ STUPID_STPNCPY (CHAR *dst, const CHAR *src, size_t n)
+   return dst + nc;
+ }
+ 
++#undef CHAR
+ #include "test-strncpy.c"
+diff --git a/string/test-strcat.c b/string/test-strcat.c
+index a822733cff7fd39e..dca8dd47aa119ce0 100644
+--- a/string/test-strcat.c
++++ b/string/test-strcat.c
+@@ -71,7 +71,7 @@ SIMPLE_STRCAT (CHAR *dst, const CHAR *src)
+ }
+ 
+ static void
+-do_one_test (impl_t *impl, CHAR *dst, const char *src)
++do_one_test (impl_t *impl, CHAR *dst, const CHAR *src)
+ {
+   size_t k = STRLEN (dst);
+   if (CALL (impl, dst, src) != dst)
+diff --git a/string/test-strncmp.c b/string/test-strncmp.c
+index 950bf248385787b6..63b16eaa385f942a 100644
+--- a/string/test-strncmp.c
++++ b/string/test-strncmp.c
+@@ -210,7 +210,7 @@ do_test (size_t align1, size_t align2, size_t len, size_t n, int max_char,
+   if (align1 + (n + 1) * CHARBYTES >= page_size)
+     return;
+ 
+-  align2 &= 7;
++  align2 &= 63;
+   if (align2 + (n + 1) * CHARBYTES >= page_size)
+     return;
+ 
+@@ -359,8 +359,8 @@ check1 (void)
+   size_t i, offset;
+   int exp_result;
+ 
+-  strcpy(s1, L("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs"));
+-  strcpy(s2, L("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkLMNOPQRSTUV"));
++  STRCPY(s1, L("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs"));
++  STRCPY(s2, L("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkLMNOPQRSTUV"));
+ 
+   /* Check possible overflow bug for wcsncmp */
+   s1[4] = CHAR__MAX;
+diff --git a/string/test-strncpy.c b/string/test-strncpy.c
+index bdccc98301f22c10..1dbc57d9c33e6eb9 100644
+--- a/string/test-strncpy.c
++++ b/string/test-strncpy.c
+@@ -94,7 +94,7 @@ STUPID_STRNCPY (CHAR *dst, const CHAR *src, size_t n)
+ typedef CHAR *(*proto_t) (CHAR *, const CHAR *, size_t);
+ 
+ static void
+-do_one_test (impl_t *impl, CHAR *dst, const char *src, size_t len, size_t n)
++do_one_test (impl_t *impl, CHAR *dst, const CHAR *src, size_t len, size_t n)
+ {
+   if (CALL (impl, dst, src, n) != STRNCPY_RESULT (dst, len, n))
+     {
+diff --git a/string/test-strnlen.c b/string/test-strnlen.c
+index 43db896e917ec4e0..db999b53fb546460 100644
+--- a/string/test-strnlen.c
++++ b/string/test-strnlen.c
+@@ -80,7 +80,7 @@ do_test (size_t align, size_t len, size_t maxlen, int max_char)
+   CHAR *buf = (CHAR *) (buf1);
+ 
+   for (i = 0; i < len; ++i)
+-    buf[align + i] = 1 + 7 * i % max_char;
++    buf[align + i] = 1 + 11111 * i % max_char;
+   buf[align + len] = 0;
+ 
+   FOR_EACH_IMPL (impl, 0)

@@ -1,0 +1,41 @@
+Update kernel version in syscall-names.list to 4.17.
+
+As far as I can tell, Linux 4.17 does not add any new syscalls; this
+patch updates the version number in syscall-names.list to reflect that
+it's still current for 4.17.
+
+Tested for x86_64-linux-gnu with build-many-glibcs.py.
+
+	* sysdeps/unix/sysv/linux/syscall-names.list: Update kernel
+	version to 4.17.
+
+(cherry picked from commit 0e0577c93fcdd8922ca83763400f74ca10e46019)
+
+diff --git a/ChangeLog b/ChangeLog
+index 77c3dae5b015ecad..77aa2a8cf78e568f 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,8 @@
++2018-06-05  Joseph Myers  <joseph@codesourcery.com>
++
++	* sysdeps/unix/sysv/linux/syscall-names.list: Update kernel
++	version to 4.17.
++
+ 2012-12-21  David S. Miller  <davem@davemloft.net>
+ 
+ 	* po/hr.po: Update from translation team.
+diff --git a/sysdeps/unix/sysv/linux/syscall-names.list b/sysdeps/unix/sysv/linux/syscall-names.list
+index fab3ff2328373a1f..5306d538e6448163 100644
+--- a/sysdeps/unix/sysv/linux/syscall-names.list
++++ b/sysdeps/unix/sysv/linux/syscall-names.list
+@@ -22,8 +22,8 @@
+ # names are only used if the installed kernel headers also provide
+ # them.
+ 
+-# The list of system calls is current as of Linux 4.16.
+-kernel 4.16
++# The list of system calls is current as of Linux 4.17.
++kernel 4.17
+ 
+ FAST_atomic_update
+ FAST_cmpxchg

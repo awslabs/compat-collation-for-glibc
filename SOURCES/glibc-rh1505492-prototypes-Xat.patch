@@ -1,0 +1,143 @@
+Introduce prototype-style definitions for various *at functions.
+Upstream, these function definitions were removed in:
+
+commit 754a15c61cd6834685386a134d0a0fed5f3ac4c1
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Sep 30 14:32:08 2014 +0000
+
+    Move some *at definitions to syscalls.list (bug 14138).
+
+diff --git a/sysdeps/unix/sysv/linux/fchownat.c b/sysdeps/unix/sysv/linux/fchownat.c
+index 624804fa8cbfd8a1..0673118ad1c72958 100644
+--- a/sysdeps/unix/sysv/linux/fchownat.c
++++ b/sysdeps/unix/sysv/linux/fchownat.c
+@@ -29,12 +29,7 @@
+ 
+ /* Change the owner and group of FILE.  */
+ int
+-fchownat (fd, file, owner, group, flag)
+-     int fd;
+-     const char *file;
+-     uid_t owner;
+-     gid_t group;
+-     int flag;
++fchownat (int fd, const char *file, uid_t owner, gid_t group, int flag)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/futimesat.c b/sysdeps/unix/sysv/linux/futimesat.c
+index e3d034f800dfe61b..77f320d94aef5435 100644
+--- a/sysdeps/unix/sysv/linux/futimesat.c
++++ b/sysdeps/unix/sysv/linux/futimesat.c
+@@ -29,10 +29,7 @@
+ /* Change the access time of FILE relative to FD to TVP[0] and
+    the modification time of FILE to TVP[1].  */
+ int
+-futimesat (fd, file, tvp)
+-     int fd;
+-     const char *file;
+-     const struct timeval tvp[2];
++futimesat (int fd, const char *file, const struct timeval tvp[2])
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/linkat.c b/sysdeps/unix/sysv/linux/linkat.c
+index 90e0a79a7014ab72..0526861c007d773f 100644
+--- a/sysdeps/unix/sysv/linux/linkat.c
++++ b/sysdeps/unix/sysv/linux/linkat.c
+@@ -27,12 +27,7 @@
+ /* Make a link to FROM named TO but relative paths in TO and FROM are
+    interpreted relative to FROMFD and TOFD respectively.  */
+ int
+-linkat (fromfd, from, tofd, to, flags)
+-     int fromfd;
+-     const char *from;
+-     int tofd;
+-     const char *to;
+-     int flags;
++linkat (int fromfd, const char *from, int tofd, const char *to, int flags)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/mkdirat.c b/sysdeps/unix/sysv/linux/mkdirat.c
+index c5ac40ad70c78b62..3989c13f6d511389 100644
+--- a/sysdeps/unix/sysv/linux/mkdirat.c
++++ b/sysdeps/unix/sysv/linux/mkdirat.c
+@@ -28,10 +28,7 @@
+ /* Create a new directory with permission bits MODE.  But interpret
+    relative PATH names relative to the directory associated with FD.  */
+ int
+-mkdirat (fd, file, mode)
+-     int fd;
+-     const char *file;
+-     mode_t mode;
++mkdirat (int fd, const char *file, mode_t mode)
+ {
+   int res;
+ 
+diff --git a/sysdeps/unix/sysv/linux/readlinkat.c b/sysdeps/unix/sysv/linux/readlinkat.c
+index 1638cbb38063477e..05ac0c31743e0d09 100644
+--- a/sysdeps/unix/sysv/linux/readlinkat.c
++++ b/sysdeps/unix/sysv/linux/readlinkat.c
+@@ -29,11 +29,7 @@
+ /* Read the contents of the symbolic link PATH relative to FD into no
+    more than LEN bytes of BUF.  */
+ ssize_t
+-readlinkat (fd, path, buf, len)
+-     int fd;
+-     const char *path;
+-     char *buf;
+-     size_t len;
++readlinkat (int fd, const char *path, char *buf, size_t len)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/renameat.c b/sysdeps/unix/sysv/linux/renameat.c
+index 7623f5230306baaf..6b9e87016b17ab6c 100644
+--- a/sysdeps/unix/sysv/linux/renameat.c
++++ b/sysdeps/unix/sysv/linux/renameat.c
+@@ -104,11 +104,7 @@ __atfct_seterrno_2 (int errval, int fd1, const char *buf1, int fd2,
+ 
+ /* Rename the file OLD relative to OLDFD to NEW relative to NEWFD.  */
+ int
+-renameat (oldfd, old, newfd, new)
+-     int oldfd;
+-     const char *old;
+-     int newfd;
+-     const char *new;
++renameat (int oldfd, const char *old, int newfd, const char *new)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/symlinkat.c b/sysdeps/unix/sysv/linux/symlinkat.c
+index 7e3812914c99ad8c..c8f8be9892dc41db 100644
+--- a/sysdeps/unix/sysv/linux/symlinkat.c
++++ b/sysdeps/unix/sysv/linux/symlinkat.c
+@@ -28,10 +28,7 @@
+ 
+ /* Make a symbolic link to FROM named TO relative to TOFD.  */
+ int
+-symlinkat (from, tofd, to)
+-     const char *from;
+-     int tofd;
+-     const char *to;
++symlinkat (const char *from, int tofd, const char *to)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/unlinkat.c b/sysdeps/unix/sysv/linux/unlinkat.c
+index 7c50a2a914486808..d4beb82b065068f7 100644
+--- a/sysdeps/unix/sysv/linux/unlinkat.c
++++ b/sysdeps/unix/sysv/linux/unlinkat.c
+@@ -29,10 +29,7 @@
+ 
+ /* Remove the link named NAME.  */
+ int
+-unlinkat (fd, file, flag)
+-     int fd;
+-     const char *file;
+-     int flag;
++unlinkat (int fd, const char *file, int flag)
+ {
+   int result;
+ 

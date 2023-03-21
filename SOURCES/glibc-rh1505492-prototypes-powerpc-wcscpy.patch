@@ -1,0 +1,24 @@
+Introduce prototype-style function definition for wcscpy on 32-bit
+POWER.  The old-style function definition was removed upstream in:
+
+commit 93be09e7259caf227dd586404f3c74b61c830cb4
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Mon Oct 14 09:43:31 2013 -0500
+
+    PowerPC: multiarch wcscpy for PowerPC32
+
+diff --git a/sysdeps/powerpc/powerpc32/power6/wcscpy.c b/sysdeps/powerpc/powerpc32/power6/wcscpy.c
+index 9bd907788e6f2337..0af09793f7ce43e0 100644
+--- a/sysdeps/powerpc/powerpc32/power6/wcscpy.c
++++ b/sysdeps/powerpc/powerpc32/power6/wcscpy.c
+@@ -22,9 +22,7 @@
+ 
+ /* Copy SRC to DEST.  */
+ wchar_t *
+-wcscpy (dest, src)
+-     wchar_t *dest;
+-     const wchar_t *src;
++wcscpy (wchar_t *dest, const wchar_t *src)
+ {
+   wint_t c,d;
+   wchar_t *wcp, *wcp2;

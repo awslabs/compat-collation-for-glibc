@@ -1,0 +1,27 @@
+Use <support/test-driver.c> in stdlib/tst-strtod-overflow.c
+
+This downstream-only patch is needed because test-skeleton.c contains
+a copy of the old test skeleton (unlike upstream), resulting in the
+following error:
+
+In file included from tst-strtod-overflow.c:53:0:
+../test-skeleton.c:65:20: error: static declaration of 'test_dir' follows non-static declaration
+ static const char *test_dir;
+                    ^
+In file included from tst-strtod-overflow.c:23:0:
+../support/test-driver.h:65:20: note: previous declaration of 'test_dir' was here
+ extern const char *test_dir;
+                    ^
+
+diff --git a/stdlib/tst-strtod-overflow.c b/stdlib/tst-strtod-overflow.c
+index fd1be79f3f58c64b..2b30947d9a9fa03a 100644
+--- a/stdlib/tst-strtod-overflow.c
++++ b/stdlib/tst-strtod-overflow.c
+@@ -48,6 +48,4 @@ do_test (void)
+   return 0;
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#define TIMEOUT 5
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>

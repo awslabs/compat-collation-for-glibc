@@ -1,0 +1,30 @@
+commit be97091638d156a53009b4034c60b58eaf3efa24
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Nov 27 03:24:18 2014 +0000
+
+    Fix nss/tst-nss-test1.c format warning.
+    
+    Testing for 32-bit x86 shows up a warning "tst-nss-test1.c:25:3:
+    warning: format '%ju' expects argument of type 'uintmax_t', but
+    argument 2 has type 'int' [-Wformat=]".  The argument is a difference
+    of two pointers, a signed quantity of type ptrdiff_t for which the
+    right format is %td; this patch makes this test use that format.
+    
+    Tested for 32-bit x86.
+    
+            * nss/tst-nss-test1.c (do_test): Use %td printf format for pointer
+            difference, not %ju.
+
+diff --git a/nss/tst-nss-test1.c b/nss/tst-nss-test1.c
+index 4e443d453909e231..c5750e0956ea9450 100644
+--- a/nss/tst-nss-test1.c
++++ b/nss/tst-nss-test1.c
+@@ -21,7 +21,7 @@ do_test (void)
+     if (p->pw_uid != *np || strncmp (p->pw_name, "name", 4) != 0
+ 	|| atol (p->pw_name + 4) != *np)
+       {
+-	printf ("passwd entry %ju wrong (%s, %u)\n",
++	printf ("passwd entry %td wrong (%s, %u)\n",
+ 		np - pwdids, p->pw_name, p->pw_uid);
+ 	retval = 1;
+ 	break;

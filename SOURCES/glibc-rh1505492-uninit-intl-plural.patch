@@ -1,0 +1,26 @@
+Do not treat uninitialized variable warnings as errors in the
+auto-generated bison parser code in intl/plural.c.
+
+This was fixed upstream with a regenerated parser as part of this
+commit:
+
+commit 568035b7874a099087b77f7bba3e36a1173787b0
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Jan 2 19:01:50 2013 +0000
+
+    Update copyright notices with scripts/update-copyrights.
+
+diff --git a/intl/Makefile b/intl/Makefile
+index 39ecb680572bd7ab..f0a7d0d9047ce571 100644
+--- a/intl/Makefile
++++ b/intl/Makefile
+@@ -45,6 +45,9 @@ plural.c: plural.y
+ 	$(BISON) $(BISONFLAGS) $@ $^
+ endif
+ $(objpfx)plural.o: plural.c
++# The generated plural.c file generates unitialized variable warnings
++# with GCC 4.8 on 32-bit architectures.
++CFLAGS-plural.c = -Wno-error=maybe-uninitialized
+ 
+ include ../Rules
+ 

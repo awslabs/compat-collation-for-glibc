@@ -1,0 +1,1358 @@
+commit 80d9be8122d1fe181d2476b5dad9f4ce37204958
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Oct 20 21:27:22 2015 +0000
+
+    Convert miscellaneous function definitions to prototype style.
+    
+    This patch converts various miscellaneous functions definitions in
+    glibc, found with grep and not covered by my previous scripted
+    conversions, from old-style K&R to prototype-style.  These changes
+    were made manually.  This is not necessarily exhaustive as formatting
+    variants may have prevented my grep from finding some such
+    definitions.
+    
+    Regarding the changes to files from GMP, they may originally have been
+    omitted when removing __STDC__ conditionals because of the files
+    coming from another package, but (a) GMP no longer has __STDC__
+    conditionals there anyway and (b) we don't try to keep these files
+    verbatim in sync with GMP (and there are licensing differences), so
+    making the change to them in glibc seems reasonable.
+    
+    Tested for x86_64 and x86 (testsuite - this patch affects files
+    containing assertions).
+    
+            * debug/fortify_fail.c (__fortify_fail): Convert to
+            prototype-style function definition.  Use internal_function.
+            * libio/genops.c (save_for_backup): Convert to prototype-style
+            function definition.
+            * libio/wgenops.c (save_for_wbackup): Likewise.
+            * login/grantpt.c (grantpt): Likewise.
+            * login/ptsname.c (ptsname): Likewise.
+            (__ptsname_r): Likewise.
+            * login/unlockpt.c (unlockpt): Likewise.
+            * mach/msgserver.c (__mach_msg_server): Likewise.
+            * misc/efgcvt.c (__APPEND (FUNC_PREFIX, fcvt)): Likewise.
+            (__APPEND (FUNC_PREFIX, ecvt)): Likewise.
+            (__APPEND (FUNC_PREFIX, gcvt)): Likewise.
+            * misc/efgcvt_r.c (__APPEND (FUNC_PREFIX, fcvt_r)): Likewise.
+            (__APPEND (FUNC_PREFIX, ecvt_r)): Likewise.
+            * nptl/cleanup_compat.c (_pthread_cleanup_push): Likewise.
+            * nptl/cleanup_defer_compat.c (_pthread_cleanup_push_defer):
+            Likewise.
+            * nptl/libc_pthread_init.c (__libc_pthread_init): Likewise.  Use
+            internal_function.
+            * nptl/pthread_atfork.c (__pthread_atfork): Convert to
+            prototype-style function definition.
+            * nptl/pthread_create.c (__pthread_create_2_1): Likewise.
+            [SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_1)]
+            (__pthread_create_2_0): Likewise.
+            * nptl/pthread_key_create.c (__pthread_key_create): Likewise.
+            * nptl/register-atfork.c (__register_atfork): Likewise.
+            * posix/glob.c (glob): Likewise.
+            * posix/regcomp.c (re_comp): Likewise.
+            * posix/regexec.c (re_exec): Likewise.
+            * stdlib/add_n.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/cmp.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/divmod_1.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/divrem.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/lshift.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/mod_1.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/mul.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/mul_n.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/rshift.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * stdlib/strtod.c (INTERNAL (STRTOF)): Convert to prototype-style
+            function definition.
+            (STRTOF): Likewise.
+            * stdlib/strtod_l.c (__STRTOF): Likewise.
+            * stdlib/strtol.c (INTERNAL (strtol)): Likewise.
+            * stdlib/strtol_l.c (INTERNAL (__strtol_l)): Likewise.
+            (__strtol_l): Likewise.
+            * stdlib/sub_n.c [__STDC__]: Make code unconditional.
+            [!__STDC__]: Remove conditional code.
+            * string/memrchr.c (MEMRCHR): Convert to prototype-style function
+            definition.
+            * string/strcasecmp.c (LOCALE_PARAM_DECL): Remove macro.
+            [USE_IN_EXTENDED_LOCALE_MODEL] (LOCALE_PARAM): Include argument
+            type.
+            (__strcasecmp): Convert to prototype-style function definition.
+            * string/strncase.c (LOCALE_PARAM_DECL): Remove macro.
+            [USE_IN_EXTENDED_LOCALE_MODEL] (LOCALE_PARAM): Include argument
+            type.
+            (__strncasecmp): Convert to prototype-style function definition.
+            * sunrpc/pm_getport.c (__libc_rpc_getport): Likewise.
+            * sunrpc/xdr.c (xdr_union): Likewise.
+            * sunrpc/xdr_array.c (xdr_array): Likewise.
+            * sunrpc/xdr_ref.c (xdr_reference): Likewise.
+            * sysdeps/m68k/m680x0/fpu/s_atan.c (__CONCATX(__,FUNC)): Likewise.
+            * sysdeps/m68k/m680x0/fpu/s_isinf.c (__CONCATX(__,FUNC)):
+            Likewise.
+            * sysdeps/m68k/m680x0/fpu/s_scalbn.c (__CONCATX(__scalbn,suffix):
+            Likewise.
+            * sysdeps/m68k/m680x0/fpu/s_sincos.c (CONCATX(__,FUNC)): Likewise.
+            * sysdeps/unix/sysv/linux/i386/scandir64.c (__old_scandir64):
+            Likewise.
+            * time/strftime_l.c (LOCALE_PARAM_DECL): Remove macro.
+            (LOCALE_PARAM_PROTO): Likewise.
+            [_LIBC && USE_IN_EXTENDED_LOCALE_MODEL] (LOCALE_PARAM): Include
+            argument type.
+            (ut_argument_spec): Remove macro.
+            (ut_argument_spec_iso): Rename to ut_argument_spec.
+            (memcpy_lowcase): Use LOCALE_PARAM in declaration.  Convert to
+            prototype-style function definition.
+            (memcpy_uppcase): Likewise.
+            (__strftime_internal): Likewise.
+            (my_strftime): Likewise.
+            * time/strptime_l.c (LOCALE_PARAM_PROTO): Remove macro.
+            (LOCALE_PARAM_DECL): Likewise.
+            [_LIBC] (LOCALE_PARAM): Include argument type.
+            (__strptime_internal): Convert to prototype-style function
+            definition.
+            (strptime): Likewise.
+            * wcsmbs/wcscasecmp.c (LOCALE_PARAM_DECL): Remove macro.
+            [USE_IN_EXTENDED_LOCALE_MODEL] (LOCALE_PARAM): Include argument
+            type.
+            (__wcscasecmp): Convert to prototype-style function definition.
+            * wcsmbs/wcsncase.c (LOCALE_PARAM_DECL): Remove macro.
+            [USE_IN_EXTENDED_LOCALE_MODEL] (LOCALE_PARAM): Include argument
+            type.
+            (__wcsncasecmp): Convert to prototype-style function definition.
+
+Conflicts:
+	nptl/libc_pthread_init.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/libc_pthread_init.c.)
+	nptl/register-atfork.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/register-atfork.c.)
+
+diff --git a/debug/fortify_fail.c b/debug/fortify_fail.c
+index c5621ea6b5806603..d76ab3718e7814e4 100644
+--- a/debug/fortify_fail.c
++++ b/debug/fortify_fail.c
+@@ -22,9 +22,8 @@
+ extern char **__libc_argv attribute_hidden;
+ 
+ void
+-__attribute__ ((noreturn))
+-__fortify_fail (msg)
+-     const char *msg;
++__attribute__ ((noreturn)) internal_function
++__fortify_fail (const char *msg)
+ {
+   /* The loop is added only to keep gcc happy.  */
+   while (1)
+diff --git a/libio/genops.c b/libio/genops.c
+index 09a9c2eacf1fcaea..1362fd15a88130d8 100644
+--- a/libio/genops.c
++++ b/libio/genops.c
+@@ -244,9 +244,7 @@ static int
+ #ifdef _LIBC
+ internal_function
+ #endif
+-save_for_backup (fp, end_p)
+-     _IO_FILE *fp;
+-     char *end_p;
++save_for_backup (_IO_FILE *fp, char *end_p)
+ {
+   /* Append [_IO_read_base..end_p] to backup area. */
+   _IO_ssize_t least_mark = _IO_least_marker (fp, end_p);
+diff --git a/libio/wgenops.c b/libio/wgenops.c
+index 3f34bbc92d8746be..7ec7ae0c0c2c8976 100644
+--- a/libio/wgenops.c
++++ b/libio/wgenops.c
+@@ -468,9 +468,7 @@ static int
+ #ifdef _LIBC
+ internal_function
+ #endif
+-save_for_wbackup (fp, end_p)
+-     _IO_FILE *fp;
+-     wchar_t *end_p;
++save_for_wbackup (_IO_FILE *fp, wchar_t *end_p)
+ {
+   /* Append [_IO_read_base..end_p] to backup area. */
+   _IO_ssize_t least_mark = _IO_least_wmarker (fp, end_p);
+diff --git a/login/grantpt.c b/login/grantpt.c
+index fd7ee6c0bcf2f6b9..62d48b3c489b004f 100644
+--- a/login/grantpt.c
++++ b/login/grantpt.c
+@@ -23,8 +23,7 @@
+    with the slave to the calling process, and set its group and
+    mode appropriately.  Note that this is an unprivileged operation. */
+ int
+-grantpt (fd)
+-     int fd __attribute__ ((unused));
++grantpt (int fd __attribute__ ((unused)))
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/login/ptsname.c b/login/ptsname.c
+index d22ec4136257e1e1..5fe85a938558a0eb 100644
+--- a/login/ptsname.c
++++ b/login/ptsname.c
+@@ -24,18 +24,16 @@
+    of the associated slave. */
+ 
+ char *
+-ptsname (fd)
+-     int fd __attribute__ ((unused));
++ptsname (int fd __attribute__ ((unused)))
+ {
+   __set_errno (ENOSYS);
+   return NULL;
+ }
+ 
+ int
+-__ptsname_r (fd, buf, len)
+-     int fd __attribute__ ((unused));
+-     char *buf __attribute__ ((unused));
+-     size_t len __attribute__ ((unused));
++__ptsname_r (int fd __attribute__ ((unused)),
++	     char *buf __attribute__ ((unused)),
++	     size_t len __attribute__ ((unused)))
+ {
+   __set_errno (ENOSYS);
+   return ENOSYS;
+diff --git a/login/unlockpt.c b/login/unlockpt.c
+index f00d88f9c1a5d8c4..14057d0fcdd4809c 100644
+--- a/login/unlockpt.c
++++ b/login/unlockpt.c
+@@ -23,8 +23,7 @@
+    the slave can be opened.  This is to avoid a race between opening the
+    master and calling grantpt() to take possession of the slave. */
+ int
+-unlockpt (fd)
+-     int fd __attribute__ ((unused));
++unlockpt (int fd __attribute__ ((unused)))
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/mach/msgserver.c b/mach/msgserver.c
+index b087e7263511b554..d1d90cdee476b2fc 100644
+--- a/mach/msgserver.c
++++ b/mach/msgserver.c
+@@ -187,10 +187,10 @@ __mach_msg_server_timeout (boolean_t (*demux) (mach_msg_header_t *request,
+ weak_alias (__mach_msg_server_timeout, mach_msg_server_timeout)
+ 
+ mach_msg_return_t
+-__mach_msg_server (demux, max_size, rcv_name)
+-     boolean_t (*demux) (mach_msg_header_t *in, mach_msg_header_t *out);
+-     mach_msg_size_t max_size;
+-     mach_port_t rcv_name;
++__mach_msg_server (boolean_t (*demux) (mach_msg_header_t *in,
++				       mach_msg_header_t *out),
++		   mach_msg_size_t max_size,
++		   mach_port_t rcv_name)
+ {
+   return __mach_msg_server_timeout (demux, max_size, rcv_name,
+ 				    MACH_MSG_OPTION_NONE,
+diff --git a/misc/efgcvt.c b/misc/efgcvt.c
+index d7d15a1846ce1be4..e1304592dc8f36a9 100644
+--- a/misc/efgcvt.c
++++ b/misc/efgcvt.c
+@@ -65,9 +65,8 @@ static char ECVT_BUFFER[MAXDIG];
+ libc_freeres_ptr (static char *FCVT_BUFPTR);
+ 
+ char *
+-__APPEND (FUNC_PREFIX, fcvt) (value, ndigit, decpt, sign)
+-     FLOAT_TYPE value;
+-     int ndigit, *decpt, *sign;
++__APPEND (FUNC_PREFIX, fcvt) (FLOAT_TYPE value, int ndigit, int *decpt,
++			      int *sign)
+ {
+   if (FCVT_BUFPTR == NULL)
+     {
+@@ -88,9 +87,8 @@ __APPEND (FUNC_PREFIX, fcvt) (value, ndigit, decpt, sign)
+ 
+ 
+ char *
+-__APPEND (FUNC_PREFIX, ecvt) (value, ndigit, decpt, sign)
+-     FLOAT_TYPE value;
+-     int ndigit, *decpt, *sign;
++__APPEND (FUNC_PREFIX, ecvt) (FLOAT_TYPE value, int ndigit, int *decpt,
++			      int *sign)
+ {
+   (void) __APPEND (FUNC_PREFIX, ecvt_r) (value, ndigit, decpt, sign,
+ 					 ECVT_BUFFER, MAXDIG);
+@@ -99,10 +97,7 @@ __APPEND (FUNC_PREFIX, ecvt) (value, ndigit, decpt, sign)
+ }
+ 
+ char *
+-__APPEND (FUNC_PREFIX, gcvt) (value, ndigit, buf)
+-     FLOAT_TYPE value;
+-     int ndigit;
+-     char *buf;
++__APPEND (FUNC_PREFIX, gcvt) (FLOAT_TYPE value, int ndigit, char *buf)
+ {
+   sprintf (buf, "%.*" FLOAT_FMT_FLAG "g", MIN (ndigit, NDIGIT_MAX), value);
+   return buf;
+diff --git a/misc/efgcvt_r.c b/misc/efgcvt_r.c
+index e9f32d673132279d..4cd040fadc008399 100644
+--- a/misc/efgcvt_r.c
++++ b/misc/efgcvt_r.c
+@@ -72,11 +72,8 @@
+ 
+ 
+ int
+-__APPEND (FUNC_PREFIX, fcvt_r) (value, ndigit, decpt, sign, buf, len)
+-     FLOAT_TYPE value;
+-     int ndigit, *decpt, *sign;
+-     char *buf;
+-     size_t len;
++__APPEND (FUNC_PREFIX, fcvt_r) (FLOAT_TYPE value, int ndigit, int *decpt,
++				int *sign, char *buf, size_t len)
+ {
+   ssize_t n;
+   ssize_t i;
+@@ -170,11 +167,8 @@ __APPEND (FUNC_PREFIX, fcvt_r) (value, ndigit, decpt, sign, buf, len)
+ }
+ 
+ int
+-__APPEND (FUNC_PREFIX, ecvt_r) (value, ndigit, decpt, sign, buf, len)
+-     FLOAT_TYPE value;
+-     int ndigit, *decpt, *sign;
+-     char *buf;
+-     size_t len;
++__APPEND (FUNC_PREFIX, ecvt_r) (FLOAT_TYPE value, int ndigit, int *decpt,
++				int *sign, char *buf, size_t len)
+ {
+   int exponent = 0;
+ 
+diff --git a/nptl/cleanup_compat.c b/nptl/cleanup_compat.c
+index 67ff5965dd45de61..ba36268f8af78085 100644
+--- a/nptl/cleanup_compat.c
++++ b/nptl/cleanup_compat.c
+@@ -21,10 +21,8 @@
+ 
+ 
+ void
+-_pthread_cleanup_push (buffer, routine, arg)
+-     struct _pthread_cleanup_buffer *buffer;
+-     void (*routine) (void *);
+-     void *arg;
++_pthread_cleanup_push (struct _pthread_cleanup_buffer *buffer,
++		       void (*routine) (void *), void *arg)
+ {
+   struct pthread *self = THREAD_SELF;
+ 
+diff --git a/nptl/cleanup_defer_compat.c b/nptl/cleanup_defer_compat.c
+index e15723611c71d55a..96db28a26be0f7d4 100644
+--- a/nptl/cleanup_defer_compat.c
++++ b/nptl/cleanup_defer_compat.c
+@@ -20,10 +20,8 @@
+ 
+ 
+ void
+-_pthread_cleanup_push_defer (buffer, routine, arg)
+-     struct _pthread_cleanup_buffer *buffer;
+-     void (*routine) (void *);
+-     void *arg;
++_pthread_cleanup_push_defer (struct _pthread_cleanup_buffer *buffer,
++			     void (*routine) (void *), void *arg)
+ {
+   struct pthread *self = THREAD_SELF;
+ 
+diff --git a/nptl/pthread_atfork.c b/nptl/pthread_atfork.c
+index 7da2fd65d227931a..749f417c308c16cc 100644
+--- a/nptl/pthread_atfork.c
++++ b/nptl/pthread_atfork.c
+@@ -48,10 +48,8 @@ int
+ /* Don't mark the compatibility function as hidden.  */
+ attribute_hidden
+ #endif
+-__pthread_atfork (prepare, parent, child)
+-     void (*prepare) (void);
+-     void (*parent) (void);
+-     void (*child) (void);
++__pthread_atfork (void (*prepare) (void), void (*parent) (void),
++		  void (*child) (void))
+ {
+   return __register_atfork (prepare, parent, child,
+ 			    &__dso_handle == NULL ? NULL : __dso_handle);
+diff --git a/nptl/pthread_create.c b/nptl/pthread_create.c
+index 987469ba58e7bffa..7cd0003e57f5e759 100644
+--- a/nptl/pthread_create.c
++++ b/nptl/pthread_create.c
+@@ -432,11 +432,8 @@ start_thread (void *arg)
+ 
+ 
+ int
+-__pthread_create_2_1 (newthread, attr, start_routine, arg)
+-     pthread_t *newthread;
+-     const pthread_attr_t *attr;
+-     void *(*start_routine) (void *);
+-     void *arg;
++__pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
++		      void *(*start_routine) (void *), void *arg)
+ {
+   STACK_VARIABLES;
+ 
+@@ -560,11 +557,8 @@ versioned_symbol (libpthread, __pthread_create_2_1, pthread_create, GLIBC_2_1);
+ 
+ #if SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_1)
+ int
+-__pthread_create_2_0 (newthread, attr, start_routine, arg)
+-     pthread_t *newthread;
+-     const pthread_attr_t *attr;
+-     void *(*start_routine) (void *);
+-     void *arg;
++__pthread_create_2_0 (pthread_t *newthread, const pthread_attr_t *attr,
++		      void *(*start_routine) (void *), void *arg)
+ {
+   /* The ATTR attribute is not really of type `pthread_attr_t *'.  It has
+      the old size and access to the new members might crash the program.
+diff --git a/nptl/pthread_key_create.c b/nptl/pthread_key_create.c
+index 96e21ce6d6674b34..2654e6cc8f73fa24 100644
+--- a/nptl/pthread_key_create.c
++++ b/nptl/pthread_key_create.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_key_create (key, destr)
+-     pthread_key_t *key;
+-     void (*destr) (void *);
++__pthread_key_create (pthread_key_t *key, void (*destr) (void *))
+ {
+   /* Find a slot in __pthread_kyes which is unused.  */
+   for (size_t cnt = 0; cnt < PTHREAD_KEYS_MAX; ++cnt)
+diff --git a/nptl/sysdeps/unix/sysv/linux/libc_pthread_init.c b/nptl/sysdeps/unix/sysv/linux/libc_pthread_init.c
+index adf0819f59c9d1f1..49bd2b47fe2d41cc 100644
+--- a/nptl/sysdeps/unix/sysv/linux/libc_pthread_init.c
++++ b/nptl/sysdeps/unix/sysv/linux/libc_pthread_init.c
+@@ -35,10 +35,9 @@ extern int __libc_multiple_threads attribute_hidden;
+ 
+ int *
+ #endif
+-__libc_pthread_init (ptr, reclaim, functions)
+-     unsigned long int *ptr;
+-     void (*reclaim) (void);
+-     const struct pthread_functions *functions;
++internal_function
++__libc_pthread_init (unsigned long int *ptr, void (*reclaim) (void),
++		     const struct pthread_functions *functions)
+ {
+   /* Remember the pointer to the generation counter in libpthread.  */
+   __fork_generation_pointer = ptr;
+diff --git a/nptl/sysdeps/unix/sysv/linux/register-atfork.c b/nptl/sysdeps/unix/sysv/linux/register-atfork.c
+index 8b5557d89288d9b3..54b950f71c984ee2 100644
+--- a/nptl/sysdeps/unix/sysv/linux/register-atfork.c
++++ b/nptl/sysdeps/unix/sysv/linux/register-atfork.c
+@@ -78,11 +78,8 @@ fork_handler_alloc (void)
+ 
+ 
+ int
+-__register_atfork (prepare, parent, child, dso_handle)
+-     void (*prepare) (void);
+-     void (*parent) (void);
+-     void (*child) (void);
+-     void *dso_handle;
++__register_atfork (void (*prepare) (void), void (*parent) (void),
++		   void (*child) (void), void *dso_handle)
+ {
+   /* Get the lock to not conflict with other allocations.  */
+   lll_lock (__fork_lock, LLL_PRIVATE);
+diff --git a/posix/glob.c b/posix/glob.c
+index e3d6fe0f15f7d9ce..01a1f2cba3d1d3da 100644
+--- a/posix/glob.c
++++ b/posix/glob.c
+@@ -251,11 +251,8 @@ int
+ #ifdef GLOB_ATTRIBUTE
+ GLOB_ATTRIBUTE
+ #endif
+-glob (pattern, flags, errfunc, pglob)
+-     const char *pattern;
+-     int flags;
+-     int (*errfunc) (const char *, int);
+-     glob_t *pglob;
++glob (const char *pattern, int flags, int (*errfunc) (const char *, int),
++      glob_t *pglob)
+ {
+   const char *filename;
+   char *dirname = NULL;
+diff --git a/posix/regcomp.c b/posix/regcomp.c
+index 80359e58db504ed6..049522f6efbee0c2 100644
+--- a/posix/regcomp.c
++++ b/posix/regcomp.c
+@@ -656,8 +656,7 @@ char *
+    regcomp/regexec above without link errors.  */
+ weak_function
+ # endif
+-re_comp (s)
+-     const char *s;
++re_comp (const char *s)
+ {
+   reg_errcode_t ret;
+   char *fastmap;
+diff --git a/posix/regexec.c b/posix/regexec.c
+index f315149af88ac6bb..6ca865dc9a7d44d5 100644
+--- a/posix/regexec.c
++++ b/posix/regexec.c
+@@ -586,8 +586,7 @@ int
+ # ifdef _LIBC
+ weak_function
+ # endif
+-re_exec (s)
+-     const char *s;
++re_exec (const char *s)
+ {
+   return 0 == regexec (&re_comp_buf, s, 0, NULL, 0);
+ }
+diff --git a/stdlib/add_n.c b/stdlib/add_n.c
+index afb8e09306d7ecc7..fc5a6dbf71c70c7d 100644
+--- a/stdlib/add_n.c
++++ b/stdlib/add_n.c
+@@ -22,15 +22,7 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #include "gmp-impl.h"
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_add_n (mp_ptr res_ptr, mp_srcptr s1_ptr, mp_srcptr s2_ptr, mp_size_t size)
+-#else
+-mpn_add_n (res_ptr, s1_ptr, s2_ptr, size)
+-     register mp_ptr res_ptr;
+-     register mp_srcptr s1_ptr;
+-     register mp_srcptr s2_ptr;
+-     mp_size_t size;
+-#endif
+ {
+   register mp_limb_t x, y, cy;
+   register mp_size_t j;
+diff --git a/stdlib/cmp.c b/stdlib/cmp.c
+index 003b9aa236cf9d6d..90a41bbf990e14ae 100644
+--- a/stdlib/cmp.c
++++ b/stdlib/cmp.c
+@@ -27,14 +27,7 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+    Return 1 if OP1 > OP2, 0 if they are equal, and -1 if OP1 < OP2.  */
+ 
+ int
+-#if __STDC__
+ mpn_cmp (mp_srcptr op1_ptr, mp_srcptr op2_ptr, mp_size_t size)
+-#else
+-mpn_cmp (op1_ptr, op2_ptr, size)
+-     mp_srcptr op1_ptr;
+-     mp_srcptr op2_ptr;
+-     mp_size_t size;
+-#endif
+ {
+   mp_size_t i;
+   mp_limb_t op1_word, op2_word;
+diff --git a/stdlib/divmod_1.c b/stdlib/divmod_1.c
+index 4e6966bc913927a3..275dceff87094b8a 100644
+--- a/stdlib/divmod_1.c
++++ b/stdlib/divmod_1.c
+@@ -40,17 +40,9 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+    here (not udiv_qrnnd).  */
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_divmod_1 (mp_ptr quot_ptr,
+ 	      mp_srcptr dividend_ptr, mp_size_t dividend_size,
+ 	      mp_limb_t divisor_limb)
+-#else
+-mpn_divmod_1 (quot_ptr, dividend_ptr, dividend_size, divisor_limb)
+-     mp_ptr quot_ptr;
+-     mp_srcptr dividend_ptr;
+-     mp_size_t dividend_size;
+-     mp_limb_t divisor_limb;
+-#endif
+ {
+   mp_size_t i;
+   mp_limb_t n1, n0, r;
+diff --git a/stdlib/divrem.c b/stdlib/divrem.c
+index c0abb4d9fbcfc0cf..0c5b2da7df0f6880 100644
+--- a/stdlib/divrem.c
++++ b/stdlib/divrem.c
+@@ -40,19 +40,9 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+    3. NSIZE >= DSIZE, even if QEXTRA_LIMBS is non-zero.  */
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_divrem (mp_ptr qp, mp_size_t qextra_limbs,
+ 	    mp_ptr np, mp_size_t nsize,
+ 	    mp_srcptr dp, mp_size_t dsize)
+-#else
+-mpn_divrem (qp, qextra_limbs, np, nsize, dp, dsize)
+-     mp_ptr qp;
+-     mp_size_t qextra_limbs;
+-     mp_ptr np;
+-     mp_size_t nsize;
+-     mp_srcptr dp;
+-     mp_size_t dsize;
+-#endif
+ {
+   mp_limb_t most_significant_q_limb = 0;
+ 
+diff --git a/stdlib/lshift.c b/stdlib/lshift.c
+index deb264177a5710f8..d2608e06e9113c4a 100644
+--- a/stdlib/lshift.c
++++ b/stdlib/lshift.c
+@@ -31,17 +31,9 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ */
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_lshift (register mp_ptr wp,
+ 	    register mp_srcptr up, mp_size_t usize,
+ 	    register unsigned int cnt)
+-#else
+-mpn_lshift (wp, up, usize, cnt)
+-     register mp_ptr wp;
+-     register mp_srcptr up;
+-     mp_size_t usize;
+-     register unsigned int cnt;
+-#endif
+ {
+   register mp_limb_t high_limb, low_limb;
+   register unsigned sh_1, sh_2;
+diff --git a/stdlib/mod_1.c b/stdlib/mod_1.c
+index d325a931adef007c..72d8ff8110e2c9e2 100644
+--- a/stdlib/mod_1.c
++++ b/stdlib/mod_1.c
+@@ -37,15 +37,8 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+    here (not udiv_qrnnd).  */
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_mod_1 (mp_srcptr dividend_ptr, mp_size_t dividend_size,
+ 	   mp_limb_t divisor_limb)
+-#else
+-mpn_mod_1 (dividend_ptr, dividend_size, divisor_limb)
+-     mp_srcptr dividend_ptr;
+-     mp_size_t dividend_size;
+-     mp_limb_t divisor_limb;
+-#endif
+ {
+   mp_size_t i;
+   mp_limb_t n1, n0, r;
+diff --git a/stdlib/mul.c b/stdlib/mul.c
+index cab3e2b134080f08..1cb9d73ef96a4559 100644
+--- a/stdlib/mul.c
++++ b/stdlib/mul.c
+@@ -42,18 +42,9 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #endif
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_mul (mp_ptr prodp,
+ 	 mp_srcptr up, mp_size_t usize,
+ 	 mp_srcptr vp, mp_size_t vsize)
+-#else
+-mpn_mul (prodp, up, usize, vp, vsize)
+-     mp_ptr prodp;
+-     mp_srcptr up;
+-     mp_size_t usize;
+-     mp_srcptr vp;
+-     mp_size_t vsize;
+-#endif
+ {
+   mp_ptr prod_endp = prodp + usize + vsize - 1;
+   mp_limb_t cy;
+diff --git a/stdlib/mul_n.c b/stdlib/mul_n.c
+index 36876c2473e46295..ac2ab42dc887389e 100644
+--- a/stdlib/mul_n.c
++++ b/stdlib/mul_n.c
+@@ -49,15 +49,7 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+    algorithm below.  */
+ 
+ void
+-#if __STDC__
+ impn_mul_n_basecase (mp_ptr prodp, mp_srcptr up, mp_srcptr vp, mp_size_t size)
+-#else
+-impn_mul_n_basecase (prodp, up, vp, size)
+-     mp_ptr prodp;
+-     mp_srcptr up;
+-     mp_srcptr vp;
+-     mp_size_t size;
+-#endif
+ {
+   mp_size_t i;
+   mp_limb_t cy_limb;
+@@ -100,17 +92,8 @@ impn_mul_n_basecase (prodp, up, vp, size)
+ }
+ 
+ void
+-#if __STDC__
+ impn_mul_n (mp_ptr prodp,
+ 	     mp_srcptr up, mp_srcptr vp, mp_size_t size, mp_ptr tspace)
+-#else
+-impn_mul_n (prodp, up, vp, size, tspace)
+-     mp_ptr prodp;
+-     mp_srcptr up;
+-     mp_srcptr vp;
+-     mp_size_t size;
+-     mp_ptr tspace;
+-#endif
+ {
+   if ((size & 1) != 0)
+     {
+@@ -219,14 +202,7 @@ impn_mul_n (prodp, up, vp, size, tspace)
+ }
+ 
+ void
+-#if __STDC__
+ impn_sqr_n_basecase (mp_ptr prodp, mp_srcptr up, mp_size_t size)
+-#else
+-impn_sqr_n_basecase (prodp, up, size)
+-     mp_ptr prodp;
+-     mp_srcptr up;
+-     mp_size_t size;
+-#endif
+ {
+   mp_size_t i;
+   mp_limb_t cy_limb;
+@@ -269,16 +245,8 @@ impn_sqr_n_basecase (prodp, up, size)
+ }
+ 
+ void
+-#if __STDC__
+ impn_sqr_n (mp_ptr prodp,
+ 	     mp_srcptr up, mp_size_t size, mp_ptr tspace)
+-#else
+-impn_sqr_n (prodp, up, size, tspace)
+-     mp_ptr prodp;
+-     mp_srcptr up;
+-     mp_size_t size;
+-     mp_ptr tspace;
+-#endif
+ {
+   if ((size & 1) != 0)
+     {
+@@ -358,15 +326,7 @@ impn_sqr_n (prodp, up, size, tspace)
+ 
+ /* This should be made into an inline function in gmp.h.  */
+ void
+-#if __STDC__
+ mpn_mul_n (mp_ptr prodp, mp_srcptr up, mp_srcptr vp, mp_size_t size)
+-#else
+-mpn_mul_n (prodp, up, vp, size)
+-     mp_ptr prodp;
+-     mp_srcptr up;
+-     mp_srcptr vp;
+-     mp_size_t size;
+-#endif
+ {
+   TMP_DECL (marker);
+   TMP_MARK (marker);
+diff --git a/stdlib/rshift.c b/stdlib/rshift.c
+index 13a12be35c673971..96562d474fca72a7 100644
+--- a/stdlib/rshift.c
++++ b/stdlib/rshift.c
+@@ -31,17 +31,9 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ */
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_rshift (register mp_ptr wp,
+ 	    register mp_srcptr up, mp_size_t usize,
+ 	    register unsigned int cnt)
+-#else
+-mpn_rshift (wp, up, usize, cnt)
+-     register mp_ptr wp;
+-     register mp_srcptr up;
+-     mp_size_t usize;
+-     register unsigned int cnt;
+-#endif
+ {
+   register mp_limb_t high_limb, low_limb;
+   register unsigned sh_1, sh_2;
+diff --git a/stdlib/strtod.c b/stdlib/strtod.c
+index 570780cdecbffde0..657d95de82169358 100644
+--- a/stdlib/strtod.c
++++ b/stdlib/strtod.c
+@@ -46,10 +46,7 @@
+ 
+ 
+ FLOAT
+-INTERNAL (STRTOF) (nptr, endptr, group)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     int group;
++INTERNAL (STRTOF) (const STRING_TYPE *nptr, STRING_TYPE **endptr, int group)
+ {
+   return INTERNAL(STRTOF_L) (nptr, endptr, group, _NL_CURRENT_LOCALE);
+ }
+@@ -62,9 +59,7 @@ FLOAT
+ #ifdef weak_function
+ weak_function
+ #endif
+-STRTOF (nptr, endptr)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
++STRTOF (const STRING_TYPE *nptr, STRING_TYPE **endptr)
+ {
+   return INTERNAL(STRTOF_L) (nptr, endptr, 0, _NL_CURRENT_LOCALE);
+ }
+diff --git a/stdlib/strtod_l.c b/stdlib/strtod_l.c
+index e5b30d443106ee91..bfbe9b4d96222823 100644
+--- a/stdlib/strtod_l.c
++++ b/stdlib/strtod_l.c
+@@ -1738,10 +1738,7 @@ FLOAT
+ #ifdef weak_function
+ weak_function
+ #endif
+-__STRTOF (nptr, endptr, loc)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     __locale_t loc;
++__STRTOF (const STRING_TYPE *nptr, STRING_TYPE **endptr, __locale_t loc)
+ {
+   return ____STRTOF_INTERNAL (nptr, endptr, 0, loc);
+ }
+diff --git a/stdlib/strtol.c b/stdlib/strtol.c
+index 67d758c57973b5d5..68b81ef557a6274c 100644
+--- a/stdlib/strtol.c
++++ b/stdlib/strtol.c
+@@ -89,11 +89,8 @@ extern INT INTERNAL (__strtol_l) (const STRING_TYPE *, STRING_TYPE **, int,
+ 
+ 
+ INT
+-INTERNAL (strtol) (nptr, endptr, base, group)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     int base;
+-     int group;
++INTERNAL (strtol) (const STRING_TYPE *nptr, STRING_TYPE **endptr,
++		   int base, int group)
+ {
+   return INTERNAL (__strtol_l) (nptr, endptr, base, group, _NL_CURRENT_LOCALE);
+ }
+diff --git a/stdlib/strtol_l.c b/stdlib/strtol_l.c
+index 8174d22f060c2149..3e686acec1484118 100644
+--- a/stdlib/strtol_l.c
++++ b/stdlib/strtol_l.c
+@@ -222,12 +222,8 @@ extern const unsigned char __strtol_ull_rem_tab[] attribute_hidden;
+    one converted is stored in *ENDPTR.  */
+ 
+ INT
+-INTERNAL (__strtol_l) (nptr, endptr, base, group, loc)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     int base;
+-     int group;
+-     __locale_t loc;
++INTERNAL (__strtol_l) (const STRING_TYPE *nptr, STRING_TYPE **endptr,
++		       int base, int group, __locale_t loc)
+ {
+   int negative;
+   unsigned LONG int cutoff;
+@@ -546,11 +542,8 @@ INT
+ #ifdef weak_function
+ weak_function
+ #endif
+-__strtol_l (nptr, endptr, base, loc)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     int base;
+-     __locale_t loc;
++__strtol_l (const STRING_TYPE *nptr, STRING_TYPE **endptr,
++	    int base, __locale_t loc)
+ {
+   return INTERNAL (__strtol_l) (nptr, endptr, base, 0, loc);
+ }
+diff --git a/stdlib/sub_n.c b/stdlib/sub_n.c
+index 7e8ca2354554d062..db6928d82df8499d 100644
+--- a/stdlib/sub_n.c
++++ b/stdlib/sub_n.c
+@@ -22,15 +22,7 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #include "gmp-impl.h"
+ 
+ mp_limb_t
+-#if __STDC__
+ mpn_sub_n (mp_ptr res_ptr, mp_srcptr s1_ptr, mp_srcptr s2_ptr, mp_size_t size)
+-#else
+-mpn_sub_n (res_ptr, s1_ptr, s2_ptr, size)
+-     register mp_ptr res_ptr;
+-     register mp_srcptr s1_ptr;
+-     register mp_srcptr s2_ptr;
+-     mp_size_t size;
+-#endif
+ {
+   register mp_limb_t x, y, cy;
+   register mp_size_t j;
+diff --git a/string/memrchr.c b/string/memrchr.c
+index 2826f1305626fb7c..79d19aa18ff5bd3e 100644
+--- a/string/memrchr.c
++++ b/string/memrchr.c
+@@ -61,10 +61,7 @@ __memrchr
+ #else
+ MEMRCHR
+ #endif
+-     (s, c_in, n)
+-     const __ptr_t s;
+-     int c_in;
+-     size_t n;
++     (const __ptr_t s, int c_in, size_t n)
+ {
+   const unsigned char *char_ptr;
+   const unsigned long int *longword_ptr;
+diff --git a/string/strcasecmp.c b/string/strcasecmp.c
+index e7a3c4481b27e954..73581256fc13cbb8 100644
+--- a/string/strcasecmp.c
++++ b/string/strcasecmp.c
+@@ -35,21 +35,16 @@
+ #endif
+ 
+ #ifdef USE_IN_EXTENDED_LOCALE_MODEL
+-# define LOCALE_PARAM , loc
+-# define LOCALE_PARAM_DECL __locale_t loc;
++# define LOCALE_PARAM , __locale_t loc
+ #else
+ # define LOCALE_PARAM
+-# define LOCALE_PARAM_DECL
+ #endif
+ 
+ /* Compare S1 and S2, ignoring case, returning less than, equal to or
+    greater than zero if S1 is lexicographically less than,
+    equal to or greater than S2.  */
+ int
+-__strcasecmp (s1, s2 LOCALE_PARAM)
+-     const char *s1;
+-     const char *s2;
+-     LOCALE_PARAM_DECL
++__strcasecmp (const char *s1, const char *s2 LOCALE_PARAM)
+ {
+ #if defined _LIBC && !defined USE_IN_EXTENDED_LOCALE_MODEL
+   __locale_t loc = _NL_CURRENT_LOCALE;
+diff --git a/string/strncase.c b/string/strncase.c
+index 02fd51fd40a8ee94..fbd85f3a2329850d 100644
+--- a/string/strncase.c
++++ b/string/strncase.c
+@@ -36,11 +36,9 @@
+ #endif
+ 
+ #ifdef USE_IN_EXTENDED_LOCALE_MODEL
+-# define LOCALE_PARAM , loc
+-# define LOCALE_PARAM_DECL __locale_t loc;
++# define LOCALE_PARAM , __locale_t loc
+ #else
+ # define LOCALE_PARAM
+-# define LOCALE_PARAM_DECL
+ #endif
+ 
+ /* Compare no more than N characters of S1 and S2,
+@@ -48,11 +46,7 @@
+    greater than zero if S1 is lexicographically less
+    than, equal to or greater than S2.  */
+ int
+-__strncasecmp (s1, s2, n LOCALE_PARAM)
+-     const char *s1;
+-     const char *s2;
+-     size_t n;
+-     LOCALE_PARAM_DECL
++__strncasecmp (const char *s1, const char *s2, size_t n LOCALE_PARAM)
+ {
+ #if defined _LIBC && !defined USE_IN_EXTENDED_LOCALE_MODEL
+   __locale_t loc = _NL_CURRENT_LOCALE;
+diff --git a/sunrpc/pm_getport.c b/sunrpc/pm_getport.c
+index 5c43acc0609d7377..f1fd462e181f7a8b 100644
+--- a/sunrpc/pm_getport.c
++++ b/sunrpc/pm_getport.c
+@@ -82,14 +82,9 @@ __get_socket (struct sockaddr_in *saddr)
+  */
+ u_short
+ internal_function
+-__libc_rpc_getport (address, program, version, protocol, timeout_sec,
+-		    tottimeout_sec)
+-     struct sockaddr_in *address;
+-     u_long program;
+-     u_long version;
+-     u_int protocol;
+-     time_t timeout_sec;
+-     time_t tottimeout_sec;
++__libc_rpc_getport (struct sockaddr_in *address, u_long program,
++		    u_long version, u_int protocol, time_t timeout_sec,
++		    time_t tottimeout_sec)
+ {
+   const struct timeval timeout = {timeout_sec, 0};
+   const struct timeval tottimeout = {tottimeout_sec, 0};
+diff --git a/sunrpc/xdr.c b/sunrpc/xdr.c
+index 9f1f7d417521044d..32dfa0aa1ab1e76a 100644
+--- a/sunrpc/xdr.c
++++ b/sunrpc/xdr.c
+@@ -674,12 +674,15 @@ libc_hidden_nolink_sunrpc (xdr_netobj, GLIBC_2_0)
+  * If there is no specific or default routine an error is returned.
+  */
+ bool_t
+-xdr_union (xdrs, dscmp, unp, choices, dfault)
+-     XDR *xdrs;
+-     enum_t *dscmp;		/* enum to decide which arm to work on */
+-     char *unp;			/* the union itself */
+-     const struct xdr_discrim *choices;	/* [value, xdr proc] for each arm */
+-     xdrproc_t dfault;		/* default xdr routine */
++xdr_union (XDR *xdrs,
++	   /* enum to decide which arm to work on */
++	   enum_t *dscmp,
++	   /* the union itself */
++	   char *unp,
++	   /* [value, xdr proc] for each arm */
++	   const struct xdr_discrim *choices,
++	   /* default xdr routine */
++	   xdrproc_t dfault)
+ {
+   enum_t dscm;
+ 
+diff --git a/sunrpc/xdr_array.c b/sunrpc/xdr_array.c
+index fd9d1fb42f744844..99a1d5d24520572f 100644
+--- a/sunrpc/xdr_array.c
++++ b/sunrpc/xdr_array.c
+@@ -53,13 +53,17 @@
+  * xdr procedure to call to handle each element of the array.
+  */
+ bool_t
+-xdr_array (xdrs, addrp, sizep, maxsize, elsize, elproc)
+-     XDR *xdrs;
+-     caddr_t *addrp;		/* array pointer */
+-     u_int *sizep;		/* number of elements */
+-     u_int maxsize;		/* max numberof elements */
+-     u_int elsize;		/* size in bytes of each element */
+-     xdrproc_t elproc;		/* xdr routine to handle each element */
++xdr_array (XDR *xdrs,
++	   /* array pointer */
++	   caddr_t *addrp,
++	   /* number of elements */
++	   u_int *sizep,
++	   /* max numberof elements */
++	   u_int maxsize,
++	   /* size in bytes of each element */
++	   u_int elsize,
++	   /* xdr routine to handle each element */
++	   xdrproc_t elproc)
+ {
+   u_int i;
+   caddr_t target = *addrp;
+diff --git a/sunrpc/xdr_ref.c b/sunrpc/xdr_ref.c
+index a7d9264ed6be6fe2..2b7ebc8e11ca4dab 100644
+--- a/sunrpc/xdr_ref.c
++++ b/sunrpc/xdr_ref.c
+@@ -54,11 +54,13 @@
+  * proc is the routine to handle the referenced structure.
+  */
+ bool_t
+-xdr_reference (xdrs, pp, size, proc)
+-     XDR *xdrs;
+-     caddr_t *pp;		/* the pointer to work on */
+-     u_int size;		/* size of the object pointed to */
+-     xdrproc_t proc;		/* xdr routine to handle the object */
++xdr_reference (XDR *xdrs,
++	       /* the pointer to work on */
++	       caddr_t *pp,
++	       /* size of the object pointed to */
++	       u_int size,
++	       /* xdr routine to handle the object */
++	       xdrproc_t proc)
+ {
+   caddr_t loc = *pp;
+   bool_t stat;
+diff --git a/sysdeps/m68k/m680x0/fpu/s_atan.c b/sysdeps/m68k/m680x0/fpu/s_atan.c
+index c7bba83f30a4174d..acb6900d82d5c77d 100644
+--- a/sysdeps/m68k/m680x0/fpu/s_atan.c
++++ b/sysdeps/m68k/m680x0/fpu/s_atan.c
+@@ -27,8 +27,7 @@
+ #define __CONCATX(a,b) __CONCAT(a,b)
+ 
+ float_type
+-__CONCATX(__,FUNC) (x)
+-     float_type x;
++__CONCATX(__,FUNC) (float_type x)
+ {
+   return __m81_u(__CONCATX(__,FUNC))(x);
+ }
+diff --git a/sysdeps/m68k/m680x0/fpu/s_isinf.c b/sysdeps/m68k/m680x0/fpu/s_isinf.c
+index 20872da536619d09..dfb9d99be8f8560c 100644
+--- a/sysdeps/m68k/m680x0/fpu/s_isinf.c
++++ b/sysdeps/m68k/m680x0/fpu/s_isinf.c
+@@ -27,8 +27,7 @@
+ #define __CONCATX(a,b) __CONCAT(a,b)
+ 
+ int
+-__CONCATX(__,FUNC) (x)
+-     float_type x;
++__CONCATX(__,FUNC) (float_type x)
+ {
+   return __m81_u(__CONCATX(__,FUNC))(x);
+ }
+diff --git a/sysdeps/m68k/m680x0/fpu/s_scalbn.c b/sysdeps/m68k/m680x0/fpu/s_scalbn.c
+index ce1b92a22c2107df..8861f7a522cc00f4 100644
+--- a/sysdeps/m68k/m680x0/fpu/s_scalbn.c
++++ b/sysdeps/m68k/m680x0/fpu/s_scalbn.c
+@@ -39,9 +39,7 @@
+ #define __CONCATX(a,b) __CONCAT(a,b)
+ 
+ float_type
+-__CONCATX(__scalbn,suffix) (x, exp)
+-     float_type x;
+-     int exp;
++__CONCATX(__scalbn,suffix) (float_type x, int exp)
+ {
+   return __m81_u(__CONCATX(__scalbn,suffix))(x, exp);
+ }
+diff --git a/sysdeps/m68k/m680x0/fpu/s_sincos.c b/sysdeps/m68k/m680x0/fpu/s_sincos.c
+index f7a40a3704204240..d2eb192363d6c907 100644
+--- a/sysdeps/m68k/m680x0/fpu/s_sincos.c
++++ b/sysdeps/m68k/m680x0/fpu/s_sincos.c
+@@ -27,8 +27,7 @@
+ #define CONCATX(a,b) __CONCAT(a,b)
+ 
+ void
+-CONCATX(__,FUNC) (x, sinx, cosx)
+-     float_type x, *sinx, *cosx;
++CONCATX(__,FUNC) (float_type x, float_type *sinx, float_type *cosx)
+ {
+   __m81_u(CONCATX(__,FUNC))(x, sinx, cosx);
+ }
+diff --git a/sysdeps/unix/sysv/linux/i386/scandir64.c b/sysdeps/unix/sysv/linux/i386/scandir64.c
+index aca505a320b99473..485c84bee3e09aea 100644
+--- a/sysdeps/unix/sysv/linux/i386/scandir64.c
++++ b/sysdeps/unix/sysv/linux/i386/scandir64.c
+@@ -39,12 +39,10 @@ versioned_symbol (libc, __scandir64, scandir64, GLIBC_2_2);
+ # include "olddirent.h"
+ 
+ int
+-__old_scandir64 (dir, namelist, select, cmp)
+-     const char *dir;
+-     struct __old_dirent64 ***namelist;
+-     int (*select) (const struct __old_dirent64 *);
+-     int (*cmp) (const struct __old_dirent64 **,
+-		 const struct __old_dirent64 **);
++__old_scandir64 (const char *dir, struct __old_dirent64 ***namelist,
++		 int (*select) (const struct __old_dirent64 *),
++		 int (*cmp) (const struct __old_dirent64 **,
++			     const struct __old_dirent64 **))
+ {
+   DIR *dp = __opendir (dir);
+   struct __old_dirent64 **v = NULL;
+diff --git a/time/strftime_l.c b/time/strftime_l.c
+index 0f6ac83d34d43755..a1fe2714d221f4f3 100644
+--- a/time/strftime_l.c
++++ b/time/strftime_l.c
+@@ -284,16 +284,12 @@ static const CHAR_T zeroes[16] = /* "0000000000000000" */
+ # undef _NL_CURRENT
+ # define _NL_CURRENT(category, item) \
+   (current->values[_NL_ITEM_INDEX (item)].string)
+-# define LOCALE_PARAM , loc
++# define LOCALE_PARAM , __locale_t loc
+ # define LOCALE_ARG , loc
+-# define LOCALE_PARAM_DECL  __locale_t loc;
+-# define LOCALE_PARAM_PROTO , __locale_t loc
+ # define HELPER_LOCALE_ARG  , current
+ #else
+ # define LOCALE_PARAM
+-# define LOCALE_PARAM_PROTO
+ # define LOCALE_ARG
+-# define LOCALE_PARAM_DECL
+ # ifdef _LIBC
+ #  define HELPER_LOCALE_ARG , _NL_CURRENT_DATA (LC_TIME)
+ # else
+@@ -330,14 +326,10 @@ static const CHAR_T zeroes[16] = /* "0000000000000000" */
+ #define ISDIGIT(Ch) ((unsigned int) (Ch) - L_('0') <= 9)
+ 
+ static CHAR_T *memcpy_lowcase (CHAR_T *dest, const CHAR_T *src,
+-			       size_t len LOCALE_PARAM_PROTO) __THROW;
++			       size_t len LOCALE_PARAM) __THROW;
+ 
+ static CHAR_T *
+-memcpy_lowcase (dest, src, len LOCALE_PARAM)
+-     CHAR_T *dest;
+-     const CHAR_T *src;
+-     size_t len;
+-     LOCALE_PARAM_DECL
++memcpy_lowcase (CHAR_T *dest, const CHAR_T *src, size_t len LOCALE_PARAM)
+ {
+   while (len-- > 0)
+     dest[len] = TOLOWER ((UCHAR_T) src[len], loc);
+@@ -345,14 +337,10 @@ memcpy_lowcase (dest, src, len LOCALE_PARAM)
+ }
+ 
+ static CHAR_T *memcpy_uppcase (CHAR_T *dest, const CHAR_T *src,
+-			       size_t len LOCALE_PARAM_PROTO) __THROW;
++			       size_t len LOCALE_PARAM) __THROW;
+ 
+ static CHAR_T *
+-memcpy_uppcase (dest, src, len LOCALE_PARAM)
+-     CHAR_T *dest;
+-     const CHAR_T *src;
+-     size_t len;
+-     LOCALE_PARAM_DECL
++memcpy_uppcase (CHAR_T *dest, const CHAR_T *src, size_t len LOCALE_PARAM)
+ {
+   while (len-- > 0)
+     dest[len] = TOUPPER ((UCHAR_T) src[len], loc);
+@@ -429,8 +417,7 @@ static CHAR_T const month_name[][10] =
+ #ifdef emacs
+ # define my_strftime emacs_strftimeu
+ # define ut_argument , ut
+-# define ut_argument_spec int ut;
+-# define ut_argument_spec_iso , int ut
++# define ut_argument_spec , int ut
+ #else
+ # ifdef COMPILE_WIDE
+ #  define my_strftime wcsftime
+@@ -441,15 +428,14 @@ static CHAR_T const month_name[][10] =
+ # endif
+ # define ut_argument
+ # define ut_argument_spec
+-# define ut_argument_spec_iso
+ /* We don't have this information in general.  */
+ # define ut 0
+ #endif
+ 
+ static size_t __strftime_internal (CHAR_T *, size_t, const CHAR_T *,
+ 				   const struct tm *, bool *
+-				   ut_argument_spec_iso
+-				   LOCALE_PARAM_PROTO) __THROW;
++				   ut_argument_spec
++				   LOCALE_PARAM) __THROW;
+ 
+ /* Write information from TP into S according to the format
+    string FORMAT, writing no more that MAXSIZE characters
+@@ -459,13 +445,8 @@ static size_t __strftime_internal (CHAR_T *, size_t, const CHAR_T *,
+    written, use NULL for S and (size_t) UINT_MAX for MAXSIZE.  */
+ 
+ size_t
+-my_strftime (s, maxsize, format, tp ut_argument LOCALE_PARAM)
+-     CHAR_T *s;
+-     size_t maxsize;
+-     const CHAR_T *format;
+-     const struct tm *tp;
+-     ut_argument_spec
+-     LOCALE_PARAM_DECL
++my_strftime (CHAR_T *s, size_t maxsize, const CHAR_T *format,
++	     const struct tm *tp ut_argument_spec LOCALE_PARAM)
+ {
+ #if !defined _LIBC && HAVE_TZNAME && HAVE_TZSET
+   /* Solaris 2.5 tzset sometimes modifies the storage returned by localtime.
+@@ -483,15 +464,9 @@ libc_hidden_def (my_strftime)
+ #endif
+ 
+ static size_t
+-__strftime_internal (s, maxsize, format, tp, tzset_called ut_argument
+-		     LOCALE_PARAM)
+-      CHAR_T *s;
+-      size_t maxsize;
+-      const CHAR_T *format;
+-      const struct tm *tp;
+-      bool *tzset_called;
+-      ut_argument_spec
+-      LOCALE_PARAM_DECL
++__strftime_internal (CHAR_T *s, size_t maxsize, const CHAR_T *format,
++		     const struct tm *tp, bool *tzset_called
++		     ut_argument_spec LOCALE_PARAM)
+ {
+ #if defined _LIBC && defined USE_IN_EXTENDED_LOCALE_MODEL
+   struct __locale_data *const current = loc->__locales[LC_TIME];
+diff --git a/time/strptime_l.c b/time/strptime_l.c
+index cb2b8faa6d740748..7f1efa13374c5eb4 100644
+--- a/time/strptime_l.c
++++ b/time/strptime_l.c
+@@ -181,17 +181,13 @@ static const unsigned short int __mon_yday[2][13] =
+ # undef _NL_CURRENT_WORD
+ # define _NL_CURRENT_WORD(category, item) \
+   (current->values[_NL_ITEM_INDEX (item)].word)
+-# define LOCALE_PARAM , locale
++# define LOCALE_PARAM , __locale_t locale
+ # define LOCALE_ARG , locale
+-# define LOCALE_PARAM_PROTO , __locale_t locale
+-# define LOCALE_PARAM_DECL __locale_t locale;
+ # define HELPER_LOCALE_ARG , current
+ # define ISSPACE(Ch) __isspace_l (Ch, locale)
+ #else
+ # define LOCALE_PARAM
+ # define LOCALE_ARG
+-# define LOCALE_PARAM_DECL
+-# define LOCALE_PARAM_PROTO
+ # define HELPER_LOCALE_ARG
+ # define ISSPACE(Ch) isspace (Ch)
+ #endif
+@@ -239,12 +235,8 @@ internal_function
+ #else
+ static char *
+ #endif
+-__strptime_internal (rp, fmt, tmp, statep LOCALE_PARAM)
+-     const char *rp;
+-     const char *fmt;
+-     struct tm *tmp;
+-     void *statep;
+-     LOCALE_PARAM_DECL
++__strptime_internal (const char *rp, const char *fmt, struct tm *tmp,
++		     void *statep LOCALE_PARAM)
+ {
+ #ifdef _LIBC
+   struct __locale_data *const current = locale->__locales[LC_TIME];
+@@ -1204,11 +1196,7 @@ __strptime_internal (rp, fmt, tmp, statep LOCALE_PARAM)
+ 
+ 
+ char *
+-strptime (buf, format, tm LOCALE_PARAM)
+-     const char *buf;
+-     const char *format;
+-     struct tm *tm;
+-     LOCALE_PARAM_DECL
++strptime (const char *buf, const char *format, struct tm *tm LOCALE_PARAM)
+ {
+   return __strptime_internal (buf, format, tm, NULL LOCALE_ARG);
+ }
+diff --git a/wcsmbs/wcscasecmp.c b/wcsmbs/wcscasecmp.c
+index f970057f504999c8..4943bb5b9b410426 100644
+--- a/wcsmbs/wcscasecmp.c
++++ b/wcsmbs/wcscasecmp.c
+@@ -35,21 +35,16 @@
+ #endif
+ 
+ #ifdef USE_IN_EXTENDED_LOCALE_MODEL
+-# define LOCALE_PARAM , loc
+-# define LOCALE_PARAM_DECL __locale_t loc;
++# define LOCALE_PARAM , __locale_t loc
+ #else
+ # define LOCALE_PARAM
+-# define LOCALE_PARAM_DECL
+ #endif
+ 
+ /* Compare S1 and S2, ignoring case, returning less than, equal to or
+    greater than zero if S1 is lexicographically less than,
+    equal to or greater than S2.  */
+ int
+-__wcscasecmp (s1, s2 LOCALE_PARAM)
+-     const wchar_t *s1;
+-     const wchar_t *s2;
+-     LOCALE_PARAM_DECL
++__wcscasecmp (const wchar_t *s1, const wchar_t *s2 LOCALE_PARAM)
+ {
+   wint_t c1, c2;
+ 
+diff --git a/wcsmbs/wcsncase.c b/wcsmbs/wcsncase.c
+index 8b216b48184f793d..3e56ce5d25197a60 100644
+--- a/wcsmbs/wcsncase.c
++++ b/wcsmbs/wcsncase.c
+@@ -37,11 +37,9 @@
+ #endif
+ 
+ #ifdef USE_IN_EXTENDED_LOCALE_MODEL
+-# define LOCALE_PARAM , loc
+-# define LOCALE_PARAM_DECL __locale_t loc;
++# define LOCALE_PARAM , __locale_t loc
+ #else
+ # define LOCALE_PARAM
+-# define LOCALE_PARAM_DECL
+ #endif
+ 
+ /* Compare no more than N wide characters of S1 and S2,
+@@ -49,11 +47,7 @@
+    greater than zero if S1 is lexicographically less
+    than, equal to or greater than S2.  */
+ int
+-__wcsncasecmp (s1, s2, n LOCALE_PARAM)
+-     const wchar_t *s1;
+-     const wchar_t *s2;
+-     size_t n;
+-     LOCALE_PARAM_DECL
++__wcsncasecmp (const wchar_t *s1, const wchar_t *s2, size_t n LOCALE_PARAM)
+ {
+   wint_t c1, c2;
+ 

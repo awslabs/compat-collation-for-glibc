@@ -1,0 +1,135 @@
+commit d8b778907e5270fdeb70459842ffbc20bd2ca5e1
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Jan 11 13:13:14 2018 +0100
+
+    nptl: Add tst-minstack-cancel, tst-minstack-exit [BZ #22636]
+    
+    I verified that without the guard accounting change in commit
+    630f4cc3aa019ede55976ea561f1a7af2f068639 (Fix stack guard size
+    accounting) and RTLD_NOW for libgcc_s introduced by commit
+    f993b8754080ac7572b692870e926d8b493db16c (nptl: Open libgcc.so with
+    RTLD_NOW during pthread_cancel), the tst-minstack-cancel test fails on
+    an AVX-512F machine.  tst-minstack-exit still passes, and either of
+    the mentioned commit by itself frees sufficient stack space to make
+    tst-minstack-cancel pass, too.
+    
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+Index: glibc-2.17-c758a686/nptl/Makefile
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/Makefile
++++ glibc-2.17-c758a686/nptl/Makefile
+@@ -267,7 +267,8 @@ tests = tst-typesizes \
+ 	tst-vfork1 tst-vfork2 tst-vfork1x tst-vfork2x \
+ 	tst-getpid1 tst-getpid2 tst-getpid3 \
+ 	tst-initializers1 $(patsubst %,tst-initializers1-%,c89 gnu89 c99 gnu99) \
+-	tst-mutex-errorcheck
++	tst-mutex-errorcheck \
++	tst-minstack-cancel tst-minstack-exit
+ xtests = tst-setuid1 tst-setuid1-static tst-mutexpp1 tst-mutexpp6 tst-mutexpp10
+ test-srcs = tst-oddstacklimit
+ 
+Index: glibc-2.17-c758a686/nptl/tst-minstack-cancel.c
+===================================================================
+--- /dev/null
++++ glibc-2.17-c758a686/nptl/tst-minstack-cancel.c
+@@ -0,0 +1,48 @@
++/* Test cancellation with a minimal stack size.
++   Copyright (C) 2018 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++/* Note: This test is similar to tst-minstack-exit, but is separate to
++   avoid spurious test passes due to warm-up effects.  */
++
++#include <limits.h>
++#include <unistd.h>
++#include <support/check.h>
++#include <support/xthread.h>
++
++static void *
++threadfunc (void *closure)
++{
++  while (1)
++    pause ();
++  return NULL;
++}
++
++static int
++do_test (void)
++{
++  pthread_attr_t attr;
++  xpthread_attr_init (&attr);
++  xpthread_attr_setstacksize (&attr, PTHREAD_STACK_MIN);
++  pthread_t thr = xpthread_create (&attr, threadfunc, NULL);
++  xpthread_cancel (thr);
++  TEST_VERIFY (xpthread_join (thr) == PTHREAD_CANCELED);
++  xpthread_attr_destroy (&attr);
++  return 0;
++}
++
++#include <support/test-driver.c>
+Index: glibc-2.17-c758a686/nptl/tst-minstack-exit.c
+===================================================================
+--- /dev/null
++++ glibc-2.17-c758a686/nptl/tst-minstack-exit.c
+@@ -0,0 +1,46 @@
++/* Test that pthread_exit works with the minimum stack size.
++   Copyright (C) 2018 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++/* Note: This test is similar to tst-minstack-cancel, but is separate
++   to avoid spurious test passes due to warm-up effects.  */
++
++#include <limits.h>
++#include <unistd.h>
++#include <support/check.h>
++#include <support/xthread.h>
++
++static void *
++threadfunc (void *closure)
++{
++  pthread_exit (threadfunc);
++  return NULL;
++}
++
++static int
++do_test (void)
++{
++  pthread_attr_t attr;
++  xpthread_attr_init (&attr);
++  xpthread_attr_setstacksize (&attr, PTHREAD_STACK_MIN);
++  pthread_t thr = xpthread_create (&attr, threadfunc, NULL);
++  TEST_VERIFY (xpthread_join (thr) == threadfunc);
++  xpthread_attr_destroy (&attr);
++  return 0;
++}
++
++#include <support/test-driver.c>

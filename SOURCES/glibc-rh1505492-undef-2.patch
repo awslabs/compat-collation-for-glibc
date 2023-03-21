@@ -1,0 +1,19 @@
+commit ad98e30c90f518cbcd896b1fe9e45f2318102db3
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Wed Jan 9 16:05:32 2013 -0800
+
+    Force getconf.speclist to be generated in the others pass.
+
+diff --git a/posix/Makefile b/posix/Makefile
+index 1883b71957665f22..a68f0b7d041e65bd 100644
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -284,3 +284,8 @@ $(objpfx)getconf.speclist: getconf-speclist.c posix-envs.def
+ 	$(compile.c) -E -o - \
+ 	    | sed -n -e '/@@@PRESENT_/s/@@@PRESENT_//p' > $@.new
+ 	mv -f $@.new $@
++
++# This file is only actually needed at install time.  But forcing it to
++# be built both makes it available for eyeball inspection and avoids the
++# surprise of things that look like compilation being done by 'make install'.
++others: $(objpfx)getconf.speclist

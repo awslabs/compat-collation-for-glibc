@@ -1,0 +1,121 @@
+commit 3a7ac8a0f596bb73093212cd1109c1413777e1f8
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Feb 1 00:06:18 2013 +0000
+
+    Remove bp-start.h and INIT_ARGV_and_ENVIRON.
+
+Conflicts:
+	sysdeps/generic/bp-start.h
+
+Copyright header change; file removed manually.
+
+diff --git a/csu/libc-start.c b/csu/libc-start.c
+index ebf9f4ec7335f992..2fab8556a5e2cb26 100644
+--- a/csu/libc-start.c
++++ b/csu/libc-start.c
+@@ -19,7 +19,6 @@
+ #include <stdio.h>
+ #include <unistd.h>
+ #include <ldsodefs.h>
+-#include <bp-start.h>
+ #include <bp-sym.h>
+ 
+ extern void __libc_init_first (int argc, char **argv, char **envp);
+@@ -146,7 +145,7 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
+ #ifndef SHARED
+   char *__unbounded *__unbounded ubp_ev = &ubp_av[argc + 1];
+ 
+-  INIT_ARGV_and_ENVIRON;
++  __environ = ubp_ev;
+ 
+   /* Store the lowest stack address.  This is done in ld.so if this is
+      the code for the DSO.  */
+diff --git a/sysdeps/generic/bp-start.h b/sysdeps/generic/bp-start.h
+deleted file mode 100644
+index 0f0339f54cba4aa8..0000000000000000
+--- a/sysdeps/generic/bp-start.h
++++ /dev/null
+@@ -1,71 +0,0 @@
+-/* Bounded-pointer checking macros for C.
+-   Copyright (C) 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-
+-#if __BOUNDED_POINTERS__
+-
+-  /* The command-line arg vector and environment vector come to us from
+-     the OS as an unbounded pointer to an array of unbounded strings.
+-     The user's main expects argv and __environ to be bounded pointers
+-     to arrays of bounded strings.  */
+-# define INIT_ARGV_and_ENVIRON \
+-  do {									      \
+-    int envc;								      \
+-    for (envc = 0; *ubp_ev; ubp_ev++, envc++)				      \
+-      ;									      \
+-    ubp_ev -= envc;							      \
+-									      \
+-    /* GKM FIXME: we could save some space by allocating only enough for      \
+-       the additional low & high words, and destructively rewriting	      \
+-       argv in place.  */						      \
+-    __ptrvalue (argv) = __ptrlow (argv)					      \
+-      = alloca ((argc + envc + 2) * sizeof (*argv));			      \
+-    __ptrhigh (argv) = __ptrvalue (argv) + argc + 1;			      \
+-    __ptrvalue (__environ) = __ptrlow (__environ) = __ptrhigh (argv);	      \
+-    __ptrhigh (__environ) = __ptrvalue (__environ) + envc + 1;		      \
+-    boundify_vector (__environ, ubp_ev);				      \
+-    boundify_vector (argv, ubp_av);					      \
+-  } while (0)
+-
+-
+-/* Copy an unbounded vector of unbounded strings into a bounded
+-   counterpart.  */
+-
+-static void
+-boundify_vector (char **dest, char *__unbounded *__unbounded src)
+-{
+-  char *__unbounded s;
+-  for (; *src; src++, dest++)
+-    {
+-      __ptrvalue (*dest) = __ptrlow (*dest) = *src;
+-      __ptrhigh (*dest) = src[1];
+-    }
+-  *dest = 0;
+-  /* The OS lays out strings contiguously in vector order,
+-     so  */
+-  for (s = __ptrvalue (dest[-1]); *s; s++)
+-    ;
+-  __ptrhigh (dest[-1]) = ++s;
+-}
+-
+-#else
+-
+-# define INIT_ARGV_and_ENVIRON __environ = ubp_ev
+-
+-#endif
+diff --git a/sysdeps/unix/sysv/linux/powerpc/libc-start.c b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+index 98a793e0894f6936..89de1aa7e6e1df59 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/libc-start.c
++++ b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+@@ -20,7 +20,6 @@
+ #include <unistd.h>
+ #include <ldsodefs.h>
+ #include <sysdep.h>
+-#include <bp-start.h>
+ #include <bp-sym.h>
+ 
+ 

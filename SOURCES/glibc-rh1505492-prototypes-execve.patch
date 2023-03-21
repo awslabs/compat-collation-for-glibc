@@ -1,0 +1,25 @@
+Introduce prototype-style definition for execve.  Upstream, the
+old-style function definition was removed in:
+
+commit 6268f532b6c6be7971cb57883d042bd771966548
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Oct 1 20:58:20 2014 +0000
+
+    Move execve to syscalls.list (bug 14138).
+
+diff --git a/sysdeps/unix/sysv/linux/execve.c b/sysdeps/unix/sysv/linux/execve.c
+index 34fd14bf6afc5417..872b150784d41007 100644
+--- a/sysdeps/unix/sysv/linux/execve.c
++++ b/sysdeps/unix/sysv/linux/execve.c
+@@ -25,10 +25,7 @@
+ /* Consider moving to syscalls.list.  */
+ 
+ int
+-__execve (file, argv, envp)
+-     const char *file;
+-     char *const argv[];
+-     char *const envp[];
++__execve (const char *file, char *const argv[], char *const envp[])
+ {
+   return INLINE_SYSCALL (execve, 3, file, argv, envp);
+ }

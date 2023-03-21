@@ -1,0 +1,115 @@
+commit bef8fd6013f7d398661077340753c745a8939279
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Nov 12 22:33:41 2014 +0000
+
+    Fix qsort_r namespace (bug 17571).
+
+diff --git a/include/stdlib.h b/include/stdlib.h
+index c20ce9da58bd2cdf..152c12fe9cb41509 100644
+--- a/include/stdlib.h
++++ b/include/stdlib.h
+@@ -37,7 +37,8 @@ extern __typeof (secure_getenv) __libc_secure_getenv;
+ libc_hidden_proto (__libc_secure_getenv)
+ libc_hidden_proto (bsearch)
+ libc_hidden_proto (qsort)
+-libc_hidden_proto (qsort_r)
++extern __typeof (qsort_r) __qsort_r;
++libc_hidden_proto (__qsort_r)
+ libc_hidden_proto (lrand48_r)
+ libc_hidden_proto (wctomb)
+ 
+diff --git a/nscd/gai.c b/nscd/gai.c
+index 060933293838c4ee..018b449339813df5 100644
+--- a/nscd/gai.c
++++ b/nscd/gai.c
+@@ -29,6 +29,7 @@
+ #define __sendto sendto
+ #define __strchrnul strchrnul
+ #define __getline getline
++#define __qsort_r qsort_r
+ /* nscd uses 1MB or 2MB thread stacks.  */
+ #define __libc_use_alloca(size) (size <= __MAX_ALLOCA_CUTOFF)
+ 
+diff --git a/posix/tst-rfc3484-2.c b/posix/tst-rfc3484-2.c
+index a37be36e6ad5a279..afd4b2959fc830f0 100644
+--- a/posix/tst-rfc3484-2.c
++++ b/posix/tst-rfc3484-2.c
+@@ -9,6 +9,7 @@
+ #define __inet_aton inet_aton
+ #define __gethostbyaddr_r gethostbyaddr_r
+ #define __gethostbyname2_r gethostbyname2_r
++#define __qsort_r qsort_r
+ 
+ void
+ attribute_hidden
+diff --git a/posix/tst-rfc3484-3.c b/posix/tst-rfc3484-3.c
+index 493e76015c74be9e..92efecd242a0baa3 100644
+--- a/posix/tst-rfc3484-3.c
++++ b/posix/tst-rfc3484-3.c
+@@ -9,6 +9,7 @@
+ #define __inet_aton inet_aton
+ #define __gethostbyaddr_r gethostbyaddr_r
+ #define __gethostbyname2_r gethostbyname2_r
++#define __qsort_r qsort_r
+ 
+ void
+ attribute_hidden
+diff --git a/posix/tst-rfc3484.c b/posix/tst-rfc3484.c
+index db3ae1b7bb86406a..8e886d987fd42b1d 100644
+--- a/posix/tst-rfc3484.c
++++ b/posix/tst-rfc3484.c
+@@ -9,6 +9,7 @@
+ #define __inet_aton inet_aton
+ #define __gethostbyaddr_r gethostbyaddr_r
+ #define __gethostbyname2_r gethostbyname2_r
++#define __qsort_r qsort_r
+ 
+ void
+ attribute_hidden
+diff --git a/stdlib/msort.c b/stdlib/msort.c
+index e419734cd634ba5c..6f4b846b05fea8b9 100644
+--- a/stdlib/msort.c
++++ b/stdlib/msort.c
+@@ -162,7 +162,7 @@ msort_with_tmp (const struct msort_param *p, void *b, size_t n)
+ 
+ 
+ void
+-qsort_r (void *b, size_t n, size_t s, __compar_d_fn_t cmp, void *arg)
++__qsort_r (void *b, size_t n, size_t s, __compar_d_fn_t cmp, void *arg)
+ {
+   size_t size = n * s;
+   char *tmp = NULL;
+@@ -298,12 +298,13 @@ qsort_r (void *b, size_t n, size_t s, __compar_d_fn_t cmp, void *arg)
+     }
+   free (tmp);
+ }
+-libc_hidden_def (qsort_r)
++libc_hidden_def (__qsort_r)
++weak_alias (__qsort_r, qsort_r)
+ 
+ 
+ void
+ qsort (void *b, size_t n, size_t s, __compar_fn_t cmp)
+ {
+-  return qsort_r (b, n, s, (__compar_d_fn_t) cmp, NULL);
++  return __qsort_r (b, n, s, (__compar_d_fn_t) cmp, NULL);
+ }
+ libc_hidden_def (qsort)
+diff --git a/sysdeps/posix/getaddrinfo.c b/sysdeps/posix/getaddrinfo.c
+index b1c72fda9d2aa365..a678d8d7e8b23d1d 100644
+--- a/sysdeps/posix/getaddrinfo.c
++++ b/sysdeps/posix/getaddrinfo.c
+@@ -2639,11 +2639,11 @@ getaddrinfo (const char *name, const char *service,
+ 	  __libc_lock_lock (lock);
+ 	  if (__libc_once_get (old_once) && gaiconf_reload_flag)
+ 	    gaiconf_reload ();
+-	  qsort_r (order, nresults, sizeof (order[0]), rfc3484_sort, &src);
++	  __qsort_r (order, nresults, sizeof (order[0]), rfc3484_sort, &src);
+ 	  __libc_lock_unlock (lock);
+ 	}
+       else
+-	qsort_r (order, nresults, sizeof (order[0]), rfc3484_sort, &src);
++	__qsort_r (order, nresults, sizeof (order[0]), rfc3484_sort, &src);
+ 
+       /* Queue the results up as they come out of sorting.  */
+       q = p = results[order[0]].dest_addr;

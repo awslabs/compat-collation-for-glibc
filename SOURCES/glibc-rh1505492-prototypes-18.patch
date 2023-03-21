@@ -1,0 +1,261 @@
+commit 85231522bb178ebe0957529de20b7f3dda81168c
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Oct 21 11:57:23 2015 +0000
+
+    Convert a few more function definitions to prototype style.
+    
+    This patch converts a few more function definitions in glibc from
+    old-style K&R to prototype style.  This is sufficient to build and
+    test on x86_64 and x86 with -Wold-style-definition (I'll test on some
+    more architectures before proposing the actual addition of
+    -Wold-style-definition).
+    
+    Tested for x86_64 and x86 with -Wold-style-definition in use
+    (testsuite - this patch affects files containing assertions).
+    
+            * io/fts.c (fts_open): Convert to prototype-style function
+            definition.
+            * malloc/mcheck.c (mcheck): Likewise.
+            (mcheck_pedantic): Likewise.
+            * posix/regexec.c (re_search_2_stub): Likewise.  Use
+            internal_function.
+            (re_search_internal): Likewise.
+            * resolv/res_init.c [RESOLVSORT] (net_mask): Convert to
+            prototype-style function definition.
+            * sunrpc/clnt_udp.c (clntudp_call): Likewise.
+            * sunrpc/pmap_rmt.c (clnt_broadcast): Likewise.
+            * sunrpc/rpcsvc/rusers.x (xdr_utmp): Likewise.
+            (xdr_utmpptr): Likewise.
+            (xdr_utmparr): Likewise.
+            (xdr_utmpidle): Likewise.
+            (xdr_utmpidleptr): Likewise.
+            (xdr_utmpidlearr): Likewise.
+
+Conflicts:
+	malloc/mcheck.c
+	  (Textual conflict due to malloc reformatting upstream.)
+	resolv/res_init.c
+	  (Already part of the stub resolver rebase in
+	  glibc-rh677316-resolv.patch.)
+
+diff --git a/io/fts.c b/io/fts.c
+index 275608591739ce63..49d2de946b78f483 100644
+--- a/io/fts.c
++++ b/io/fts.c
+@@ -85,10 +85,8 @@ static int      fts_safe_changedir (FTS *, FTSENT *, int, const char *)
+ #define	BREAD		3		/* fts_read */
+ 
+ FTS *
+-fts_open(argv, options, compar)
+-	char * const *argv;
+-	int options;
+-	int (*compar) (const FTSENT **, const FTSENT **);
++fts_open (char * const *argv, int options,
++	  int (*compar) (const FTSENT **, const FTSENT **))
+ {
+ 	FTS *sp;
+ 	FTSENT *p, *root;
+diff --git a/malloc/mcheck.c b/malloc/mcheck.c
+index 680e03353e03f235..fa6b0309c5f28e79 100644
+--- a/malloc/mcheck.c
++++ b/malloc/mcheck.c
+@@ -370,8 +370,7 @@ mabort (enum mcheck_status status)
+ ({ __typeof (x) __x = x; __asm ("" : "+m" (__x)); __x; })
+ 
+ int
+-mcheck (func)
+-     void (*func) (enum mcheck_status);
++mcheck (void (*func) (enum mcheck_status))
+ {
+   abortfunc = (func != NULL) ? func : &mabort;
+ 
+@@ -402,8 +401,7 @@ libc_hidden_def (mcheck)
+ #endif
+ 
+ int
+-mcheck_pedantic (func)
+-      void (*func) (enum mcheck_status);
++mcheck_pedantic (void (*func) (enum mcheck_status))
+ {
+   int res = mcheck (func);
+   if (res == 0)
+diff --git a/posix/regexec.c b/posix/regexec.c
+index 6ca865dc9a7d44d5..7e1618561e61e41d 100644
+--- a/posix/regexec.c
++++ b/posix/regexec.c
+@@ -343,12 +343,11 @@ weak_alias (__re_search_2, re_search_2)
+ #endif
+ 
+ static int
+-re_search_2_stub (bufp, string1, length1, string2, length2, start, range, regs,
+-		  stop, ret_len)
+-    struct re_pattern_buffer *bufp;
+-    const char *string1, *string2;
+-    int length1, length2, start, range, stop, ret_len;
+-    struct re_registers *regs;
++internal_function
++re_search_2_stub (struct re_pattern_buffer *bufp, const char *string1,
++		  int length1, const char *string2, int length2, int start,
++		  int range, struct re_registers *regs,
++		  int stop, int ret_len)
+ {
+   const char *str;
+   int rval;
+@@ -604,14 +603,10 @@ re_exec (const char *s)
+    (START + RANGE >= 0 && START + RANGE <= LENGTH)  */
+ 
+ static reg_errcode_t
+-__attribute_warn_unused_result__
+-re_search_internal (preg, string, length, start, range, stop, nmatch, pmatch,
+-		    eflags)
+-    const regex_t *preg;
+-    const char *string;
+-    int length, start, range, stop, eflags;
+-    size_t nmatch;
+-    regmatch_t pmatch[];
++__attribute_warn_unused_result__ internal_function
++re_search_internal (const regex_t *preg, const char *string, int length,
++		    int start, int range, int stop, size_t nmatch,
++		    regmatch_t pmatch[], int eflags)
+ {
+   reg_errcode_t err;
+   const re_dfa_t *dfa = (const re_dfa_t *) preg->buffer;
+diff --git a/sunrpc/clnt_udp.c b/sunrpc/clnt_udp.c
+index 1e0c7d45d33d23a1..069768ac213aa116 100644
+--- a/sunrpc/clnt_udp.c
++++ b/sunrpc/clnt_udp.c
+@@ -293,14 +293,20 @@ is_network_up (int sock)
+ }
+ 
+ static enum clnt_stat
+-clntudp_call (cl, proc, xargs, argsp, xresults, resultsp, utimeout)
+-     CLIENT *cl;	/* client handle */
+-     u_long proc;		/* procedure number */
+-     xdrproc_t xargs;		/* xdr routine for args */
+-     caddr_t argsp;		/* pointer to args */
+-     xdrproc_t xresults;	/* xdr routine for results */
+-     caddr_t resultsp;		/* pointer to results */
+-     struct timeval utimeout;	/* seconds to wait before giving up */
++clntudp_call (/* client handle */
++	      CLIENT *cl,
++	      /* procedure number */
++	      u_long proc,
++	      /* xdr routine for args */
++	      xdrproc_t xargs,
++	      /* pointer to args */
++	      caddr_t argsp,
++	      /* xdr routine for results */
++	      xdrproc_t xresults,
++	      /* pointer to results */
++	      caddr_t resultsp,
++	      /* seconds to wait before giving up */
++	      struct timeval utimeout)
+ {
+   struct cu_data *cu = (struct cu_data *) cl->cl_private;
+   XDR *xdrs;
+diff --git a/sunrpc/pmap_rmt.c b/sunrpc/pmap_rmt.c
+index c8a8011ea5474b3b..e54fe1447004c6b1 100644
+--- a/sunrpc/pmap_rmt.c
++++ b/sunrpc/pmap_rmt.c
+@@ -196,15 +196,22 @@ getbroadcastnets (struct in_addr *addrs, int naddrs)
+ 
+ 
+ enum clnt_stat
+-clnt_broadcast (prog, vers, proc, xargs, argsp, xresults, resultsp, eachresult)
+-     u_long prog;		/* program number */
+-     u_long vers;		/* version number */
+-     u_long proc;		/* procedure number */
+-     xdrproc_t xargs;		/* xdr routine for args */
+-     caddr_t argsp;		/* pointer to args */
+-     xdrproc_t xresults;	/* xdr routine for results */
+-     caddr_t resultsp;		/* pointer to results */
+-     resultproc_t eachresult;	/* call with each result obtained */
++clnt_broadcast (/* program number */
++		u_long prog,
++		/* version number */
++		u_long vers,
++		/* procedure number */
++		u_long proc,
++		/* xdr routine for args */
++		xdrproc_t xargs,
++		/* pointer to args */
++		caddr_t argsp,
++		/* xdr routine for results */
++		xdrproc_t xresults,
++		/* pointer to results */
++		caddr_t resultsp,
++		/* call with each result obtained */
++		resultproc_t eachresult)
+ {
+   enum clnt_stat stat = RPC_FAILED;
+   AUTH *unix_auth = authunix_create_default ();
+diff --git a/sunrpc/rpcsvc/rusers.x b/sunrpc/rpcsvc/rusers.x
+index 476ed7400c445d2a..5bbfe97e79e27aa2 100644
+--- a/sunrpc/rpcsvc/rusers.x
++++ b/sunrpc/rpcsvc/rusers.x
+@@ -137,9 +137,7 @@ program RUSERSPROG {
+ %bool_t xdr_utmp (XDR *xdrs, struct ru_utmp *objp);
+ %
+ %bool_t
+-%xdr_utmp(xdrs, objp)
+-%	XDR *xdrs;
+-%	struct ru_utmp *objp;
++%xdr_utmp (XDR *xdrs, struct ru_utmp *objp)
+ %{
+ %	/* Since the fields are char foo [xxx], we should not free them. */
+ %	if (xdrs->x_op != XDR_FREE)
+@@ -171,9 +169,7 @@ program RUSERSPROG {
+ %bool_t xdr_utmpptr(XDR *xdrs, struct ru_utmp **objpp);
+ %
+ %bool_t
+-%xdr_utmpptr(xdrs, objpp)
+-%	XDR *xdrs;
+-%	struct ru_utmp **objpp;
++%xdr_utmpptr (XDR *xdrs, struct ru_utmp **objpp)
+ %{
+ %	if (!xdr_reference(xdrs, (char **) objpp, sizeof (struct ru_utmp),
+ %			   (xdrproc_t) xdr_utmp)) {
+@@ -183,9 +179,7 @@ program RUSERSPROG {
+ %}
+ %
+ %bool_t
+-%xdr_utmparr(xdrs, objp)
+-%	XDR *xdrs;
+-%	struct utmparr *objp;
++%xdr_utmparr (XDR *xdrs, struct utmparr *objp)
+ %{
+ %	if (!xdr_array(xdrs, (char **)&objp->uta_arr, (u_int *)&objp->uta_cnt,
+ %		       MAXUSERS, sizeof(struct ru_utmp *),
+@@ -198,9 +192,7 @@ program RUSERSPROG {
+ %bool_t xdr_utmpidle(XDR *xdrs, struct utmpidle *objp);
+ %
+ %bool_t
+-%xdr_utmpidle(xdrs, objp)
+-%	XDR *xdrs;
+-%	struct utmpidle *objp;
++%xdr_utmpidle (XDR *xdrs, struct utmpidle *objp)
+ %{
+ %	if (!xdr_utmp(xdrs, &objp->ui_utmp)) {
+ %		return (FALSE);
+@@ -214,9 +206,7 @@ program RUSERSPROG {
+ %bool_t xdr_utmpidleptr(XDR *xdrs, struct utmpidle **objp);
+ %
+ %bool_t
+-%xdr_utmpidleptr(xdrs, objpp)
+-%	XDR *xdrs;
+-%	struct utmpidle **objpp;
++%xdr_utmpidleptr (XDR *xdrs, struct utmpidle **objpp)
+ %{
+ %	if (!xdr_reference(xdrs, (char **) objpp, sizeof (struct utmpidle),
+ %			   (xdrproc_t) xdr_utmpidle)) {
+@@ -226,9 +216,7 @@ program RUSERSPROG {
+ %}
+ %
+ %bool_t
+-%xdr_utmpidlearr(xdrs, objp)
+-%	XDR *xdrs;
+-%	struct utmpidlearr *objp;
++%xdr_utmpidlearr (XDR *xdrs, struct utmpidlearr *objp)
+ %{
+ %	if (!xdr_array(xdrs, (char **)&objp->uia_arr, (u_int *)&objp->uia_cnt,
+ %		       MAXUSERS, sizeof(struct utmpidle *),

@@ -1,0 +1,29 @@
+commit d643bac1f7b2f361576ce45523de7cf0bf5a69de
+Author: Andreas Schwab <schwab@linux-m68k.org>
+Date:   Fri Jan 4 18:01:34 2013 +0100
+
+    Fix warnings in test-powerpc-snan.c
+
+diff --git a/sysdeps/powerpc/fpu/test-powerpc-snan.c b/sysdeps/powerpc/fpu/test-powerpc-snan.c
+index b90f0264b2b2bfb9..1547ced39a7ba371 100644
+--- a/sysdeps/powerpc/fpu/test-powerpc-snan.c
++++ b/sysdeps/powerpc/fpu/test-powerpc-snan.c
+@@ -17,8 +17,7 @@
+    License along with the GNU C Library; if not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
+-#define _GNU_SOURCE
+-#define __USE_GNU
++#define _GNU_SOURCE 1
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <sys/time.h>
+@@ -42,7 +41,7 @@ long double SNANl;
+ static sigjmp_buf sigfpe_buf;
+ 
+ void
+-init_signaling_nan()
++init_signaling_nan (void)
+ {
+     union {
+ 	double _ld16;

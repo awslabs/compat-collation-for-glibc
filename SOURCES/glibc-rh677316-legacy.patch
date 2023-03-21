@@ -1,0 +1,61 @@
+This patch restores the legacy resolv.conf option parsing behavior which
+was removed during the rebase.  It also adds back formatting of legacy
+options.
+
+diff --git a/resolv/res_debug.c b/resolv/res_debug.c
+index 919b86e2b37dc150..e175229913b5f644 100644
+--- a/resolv/res_debug.c
++++ b/resolv/res_debug.c
+@@ -597,7 +597,9 @@ p_option(u_long option) {
+ 	switch (option) {
+ 	case RES_INIT:		return "init";
+ 	case RES_DEBUG:		return "debug";
+-	case RES_USEVC:		return "use-vc";
++	case RES_AAONLY:	return "aaonly(unimpl)";
++	case RES_USEVC:		return "usevc";
++	case RES_PRIMARY:	return "primry(unimpl)";
+ 	case RES_IGNTC:		return "igntc";
+ 	case RES_RECURSE:	return "recurs";
+ 	case RES_DEFNAMES:	return "defnam";
+@@ -608,6 +610,11 @@ p_option(u_long option) {
+ 	case RES_NOALIASES:	return "noaliases";
+ 	case DEPRECATED_RES_USE_INET6:	return "inet6";
+ 	case RES_ROTATE:	return "rotate";
++	case RES_NOCHECKNAME:	return "no-check-names";
++	case RES_KEEPTSIG:	return "keeptsig(unimpl)";
++	case RES_BLAST:		return "blast";
++	case RES_USEBSTRING:	return "ip6-bytstring";
++	case RES_NOIP6DOTINT:   return "no-ip6-dotint";
+ 	case RES_USE_EDNS0:	return "edns0";
+ 	case RES_SNGLKUP:	return "single-request";
+ 	case RES_SNGLKUPREOP:	return "single-request-reopen";
+diff --git a/resolv/res_init.c b/resolv/res_init.c
+index 4e1f9fe8dea93e8a..c29bc4e9b99b6bee 100644
+--- a/resolv/res_init.c
++++ b/resolv/res_init.c
+@@ -668,7 +668,11 @@ res_setoptions (struct resolv_conf_parser *parser, const char *options)
+           } options[] = {
+ #define STRnLEN(str) str, sizeof (str) - 1
+             { STRnLEN ("inet6"), 0, DEPRECATED_RES_USE_INET6 },
++            { STRnLEN ("ip6-bytestring"), 0, RES_USEBSTRING },
++            { STRnLEN ("no-ip6-dotint"), 0, RES_NOIP6DOTINT },
++            { STRnLEN ("ip6-dotint"), 1, ~RES_NOIP6DOTINT },
+             { STRnLEN ("rotate"), 0, RES_ROTATE },
++            { STRnLEN ("no-check-names"), 0, RES_NOCHECKNAME },
+             { STRnLEN ("edns0"), 0, RES_USE_EDNS0 },
+             { STRnLEN ("single-request-reopen"), 0, RES_SNGLKUPREOP },
+             { STRnLEN ("single-request"), 0, RES_SNGLKUP },
+diff --git a/resolv/tst-resolv-res_init-skeleton.c b/resolv/tst-resolv-res_init-skeleton.c
+index 3b7b4129e31eaa22..288c2466e573507c 100644
+--- a/resolv/tst-resolv-res_init-skeleton.c
++++ b/resolv/tst-resolv-res_init-skeleton.c
+@@ -106,7 +106,8 @@ print_resp (FILE *fp, res_state resp)
+     /* Also mask out other default flags which cannot be set through
+        the options directive.  */
+     int options
+-      = resp->options & ~(RES_INIT | RES_RECURSE | RES_DEFNAMES | RES_DNSRCH);
++      = resp->options & ~(RES_INIT | RES_RECURSE | RES_DEFNAMES | RES_DNSRCH
++                          | RES_NOIP6DOTINT);
+     if (options != 0
+         || resp->ndots != 1
+         || resp->retrans != RES_TIMEOUT

@@ -1,0 +1,72 @@
+commit c81e9deba2f73ddc6f62a9d41684824c854366c6
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Dec 10 00:43:36 2014 +0000
+
+    Disable -Wdiv-by-zero for some tests in stdio-common/tst-unlockedio.c.
+    
+    This patch uses diagnostic control pragmas to disable some
+    division-by-zero warnings in stdio-common/tst-unlockedio.c.  This is
+    another test where disabling warnings using diagnostic pragmas seems
+    appropriate (the warnings are not wildly inappropriate for what the
+    test deliberately does; the deliberate use of unusual arguments to the
+    macros being tested means that changing the arguments in a way that
+    avoids the warning would also unduly perturb what is being tested).
+    
+    Tested for x86_64.
+    
+            * stdio-common/tst-unlockedio.c: Include <libc-internal.h>.
+            (do_test): Disable -Wdiv-by-zero around some calls to
+            fwrite_unlocked and fread_unlocked.
+
+diff --git a/stdio-common/tst-unlockedio.c b/stdio-common/tst-unlockedio.c
+index 2e5848ec5f49b693..5ce02fe6f5c7ea5c 100644
+--- a/stdio-common/tst-unlockedio.c
++++ b/stdio-common/tst-unlockedio.c
+@@ -20,6 +20,7 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
++#include <libc-internal.h>
+ 
+ int fd;
+ static void do_prepare (void);
+@@ -44,6 +45,13 @@ do_test (void)
+ 
+   f = fp;
+   cp = blah;
++  /* These tests deliberately use fwrite_unlocked with the size
++     argument specified as 0, which results in "division by zero"
++     warnings from the expansion of that macro (in code that is not
++     evaluated for a size of 0).  This applies to the tests of
++     fread_unlocked below as well.  */
++  DIAG_PUSH_NEEDS_COMMENT;
++  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wdiv-by-zero");
+   if (ftello (fp) != 0
+       || fwrite_unlocked (blah, blah - blah, strlen (blah), f++) != 0
+       || f != fp + 1
+@@ -59,6 +67,7 @@ do_test (void)
+       puts ("One of fwrite_unlocked tests failed");
+       exit (1);
+     }
++  DIAG_POP_NEEDS_COMMENT;
+ 
+   if (fwrite_unlocked (blah, 1, strlen (blah) - 2, fp) != strlen (blah) - 2)
+     {
+@@ -93,6 +102,9 @@ do_test (void)
+   f = fp;
+   wp = buf;
+   memset (buf, ' ', sizeof (buf));
++  /* See explanation above.  */
++  DIAG_PUSH_NEEDS_COMMENT;
++  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wdiv-by-zero");
+   if (ftello (fp) != 0
+       || fread_unlocked (buf, buf - buf, strlen (blah), f++) != 0
+       || f != fp + 1
+@@ -109,6 +121,7 @@ do_test (void)
+       puts ("One of fread_unlocked tests failed");
+       exit (1);
+     }
++  DIAG_POP_NEEDS_COMMENT;
+ 
+   if (fread_unlocked (buf, 1, strlen (blah) - 2, fp) != strlen (blah) - 2)
+     {

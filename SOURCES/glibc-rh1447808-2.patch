@@ -1,0 +1,18 @@
+Fix strncmp in rtld for x86-64 by using the generic implementation.  Not
+needed upstream since upstream uses
+d8725b1fba769a89ce2c902a2091d01faa946b66 to enable strncmp from
+strncmp.S, but this introduces SSE registers into rtld for RHEL7 and
+this would be the first instance of such a change. While we have done
+everything we can to save/restore such registers (see the xsave work) it
+isn't clear if everything is fixed, so to play it safe in RHEL we just
+use the C version of strncmp for rtld.
+
+Not needed upstream.
+
+diff --git a/sysdeps/x86_64/multiarch/rtld-strncmp.c b/sysdeps/x86_64/multiarch/rtld-strncmp.c
+new file mode 100644
+index 0000000000000000..5bb3cfb974b9a95d
+--- /dev/null
++++ b/sysdeps/x86_64/multiarch/rtld-strncmp.c
+@@ -0,0 +1 @@
++#include <string/strncmp.c>

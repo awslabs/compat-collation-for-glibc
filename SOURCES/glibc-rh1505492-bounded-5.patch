@@ -1,0 +1,168 @@
+commit e782a927c24430100bf2008c96cd421a70285a7e
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Feb 1 06:35:29 2013 +0000
+
+    Remove BOUNDED_N and BOUNDED_1.
+
+Conflicts:
+	sysdeps/sparc/backtrace.c
+
+The changes to that file have been applied to
+sysdeps/sparc/sparc64/backtrace.c instead.
+
+diff --git a/debug/backtrace.c b/debug/backtrace.c
+index a3fd81c32d176089..d0785329a2514e20 100644
+--- a/debug/backtrace.c
++++ b/debug/backtrace.c
+@@ -21,7 +21,6 @@
+ #include <signal.h>
+ #include <frame.h>
+ #include <sigcontextinfo.h>
+-#include <bp-checks.h>
+ #include <ldsodefs.h>
+ 
+ /* This implementation assumes a stack layout that matches the defaults
+@@ -50,7 +49,7 @@
+ /* By default assume the `next' pointer in struct layout points to the
+    next struct layout.  */
+ #ifndef ADVANCE_STACK_FRAME
+-# define ADVANCE_STACK_FRAME(next) BOUNDED_1 ((struct layout *) (next))
++# define ADVANCE_STACK_FRAME(next) ((struct layout *) (next))
+ #endif
+ 
+ /* By default, the frame pointer is just what we get from gcc.  */
+@@ -72,7 +71,7 @@ __backtrace (array, size)
+   top_stack = CURRENT_STACK_FRAME;
+ 
+   /* We skip the call to this function, it makes no sense to record it.  */
+-  current = BOUNDED_1 ((struct layout *) top_frame);
++  current = ((struct layout *) top_frame);
+   while (cnt < size)
+     {
+       if ((void *) current INNER_THAN top_stack
+diff --git a/sysdeps/generic/bp-checks.h b/sysdeps/generic/bp-checks.h
+index d43e299d4dc06b6b..f2610786aed0cc85 100644
+--- a/sysdeps/generic/bp-checks.h
++++ b/sysdeps/generic/bp-checks.h
+@@ -66,13 +66,6 @@ extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+ /* Same as CHECK_STRING, but tolerate ARG == NULL.  */
+ # define CHECK_STRING_NULL_OK(ARG) _CHECK_STRING ((ARG), __ptrvalue (ARG))
+ 
+-/* Return a bounded pointer with value PTR that satisfies CHECK_N (PTR, N).  */
+-# define BOUNDED_N(PTR, N) 				\
+-  ({ __typeof (PTR) __bounded _p_;			\
+-     __ptrvalue _p_ = __ptrlow _p_ = __ptrvalue (PTR);	\
+-     __ptrhigh _p_ = __ptrvalue _p_ + (N);		\
+-     _p_; })
+-
+ #else /* !__BOUNDED_POINTERS__ */
+ 
+ /* Do nothing if not compiling with -fbounded-pointers.  */
+@@ -85,10 +78,7 @@ extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+ # define CHECK_N(ARG, N) (ARG)
+ # define CHECK_N_NULL_OK(ARG, N) (ARG)
+ # define CHECK_STRING(ARG) (ARG)
+-# define BOUNDED_N(PTR, N) (PTR)
+ 
+ #endif /* !__BOUNDED_POINTERS__ */
+ 
+-#define BOUNDED_1(PTR) BOUNDED_N (PTR, 1)
+-
+ #endif /* _bp_checks_h_ */
+diff --git a/sysdeps/powerpc/powerpc32/backtrace.c b/sysdeps/powerpc/powerpc32/backtrace.c
+index 942951f2bc0ce45d..0e2e5c296876444e 100644
+--- a/sysdeps/powerpc/powerpc32/backtrace.c
++++ b/sysdeps/powerpc/powerpc32/backtrace.c
+@@ -18,7 +18,6 @@
+ 
+ #include <execinfo.h>
+ #include <stddef.h>
+-#include <bp-checks.h>
+ 
+ /* This is the stack layout we see with every stack frame.
+    Note that every routine is required by the ABI to lay out the stack
+@@ -47,11 +46,10 @@ __backtrace (void **array, int size)
+ 
+   /* Get the address on top-of-stack.  */
+   asm volatile ("lwz %0,0(1)" : "=r"(current));
+-  current = BOUNDED_1 (current);
+ 
+   for (				count = 0;
+        current != NULL && 	count < size;
+-       current = BOUNDED_1 (current->next), count++)
++       current = current->next, count++)
+     array[count] = current->return_address;
+ 
+   /* It's possible the second-last stack frame can't return
+diff --git a/sysdeps/powerpc/powerpc64/backtrace.c b/sysdeps/powerpc/powerpc64/backtrace.c
+index 89957a5f4e1efb95..08e535585ef2a104 100644
+--- a/sysdeps/powerpc/powerpc64/backtrace.c
++++ b/sysdeps/powerpc/powerpc64/backtrace.c
+@@ -18,7 +18,6 @@
+ 
+ #include <execinfo.h>
+ #include <stddef.h>
+-#include <bp-checks.h>
+ 
+ /* This is the stack layout we see with every stack frame.
+    Note that every routine is required by the ABI to lay out the stack
+@@ -50,11 +49,10 @@ __backtrace (void **array, int size)
+ 
+   /* Get the address on top-of-stack.  */
+   asm volatile ("ld %0,0(1)" : "=r"(current));
+-  current = BOUNDED_1 (current);
+ 
+   for (				count = 0;
+        current != NULL && 	count < size;
+-       current = BOUNDED_1 (current->next), count++)
++       current = current->next, count++)
+     array[count] = current->return_address;
+ 
+   /* It's possible the second-last stack frame can't return
+diff --git a/sysdeps/sparc/sparc64/backtrace.c b/sysdeps/sparc/sparc64/backtrace.c
+index e9a72a69a0c64d75..d5a1ebec000ce91e 100644
+--- a/sysdeps/sparc/sparc64/backtrace.c
++++ b/sysdeps/sparc/sparc64/backtrace.c
+@@ -19,7 +19,6 @@
+ 
+ #include <execinfo.h>
+ #include <stddef.h>
+-#include <bp-checks.h>
+ #include <sysdep.h>
+ 
+ struct layout
+@@ -40,7 +39,6 @@ __backtrace (void **array, int size)
+   asm volatile ("flushw");
+   asm volatile ("mov %%fp, %0" : "=r"(fp));
+   current = (struct layout *__unbounded) (fp + STACK_BIAS);
+-  current = BOUNDED_1 (current);
+ 
+   for (count = 0; count < size; count++)
+     {
+@@ -48,7 +46,6 @@ __backtrace (void **array, int size)
+       if (!current->next)
+ 	break;
+       current = (struct layout *__unbounded) (current->next + STACK_BIAS);
+-      current = BOUNDED_1 (current);
+     }
+ 
+   return count;
+diff --git a/sysdeps/unix/sysv/linux/shmat.c b/sysdeps/unix/sysv/linux/shmat.c
+index d01bb1bdb779fb0d..21417f4ced70e778 100644
+--- a/sysdeps/unix/sysv/linux/shmat.c
++++ b/sysdeps/unix/sysv/linux/shmat.c
+@@ -23,7 +23,6 @@
+ #include <sysdep.h>
+ #include <unistd.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Attach the shared memory segment associated with SHMID to the data
+    segment of the calling process.  SHMADDR and SHMFLG determine how
+@@ -58,5 +57,5 @@ shmat (shmid, shmaddr, shmflg)
+       return (void *) -1l;
+     }
+ 
+-  return BOUNDED_N (raddr, length);
++  return raddr;
+ }

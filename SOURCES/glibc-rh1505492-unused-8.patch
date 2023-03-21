@@ -1,0 +1,37 @@
+commit c82f5c0ce5c1c0180fca311ceb29fd2d59da7441
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Nov 26 00:45:19 2014 +0000
+
+    Fix warning in setjmp/jmpbug.c.
+    
+    This patch fixes a "set but not used" warning in setjmp/jmpbug.c.  A
+    variable is used only to store the result of alloca.  A cast to void
+    is added to avoid the warning, and the variable is made volatile to
+    ensure the call to alloca isn't optimized away for being unused.
+    
+    Tested for x86_64.
+    
+            * setjmp/jmpbug.c (test): Make foo volatile and cast it to
+            void.
+
+diff --git a/setjmp/jmpbug.c b/setjmp/jmpbug.c
+index 125977b2f719dbeb..8594c5a8a782b218 100644
+--- a/setjmp/jmpbug.c
++++ b/setjmp/jmpbug.c
+@@ -14,7 +14,7 @@ static void
+ test (int x)
+ {
+   jmp_buf buf;
+-  char *foo;
++  char *volatile foo;
+   int arr[100];
+ 
+   arr[77] = x;
+@@ -25,6 +25,7 @@ test (int x)
+     }
+ 
+   foo = (char *) alloca (128);
++  (void) foo;
+   sub5 (buf);
+ }
+ 

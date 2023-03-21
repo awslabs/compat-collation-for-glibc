@@ -1,0 +1,27 @@
+commit 48bb14bdbbeb09cb3cd950d7346688958f1bce1a
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Aug 20 20:50:05 2015 +0000
+
+    Don't use -Wno-error=undef.
+    
+    This patch removes the use of -Wno-error=undef, so that -Wundef
+    warnings become errors.
+    
+    Tested for x86_64, x86, mips64 (all three ABIs) and arm.
+    
+            * Makeconfig [$(enable-werror) = yes] (+gccwarn): Do not add
+            -Wno-error=undef.
+
+diff --git a/Makeconfig b/Makeconfig
+index b1bf7f24b6154e3d..3c0d4abc5f5f30df 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -645,7 +645,7 @@ else
+ endif
+ +gccwarn += -Wundef
+ ifeq ($(enable-werror),yes)
+-+gccwarn += -Werror -Wno-error=undef
+++gccwarn += -Werror
+ endif
+ +gccwarn-c = -Wstrict-prototypes
+ 

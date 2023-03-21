@@ -1,0 +1,215 @@
+commit fb53a27c57417104069f128963bf6f26dc02b0bd
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Jan 12 12:42:55 2016 +0000
+
+    Add new header definitions from Linux 4.4 (plus older ptrace definitions).
+    
+    This patch adds some new header definitions from Linux 4.4:
+    
+    * MCL_ONFAULT is added to bits/mman.h / bits/mman-linux.h (this was
+      already done for hppa).
+    
+    * PTRACE_SECCOMP_GET_FILTER is added to sys/ptrace.h.  Along with it,
+      the older PTRACE_GETSIGMASK and PTRACE_SETSIGMASK, added in Linux
+      3.11 but missed at the time, are also added.
+    
+    Tested for x86_64 and x86 (testsuite, and that installed stripped
+    shared libraries are unchanged by the patch).
+    
+    	* bits/mman-linux.h [!MCL_CURRENT] (MCL_ONFAULT): New macro.
+    	* sysdeps/unix/sysv/linux/alpha/bits/mman.h (MCL_ONFAULT):
+    	Likewise.
+    	* sysdeps/unix/sysv/linux/powerpc/bits/mman.h (MCL_ONFAULT):
+    	Likewise.
+    	* sysdeps/unix/sysv/linux/sparc/bits/mman.h (MCL_ONFAULT):
+    	Likewise.
+    	* sysdeps/unix/sysv/linux/sys/ptrace.h (PTRACE_GETSIGMASK): New
+    	enum constant and macro.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+    	* sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h
+    	(PTRACE_GETSIGMASK): Likewise.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+    	* sysdeps/unix/sysv/linux/ia64/sys/ptrace.h (PTRACE_GETSIGMASK):
+    	Likewise.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+    	* sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h
+    	(PTRACE_GETSIGMASK): Likewise.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+    	* sysdeps/unix/sysv/linux/s390/sys/ptrace.h (PTRACE_GETSIGMASK):
+    	Likewise.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+    	* sysdeps/unix/sysv/linux/sparc/sys/ptrace.h (PTRACE_GETSIGMASK):
+    	Likewise.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+    	* sysdeps/unix/sysv/linux/tile/sys/ptrace.h (PTRACE_GETSIGMASK):
+    	Likewise.
+    	(PTRACE_SETSIGMASK): Likewise.
+    	(PTRACE_SECCOMP_GET_FILTER): Likewise.
+
+diff --git a/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h b/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h
+index 1ef1c5f..506ecce 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h
+@@ -127,8 +127,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h b/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h
+index d082d05..b568a66 100644
+--- a/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/ia64/sys/ptrace.h
+@@ -132,8 +132,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h b/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h
+index 20d60aa..b9ddee0 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h
+@@ -119,8 +119,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/s390/sys/ptrace.h b/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
+index 07b118d..15991f3 100644
+--- a/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
+@@ -158,8 +158,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h b/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h
+index dd57c7f..4b88152 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/sparc/sys/ptrace.h
+@@ -201,8 +201,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/sys/ptrace.h b/sysdeps/unix/sysv/linux/sys/ptrace.h
+index cb4f6a1..ee88271 100644
+--- a/sysdeps/unix/sysv/linux/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/sys/ptrace.h
+@@ -149,8 +149,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/tile/sys/ptrace.h b/sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+index bb921c8..46b5efa 100644
+--- a/sysdeps/unix/sysv/linux/tile/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+@@ -122,8 +122,17 @@ enum __ptrace_request
+   PTRACE_LISTEN = 0x4208,
+ #define PTRACE_LISTEN PTRACE_LISTEN
+ 
+-  PTRACE_PEEKSIGINFO = 0x4209
++  PTRACE_PEEKSIGINFO = 0x4209,
+ #define PTRACE_PEEKSIGINFO PTRACE_PEEKSIGINFO
++
++  PTRACE_GETSIGMASK = 0x420a,
++#define PTRACE_GETSIGMASK PTRACE_GETSIGMASK
++
++  PTRACE_SETSIGMASK = 0x420b,
++#define PTRACE_SETSIGMASK PTRACE_SETSIGMASK
++
++  PTRACE_SECCOMP_GET_FILTER = 0x420c
++#define PTRACE_SECCOMP_GET_FILTER PTRACE_SECCOMP_GET_FILTER
+ };
+ 
+ 

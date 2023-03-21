@@ -1,0 +1,27 @@
+commit 7f3e75f87a93265e5a9feb1ba320f4b19f29cd67
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Fri Feb 8 10:46:32 2013 -0800
+
+    Remove dead variable in generic strcpy.
+
+diff --git a/string/strcpy.c b/string/strcpy.c
+index 812de20a3732cce5..bf624947cc780328 100644
+--- a/string/strcpy.c
++++ b/string/strcpy.c
+@@ -30,7 +30,6 @@ strcpy (dest, src)
+   char c;
+   char *__unbounded s = (char *__unbounded) src;
+   const ptrdiff_t off = dest - s - 1;
+-  size_t n;
+ 
+   do
+     {
+@@ -39,8 +38,6 @@ strcpy (dest, src)
+     }
+   while (c != '\0');
+ 
+-  n = s - src;
+-
+   return dest;
+ }
+ libc_hidden_builtin_def (strcpy)

@@ -1,0 +1,40 @@
+commit 9114625bad23441c89eac5a7dcf319a9714ca31f
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Nov 27 16:00:08 2014 +0000
+
+    Fix dlfcn/failtestmod.c warning.
+    
+    This patch fixes a "set but not used" warning from
+    dlfcn/failtestmod.c.  A variable is used only to store the return
+    value from dlsym.  As I understand this test, the point is simply to
+    do a sequence of load / unload operations in a loop, and all that
+    matters here is that dlsym gets called and returns without crashing,
+    not what its return value is.  So this patch removes the assignment to
+    a variable.
+    
+    Tested for x86_64.
+    
+            * dlfcn/failtestmod.c (constr): Do not store result of dlsym in a
+            variable.
+
+diff --git a/dlfcn/failtestmod.c b/dlfcn/failtestmod.c
+index a03f90b734132d8d..64dadd53ff8ef109 100644
+--- a/dlfcn/failtestmod.c
++++ b/dlfcn/failtestmod.c
+@@ -8,7 +8,6 @@ __attribute__ ((__constructor__))
+ constr (void)
+ {
+   void *handle;
+-  void *m;
+ 
+   /* Open the library.  */
+   handle = dlopen (NULL, RTLD_NOW);
+@@ -19,7 +18,7 @@ constr (void)
+     }
+ 
+   /* Get a symbol.  */
+-  m = dlsym (handle, "main");
++  dlsym (handle, "main");
+   puts ("called dlsym() to get main");
+ 
+   dlclose (handle);

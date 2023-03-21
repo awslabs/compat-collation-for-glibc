@@ -1,0 +1,77 @@
+commit ccb729df47188874401c655dda8d47b55cddd3b7
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Aug 19 00:50:17 2015 +0000
+
+    Fix -Wundef warnings in login/tst-utmp.c.
+    
+    To remove -Wno-error=undef, we need to fix the remaining cases where
+    there are -Wundef warnings in the testsuite.  One of those places is
+    in login/tst-utmp.c.
+    
+    When included from tst-utmpx.c, <utmpx.h> is included instead of
+    <utmp.h>, meaning the _HAVE_UT_* macros are not defined.  The test is
+    prepared for them not being defined, in that all the relevant
+    conditionals also include "defined UTMPX".  However, they test the
+    _HAVE_UT_* macros first, so resulting in -Wundef warnings.
+    
+    This patch does the minimal fix of swapping the || operands.  This is
+    logically correct - avoiding checking a macro we know will not be
+    defined in the case where it is not defined.  It won't fix such
+    warnings for the case where the toplevel bits/utmp.h is used and most
+    _HAVE_UT_* aren't defined at all even when <utmp.h> is included, but
+    that case doesn't apply to any current glibc configuration.  Fixing it
+    would also be tricky in that, while glibc itself consistently uses
+    _HAVE_UT_* in ways that would work with 0 instead of undefined,
+    external packages that use the macros expect defined / undefined
+    instead of 1 / 0 (codesearch.debian.net shows uses by util-linux,
+    python-utmp, libsys-utmp-perl).
+    
+    Tested for x86_64.
+    
+            * login/tst-utmp.c [_HAVE_UT_TYPE || defined UTMPX]: Change
+            conditional to [defined UTMPX || _HAVE_UT_TYPE].
+            [_HAVE_UT_TV || defined UTMPX]: Change conditional to [defined
+            UTMPX || _HAVE_UT_TV].
+            [_HAVE_UT_TV - 0 || defined UTMPX]: Change conditional to [defined
+            UTMPX || _HAVE_UT_TV - 0].
+
+diff --git a/login/tst-utmp.c b/login/tst-utmp.c
+index 7cc39cb2b7ff2dba..84945934e249ca25 100644
+--- a/login/tst-utmp.c
++++ b/login/tst-utmp.c
+@@ -39,7 +39,7 @@
+ #endif
+ 
+ 
+-#if _HAVE_UT_TYPE || defined UTMPX
++#if defined UTMPX || _HAVE_UT_TYPE
+ 
+ /* Prototype for our test function.  */
+ static int do_test (int argc, char *argv[]);
+@@ -75,7 +75,7 @@ do_prepare (int argc, char *argv[])
+ 
+ struct utmp entry[] =
+ {
+-#if _HAVE_UT_TV || defined UTMPX
++#if defined UTMPX || _HAVE_UT_TV
+ #define UT(a)  .ut_tv = { .tv_sec = (a)}
+ #else
+ #define UT(a)  .ut_time = (a)
+@@ -167,7 +167,7 @@ simulate_login (const char *line, const char *user)
+ 	    entry[n].ut_pid = (entry_pid += 27);
+ 	  entry[n].ut_type = USER_PROCESS;
+ 	  strncpy (entry[n].ut_user, user, sizeof (entry[n].ut_user));
+-#if _HAVE_UT_TV - 0 || defined UTMPX
++#if defined UTMPX || _HAVE_UT_TV - 0
+ 	  entry[n].ut_tv.tv_sec = (entry_time += 1000);
+ #else
+           entry[n].ut_time = (entry_time += 1000);
+@@ -201,7 +201,7 @@ simulate_logout (const char *line)
+ 	{
+ 	  entry[n].ut_type = DEAD_PROCESS;
+ 	  strncpy (entry[n].ut_user, "", sizeof (entry[n].ut_user));
+-#if _HAVE_UT_TV - 0 || defined UTMPX
++#if defined UTMPX || _HAVE_UT_TV - 0
+           entry[n].ut_tv.tv_sec = (entry_time += 1000);
+ #else
+           entry[n].ut_time = (entry_time += 1000);

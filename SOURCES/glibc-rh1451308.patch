@@ -1,0 +1,41 @@
+commit d62aa75af1941fca6f07e107afc447b7b248e340
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 10 14:15:16 2014 +0530
+
+    Fix crash when system has no ipv6 address [BZ #17125]
+    
+    Here's an updated patch to fix the crash in bug-ga2 when the system
+    has no configured ipv6 address.  I have taken a different approach of
+    using libc_freeres_fn instead of the libc_freeres_ptr since the former
+    gives better control over what is freed; we need that since cache may
+    or may not be allocated using malloc.
+    
+    Verified that bug-ga2 works correctly in both cases and does not have
+    memory leaks in either of them.
+
+diff --git a/sysdeps/unix/sysv/linux/check_pf.c b/sysdeps/unix/sysv/linux/check_pf.c
+index 6b28a735a14f1498..757853342d2af5f4 100644
+--- a/sysdeps/unix/sysv/linux/check_pf.c
++++ b/sysdeps/unix/sysv/linux/check_pf.c
+@@ -62,7 +62,7 @@ static struct cached_data noai6ai_cached =
+     .in6ailen = 0
+   };
+ 
+-libc_freeres_ptr (static struct cached_data *cache);
++static struct cached_data *cache;
+ __libc_lock_define_initialized (static, lock);
+ 
+ 
+@@ -378,6 +378,12 @@ __check_pf (bool *seen_ipv4, bool *seen_ipv6,
+   *seen_ipv6 = true;
+ }
+ 
++/* Free the cache if it has been allocated.  */
++libc_freeres_fn (freecache)
++{
++  if (cache)
++    __free_in6ai (cache->in6ai);
++}
+ 
+ void
+ __free_in6ai (struct in6addrinfo *ai)

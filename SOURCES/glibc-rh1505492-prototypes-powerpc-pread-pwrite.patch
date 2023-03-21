@@ -1,0 +1,78 @@
+Introduce prototype-style function definitions for pread, pwrite,
+pread64, pwrite64.  Upstream removed the old-style function definitions
+in:
+
+commit 94a42455257226361fedf37a0ad7fc1d9d131645
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Oct 31 21:13:32 2014 +0000
+
+    Move powerpc64 pread/pwrite definitions to syscalls.list (bug 14138).
+
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c
+index 43ead1af67b0c0da..010fca1b6bb0d4b0 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c
+@@ -29,11 +29,7 @@
+ /* Consider moving to syscalls.list.  */
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c
+index dc9fc81c4ccf067e..bcf1bebd75ebf8f5 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c
+@@ -28,11 +28,7 @@
+ /* Consider moving to syscalls.list.  */
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c
+index 57c62bdb74805836..ff9f5c4d8ef3e26d 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c
+@@ -29,11 +29,7 @@
+ /* Consider moving to syscalls.list.  */
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c
+index 430bb4ef2bd2eb3e..b2f630396cf53b39 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c
+@@ -28,11 +28,7 @@
+ /* Consider moving to syscalls.list.  */
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 

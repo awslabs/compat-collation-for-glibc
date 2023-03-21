@@ -1,0 +1,250 @@
+commit 2eecc8afd02d8c65cf098cbae4de87f332dc21bd
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Mon Nov 9 12:48:41 2015 +0100
+
+    Terminate process on invalid netlink response from kernel [BZ #12926]
+    
+    The recvmsg system calls for netlink sockets have been particularly
+    prone to picking up unrelated data after a file descriptor race
+    (where the descriptor is closed and reopened concurrently in a
+    multi-threaded process, as the result of a file descriptor
+    management issue elsewhere).  This commit adds additional error
+    checking and aborts the process if a datagram of unexpected length
+    (without the netlink header) is received, or an error code which
+    cannot happen due to the way the netlink socket is used.
+    
+            [BZ #12926]
+            Terminate process on invalid netlink response.
+            * sysdeps/unix/sysv/linux/netlinkaccess.h
+            (__netlink_assert_response): Declare.
+            * sysdeps/unix/sysv/linux/netlink_assert_response.c: New file.
+            * sysdeps/unix/sysv/linux/Makefile [$(subdir) == inet]
+            (sysdep_routines): Add netlink_assert_response.
+            * sysdeps/unix/sysv/linux/check_native.c (__check_native): Call
+            __netlink_assert_response.
+            * sysdeps/unix/sysv/linux/check_pf.c (make_request): Likewise.
+            * sysdeps/unix/sysv/linux/ifaddrs.c (__netlink_request): Likewise.
+            * sysdeps/unix/sysv/linux/Versions (GLIBC_PRIVATE): Add
+            __netlink_assert_response.
+
+Conflicts:
+	sysdeps/unix/sysv/linux/check_pf.c
+	  Upstream commit fda389c8f0311dd5786be91a7b54b9f935fcafa1
+          ("Fix infinite loop in check_pf (BZ #12926)") was not backported
+	  before and is superseded by the upstream commit backported here.
+	sysdeps/unix/sysv/linux/netlinkaccess.h
+          Missing backport of e054f494306530720114b321b3d97ca2f397cbbb
+          ("Add #include <stdint.h> for uint[32|64]_t usage (except
+	  installed headers)").
+
+diff --git a/sysdeps/unix/sysv/linux/Makefile b/sysdeps/unix/sysv/linux/Makefile
+index 95cff0ef651e74a9..bb69b985e6df7fb1 100644
+--- a/sysdeps/unix/sysv/linux/Makefile
++++ b/sysdeps/unix/sysv/linux/Makefile
+@@ -114,6 +114,7 @@ sysdep_headers += netinet/if_fddi.h netinet/if_tr.h \
+ 		  netipx/ipx.h netash/ash.h netax25/ax25.h netatalk/at.h \
+ 		  netrom/netrom.h netpacket/packet.h netrose/rose.h \
+ 		  neteconet/ec.h netiucv/iucv.h
++sysdep_routines += netlink_assert_response
+ endif
+ 
+ # Don't compile the ctype glue code, since there is no old non-GNU C library.
+diff --git a/sysdeps/unix/sysv/linux/Versions b/sysdeps/unix/sysv/linux/Versions
+index 16bb28159099c5fa..202ffccc2908ddcc 100644
+--- a/sysdeps/unix/sysv/linux/Versions
++++ b/sysdeps/unix/sysv/linux/Versions
+@@ -169,5 +169,7 @@ libc {
+   GLIBC_PRIVATE {
+     # functions used in other libraries
+     __syscall_rt_sigqueueinfo;
++    # functions used by nscd
++    __netlink_assert_response;
+   }
+ }
+diff --git a/sysdeps/unix/sysv/linux/check_native.c b/sysdeps/unix/sysv/linux/check_native.c
+index 4968a07a0f8c7932..319b46762aeaf3b6 100644
+--- a/sysdeps/unix/sysv/linux/check_native.c
++++ b/sysdeps/unix/sysv/linux/check_native.c
+@@ -35,6 +35,7 @@
+ 
+ #include <not-cancel.h>
+ 
++#include "netlinkaccess.h"
+ 
+ void
+ __check_native (uint32_t a1_index, int *a1_native,
+@@ -117,6 +118,7 @@ __check_native (uint32_t a1_index, int *a1_native,
+ 	};
+ 
+       ssize_t read_len = TEMP_FAILURE_RETRY (__recvmsg (fd, &msg, 0));
++      __netlink_assert_response (fd, read_len);
+       if (read_len < 0)
+ 	goto out_fail;
+ 
+diff --git a/sysdeps/unix/sysv/linux/check_pf.c b/sysdeps/unix/sysv/linux/check_pf.c
+index d33e1b497d8ba9c7..6b28a735a14f1498 100644
+--- a/sysdeps/unix/sysv/linux/check_pf.c
++++ b/sysdeps/unix/sysv/linux/check_pf.c
+@@ -36,6 +36,7 @@
+ #include <atomic.h>
+ #include <nscd/nscd-client.h>
+ 
++#include "netlinkaccess.h"
+ 
+ #ifndef IFA_F_HOMEADDRESS
+ # define IFA_F_HOMEADDRESS 0
+@@ -178,6 +179,7 @@ make_request (int fd, pid_t pid)
+ 	};
+ 
+       ssize_t read_len = TEMP_FAILURE_RETRY (__recvmsg (fd, &msg, 0));
++      __netlink_assert_response (fd, read_len);
+       if (read_len < 0)
+ 	goto out_fail;
+ 
+diff --git a/sysdeps/unix/sysv/linux/ifaddrs.c b/sysdeps/unix/sysv/linux/ifaddrs.c
+index 179653103e057b79..c87e594e30a314fe 100644
+--- a/sysdeps/unix/sysv/linux/ifaddrs.c
++++ b/sysdeps/unix/sysv/linux/ifaddrs.c
+@@ -169,6 +169,7 @@ __netlink_request (struct netlink_handle *h, int type)
+ 	};
+ 
+       read_len = TEMP_FAILURE_RETRY (__recvmsg (h->fd, &msg, 0));
++      __netlink_assert_response (h->fd, read_len);
+       if (read_len < 0)
+ 	goto out_fail;
+ 
+diff --git a/sysdeps/unix/sysv/linux/netlink_assert_response.c b/sysdeps/unix/sysv/linux/netlink_assert_response.c
+new file mode 100644
+index 0000000000000000..b570e93db840fec1
+--- /dev/null
++++ b/sysdeps/unix/sysv/linux/netlink_assert_response.c
+@@ -0,0 +1,106 @@
++/* Check recvmsg results for netlink sockets.
++   Copyright (C) 2015 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <errno.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <sys/socket.h>
++
++#include "netlinkaccess.h"
++
++static int
++get_address_family (int fd)
++{
++  struct sockaddr_storage sa;
++  socklen_t sa_len = sizeof (sa);
++  if (__getsockname (fd, (struct sockaddr *) &sa, &sa_len) < 0)
++    return -1;
++  /* Check that the socket family number is preserved despite in-band
++     signaling.  */
++  _Static_assert (sizeof (sa.ss_family) < sizeof (int), "address family size");
++  _Static_assert (0 < (__typeof__ (sa.ss_family)) -1,
++                  "address family unsigned");
++  return sa.ss_family;
++}
++
++void
++internal_function
++__netlink_assert_response (int fd, ssize_t result)
++{
++  if (result < 0)
++    {
++      /* Check if the error is unexpected.  */
++      bool terminate = false;
++      int error_code = errno;
++      int family = get_address_family (fd);
++      if (family != AF_NETLINK)
++        /* If the address family does not match (or getsockname
++           failed), report the original error.  */
++        terminate = true;
++      else if (error_code == EBADF
++          || error_code == ENOTCONN
++          || error_code == ENOTSOCK
++          || error_code == ECONNREFUSED)
++        /* These errors indicate that the descriptor is not a
++           connected socket.  */
++        terminate = true;
++      else if (error_code == EAGAIN || error_code == EWOULDBLOCK)
++        {
++          /* The kernel might return EAGAIN for other reasons than a
++             non-blocking socket.  But if the socket is not blocking,
++             it is not ours, so report the error.  */
++          int mode = __fcntl (fd, F_GETFL, 0);
++          if (mode < 0 || (mode & O_NONBLOCK) != 0)
++            terminate = true;
++        }
++      if (terminate)
++        {
++          char message[200];
++          if (family < 0)
++            __snprintf (message, sizeof (message),
++                        "Unexpected error %d on netlink descriptor %d",
++                        error_code, fd);
++          else
++            __snprintf (message, sizeof (message),
++                        "Unexpected error %d on netlink descriptor %d"
++                        " (address family %d)",
++                        error_code, fd, family);
++          __libc_fatal (message);
++        }
++      else
++        /* Restore orignal errno value.  */
++        __set_errno (error_code);
++    }
++  else if (result < sizeof (struct nlmsghdr))
++    {
++      char message[200];
++      int family = get_address_family (fd);
++      if (family < 0)
++          __snprintf (message, sizeof (message),
++                      "Unexpected netlink response of size %zd"
++                      " on descriptor %d",
++                      result, fd);
++      else
++          __snprintf (message, sizeof (message),
++                      "Unexpected netlink response of size %zd"
++                      " on descriptor %d (address family %d)",
++                      result, fd, family);
++      __libc_fatal (message);
++    }
++}
++libc_hidden_def (__netlink_assert_response)
+diff --git a/sysdeps/unix/sysv/linux/netlinkaccess.h b/sysdeps/unix/sysv/linux/netlinkaccess.h
+index 6cd8a882640d2486..33dc4e12cd464681 100644
+--- a/sysdeps/unix/sysv/linux/netlinkaccess.h
++++ b/sysdeps/unix/sysv/linux/netlinkaccess.h
+@@ -18,6 +18,7 @@
+ #ifndef _NETLINKACCESS_H
+ #define _NETLINKACCESS_H 1
+ 
++#include <sys/types.h>
+ #include <asm/types.h>
+ #include <linux/netlink.h>
+ #include <linux/rtnetlink.h>
+@@ -49,5 +50,10 @@ extern void __netlink_close (struct netlink_handle *h);
+ extern void __netlink_free_handle (struct netlink_handle *h);
+ extern int __netlink_request (struct netlink_handle *h, int type);
+ 
++/* Terminate the process if RESULT is an invalid recvmsg result for
++   the netlink socket FD.  */
++void __netlink_assert_response (int fd, ssize_t result)
++  internal_function;
++libc_hidden_proto (__netlink_assert_response)
+ 
+ #endif /* netlinkaccess.h */

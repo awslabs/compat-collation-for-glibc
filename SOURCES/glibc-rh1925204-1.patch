@@ -1,0 +1,74 @@
+Fixes regression introduced by glibc-rh1869380.patch.  This fix
+backports the upstream fixed implementation of __isnanl to use only in
+printf_fp.c so that the fix remains localized and does not affect
+other callers of __isnanl.
+
+diff --git a/include/math.h b/include/math.h
+index 0925d604ea3552a7..4eddc81be0dccad9 100644
+--- a/include/math.h
++++ b/include/math.h
+@@ -6,6 +6,11 @@
+ /* Now define the internal interfaces.  */
+ extern int __matherr (struct exception *__exc);
+ 
++# if IS_IN (libc)
++extern int __isnanl_pseudo (long double);
++hidden_proto (__isnanl_pseudo)
++#endif
++
+ # if IS_IN (libc) || IS_IN (libm)
+ hidden_proto (__finite)
+ hidden_proto (__isinf)
+diff --git a/stdio-common/printf_fp.c b/stdio-common/printf_fp.c
+index 60b143571065a082..af842156eaa3eace 100644
+--- a/stdio-common/printf_fp.c
++++ b/stdio-common/printf_fp.c
+@@ -155,19 +155,7 @@ static __always_inline int
+ isnanl_or_pseudo (long double in)
+ {
+ #if defined __x86_64__ || defined __i386__
+-  union
+-    {
+-      long double f;
+-      struct
+-	{
+-	  uint64_t low;
+-	  uint64_t high;
+-	} u;
+-    } ldouble;
+-
+-  ldouble.f = in;
+-
+-  return __isnanl (in) || (ldouble.u.low & 0x8000000000000000) == 0;
++  return __isnanl_pseudo (in);
+ #else
+   return __isnanl (in);
+ #endif
+diff --git a/sysdeps/i386/fpu/s_isnanl.c b/sysdeps/i386/fpu/s_isnanl.c
+index 816396d8fbc79dde..dc83d7a85fb3318b 100644
+--- a/sysdeps/i386/fpu/s_isnanl.c
++++ b/sysdeps/i386/fpu/s_isnanl.c
+@@ -41,3 +41,23 @@ int __isnanl(long double x)
+ }
+ hidden_def (__isnanl)
+ weak_alias (__isnanl, isnanl)
++
++#if IS_IN (libc)
++/* Exact backport from glibc-2.33, used only in printf_fp.c.  */
++int __isnanl_pseudo (long double x)
++{
++	int32_t se,hx,lx,pn;
++	GET_LDOUBLE_WORDS(se,hx,lx,x);
++	se = (se & 0x7fff) << 1;
++	/* Detect pseudo-normal numbers, i.e. exponent is non-zero and the top
++	   bit of the significand is not set.   */
++	pn = (uint32_t)((~hx & 0x80000000) & (se|(-se)))>>31;
++	/* Clear the significand bit when computing mantissa.  */
++	lx |= hx & 0x7fffffff;
++	se |= (uint32_t)(lx|(-lx))>>31;
++	se = 0xfffe - se;
++
++	return (int)(((uint32_t)(se)) >> 16) | pn;
++}
++hidden_def (__isnanl_pseudo)
++#endif

@@ -1,0 +1,70 @@
+Partial backport of this upstream commit:
+
+commit 9acacaa02f3b75fddc07a56f3d848df45281a5de
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Jun 12 10:10:18 2015 +0000
+
+    Fix h_errno namespace (bug 18520).
+
+The linknamespace test changes in conform/Makefile are not included here
+because glibc 2.17 did not have these tests.
+
+diff --git a/include/netdb.h b/include/netdb.h
+index b6d7b90bbf8abd2e..6a6dca9ef57aaa37 100644
+--- a/include/netdb.h
++++ b/include/netdb.h
+@@ -8,7 +8,7 @@
+ #  if IS_IN (libc)
+ #   define h_errno __libc_h_errno
+ #  else
+-#   define h_errno h_errno	/* For #ifndef h_errno tests.  */
++#   define h_errno __h_errno
+ #  endif
+ extern __thread int h_errno attribute_tls_model_ie;
+ # endif /* IS_IN_LIB */
+diff --git a/inet/herrno.c b/inet/herrno.c
+index 1802d0e00563839a..0cd84445190728b3 100644
+--- a/inet/herrno.c
++++ b/inet/herrno.c
+@@ -24,7 +24,7 @@
+ /* We need to have the error status variable of the resolver
+    accessible in the libc.  */
+ 
+-__thread int h_errno;
+-extern __thread int __libc_h_errno __attribute__ ((alias ("h_errno")))
++__thread int __h_errno;
++extern __thread int __libc_h_errno __attribute__ ((alias ("__h_errno")))
+   attribute_hidden;
+ #define h_errno __libc_h_errno
+diff --git a/nptl/herrno.c b/nptl/herrno.c
+index c0488e4f6754873f..5056e3df88211123 100644
+--- a/nptl/herrno.c
++++ b/nptl/herrno.c
+@@ -23,12 +23,12 @@
+ 
+ /* We need to have the error status variable of the resolver
+    accessible in the libc.  */
+-extern __thread int h_errno;
++extern __thread int __h_errno;
+ 
+ 
+ /* When threaded, h_errno may be a per-thread variable.  */
+ int *
+ __h_errno_location (void)
+ {
+-  return &h_errno;
++  return &__h_errno;
+ }
+diff --git a/resolv/Versions b/resolv/Versions
+index 93faf1e2f5faac79..152ef3f68f9a8b48 100644
+--- a/resolv/Versions
++++ b/resolv/Versions
+@@ -26,7 +26,7 @@ libc {
+   GLIBC_PRIVATE {
+     __gai_sigqueue;
+ 
+-    h_errno; __resp;
++    __h_errno; __resp;
+ 
+     __res_maybe_init; __res_iclose;
+   }

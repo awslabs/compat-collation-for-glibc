@@ -1,0 +1,63 @@
+commit cfa8054fbb6212e64d54a3d4926972a6a20e3498
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Tue Jan 15 14:36:09 2013 +0100
+
+    Hide reference to mktemp in libpthread
+
+diff --git a/include/stdlib.h b/include/stdlib.h
+index 152c12fe9cb41509..edec46fa1ff4cc28 100644
+--- a/include/stdlib.h
++++ b/include/stdlib.h
+@@ -78,6 +78,7 @@ extern struct drand48_data __libc_drand48_data attribute_hidden;
+ extern int __setenv (const char *__name, const char *__value, int __replace);
+ extern int __unsetenv (const char *__name);
+ extern int __clearenv (void);
++extern char *__mktemp (char *__template) __THROW __nonnull ((1));
+ extern char *__canonicalize_file_name (const char *__name);
+ extern char *__realpath (const char *__name, char *__resolved);
+ extern int __ptsname_r (int __fd, char *__buf, size_t __buflen);
+diff --git a/misc/Versions b/misc/Versions
+index 64632f0bfa81b00a..ec5aea7b523e7041 100644
+--- a/misc/Versions
++++ b/misc/Versions
+@@ -151,6 +151,7 @@ libc {
+   }
+   GLIBC_PRIVATE {
+     __madvise;
++    __mktemp;
+     __libc_ifunc_impl_list;
+   }
+ }
+diff --git a/misc/mktemp.c b/misc/mktemp.c
+index 05a07cb301f9506e..19824f01a11f9af9 100644
+--- a/misc/mktemp.c
++++ b/misc/mktemp.c
+@@ -22,7 +22,7 @@
+    The last six characters of TEMPLATE must be "XXXXXX";
+    they are replaced with a string that makes the filename unique.  */
+ char *
+-mktemp (template)
++__mktemp (template)
+      char *template;
+ {
+   if (__gen_tempname (template, 0, 0, __GT_NOCREATE) < 0)
+@@ -31,5 +31,6 @@ mktemp (template)
+ 
+   return template;
+ }
++weak_alias (__mktemp, mktemp)
+ 
+ link_warning (mktemp, "the use of `mktemp' is dangerous, better use `mkstemp'")
+diff --git a/nptl/sem_open.c b/nptl/sem_open.c
+index d87076e04a55cf71..a0c488b62ffebcc4 100644
+--- a/nptl/sem_open.c
++++ b/nptl/sem_open.c
+@@ -334,7 +334,7 @@ sem_open (const char *name, int oflag, ...)
+ 	     since the file must be opened with a specific mode.  The
+ 	     mode cannot later be set since then we cannot apply the
+ 	     file create mask.  */
+-	  if (mktemp (tmpfname) == NULL)
++	  if (__mktemp (tmpfname) == NULL)
+ 	    return SEM_FAILED;
+ 
+ 	  /* Open the file.  Make sure we do not overwrite anything.  */

@@ -1,0 +1,51 @@
+Introduce prototypes for scandir, scandirat.  This was implemented
+upstream in:
+
+commit d2ee815ad677bba720c4f0275c1d6065f5809e7a
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Wed May 13 12:34:11 2015 -0700
+
+    Refactor scandir/scandirat to use common tail.
+
+Not backported here because of its dependency on the fix for
+swbz#17999.
+
+diff --git a/dirent/scandir.c b/dirent/scandir.c
+index 6dce54d64a3effa2..39c4c20e2b22804d 100644
+--- a/dirent/scandir.c
++++ b/dirent/scandir.c
+@@ -34,11 +34,9 @@
+ 
+ 
+ int
+-SCANDIR (dir, namelist, select, cmp)
+-     const char *dir;
+-     DIRENT_TYPE ***namelist;
+-     int (*select) (const DIRENT_TYPE *);
+-     int (*cmp) (const DIRENT_TYPE **, const DIRENT_TYPE **);
++SCANDIR (const char *dir, DIRENT_TYPE ***namelist,
++         int (*select) (const DIRENT_TYPE *),
++         int (*cmp) (const DIRENT_TYPE **, const DIRENT_TYPE **))
+ {
+   return SCANDIRAT (AT_FDCWD, dir, namelist, select, cmp);
+ }
+diff --git a/dirent/scandirat.c b/dirent/scandirat.c
+index c2704baa88ef71d0..0200171a64139933 100644
+--- a/dirent/scandirat.c
++++ b/dirent/scandirat.c
+@@ -52,12 +52,9 @@ __scandir_cancel_handler (void *arg)
+ 
+ 
+ int
+-SCANDIRAT (dfd, dir, namelist, select, cmp)
+-     int dfd;
+-     const char *dir;
+-     DIRENT_TYPE ***namelist;
+-     int (*select) (const DIRENT_TYPE *);
+-     int (*cmp) (const DIRENT_TYPE **, const DIRENT_TYPE **);
++SCANDIRAT (int dfd, const char *dir, DIRENT_TYPE ***namelist,
++	   int (*select) (const DIRENT_TYPE *),
++	   int (*cmp) (const DIRENT_TYPE **, const DIRENT_TYPE **))
+ {
+   DIR *dp = __opendirat (dfd, dir);
+   DIRENT_TYPE **v = NULL;

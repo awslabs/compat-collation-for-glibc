@@ -1,0 +1,21 @@
+commit bdf079da369ad5685c0432b2f41a5aaf1ec990e7
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Wed Dec 17 13:04:07 2014 +0100
+
+    Fix printf format error
+
+diff --git a/nscd/mem.c b/nscd/mem.c
+index 3811b447b0bf732b..a3d1014c640e7d83 100644
+--- a/nscd/mem.c
++++ b/nscd/mem.c
+@@ -423,8 +423,8 @@ gc (struct database_dyn *db)
+ 
+       if (__builtin_expect (debug_level >= 3, 0))
+ 	dbg_log (_("freed %zu bytes in %s cache"),
+-		 db->head->first_free
+-		 - ((char *) moves->to + moves->size - db->data),
++		 (size_t) (db->head->first_free
++			   - ((char *) moves->to + moves->size - db->data)),
+ 		 dbnames[db - dbs]);
+ 
+       /* The byte past the end of the last copied block is the next

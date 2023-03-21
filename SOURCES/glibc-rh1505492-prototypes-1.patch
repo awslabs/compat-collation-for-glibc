@@ -1,0 +1,54 @@
+commit c93c5dec54a64563ce85b511053bd22161085d77
+Author: Andi Kleen <ak@linux.intel.com>
+Date:   Fri Dec 28 21:25:07 2012 +0100
+
+    Convert pthread_rwlock_try(rd/wr)lock to prototypes
+    
+    2012-12-28  Andi Kleen  <ak@linux.intel.com>
+    
+            * pthread_rwlock_tryrdlock.c (__pthread_rwlock_tryrdlock):
+            * Convert
+            to prototype.
+            * pthread_rwlock_trywrlock.c (__pthread_rwlock_trywrlock):
+            Likewise.
+
+diff --git a/nptl/pthread_rwlock_tryrdlock.c b/nptl/pthread_rwlock_tryrdlock.c
+index beaa970acfc6c0a3..1a492364154f6828 100644
+--- a/nptl/pthread_rwlock_tryrdlock.c
++++ b/nptl/pthread_rwlock_tryrdlock.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 2002, 2007 Free Software Foundation, Inc.
++/* Copyright (C) 2002-2012 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+ 
+@@ -22,8 +22,7 @@
+ 
+ 
+ int
+-__pthread_rwlock_tryrdlock (rwlock)
+-     pthread_rwlock_t *rwlock;
++__pthread_rwlock_tryrdlock (pthread_rwlock_t *rwlock)
+ {
+   int result = EBUSY;
+ 
+diff --git a/nptl/pthread_rwlock_trywrlock.c b/nptl/pthread_rwlock_trywrlock.c
+index 92750b83a209c959..920cf366fa73e4ce 100644
+--- a/nptl/pthread_rwlock_trywrlock.c
++++ b/nptl/pthread_rwlock_trywrlock.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 2002, 2003, 2007 Free Software Foundation, Inc.
++/* Copyright (C) 2002-2012 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+ 
+@@ -22,8 +22,7 @@
+ 
+ 
+ int
+-__pthread_rwlock_trywrlock (rwlock)
+-     pthread_rwlock_t *rwlock;
++__pthread_rwlock_trywrlock (pthread_rwlock_t *rwlock)
+ {
+   int result = EBUSY;
+ 

@@ -1,0 +1,28 @@
+Use stat64 to detect presence of file that alters IFUNC selection.
+This avoids problems in NVMe drives where 32-bit stat would fail
+because the device ID doesn't fit into teh truncated 16-bit dev_t.
+
+diff --git a/sysdeps/x86/cpu-features.h b/sysdeps/x86/cpu-features.h
+index 4e2e6fabb39ab600..e3b8167ae0669f00 100644
+--- a/sysdeps/x86/cpu-features.h
++++ b/sysdeps/x86/cpu-features.h
+@@ -184,11 +184,19 @@
+ static bool __attribute__ ((unused))
+ use_unaligned_strstr (void)
+ {
++# if defined __x86_64__
+   struct stat unaligned_strstr_etc_sysconfig_file;
++# else
++  struct stat64 unaligned_strstr_etc_sysconfig_file;
++# endif
+ 
+   /* TLS may not have been set up yet, so avoid using stat since it tries to
+      set errno.  */
++# if defined __x86_64__
+   return INTERNAL_SYSCALL (stat, , 2,
++# else
++  return INTERNAL_SYSCALL (stat64, , 2,
++# endif
+ 			   ENABLE_STRSTR_UNALIGNED_PATHNAME,
+ 			   &unaligned_strstr_etc_sysconfig_file) == 0;
+ }

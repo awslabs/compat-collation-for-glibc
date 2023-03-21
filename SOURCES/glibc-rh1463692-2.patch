@@ -1,0 +1,28 @@
+From f8cef4d07d9641e27629bd3ce2d13f5d702fb251 Mon Sep 17 00:00:00 2001
+From: DJ Delorie <dj@delorie.com>
+Date: Wed, 19 Jul 2017 13:14:34 -0400
+Subject: [PATCH] Fix cast-after-dereference
+
+Original code was dereferencing a char*, then casting the value
+to size_t.  Should cast the pointer to size_t* then deference.
+---
+ ChangeLog       | 4 ++++
+ grp/grp-merge.c | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/grp/grp-merge.c b/grp/grp-merge.c
+index 6590e5d..035e7a6 100644
+--- a/grp/grp-merge.c
++++ b/grp/grp-merge.c
+@@ -137,7 +137,7 @@ __merge_grp (struct group *savedgrp, char *savedbuf, char *savedend,
+ 
+   /* Get the count of group members from the last sizeof (size_t) bytes in the
+      mergegrp buffer.  */
+-  savedmemcount = (size_t) *(savedend - sizeof (size_t));
++  savedmemcount = *(size_t *) (savedend - sizeof (size_t));
+ 
+   /* Get the count of new members to add.  */
+   for (memcount = 0; mergegrp->gr_mem[memcount]; memcount++)
+-- 
+1.8.3.1
+

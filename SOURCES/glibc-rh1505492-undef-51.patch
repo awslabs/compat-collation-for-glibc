@@ -1,0 +1,184 @@
+commit 50cbbaa935e92dc570fc899a17669cd6782b09cd
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Mon Dec 29 17:40:47 2014 +0530
+
+    Use posix-conf-vars.list to generate spec array
+    
+    This patch adds support to generate the spec array in getconf from the
+    conf.list.  The generated code is mostly unchanged.  the only changes
+    are due to the change in layout of the spec and val arrays in the ELF.
+    
+    The val array can also be auto-generated from posix-conf-vars.list
+    once the remaining macros are added to it.
+    
+            * posix/posix-conf-vars.list (SPEC:XBS5): Add sysconf prefix.
+            * posix/confstr.c: Define NEED_SPEC_ARRAY to 0.
+            * posix/posix-envs.def: Likewise.
+            * sysdeps/posix/sysconf.c: Likewise.
+            * posix/getconf.c: Define NEED_SPEC_ARRAY to 1.
+            (specs): Remove array.
+            * scripts/gen-posix-conf-vars.awk: Support generation of specs
+            array.
+
+diff --git a/posix/confstr.c b/posix/confstr.c
+index 5b03986a3678e007..0233ea94707ee627 100644
+--- a/posix/confstr.c
++++ b/posix/confstr.c
+@@ -21,6 +21,8 @@
+ #include <string.h>
+ #include <confstr.h>
+ #include "../version.h"
++
++#define NEED_SPEC_ARRAY 0
+ #include <posix-conf-vars.h>
+ 
+ /* If BUF is not NULL and LEN > 0, fill in at most LEN - 1 bytes
+diff --git a/posix/getconf.c b/posix/getconf.c
+index 9cb8f29be28466ff..bd844dead16e9400 100644
+--- a/posix/getconf.c
++++ b/posix/getconf.c
+@@ -26,6 +26,9 @@
+ #include "../version.h"
+ #define PACKAGE _libc_intl_domainname
+ 
++#define NEED_SPEC_ARRAY 1
++#include <posix-conf-vars.h>
++
+ struct conf
+   {
+     const char *name;
+@@ -1008,23 +1011,6 @@ static const struct conf vars[] =
+   };
+ 
+ 
+-static const struct { const char *name; int num; } specs[] =
+-  {
+-    { "XBS5_ILP32_OFF32", _SC_XBS5_ILP32_OFF32 },
+-    { "XBS5_ILP32_OFFBIG", _SC_XBS5_ILP32_OFFBIG },
+-    { "XBS5_LP64_OFF64", _SC_XBS5_LP64_OFF64 },
+-    { "XBS5_LPBIG_OFFBIG", _SC_XBS5_LPBIG_OFFBIG },
+-    { "POSIX_V6_ILP32_OFF32", _SC_V6_ILP32_OFF32 },
+-    { "POSIX_V6_ILP32_OFFBIG", _SC_V6_ILP32_OFFBIG },
+-    { "POSIX_V6_LP64_OFF64", _SC_V6_LP64_OFF64 },
+-    { "POSIX_V6_LPBIG_OFFBIG", _SC_V6_LPBIG_OFFBIG },
+-    { "POSIX_V7_ILP32_OFF32", _SC_V7_ILP32_OFF32 },
+-    { "POSIX_V7_ILP32_OFFBIG", _SC_V7_ILP32_OFFBIG },
+-    { "POSIX_V7_LP64_OFF64", _SC_V7_LP64_OFF64 },
+-    { "POSIX_V7_LPBIG_OFFBIG", _SC_V7_LPBIG_OFFBIG },
+-  };
+-static const int nspecs = sizeof (specs) / sizeof (specs[0]);
+-
+ extern const char *__progname;
+ 
+ 
+diff --git a/posix/posix-conf-vars.list b/posix/posix-conf-vars.list
+index 3e7e7cdaa9c46c85..601bc2fd33f72f27 100644
+--- a/posix/posix-conf-vars.list
++++ b/posix/posix-conf-vars.list
+@@ -1,7 +1,8 @@
+ # Configuration variables identified by getconf.  The heading of each section
+-# is of the format TYPE PREFIX with the opening curly brace on the same line.
+-# TYPE can either be SYSCONF, PATHCONF, CONFSTR or SPEC.  Variable names are
+-# put one on each line with a curly brace on its own line ending the section.
++# is of the format TYPE PREFIX SC_PREFIX with the opening curly brace on the
++# same line.  TYPE can either be SYSCONF, PATHCONF, CONFSTR or SPEC.  In the
++# absence of SC_PREFIX, _SC is used as the SC_PREFIX.  Variable names are put
++# one on each line with a curly brace on its own line ending the section.
+ 
+ SPEC POSIX {
+   V6_ILP32_OFF32
+@@ -104,7 +105,7 @@ SYSCONF POSIX {
+   RAW_SOCKETS
+ }
+ 
+-SPEC XBS5 {
++SPEC XBS5 _SC_XBS5 {
+   ILP32_OFF32
+   ILP32_OFFBIG
+   LP64_OFF64
+diff --git a/posix/posix-envs.def b/posix/posix-envs.def
+index e820e6dbe3fa3b61..428dbc23ceb7f64c 100644
+--- a/posix/posix-envs.def
++++ b/posix/posix-envs.def
+@@ -42,6 +42,7 @@
+    defined.  These are called with arguments V5, V6, V7 before and
+    after the relevant groups of environments.  */
+ 
++#define NEED_SPEC_ARRAY 0
+ #include <posix-conf-vars.h>
+ 
+ START_ENV_GROUP (V7)
+diff --git a/scripts/gen-posix-conf-vars.awk b/scripts/gen-posix-conf-vars.awk
+index 16e20fc1007bd2f5..0eca55d536bd7f70 100644
+--- a/scripts/gen-posix-conf-vars.awk
++++ b/scripts/gen-posix-conf-vars.awk
+@@ -15,12 +15,19 @@ $1 ~ /^#/ || $0 ~ /^\s*$/ {
+ $NF == "{" {
+   type = $1
+   prefix = $2
++
++  if (NF == 4)
++    sc_prefix = $3
++  else
++    sc_prefix = "_SC"
++
+   next
+ }
+ 
+ $1 == "}" {
+   prefix = ""
+   type = ""
++  sc_prefix = ""
+   next
+ }
+ 
+@@ -35,6 +42,7 @@ $1 == "}" {
+   # CONFSTR: A configuration string
+   # SYSCONF: A numeric value
+   # SPEC: A specification
++  sc_prefixes[prefix][$1] = sc_prefix
+   conf[prefix][$1] = type
+ }
+ 
+@@ -56,6 +64,26 @@ END {
+ 	printf "# endif\n"
+       }
+       printf "#endif\n\n"
++
++      # Build a name -> sysconf number associative array to print a C array at
++      # the end.
++      if (conf[p][c] == "SPEC") {
++	name = sprintf ("%s_%s", p, c)
++	num = sprintf ("%s_%s", sc_prefixes[p][c], c)
++	spec[name] = num
++      }
+     }
+   }
++
++  # Print the specification array.  Define the macro NEED_SPEC_ARRAY before
++  # including posix-conf-vars.h to make it available in the compilation unit.
++  print "#if NEED_SPEC_ARRAY"
++  print "static const struct { const char *name; int num; } specs[] ="
++  print "  {"
++  for (s in spec) {
++    printf "    { \"%s\", %s },\n", s, spec[s]
++  }
++  print "  };"
++  print "static const int nspecs = sizeof (specs) / sizeof (specs[0]);"
++  print "#endif"
+ }
+diff --git a/sysdeps/posix/sysconf.c b/sysdeps/posix/sysconf.c
+index 1e9d4e099e94981c..88aa151422dc56f9 100644
+--- a/sysdeps/posix/sysconf.c
++++ b/sysdeps/posix/sysconf.c
+@@ -31,9 +31,9 @@
+ #include <sys/types.h>
+ #include <regex.h>
+ 
++#define NEED_SPEC_ARRAY 0
+ #include <posix-conf-vars.h>
+ 
+-
+ #define NEED_CHECK_SPEC \
+   (!defined _XBS5_ILP32_OFF32 || !defined _XBS5_ILP32_OFFBIG \
+    || !defined _XBS5_LP64_OFF64 || !defined _XBS5_LPBIG_OFFBIG \

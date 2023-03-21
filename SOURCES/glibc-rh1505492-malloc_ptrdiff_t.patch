@@ -1,0 +1,24 @@
+commit dd54b8644c60cd7b7bee27ecaae4138e7c056c01
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Mar 8 16:46:45 2013 +0000
+
+    Remove __malloc_ptrdiff_t.
+
+Conflicts:
+	malloc/malloc.h
+
+Adjusted to keep the definition in the public <malloc.h> header file.
+
+diff --git a/malloc/morecore.c b/malloc/morecore.c
+index 8a72ba6a3d70a865..1e7b77749ff1700d 100644
+--- a/malloc/morecore.c
++++ b/malloc/morecore.c
+@@ -43,7 +43,7 @@ libc_hidden_proto (__sbrk)
+    If INCREMENT is negative, shrink data space.  */
+ __malloc_ptr_t
+ __default_morecore (increment)
+-     __malloc_ptrdiff_t increment;
++     ptrdiff_t increment;
+ {
+   __malloc_ptr_t result = (__malloc_ptr_t) __sbrk (increment);
+   if (result == (__malloc_ptr_t) -1)

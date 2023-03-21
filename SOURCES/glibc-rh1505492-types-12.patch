@@ -1,0 +1,19 @@
+commit eca2772b9a2b057a1af6604afb9b5d3ce3448497
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date:   Wed Dec 17 16:42:51 2014 +0100
+
+    Get rid of format warning in tst-widetext.c.
+
+diff --git a/libio/tst-widetext.c b/libio/tst-widetext.c
+index fef57be53ca072c4..fd8b207eb30a99bf 100644
+--- a/libio/tst-widetext.c
++++ b/libio/tst-widetext.c
+@@ -291,7 +291,7 @@ do_test (void)
+     {
+       if (fgetws (wcp, &wc2buf[wcsize] - wcp + 1, fp) == NULL)
+ 	{
+-	  printf ("%u: short read using fgetws (only %Zd of %Zd)\n",
++	  printf ("%u: short read using fgetws (only %td of %Zd)\n",
+ 		  __LINE__, wcp - wc2buf, wcsize);
+ 	  status = 1;
+ 	  break;

@@ -1,0 +1,24 @@
+Introduce prototype-style function definition for generic stpcpy.
+Upstream part of:
+
+commit 142e0a9953059bcf5667921f2670efec377be3d5
+Author: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+Date:   Tue Jul 28 17:12:25 2015 -0300
+
+    powerpc: Use default strcpy optimization for POWER7
+
+diff --git a/string/stpcpy.c b/string/stpcpy.c
+index b74f6e2b489e1f18..8b2c4c5bb7e1ee74 100644
+--- a/string/stpcpy.c
++++ b/string/stpcpy.c
+@@ -36,9 +36,7 @@ extern __typeof (__stpcpy) STPCPY;
+ 
+ /* Copy SRC to DEST, returning the address of the terminating '\0' in DEST.  */
+ char *
+-__stpcpy (dest, src)
+-     char *dest;
+-     const char *src;
++__stpcpy (char *dest, const char *src)
+ {
+   char *d = dest;
+   const char *s = src;

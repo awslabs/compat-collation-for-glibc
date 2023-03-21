@@ -1,0 +1,66 @@
+commit c259196b5005812aa3294dbf4eeca29b266a4522
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Mar 1 18:53:03 2019 +0100
+
+    elf/tst-big-note: Improve accuracy of test [BZ #20419]
+    
+    It is possible that the link editor injects an allocated ABI tag note
+    before the artificial, allocated large note in the test.  Note parsing
+    in open_verify stops when the first ABI tag note is encountered, so if
+    the ABI tag note comes first, the problematic code is not actually
+    exercised.
+    
+    Also tweak the artificial note so that it is a syntactically valid
+    4-byte aligned note, in case the link editor tries to parse notes and
+    process them.
+    
+    Improves the testing part of commit 0065aaaaae51cd60210ec3a7e13.
+    
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+(Minor adjustment for Makefile conflict.)
+
+diff --git a/elf/Makefile b/elf/Makefile
+index b46b3a0e3542a06f..2b2662d5cf96c437 100644
+--- a/elf/Makefile
++++ b/elf/Makefile
+@@ -244,8 +244,8 @@ extra-test-objs += $(addsuffix .os,$(strip $(modules-names)))
+ # We need this variable to be sure the test modules get the right CPPFLAGS.
+ test-extras += $(modules-names)
+ 
+-# filtmod1.so has a special rule
+-modules-names-nobuild := filtmod1
++# filtmod1.so, tst-big-note-lib.so have special rules.
++modules-names-nobuild := filtmod1 tst-big-note-lib
+ 
+ ifneq (no,$(multi-arch))
+ tests-static += ifuncmain1static ifuncmain1picstatic \
+@@ -1239,3 +1239,8 @@ $(objpfx)tst-audit12mod1.so: $(objpfx)tst-audit12mod2.so
+ LDFLAGS-tst-audit12mod2.so = -Wl,--version-script=tst-audit12mod2.map
+ 
+ $(objpfx)tst-big-note: $(objpfx)tst-big-note-lib.so
++# Avoid creating an ABI tag note, which may come before the
++# artificial, large note in tst-big-note-lib.o and invalidate the
++# test.
++$(objpfx)tst-big-note-lib.so: $(objpfx)tst-big-note-lib.o
++	$(LINK.o) -shared -o $@ $(LDFLAGS.so) $<
+diff --git a/elf/tst-big-note-lib.S b/elf/tst-big-note-lib.S
+index 6b514a03cc686141..c97590ccb05e9b2e 100644
+--- a/elf/tst-big-note-lib.S
++++ b/elf/tst-big-note-lib.S
+@@ -20,7 +20,13 @@
+    On a typical Linux system with 8MiB "ulimit -s", that was enough
+    to trigger stack overflow in open_verify.  */
+ 
++#define NOTE_SIZE 8*1024*1024
++
+ .pushsection .note.big,"a"
+-.balign 4
+-.fill 8*1024*1024, 1, 0
++	.balign 4
++	.long 5 		/* n_namesz.  Length of "GLIBC".  */
++	.long NOTE_SIZE		/* n_descsz.  */
++	.long 0			/* n_type.  */
++	.ascii "GLIBC\0\0\0"	/* Name and alignment to four bytes.  */
++	.fill NOTE_SIZE, 1, 0
+ .popsection

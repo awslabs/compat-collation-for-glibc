@@ -1,0 +1,33 @@
+commit 257dabc059447934a90be6fce4b5d2a5f4b63dfd
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Dec 14 18:23:15 2016 +0000
+
+    Include <linux/falloc.h> in bits/fcntl-linux.h.
+    
+    This patch makes bits/fcntl-linux.h include <linux/falloc.h> to define
+    the FALLOC_* flags under __USE_GNU (linux/falloc.h defines only those
+    bits, nothing else).
+    
+    Tested for x86_64 and x86.
+    
+    	* sysdeps/unix/sysv/linux/bits/fcntl-linux.h [__USE_GNU]: Include
+    	<linux/falloc.h>.
+    	(FALLOC_FL_KEEP_SIZE): Remove.
+    	(FALLOC_FL_PUNCH_HOLE): Likewise.
+    	(FALLOC_FL_COLLAPSE_RANGE): Likewise.
+    	(FALLOC_FL_ZERO_RANGE): Likewise.
+
+diff -rup a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
+--- a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h	2018-04-13 18:27:53.000000000 -0400
++++ b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h	2018-04-13 18:29:27.108482182 -0400
+@@ -300,6 +300,10 @@ struct f_owner_ex
+ # define SPLICE_F_GIFT		8	/* Pages passed in are a gift.  */
+ 
+ 
++/* Flags for fallocate.  */
++# include <linux/falloc.h>
++
++
+ /* File handle structure.  */
+ struct file_handle
+ {

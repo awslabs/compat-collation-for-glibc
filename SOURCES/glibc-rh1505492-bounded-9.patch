@@ -1,0 +1,1144 @@
+commit a2da1673fe32540799c801e8aec374dc1c0e0596
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Feb 8 20:06:30 2013 +0000
+
+    Remove CHECK_N and bp-checks.h.
+
+Conflicts:
+	sysdeps/generic/bp-checks.h
+
+Copyright header change; file removed manually.
+
+diff --git a/debug/segfault.c b/debug/segfault.c
+index 98886dbf152f6ea3..67435b305b84089b 100644
+--- a/debug/segfault.c
++++ b/debug/segfault.c
+@@ -32,8 +32,6 @@
+ #include <_itoa.h>
+ #include <ldsodefs.h>
+ 
+-#include <bp-checks.h>
+-
+ /* This file defines macros to access the content of the sigcontext element
+    passed up by the signal handler.  */
+ #include <sigcontextinfo.h>
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fdatasync.c b/ports/sysdeps/unix/sysv/linux/alpha/fdatasync.c
+index 10f5035787aace19..ecb4a669d37b40c0 100644
+--- a/ports/sysdeps/unix/sysv/linux/alpha/fdatasync.c
++++ b/ports/sysdeps/unix/sysv/linux/alpha/fdatasync.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/gethostname.c b/ports/sysdeps/unix/sysv/linux/alpha/gethostname.c
+index cec26d9815dfc2c8..0bfdd399ba0d4767 100644
+--- a/ports/sysdeps/unix/sysv/linux/alpha/gethostname.c
++++ b/ports/sysdeps/unix/sysv/linux/alpha/gethostname.c
+@@ -22,14 +22,13 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ int
+ __gethostname (char *name, size_t len)
+ {
+   int result;
+ 
+-  result = INLINE_SYSCALL (gethostname, 2, CHECK_N (name, len), len);
++  result = INLINE_SYSCALL (gethostname, 2, name, len);
+ 
+   if (result == 0
+       /* See whether the string is terminated.  If not we will return
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pread.c b/ports/sysdeps/unix/sysv/linux/arm/pread.c
+index 4efe349e930b778c..ed7be7394307892c 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/pread.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/pread.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ ssize_t
+ __libc_pread (fd, buf, count, offset)
+@@ -38,7 +37,7 @@ __libc_pread (fd, buf, count, offset)
+     {
+       /* In the ARM EABI, 64-bit values are aligned to even/odd register
+ 	 pairs for syscalls.  */
+-      result = INLINE_SYSCALL (pread64, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pread64, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+       return result;
+@@ -48,7 +47,7 @@ __libc_pread (fd, buf, count, offset)
+ 
+   /* In the ARM EABI, 64-bit values are aligned to even/odd register
+      pairs for syscalls.  */
+-  result = INLINE_SYSCALL (pread64, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pread64, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+   LIBC_CANCEL_RESET (oldtype);
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pread64.c b/ports/sysdeps/unix/sysv/linux/arm/pread64.c
+index 59bd9cfe0b9133ba..a3e8dfccb7446d76 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/pread64.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/pread64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ ssize_t
+ __libc_pread64 (fd, buf, count, offset)
+@@ -38,7 +37,7 @@ __libc_pread64 (fd, buf, count, offset)
+     {
+       /* In the ARM EABI, 64-bit values are aligned to even/odd register
+ 	 pairs for syscalls.  */
+-      result = INLINE_SYSCALL (pread64, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pread64, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 						 (off_t) (offset & 0xffffffff)));
+ 
+@@ -49,7 +48,7 @@ __libc_pread64 (fd, buf, count, offset)
+ 
+   /* In the ARM EABI, 64-bit values are aligned to even/odd register
+      pairs for syscalls.  */
+-  result = INLINE_SYSCALL (pread64, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pread64, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pwrite.c b/ports/sysdeps/unix/sysv/linux/arm/pwrite.c
+index 43788e5420240b69..a102f307926c2873 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/pwrite.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/pwrite.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ ssize_t
+ __libc_pwrite (fd, buf, count, offset)
+@@ -38,7 +37,7 @@ __libc_pwrite (fd, buf, count, offset)
+     {
+       /* In the ARM EABI, 64-bit values are aligned to even/odd register
+ 	 pairs for syscalls.  */
+-      result = INLINE_SYSCALL (pwrite64, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pwrite64, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+       return result;
+@@ -48,7 +47,7 @@ __libc_pwrite (fd, buf, count, offset)
+ 
+   /* In the ARM EABI, 64-bit values are aligned to even/odd register
+      pairs for syscalls.  */
+-  result = INLINE_SYSCALL (pwrite64, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pwrite64, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+   LIBC_CANCEL_RESET (oldtype);
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/pwrite64.c b/ports/sysdeps/unix/sysv/linux/arm/pwrite64.c
+index c7bfdaf9f34a15b5..19b15f6bd7cb2e0d 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/pwrite64.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/pwrite64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ ssize_t
+ __libc_pwrite64 (fd, buf, count, offset)
+@@ -38,7 +37,7 @@ __libc_pwrite64 (fd, buf, count, offset)
+     {
+       /* In the ARM EABI, 64-bit values are aligned to even/odd register
+ 	 pairs for syscalls.  */
+-      result = INLINE_SYSCALL (pwrite64, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pwrite64, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 						 (off_t) (offset & 0xffffffff)));
+ 
+@@ -49,7 +48,7 @@ __libc_pwrite64 (fd, buf, count, offset)
+ 
+   /* In the ARM EABI, 64-bit values are aligned to even/odd register
+      pairs for syscalls.  */
+-  result = INLINE_SYSCALL (pwrite64, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pwrite64, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c
+index 24b517e43846b80a..dda02b14442d5cb5 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <xstatconv.h>
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/pread.c b/ports/sysdeps/unix/sysv/linux/mips/pread.c
+index a868130ea1144e44..f24e500c10efae99 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/pread.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/pread.c
+@@ -26,7 +26,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -54,10 +53,9 @@ __libc_pread (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-      result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count,
+-			       offset);
++      result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ #else
+-      result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR (offset >> 31, offset));
+ #endif
+       return result;
+@@ -66,9 +64,9 @@ __libc_pread (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-  result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count, offset);
++  result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ #else
+-  result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ #endif
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/pread64.c b/ports/sysdeps/unix/sysv/linux/mips/pread64.c
+index 6f9b0054a53faf67..d5172a039d7fd269 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/pread64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/pread64.c
+@@ -25,7 +25,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -50,10 +49,9 @@ __libc_pread64 (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-      result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count,
+-			       offset);
++      result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ #else
+-     result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++     result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			      __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 			      (off_t) (offset & 0xffffffff)));
+ #endif
+@@ -63,9 +61,9 @@ __libc_pread64 (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-  result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count, offset);
++  result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ #else
+-  result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ #endif
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/pwrite.c b/ports/sysdeps/unix/sysv/linux/mips/pwrite.c
+index cc0c3b7c22199cc0..caa69cbb4f7e3e77 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/pwrite.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/pwrite.c
+@@ -26,7 +26,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -54,10 +53,9 @@ __libc_pwrite (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-      result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count,
+-			       offset);
++      result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ #else
+-      result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR (offset >> 31, offset));
+ #endif
+       return result;
+@@ -66,9 +64,9 @@ __libc_pwrite (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-  result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count, offset);
++  result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ #else
+-  result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ #endif
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/pwrite64.c b/ports/sysdeps/unix/sysv/linux/mips/pwrite64.c
+index d60accd57fc3c535..d8ae27a9abf5c606 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/pwrite64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/pwrite64.c
+@@ -25,7 +25,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -49,10 +48,9 @@ __libc_pwrite64 (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-      result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count,
+-			       offset);
++      result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ #else
+-     result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++     result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			      __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 			     (off_t) (offset & 0xffffffff)));
+ #endif
+@@ -63,9 +61,9 @@ __libc_pwrite64 (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+ #if _MIPS_SIM == _ABIN32 || _MIPS_SIM == _ABI64
+-  result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count, offset);
++  result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ #else
+-  result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ #endif
+diff --git a/sysdeps/generic/bp-checks.h b/sysdeps/generic/bp-checks.h
+deleted file mode 100644
+index 90a07fc10fde3a84..0000000000000000
+--- a/sysdeps/generic/bp-checks.h
++++ /dev/null
+@@ -1,49 +0,0 @@
+-/* Bounded-pointer checking macros for C.
+-   Copyright (C) 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _bp_checks_h_
+-#define _bp_checks_h_ 1
+-
+-#if __BOUNDED_POINTERS__
+-
+-# define BOUNDS_VIOLATED (__builtin_trap (), 0)
+-
+-# define _CHECK_N(ARG, N, COND)				\
+-  (((COND)						\
+-    && (__ptrvalue (ARG) < __ptrlow (ARG)		\
+-	|| __ptrvalue (ARG) + (N) > __ptrhigh (ARG))	\
+-    && BOUNDS_VIOLATED),				\
+-   __ptrvalue (ARG))
+-
+-/* Check bounds of a pointer seated to an array of N objects.  */
+-# define CHECK_N(ARG, N) _CHECK_N ((ARG), (N), 1)
+-/* Same as CHECK_N, but tolerate ARG == NULL.  */
+-# define CHECK_N_NULL_OK(ARG, N) _CHECK_N ((ARG), (N), __ptrvalue (ARG))
+-
+-#else /* !__BOUNDED_POINTERS__ */
+-
+-/* Do nothing if not compiling with -fbounded-pointers.  */
+-
+-# define BOUNDS_VIOLATED
+-# define CHECK_N(ARG, N) (ARG)
+-# define CHECK_N_NULL_OK(ARG, N) (ARG)
+-
+-#endif /* !__BOUNDED_POINTERS__ */
+-
+-#endif /* _bp_checks_h_ */
+diff --git a/sysdeps/unix/sysv/linux/getdents.c b/sysdeps/unix/sysv/linux/getdents.c
+index babfbd0a43a29450..6b64f5d9bdb6b573 100644
+--- a/sysdeps/unix/sysv/linux/getdents.c
++++ b/sysdeps/unix/sysv/linux/getdents.c
+@@ -28,7 +28,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -109,7 +108,7 @@ __GETDENTS (int fd, char *buf, size_t nbytes)
+       && (offsetof (struct kernel_dirent, d_reclen)
+ 	  == offsetof (struct dirent, d_reclen)))
+     {
+-      retval = INLINE_SYSCALL (getdents, 3, fd, CHECK_N(buf, nbytes), nbytes);
++      retval = INLINE_SYSCALL (getdents, 3, fd, buf, nbytes);
+ 
+       /* The kernel added the d_type value after the name.  Change
+ 	 this now.  */
+@@ -158,8 +157,7 @@ __GETDENTS (int fd, char *buf, size_t nbytes)
+ 		   - offsetof (DIRENT_TYPE, d_name);
+ 	  kbuf = __alloca(kbytes);
+ 	}
+-      retval = INLINE_SYSCALL (getdents64, 3, fd, CHECK_N(kbuf, kbytes),
+-			       kbytes);
++      retval = INLINE_SYSCALL (getdents64, 3, fd, kbuf, kbytes);
+ # ifndef __ASSUME_GETDENTS64_SYSCALL
+       if (retval != -1 || (errno != EINVAL && errno != ENOSYS))
+ # endif
+@@ -255,8 +253,7 @@ __GETDENTS (int fd, char *buf, size_t nbytes)
+ 
+     skdp = kdp = __alloca (red_nbytes);
+ 
+-    retval = INLINE_SYSCALL (getdents, 3, fd,
+-			     CHECK_N ((char *) kdp, red_nbytes), red_nbytes);
++    retval = INLINE_SYSCALL (getdents, 3, fd, (char *) kdp, red_nbytes);
+ 
+     if (retval == -1)
+       return -1;
+diff --git a/sysdeps/unix/sysv/linux/i386/brk.c b/sysdeps/unix/sysv/linux/i386/brk.c
+index 68451f1b17e52c45..0b367096f47007ce 100644
+--- a/sysdeps/unix/sysv/linux/i386/brk.c
++++ b/sysdeps/unix/sysv/linux/i386/brk.c
+@@ -20,8 +20,6 @@
+ #include <unistd.h>
+ #include <sysdep.h>
+ 
+-#include <bp-checks.h>
+-
+ /* This must be initialized data because commons can't have aliases.  */
+ void *__curbrk = 0;
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/getgroups.c b/sysdeps/unix/sysv/linux/i386/getgroups.c
+index e0871ec2d29258ab..7759c17a9bbfb37c 100644
+--- a/sysdeps/unix/sysv/linux/i386/getgroups.c
++++ b/sysdeps/unix/sysv/linux/i386/getgroups.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -34,7 +33,7 @@
+ int
+ __getgroups (int n, gid_t *groups)
+ {
+-  return INLINE_SYSCALL (getgroups32, 2, n, CHECK_N (groups, n));
++  return INLINE_SYSCALL (getgroups32, 2, n, groups);
+ }
+ 
+ weak_alias (__getgroups, getgroups)
+diff --git a/sysdeps/unix/sysv/linux/i386/setgroups.c b/sysdeps/unix/sysv/linux/i386/setgroups.c
+index 73b341ac53010d2b..e9466fd9e1eef27f 100644
+--- a/sysdeps/unix/sysv/linux/i386/setgroups.c
++++ b/sysdeps/unix/sysv/linux/i386/setgroups.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <setxid.h>
+ #include <linux/posix_types.h>
+@@ -33,6 +32,6 @@
+ int
+ setgroups (size_t n, const gid_t *groups)
+ {
+-  return INLINE_SETXID_SYSCALL (setgroups32, 2, n, CHECK_N (groups, n));
++  return INLINE_SETXID_SYSCALL (setgroups32, 2, n, groups);
+ }
+ libc_hidden_def (setgroups)
+diff --git a/sysdeps/unix/sysv/linux/mmap64.c b/sysdeps/unix/sysv/linux/mmap64.c
+index bca15f9c5dd4c590..87bd532c5e350c56 100644
+--- a/sysdeps/unix/sysv/linux/mmap64.c
++++ b/sysdeps/unix/sysv/linux/mmap64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+diff --git a/sysdeps/unix/sysv/linux/msgrcv.c b/sysdeps/unix/sysv/linux/msgrcv.c
+index 0b47ce7bbe125945..dc0e34fe3d7f2ffd 100644
+--- a/sysdeps/unix/sysv/linux/msgrcv.c
++++ b/sysdeps/unix/sysv/linux/msgrcv.c
+@@ -23,8 +23,6 @@
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+ 
+-#include <bp-checks.h>
+-
+ /* Kludge to work around Linux' restriction of only up to five
+    arguments to a system call.  */
+ struct ipc_kludge
+@@ -46,7 +44,7 @@ __libc_msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)
+      fives parameters to a system call.  */
+   struct ipc_kludge tmp;
+ 
+-  tmp.msgp = CHECK_N (msgp, msgsz);
++  tmp.msgp = msgp;
+   tmp.msgtyp = msgtyp;
+ 
+   if (SINGLE_THREAD_P)
+diff --git a/sysdeps/unix/sysv/linux/msgsnd.c b/sysdeps/unix/sysv/linux/msgsnd.c
+index 2f57fe74f10dae31..2883cad8aa370c6c 100644
+--- a/sysdeps/unix/sysv/linux/msgsnd.c
++++ b/sysdeps/unix/sysv/linux/msgsnd.c
+@@ -23,8 +23,6 @@
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+ 
+-#include <bp-checks.h>
+-
+ int
+ __libc_msgsnd (msqid, msgp, msgsz, msgflg)
+      int msqid;
+@@ -34,12 +32,12 @@ __libc_msgsnd (msqid, msgp, msgsz, msgflg)
+ {
+   if (SINGLE_THREAD_P)
+     return INLINE_SYSCALL (ipc, 5, IPCOP_msgsnd, msqid, msgsz,
+-			   msgflg, (void *) CHECK_N (msgp, msgsz));
++			   msgflg, (void *) msgp);
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   int result = INLINE_SYSCALL (ipc, 5, IPCOP_msgsnd, msqid, msgsz,
+-			       msgflg, (void *) CHECK_N (msgp, msgsz));
++			       msgflg, (void *) msgp);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c
+index 364834f1d0c717e7..9a9d0d456e5db1c0 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -38,7 +37,7 @@ __libc_pread (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+       /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-      result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count,
++      result = INLINE_SYSCALL (pread, 6, fd, buf, count,
+ 			       0, offset >> 31, offset);
+ 
+       return result;
+@@ -47,7 +46,7 @@ __libc_pread (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-  result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pread, 6, fd, buf, count,
+ 			       0, offset >> 31, offset);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
+index 5b1445ff23ef9ab4..1435b293b143159b 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -38,7 +37,7 @@ __libc_pread64 (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+       /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-      result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count,
++      result = INLINE_SYSCALL (pread, 6, fd, buf, count,
+ 			       0, (long) (offset >> 32),
+ 			       (long) offset);
+ 
+@@ -48,7 +47,7 @@ __libc_pread64 (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-  result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pread, 6, fd, buf, count,
+ 			   0, (long) (offset >> 32),
+ 			   (long) offset);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c
+index ed1878bc5ee94a5e..d3a551c5a97550ca 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -39,7 +38,7 @@ __libc_pwrite (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+       /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-      result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count,
++      result = INLINE_SYSCALL (pwrite, 6, fd, buf, count,
+ 			       0, offset >> 31, offset);
+ 
+       return result;
+@@ -48,7 +47,7 @@ __libc_pwrite (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-  result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pwrite, 6, fd, buf, count,
+ 			   0, offset >> 31, offset);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
+index dedeb7e97d8ed14b..d89a1759d1903eba 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -38,7 +37,7 @@ __libc_pwrite64 (fd, buf, count, offset)
+   if (SINGLE_THREAD_P)
+     {
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-      result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count,
++      result = INLINE_SYSCALL (pwrite, 6, fd, buf, count,
+ 			       0, (long) (offset >> 32),
+ 			       (long) offset);
+ 
+@@ -48,7 +47,7 @@ __libc_pwrite64 (fd, buf, count, offset)
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-  result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pwrite, 6, fd, buf, count,
+ 			   0, (long) (offset >> 32),
+ 			   (long) offset);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c
+index ed4708f2dee6b9a7..43ead1af67b0c0da 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -40,16 +39,14 @@ __libc_pread (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-      result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count,
+-                                offset);
++      result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ 
+       return result;
+     }
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count,
+-                            offset);
++  result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c
+index 63ba30df297b703a..dc9fc81c4ccf067e 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pread64.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -39,16 +38,14 @@ __libc_pread64 (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-      result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count,
+-                                offset);
++      result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ 
+       return result;
+     }
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-   result = INLINE_SYSCALL (pread, 4, fd, CHECK_N (buf, count), count,
+-                            offset);
++   result = INLINE_SYSCALL (pread, 4, fd, buf, count, offset);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c
+index 68f26dfb7e2c8d4e..57c62bdb74805836 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -40,16 +39,14 @@ __libc_pwrite (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-      result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count,
+-                              offset);
++      result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ 
+       return result;
+     }
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count,
+-			                     offset);
++  result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c
+index 71ffa17c5befd899..430bb4ef2bd2eb3e 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/pwrite64.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -39,16 +38,14 @@ __libc_pwrite64 (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-      result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count,
+-                                offset);
++      result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ 
+       return result;
+     }
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pwrite, 4, fd, CHECK_N (buf, count), count,
+-                            offset);
++  result = INLINE_SYSCALL (pwrite, 4, fd, buf, count, offset);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/pread.c b/sysdeps/unix/sysv/linux/pread.c
+index 4ea67fcb0b04c271..7322e42d6ed990c1 100644
+--- a/sysdeps/unix/sysv/linux/pread.c
++++ b/sysdeps/unix/sysv/linux/pread.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -44,7 +43,7 @@ do_pread (int fd, void *buf, size_t count, off_t offset)
+   ssize_t result;
+ 
+   assert (sizeof (offset) == 4);
+-  result = INLINE_SYSCALL (pread, 5, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pread, 5, fd, buf, count,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+   return result;
+diff --git a/sysdeps/unix/sysv/linux/pread64.c b/sysdeps/unix/sysv/linux/pread64.c
+index 897b5674a75c23be..03e5f1402bf8b888 100644
+--- a/sysdeps/unix/sysv/linux/pread64.c
++++ b/sysdeps/unix/sysv/linux/pread64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -39,7 +38,7 @@ do_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+-  result = INLINE_SYSCALL (pread, 5, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pread, 5, fd, buf, count,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ 
+diff --git a/sysdeps/unix/sysv/linux/pwrite.c b/sysdeps/unix/sysv/linux/pwrite.c
+index c4940fcdd09b0726..e773d65f2e5602a8 100644
+--- a/sysdeps/unix/sysv/linux/pwrite.c
++++ b/sysdeps/unix/sysv/linux/pwrite.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -44,7 +43,7 @@ do_pwrite (int fd, const void *buf, size_t count, off_t offset)
+   ssize_t result;
+ 
+   assert (sizeof (offset) == 4);
+-  result = INLINE_SYSCALL (pwrite, 5, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pwrite, 5, fd, buf, count,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+   return result;
+diff --git a/sysdeps/unix/sysv/linux/pwrite64.c b/sysdeps/unix/sysv/linux/pwrite64.c
+index ad945a2903a44714..558a08e735616649 100644
+--- a/sysdeps/unix/sysv/linux/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/pwrite64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -39,7 +38,7 @@ do_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+-  result = INLINE_SYSCALL (pwrite, 5, fd, CHECK_N (buf, count), count,
++  result = INLINE_SYSCALL (pwrite, 5, fd, buf, count,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ 
+diff --git a/sysdeps/unix/sysv/linux/readv.c b/sysdeps/unix/sysv/linux/readv.c
+index 440e1039c3a8f3ac..e8acd65ce377963a 100644
+--- a/sysdeps/unix/sysv/linux/readv.c
++++ b/sysdeps/unix/sysv/linux/readv.c
+@@ -24,7 +24,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ #include <kernel-features.h>
+ 
+ #ifndef __ASSUME_COMPLETE_READV_WRITEV
+@@ -48,12 +47,12 @@ __libc_readv (fd, vector, count)
+   ssize_t result;
+ 
+   if (SINGLE_THREAD_P)
+-    result = INLINE_SYSCALL (readv, 3, fd, CHECK_N (vector, count), count);
++    result = INLINE_SYSCALL (readv, 3, fd, vector, count);
+   else
+     {
+       int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-      result = INLINE_SYSCALL (readv, 3, fd, CHECK_N (vector, count), count);
++      result = INLINE_SYSCALL (readv, 3, fd, vector, count);
+ 
+       LIBC_CANCEL_RESET (oldtype);
+     }
+diff --git a/sysdeps/unix/sysv/linux/semop.c b/sysdeps/unix/sysv/linux/semop.c
+index 22bdeeb0f19bef15..4cd6891976858cc2 100644
+--- a/sysdeps/unix/sysv/linux/semop.c
++++ b/sysdeps/unix/sysv/linux/semop.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Perform user-defined atomical operation of array of semaphores.  */
+ 
+@@ -32,6 +31,5 @@ semop (semid, sops, nsops)
+      struct sembuf *sops;
+      size_t nsops;
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_semop,
+-			 semid, (int) nsops, 0, CHECK_N (sops, nsops));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_semop, semid, (int) nsops, 0, sops);
+ }
+diff --git a/sysdeps/unix/sysv/linux/semtimedop.c b/sysdeps/unix/sysv/linux/semtimedop.c
+index 6e2c40f3758483a9..5a43f53975aeafcc 100644
+--- a/sysdeps/unix/sysv/linux/semtimedop.c
++++ b/sysdeps/unix/sysv/linux/semtimedop.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Perform user-defined atomical operation of array of semaphores.  */
+ 
+@@ -34,6 +33,6 @@ semtimedop (semid, sops, nsops, timeout)
+      const struct timespec *timeout;
+ {
+   return INLINE_SYSCALL (ipc, 6, IPCOP_semtimedop,
+-			 semid, (int) nsops, 0, CHECK_N (sops, nsops),
++			 semid, (int) nsops, 0, sops,
+ 			 timeout);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sh/pread.c b/sysdeps/unix/sysv/linux/sh/pread.c
+index 3e7702f10d26c347..160c906a4d0197fd 100644
+--- a/sysdeps/unix/sysv/linux/sh/pread.c
++++ b/sysdeps/unix/sysv/linux/sh/pread.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -46,14 +45,14 @@ __libc_pread (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-      result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR (offset >> 31, offset));
+       return result;
+     }
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+   LIBC_CANCEL_RESET (oldtype);
+diff --git a/sysdeps/unix/sysv/linux/sh/pread64.c b/sysdeps/unix/sysv/linux/sh/pread64.c
+index 523ed7f82f5e5de7..bb4f13d06b72fdf1 100644
+--- a/sysdeps/unix/sysv/linux/sh/pread64.c
++++ b/sysdeps/unix/sysv/linux/sh/pread64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -45,7 +44,7 @@ __libc_pread64 (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-     result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++     result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			      __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 			      (off_t) (offset & 0xffffffff)));
+      return result;
+@@ -53,7 +52,7 @@ __libc_pread64 (fd, buf, count, offset)
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pread, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pread, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ 
+diff --git a/sysdeps/unix/sysv/linux/sh/pwrite.c b/sysdeps/unix/sysv/linux/sh/pwrite.c
+index e8052757aae56afe..b17bd87a5d4f74cc 100644
+--- a/sysdeps/unix/sysv/linux/sh/pwrite.c
++++ b/sysdeps/unix/sysv/linux/sh/pwrite.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -46,14 +45,14 @@ __libc_pwrite (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-      result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++      result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			       __LONG_LONG_PAIR (offset >> 31, offset));
+       return result;
+     }
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR (offset >> 31, offset));
+ 
+   LIBC_CANCEL_RESET (oldtype);
+diff --git a/sysdeps/unix/sysv/linux/sh/pwrite64.c b/sysdeps/unix/sysv/linux/sh/pwrite64.c
+index 8f80fea49501ed2b..d9f41ec34cf01fb4 100644
+--- a/sysdeps/unix/sysv/linux/sh/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/sh/pwrite64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -45,7 +44,7 @@ __libc_pwrite64 (fd, buf, count, offset)
+ 
+   if (SINGLE_THREAD_P)
+     {
+-     result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++     result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			      __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 			     (off_t) (offset & 0xffffffff)));
+ 
+@@ -54,7 +53,7 @@ __libc_pwrite64 (fd, buf, count, offset)
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-  result = INLINE_SYSCALL (pwrite, 6, fd, CHECK_N (buf, count), count, 0,
++  result = INLINE_SYSCALL (pwrite, 6, fd, buf, count, 0,
+ 			   __LONG_LONG_PAIR ((off_t) (offset >> 32),
+ 					     (off_t) (offset & 0xffffffff)));
+ 
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c b/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c
+index 15eb7983c6ebd3f9..3684a01142f68323 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c
+@@ -22,8 +22,6 @@
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+ 
+-#include <bp-checks.h>
+-
+ ssize_t
+ __libc_msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)
+      int msqid;
+@@ -34,12 +32,12 @@ __libc_msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)
+ {
+   if (SINGLE_THREAD_P)
+     return INLINE_SYSCALL (ipc, 6, IPCOP_msgrcv, msqid, msgsz, msgflg,
+-			   CHECK_N (msgp, msgsz), msgtyp);
++			   msgp, msgtyp);
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   ssize_t result = INLINE_SYSCALL (ipc, 6, IPCOP_msgrcv, msqid, msgsz, msgflg,
+-				   CHECK_N (msgp, msgsz), msgtyp);
++				   msgp, msgtyp);
+ 
+   LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/sysctl.c b/sysdeps/unix/sysv/linux/sysctl.c
+index f69c8229643ae5a9..e00ecfe85cfc0281 100644
+--- a/sysdeps/unix/sysv/linux/sysctl.c
++++ b/sysdeps/unix/sysv/linux/sysctl.c
+@@ -22,13 +22,11 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ int
+ __sysctl (int *name, int nlen, void *oldval, size_t *oldlenp,
+ 	  void *newval, size_t newlen)
+ {
+-  /* GKM FIXME: force __sysctl_args decl to have unbounded pointers.  */
+   struct __sysctl_args args =
+   {
+     .name = name,
+@@ -38,9 +36,6 @@ __sysctl (int *name, int nlen, void *oldval, size_t *oldlenp,
+     .newval = newval,
+     .newlen = newlen
+   };
+-  (void) CHECK_N (name, nlen);
+-  (void) CHECK_N (oldval, *oldlenp);
+-  (void) CHECK_N (newval, newlen);
+ 
+   return INLINE_SYSCALL (_sysctl, 1, __ptrvalue (&args));
+ }
+diff --git a/sysdeps/unix/sysv/linux/writev.c b/sysdeps/unix/sysv/linux/writev.c
+index 26a68df6b902a6fc..8b018ecdf6fbc323 100644
+--- a/sysdeps/unix/sysv/linux/writev.c
++++ b/sysdeps/unix/sysv/linux/writev.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ #include <kernel-features.h>
+ 
+ #ifndef __ASSUME_COMPLETE_READV_WRITEV
+@@ -47,12 +46,12 @@ __libc_writev (fd, vector, count)
+   ssize_t result;
+ 
+   if (SINGLE_THREAD_P)
+-    result = INLINE_SYSCALL (writev, 3, fd, CHECK_N (vector, count), count);
++    result = INLINE_SYSCALL (writev, 3, fd, vector, count);
+   else
+     {
+       int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+-      result = INLINE_SYSCALL (writev, 3, fd, CHECK_N (vector, count), count);
++      result = INLINE_SYSCALL (writev, 3, fd, vector, count);
+ 
+       LIBC_CANCEL_RESET (oldtype);
+     }

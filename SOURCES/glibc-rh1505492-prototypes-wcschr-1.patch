@@ -1,0 +1,24 @@
+Prototype-style function definition for wcschr for POWER.  Upstream,
+this was part of:
+
+commit 05b5cd1ce51247f986e66b90ad672e89b4b98333
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Mon Oct 14 09:23:12 2013 -0500
+
+    PowerPC: multiarch wcschr for PowerPC32
+
+diff --git a/sysdeps/powerpc/powerpc32/power6/wcschr.c b/sysdeps/powerpc/powerpc32/power6/wcschr.c
+index 3b4cca15face81da..70efc574f5a13e5a 100644
+--- a/sysdeps/powerpc/powerpc32/power6/wcschr.c
++++ b/sysdeps/powerpc/powerpc32/power6/wcschr.c
+@@ -21,9 +21,7 @@
+ 
+ /* Find the first occurrence of WC in WCS.  */
+ wchar_t *
+-wcschr (wcs, wc)
+-     const wchar_t *wcs;
+-     const wchar_t wc;
++wcschr (const wchar_t *wcs, const wchar_t wc)
+ {
+   const wchar_t *wcs2 = wcs + 1;
+ 

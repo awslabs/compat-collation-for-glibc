@@ -1,0 +1,33 @@
+commit 4712799fbb6812cc73f7bd9c8faa6e7b05c0f5ab
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Wed Nov 20 18:19:57 2013 +0530
+
+    Fix build warning in locarchive.c
+
+(With an adjustment for the non-upstream version of
+glibc-rh1296297-1.patch.)
+
+diff --git a/locale/programs/locarchive.c b/locale/programs/locarchive.c
+index dd4a5d147f46b0d4..1eae271186bc80a9 100644
+--- a/locale/programs/locarchive.c
++++ b/locale/programs/locarchive.c
+@@ -521,7 +521,7 @@ open_archive (struct locarhandle *ah, bool readonly)
+   int retry = 0;
+   size_t prefix_len = output_prefix ? strlen (output_prefix) : 0;
+   char fname[prefix_len + sizeof (ARCHIVE_NAME)];
+-  char *archivefname = ah->fname;
++  const char *archivefname = ah->fname;
+   bool defaultfname = false;
+ 
+   /* If ah has a non-NULL fname open that otherwise open the default.  */
+@@ -530,8 +530,8 @@ open_archive (struct locarhandle *ah, bool readonly)
+       defaultfname = true;
+       archivefname = fname;
+       if (output_prefix)
+-        memcpy (archivefname, output_prefix, prefix_len);
+-      strcpy (archivefname + prefix_len, ARCHIVE_NAME);
++        memcpy (fname, output_prefix, prefix_len);
++      strcpy (fname + prefix_len, ARCHIVE_NAME);
+     }
+ 
+   while (1)

@@ -1,0 +1,72 @@
+commit ad37480c4b79b801b987f5529d036b4e25cac615
+Author: Martin Sebor <msebor@redhat.com>
+Date:   Fri Jan 15 10:44:07 2016 -0700
+
+    Fix build errors with -DNDEBUG.
+    
+            [BZ #18755]
+            * iconv/skeleton.c (FUNCTION_NAME): Suppress -Wunused-but-set-variable
+            warnings.
+            * sysdeps/nptl/gai_misc.h (__gai_start_notify_thread): Same.
+            (__gai_create_helper_thread): Same.
+            * nscd/nscd.c (do_exit): Suppress -Wunused-variable.
+            * iconvdata/iso-2022-cn-ext.c (BODY): Initialize local variable
+            to suppress -Wmaybe-uninitialized warnings.
+
+Conflicts:
+	sysdeps/nptl/gai_misc.h
+
+Not needed due to missing backport of commit
+74eb826cff5e4277d2d866a92058f27a837f8ff7 (NPTL: Remove gratuitous
+Linuxisms from gai_misc.h.).  File deleted manually.
+
+diff --git a/iconv/skeleton.c b/iconv/skeleton.c
+index 3384d520661f88ed..893fee9aaadf91e3 100644
+--- a/iconv/skeleton.c
++++ b/iconv/skeleton.c
+@@ -682,7 +682,7 @@ FUNCTION_NAME (struct __gconv_step *step, struct __gconv_step_data *data,
+ #else
+ 		      /* We have a problem in one of the functions below.
+ 			 Undo the conversion upto the error point.  */
+-		      size_t nstatus;
++		      size_t nstatus __attribute__ ((unused));
+ 
+ 		      /* Reload the pointers.  */
+ 		      *inptrp = inptr;
+diff --git a/iconvdata/iso-2022-cn-ext.c b/iconvdata/iso-2022-cn-ext.c
+index bde266811d967192..c86d8616d417f21b 100644
+--- a/iconvdata/iso-2022-cn-ext.c
++++ b/iconvdata/iso-2022-cn-ext.c
+@@ -426,7 +426,7 @@ enum
+       }									      \
+     else								      \
+       {									      \
+-	unsigned char buf[2];						      \
++	unsigned char buf[2] = { 0, 0 };				      \
+ 	int used;							      \
+ 									      \
+ 	if (set == GB2312_set || ((ann & SO_ann) != CNS11643_1_ann	      \
+diff --git a/nscd/nscd.c b/nscd/nscd.c
+index f74a7325ec06e4a6..b088069c0b102846 100644
+--- a/nscd/nscd.c
++++ b/nscd/nscd.c
+@@ -634,7 +634,8 @@ do_exit (int child_ret, int errnum, const char *format, ...)
+ {
+   if (parent_fd != -1)
+     {
+-      int ret = write (parent_fd, &child_ret, sizeof (child_ret));
++      int ret __attribute__ ((unused));
++      ret = write (parent_fd, &child_ret, sizeof (child_ret));
+       assert (ret == sizeof (child_ret));
+       close (parent_fd);
+     }
+@@ -666,7 +667,8 @@ notify_parent (int child_ret)
+   if (parent_fd == -1)
+     return;
+ 
+-  int ret = write (parent_fd, &child_ret, sizeof (child_ret));
++  int ret __attribute__ ((unused));
++  ret = write (parent_fd, &child_ret, sizeof (child_ret));
+   assert (ret == sizeof (child_ret));
+   close (parent_fd);
+   parent_fd = -1;

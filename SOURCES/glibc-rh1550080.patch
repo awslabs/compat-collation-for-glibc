@@ -1,0 +1,61 @@
+The patch originally submitted corrected behaviour on s390 and s390x.
+The i686 change was added in order to maintain parity.
+
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+
+Index: b/sysdeps/unix/sysv/linux/s390/s390-32/socket.S
+===================================================================
+--- a/sysdeps/unix/sysv/linux/s390/s390-32/socket.S
++++ b/sysdeps/unix/sysv/linux/s390/s390-32/socket.S
+@@ -99,8 +99,8 @@ ENTRY(__socket)
+ 	l       %r15,0(0,%r15)          /* load back chain */
+ 	lm      %r6,15,24(%r15)         /* load registers */
+ 
+-	/* gpr2 is < 0 if there was an error.  */
+-	lhi     %r0,-125
++	/* gpr2 is in [-4095, -1] if there was an error.  */
++	lhi     %r0,-4095
+ 	clr     %r2,%r0
+ 	jnl     SYSCALL_ERROR_LABEL
+ 
+Index: b/sysdeps/unix/sysv/linux/s390/s390-64/socket.S
+===================================================================
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/socket.S
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/socket.S
+@@ -99,8 +99,8 @@ ENTRY(__socket)
+         lg      %r15,0(%r15)            /* Load back chain.  */
+         lmg     %r6,15,48(%r15)         /* Load registers.  */
+ 
+-	/* gpr2 is < 0 if there was an error.  */
+-        lghi    %r0,-125 
++	/* gpr2 is in [-4095, -1] if there was an error.  */
++        lghi    %r0,-4095
+         clgr    %r2,%r0
+         jgnl    SYSCALL_ERROR_LABEL
+  
+Index: b/sysdeps/unix/sysv/linux/i386/socket.S
+===================================================================
+--- a/sysdeps/unix/sysv/linux/i386/socket.S
++++ b/sysdeps/unix/sysv/linux/i386/socket.S
+@@ -63,8 +63,8 @@ ENTRY (__socket)
+ 	movl %edx, %ebx
+ 	cfi_restore (3)
+ 
+-	/* %eax is < 0 if there was an error.  */
+-	cmpl $-125, %eax
++	/* %eax is in [-4095, -1] if there was an error.  */
++	cmpl $-4095, %eax
+ 	jae SYSCALL_ERROR_LABEL
+ 
+ 	/* Successful; return the syscall's value.  */
+@@ -108,8 +108,8 @@ ENTRY (__socket)
+ 	cfi_restore (6)
+ 	cfi_adjust_cfa_offset(-4)
+ 
+-	/* %eax is < 0 if there was an error.  */
+-	cmpl $-125, %eax
++	/* %eax is in [-4095, -1] if there was an error.  */
++	cmpl $-4095, %eax
+ 	jae SYSCALL_ERROR_LABEL
+ 
+ 	/* Successful; return the syscall's value.  */

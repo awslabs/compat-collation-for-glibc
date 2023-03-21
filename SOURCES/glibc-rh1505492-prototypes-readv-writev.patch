@@ -1,0 +1,41 @@
+Introduce prototype-style function definitions for readv and writev.
+Upstream, the old-style function definitions were removed in:
+
+commit 42b7f5d48549b85386a9b28a1a90e66fd81ba273
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Mon Oct 20 15:49:08 2014 +0000
+
+    Move readv and writev definitions to syscalls.list (bug 14138).
+
+diff --git a/sysdeps/unix/sysv/linux/readv.c b/sysdeps/unix/sysv/linux/readv.c
+index e8acd65ce377963a..e49d54ede39d45af 100644
+--- a/sysdeps/unix/sysv/linux/readv.c
++++ b/sysdeps/unix/sysv/linux/readv.c
+@@ -39,10 +39,7 @@ static ssize_t __atomic_readv_replacement (int, const struct iovec *,
+ 
+ 
+ ssize_t
+-__libc_readv (fd, vector, count)
+-     int fd;
+-     const struct iovec *vector;
+-     int count;
++__libc_readv (int fd, const struct iovec *vector, int count)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/writev.c b/sysdeps/unix/sysv/linux/writev.c
+index 8b018ecdf6fbc323..847a1057aa443238 100644
+--- a/sysdeps/unix/sysv/linux/writev.c
++++ b/sysdeps/unix/sysv/linux/writev.c
+@@ -38,10 +38,7 @@ static ssize_t __atomic_writev_replacement (int, const struct iovec *,
+ 
+ 
+ ssize_t
+-__libc_writev (fd, vector, count)
+-     int fd;
+-     const struct iovec *vector;
+-     int count;
++__libc_writev (int fd, const struct iovec *vector, int count)
+ {
+   ssize_t result;
+ 

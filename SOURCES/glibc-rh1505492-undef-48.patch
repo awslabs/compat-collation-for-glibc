@@ -1,0 +1,35 @@
+commit 61fe374a44a92621e0b75ec1f011ff1fba6c2148
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Mon Sep 15 10:16:14 2014 +0530
+
+    Remove _POSIX_REGEX_VERSION
+    
+    There is no _POSIX_REGEX_VERSION, so don't check for it.
+    _REGEX_VERSION has been removed as well[1], so only keep the -1 return
+    for backward compatibility.  I found this when trying to make the
+    getconf environment variables typo-proof.
+    
+            * sysdeps/posix/sysconf.c (__sysconf): Return -1 for
+            _SC_REGEX_VERSION.
+    
+    [1] http://pubs.opengroup.org/onlinepubs/009695399/functions/sysconf.html
+
+diff --git a/sysdeps/posix/sysconf.c b/sysdeps/posix/sysconf.c
+index e795b565367bdd1b..cf4f8010097e309a 100644
+--- a/sysdeps/posix/sysconf.c
++++ b/sysdeps/posix/sysconf.c
+@@ -983,12 +983,10 @@ __sysconf (name)
+ #else
+       return -1;
+ #endif
++    /* _REGEX_VERSION has been removed with IEEE Std 1003.1-2001/Cor 2-2004,
++       item XSH/TC2/D6/137.  */
+     case _SC_REGEX_VERSION:
+-#if _POSIX_REGEX_VERSION > 0
+-      return _POSIX_REGEX_VERSION;
+-#else
+       return -1;
+-#endif
+ 
+     case _SC_SHELL:
+ #if _POSIX_SHELL > 0

@@ -1,0 +1,32 @@
+commit cb61630ed712d033f54295f776967532d3f4b46a
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Nov 22 22:10:42 2019 +0100
+
+    libio: Disable vtable validation for pre-2.1 interposed handles [BZ #25203]
+    
+    Commit c402355dfa7807b8e0adb27c009135a7e2b9f1b0 ("libio: Disable
+    vtable validation in case of interposition [BZ #23313]") only covered
+    the interposable glibc 2.1 handles, in libio/stdfiles.c.  The
+    parallel code in libio/oldstdfiles.c needs similar detection logic.
+    
+    Fixes (again) commit db3476aff19b75c4fdefbe65fcd5f0a90588ba51
+    ("libio: Implement vtable verification [BZ #20191]").
+    
+    Change-Id: Ief6f9f17e91d1f7263421c56a7dc018f4f595c21
+
+diff --git a/libio/oldstdfiles.c b/libio/oldstdfiles.c
+index 870cb0536c52024f..54d3e354fcbf257e 100644
+--- a/libio/oldstdfiles.c
++++ b/libio/oldstdfiles.c
+@@ -87,6 +87,11 @@ _IO_check_libio (void)
+ 	stdout->_vtable_offset = stderr->_vtable_offset =
+ 	((int) sizeof (struct _IO_FILE)
+ 	 - (int) sizeof (struct _IO_FILE_complete));
++
++      if (_IO_stdin_.vtable != &_IO_old_file_jumps
++	  || _IO_stdout_.vtable != &_IO_old_file_jumps
++	  || _IO_stderr_.vtable != &_IO_old_file_jumps)
++	IO_set_accept_foreign_vtables (&_IO_vtable_check);
+     }
+ }
+ 

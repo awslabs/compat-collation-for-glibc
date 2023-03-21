@@ -1,0 +1,2287 @@
+commit 2366713d874342c94f9362b0d6b2461e1c68dbc3
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Feb 21 22:21:52 2013 +0000
+
+    Remove remaining bounded-pointers support from i386 .S files.
+
+Conflicts:
+	sysdeps/i386/bp-asm.h
+
+Copyright header change; file removed manually.
+
+diff --git a/sysdeps/i386/add_n.S b/sysdeps/i386/add_n.S
+index df3ea2362c76247a..55e454f2091c67eb 100644
+--- a/sysdeps/i386/add_n.S
++++ b/sysdeps/i386/add_n.S
+@@ -19,17 +19,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+8	/* space for 2 saved regs */
++#define PARMS	4+8	/* space for 2 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define S2	S1+PTR_SIZE
+-#define SIZE	S2+PTR_SIZE
++#define S1	RES+4
++#define S2	S1+4
++#define SIZE	S2+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_add_n))
++ENTRY (__mpn_add_n)
+ 
+ 	pushl %edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -110,4 +108,4 @@ L(oop):	movl	(%esi),%eax
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_add_n))
++END (__mpn_add_n)
+diff --git a/sysdeps/i386/addmul_1.S b/sysdeps/i386/addmul_1.S
+index 006c08a92de4e303..286781efdb37d304 100644
+--- a/sysdeps/i386/addmul_1.S
++++ b/sysdeps/i386/addmul_1.S
+@@ -19,13 +19,11 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define SIZE	S1+PTR_SIZE
++#define S1	RES+4
++#define SIZE	S1+4
+ #define S2LIMB	SIZE+4
+ 
+ #define res_ptr edi
+@@ -34,7 +32,7 @@
+ #define s2_limb ebx
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_addmul_1))
++ENTRY (__mpn_addmul_1)
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -85,4 +83,4 @@ L(oop):
+ 	cfi_restore (res_ptr)
+ 
+ 	ret
+-END (BP_SYM (__mpn_addmul_1))
++END (__mpn_addmul_1)
+diff --git a/sysdeps/i386/bp-asm.h b/sysdeps/i386/bp-asm.h
+deleted file mode 100644
+index 75e1a007cb3eca71..0000000000000000
+--- a/sysdeps/i386/bp-asm.h
++++ /dev/null
+@@ -1,60 +0,0 @@
+-/* Bounded-pointer definitions for x86 assembler.
+-   Copyright (C) 2000 Free Software Foundation, Inc.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-   This file is part of the GNU C Library.  Its master source is NOT part of
+-   the C library, however.  The master source lives in the GNU MP Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _bp_asm_h_
+-# define _bp_asm_h_ 1
+-
+-# if __ASSEMBLER__
+-
+-#  if __BOUNDED_POINTERS__
+-
+-/* Bounded pointers occupy three words.  */
+-#   define PTR_SIZE 12
+-/* Bounded pointer return values are passed back through a hidden
+-   argument that points to caller-allocate space.  The hidden arg
+-   occupies one word on the stack.  */
+-#   define RTN_SIZE 4
+-/* Although the caller pushes the hidden arg, the callee is
+-   responsible for popping it.  */
+-#   define RET_PTR ret $RTN_SIZE
+-/* Stack space overhead of procedure-call linkage: return address and
+-   frame pointer.  */
+-#   define LINKAGE 8
+-/* Stack offset of return address after calling ENTER.  */
+-#   define PCOFF 4
+-
+-#  else /* !__BOUNDED_POINTERS__ */
+-
+-/* Unbounded pointers occupy one word.  */
+-#   define PTR_SIZE 4
+-/* Unbounded pointer return values are passed back in the register %eax.  */
+-#   define RTN_SIZE 0
+-/* Use simple return instruction for unbounded pointer values.  */
+-#   define RET_PTR ret
+-/* Stack space overhead of procedure-call linkage: return address only.  */
+-#   define LINKAGE 4
+-/* Stack offset of return address after calling ENTER.  */
+-#   define PCOFF 0
+-
+-#  endif /* !__BOUNDED_POINTERS__ */
+-
+-# endif /* __ASSEMBLER__ */
+-
+-#endif /* _bp_asm_h_ */
+diff --git a/sysdeps/i386/bsd-_setjmp.S b/sysdeps/i386/bsd-_setjmp.S
+index fe0224145643ea0b..3a57995fa9811274 100644
+--- a/sysdeps/i386/bsd-_setjmp.S
++++ b/sysdeps/i386/bsd-_setjmp.S
+@@ -22,15 +22,13 @@
+ 
+ #include <sysdep.h>
+ #include <jmpbuf-offsets.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ #include <stap-probe.h>
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define JMPBUF	PARMS
+-#define SIGMSK	JMPBUF+PTR_SIZE
++#define SIGMSK	JMPBUF+4
+ 
+-ENTRY (BP_SYM (_setjmp))
++ENTRY (_setjmp)
+ 
+ 	xorl %eax, %eax
+ 	movl JMPBUF(%esp), %edx
+@@ -44,7 +42,7 @@ ENTRY (BP_SYM (_setjmp))
+ 	PTR_MANGLE (%ecx)
+ #endif
+      	movl %ecx, (JB_SP*4)(%edx)
+-	movl PCOFF(%esp), %ecx	/* Save PC we are returning to now.  */
++	movl 0(%esp), %ecx	/* Save PC we are returning to now.  */
+ 	LIBC_PROBE (setjmp, 3, 4@%edx, -4@$0, 4@%ecx)
+ #ifdef PTR_MANGLE
+ 	PTR_MANGLE (%ecx)
+@@ -54,5 +52,5 @@ ENTRY (BP_SYM (_setjmp))
+ 
+ 	movl %eax, JB_SIZE(%edx) /* No signal mask set.  */
+ 	ret
+-END (BP_SYM (_setjmp))
++END (_setjmp)
+ libc_hidden_def (_setjmp)
+diff --git a/sysdeps/i386/bsd-setjmp.S b/sysdeps/i386/bsd-setjmp.S
+index 25470f3904a8ca73..9f2eb9d99c0807d2 100644
+--- a/sysdeps/i386/bsd-setjmp.S
++++ b/sysdeps/i386/bsd-setjmp.S
+@@ -22,15 +22,13 @@
+ 
+ #include <sysdep.h>
+ #include <jmpbuf-offsets.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ #include <stap-probe.h>
+ 
+-#define PARMS  LINKAGE		/* no space for saved regs */
++#define PARMS  4		/* no space for saved regs */
+ #define JMPBUF PARMS
+-#define SIGMSK JMPBUF+PTR_SIZE
++#define SIGMSK JMPBUF+4
+ 
+-ENTRY (BP_SYM (setjmp))
++ENTRY (setjmp)
+ 	/* Note that we have to use a non-exported symbol in the next
+ 	   jump since otherwise gas will emit it as a jump through the
+ 	   PLT which is what we cannot use here.  */
+@@ -46,7 +44,7 @@ ENTRY (BP_SYM (setjmp))
+ 	PTR_MANGLE (%ecx)
+ #endif
+      	movl %ecx, (JB_SP*4)(%eax)
+-	movl PCOFF(%esp), %ecx	/* Save PC we are returning to now.  */
++	movl 0(%esp), %ecx	/* Save PC we are returning to now.  */
+ 	LIBC_PROBE (setjmp, 3, 4@%eax, -4@$1, 4@%ecx)
+ #ifdef PTR_MANGLE
+ 	PTR_MANGLE (%ecx)
+@@ -59,10 +57,10 @@ ENTRY (BP_SYM (setjmp))
+ 	cfi_adjust_cfa_offset (4)
+ 	pushl 8(%esp)
+ 	cfi_adjust_cfa_offset (4)
+-	call BP_SYM (__sigjmp_save)
++	call __sigjmp_save
+ 	popl %ecx
+ 	cfi_adjust_cfa_offset (-4)
+ 	popl %edx
+ 	cfi_adjust_cfa_offset (-4)
+ 	ret
+-END (BP_SYM (setjmp))
++END (setjmp)
+diff --git a/sysdeps/i386/fpu/s_frexp.S b/sysdeps/i386/fpu/s_frexp.S
+index 6c5cd8fdfd9f825b..220eb3cb4bdedc0a 100644
+--- a/sysdeps/i386/fpu/s_frexp.S
++++ b/sysdeps/i386/fpu/s_frexp.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <machine/asm.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ 	.section .rodata
+ 
+@@ -34,13 +32,13 @@ two54:	.byte 0, 0, 0, 0, 0, 0, 0x50, 0x43
+ #define MO(op) op
+ #endif
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define VAL0	PARMS
+ #define VAL1	VAL0+4
+ #define EXPP	VAL1+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__frexp))
++ENTRY (__frexp)
+ 
+ 	movl	VAL0(%esp), %ecx
+ 	movl	VAL1(%esp), %eax
+@@ -81,5 +79,5 @@ ENTRY (BP_SYM (__frexp))
+ 	movl	%ecx, (%eax)
+ 
+ 	ret
+-END (BP_SYM (__frexp))
+-weak_alias (BP_SYM (__frexp), BP_SYM (frexp))
++END (__frexp)
++weak_alias (__frexp, frexp)
+diff --git a/sysdeps/i386/fpu/s_frexpf.S b/sysdeps/i386/fpu/s_frexpf.S
+index 4fe2181873de7302..1515ec3d5d08fe5e 100644
+--- a/sysdeps/i386/fpu/s_frexpf.S
++++ b/sysdeps/i386/fpu/s_frexpf.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <machine/asm.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ 	.section .rodata
+ 
+@@ -34,12 +32,12 @@ two25:	.byte 0, 0, 0, 0x4c
+ #define MO(op) op
+ #endif
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define VAL	PARMS
+ #define EXPP	VAL+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__frexpf))
++ENTRY (__frexpf)
+ 
+ 	movl	VAL(%esp), %eax
+ 	xorl	%ecx, %ecx
+@@ -78,5 +76,5 @@ ENTRY (BP_SYM (__frexpf))
+ 	movl	%ecx, (%eax)
+ 
+ 	ret
+-END (BP_SYM (__frexpf))
+-weak_alias (BP_SYM (__frexpf), BP_SYM (frexpf))
++END (__frexpf)
++weak_alias (__frexpf, frexpf)
+diff --git a/sysdeps/i386/fpu/s_frexpl.S b/sysdeps/i386/fpu/s_frexpl.S
+index 54d5010185792bd9..bd8064ac46104921 100644
+--- a/sysdeps/i386/fpu/s_frexpl.S
++++ b/sysdeps/i386/fpu/s_frexpl.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <machine/asm.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ 	.section .rodata
+ 
+@@ -34,14 +32,14 @@ two64:	.byte 0, 0, 0, 0, 0, 0, 0xf0, 0x43
+ #define MO(op) op
+ #endif
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define VAL0	PARMS
+ #define VAL1	VAL0+4
+ #define VAL2	VAL1+4
+ #define EXPP	VAL2+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__frexpl))
++ENTRY (__frexpl)
+ 
+ 	movl	VAL0(%esp), %ecx
+ 	movl	VAL2(%esp), %eax
+@@ -83,5 +81,5 @@ ENTRY (BP_SYM (__frexpl))
+ 	movl	%ecx, (%eax)
+ 
+ 	ret
+-END (BP_SYM (__frexpl))
+-weak_alias (BP_SYM (__frexpl), BP_SYM (frexpl))
++END (__frexpl)
++weak_alias (__frexpl, frexpl)
+diff --git a/sysdeps/i386/fpu/s_remquo.S b/sysdeps/i386/fpu/s_remquo.S
+index e61ff5be7bc826df..341285db30448710 100644
+--- a/sysdeps/i386/fpu/s_remquo.S
++++ b/sysdeps/i386/fpu/s_remquo.S
+@@ -5,16 +5,14 @@
+  */
+ 
+ #include <machine/asm.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define DVDND	PARMS
+ #define DVSOR	DVDND+8
+ #define QUOP	DVSOR+8
+ 
+ 	.text
+-ENTRY (BP_SYM (__remquo))
++ENTRY (__remquo)
+ 
+ 	fldl	DVSOR(%esp)
+ 	fldl	DVDND(%esp)
+@@ -43,5 +41,5 @@ ENTRY (BP_SYM (__remquo))
+ 1:	movl	%eax, (%ecx)
+ 
+ 	ret
+-END (BP_SYM (__remquo))
+-weak_alias (BP_SYM (__remquo), BP_SYM (remquo))
++END (__remquo)
++weak_alias (__remquo, remquo)
+diff --git a/sysdeps/i386/fpu/s_remquof.S b/sysdeps/i386/fpu/s_remquof.S
+index c2b351b859c28e7c..62063f068f59220a 100644
+--- a/sysdeps/i386/fpu/s_remquof.S
++++ b/sysdeps/i386/fpu/s_remquof.S
+@@ -5,16 +5,14 @@
+  */
+ 
+ #include <machine/asm.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define DVDND	PARMS
+ #define DVSOR	DVDND+4
+ #define QUOP	DVSOR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__remquof))
++ENTRY (__remquof)
+ 
+ 	flds	DVSOR(%esp)
+ 	flds	DVDND(%esp)
+@@ -43,5 +41,5 @@ ENTRY (BP_SYM (__remquof))
+ 1:	movl	%eax, (%ecx)
+ 
+ 	ret
+-END (BP_SYM (__remquof))
+-weak_alias (BP_SYM (__remquof), BP_SYM (remquof))
++END (__remquof)
++weak_alias (__remquof, remquof)
+diff --git a/sysdeps/i386/fpu/s_remquol.S b/sysdeps/i386/fpu/s_remquol.S
+index 2cbe43589609a2b8..f3d84fc7c2c22d73 100644
+--- a/sysdeps/i386/fpu/s_remquol.S
++++ b/sysdeps/i386/fpu/s_remquol.S
+@@ -5,16 +5,14 @@
+  */
+ 
+ #include <machine/asm.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define DVDND	PARMS
+ #define DVSOR	DVDND+12
+ #define QUOP	DVSOR+12
+ 
+ 	.text
+-ENTRY (BP_SYM (__remquol))
++ENTRY (__remquol)
+ 
+ 	fldt	DVSOR(%esp)
+ 	fldt	DVDND(%esp)
+@@ -43,5 +41,5 @@ ENTRY (BP_SYM (__remquol))
+ 1:	movl	%eax, (%ecx)
+ 
+ 	ret
+-END (BP_SYM (__remquol))
+-weak_alias (BP_SYM (__remquol), BP_SYM (remquol))
++END (__remquol)
++weak_alias (__remquol, remquol)
+diff --git a/sysdeps/i386/i486/strcat.S b/sysdeps/i386/i486/strcat.S
+index b3212c8beb948411..d772b108d1c45e2d 100644
+--- a/sysdeps/i386/i486/strcat.S
++++ b/sysdeps/i386/i486/strcat.S
+@@ -21,16 +21,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strcat))
++ENTRY (strcat)
+ 
+ 	pushl %edi		/* Save callee-safe register.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -257,12 +255,11 @@ L(9):	movb %al, (%ecx,%edx)	/* store first byte of last word */
+ 
+ 	movb %ah, 3(%ecx,%edx)	/* store fourth byte of last word */
+ 
+-L(8):	/* GKM FIXME: check high bounds */
+-	movl DEST(%esp), %eax	/* start address of destination is result */
++L(8):	movl DEST(%esp), %eax	/* start address of destination is result */
+ 	popl %edi		/* restore saved register */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (strcat))
++	ret
++END (strcat)
+ libc_hidden_builtin_def (strcat)
+diff --git a/sysdeps/i386/i486/strlen.S b/sysdeps/i386/i486/strlen.S
+index 76c31098e84a1c93..371e202902603639 100644
+--- a/sysdeps/i386/i486/strlen.S
++++ b/sysdeps/i386/i486/strlen.S
+@@ -20,14 +20,12 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define STR	PARMS
+ 
+ 	.text
+-ENTRY (BP_SYM (strlen))
++ENTRY (strlen)
+ 
+ 	movl STR(%esp), %ecx
+ 	movl %ecx, %eax		/* duplicate it */
+@@ -130,5 +128,5 @@ L(3):	testb %cl, %cl		/* is first byte NUL? */
+ L(2):	subl STR(%esp), %eax	/* compute difference to string start */
+ 
+ 	ret
+-END (BP_SYM (strlen))
++END (strlen)
+ libc_hidden_builtin_def (strlen)
+diff --git a/sysdeps/i386/i586/add_n.S b/sysdeps/i386/i586/add_n.S
+index a2b502d0d21bf9f5..e3f439412f7d4061 100644
+--- a/sysdeps/i386/i586/add_n.S
++++ b/sysdeps/i386/i586/add_n.S
+@@ -19,17 +19,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16		/* space for 4 saved regs */
++#define PARMS	4+16		/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define S2	S1+PTR_SIZE
+-#define SIZE	S2+PTR_SIZE
++#define S1	RES+4
++#define S2	S1+4
++#define SIZE	S2+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_add_n))
++ENTRY (__mpn_add_n)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -142,4 +140,4 @@ L(end2):
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_add_n))
++END (__mpn_add_n)
+diff --git a/sysdeps/i386/i586/addmul_1.S b/sysdeps/i386/i586/addmul_1.S
+index a9d0b08b5e8072ab..333951f8e5d6d3ec 100644
+--- a/sysdeps/i386/i586/addmul_1.S
++++ b/sysdeps/i386/i586/addmul_1.S
+@@ -19,13 +19,11 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define SIZE	S1+PTR_SIZE
++#define S1	RES+4
++#define SIZE	S1+4
+ #define S2LIMB	SIZE+4
+ 
+ #define res_ptr edi
+@@ -34,7 +32,7 @@
+ #define s2_limb ebx
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_addmul_1))
++ENTRY (__mpn_addmul_1)
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -93,4 +91,4 @@ L(oop):	adcl	$0, %ebp
+ 
+ 	ret
+ #undef size
+-END (BP_SYM (__mpn_addmul_1))
++END (__mpn_addmul_1)
+diff --git a/sysdeps/i386/i586/bzero.S b/sysdeps/i386/i586/bzero.S
+index 220aa47c3f9c6d5c..84d2f709c16d0b46 100644
+--- a/sysdeps/i386/i586/bzero.S
++++ b/sysdeps/i386/i586/bzero.S
+@@ -1,3 +1,3 @@
+ #define memset __bzero
+ #include <sysdeps/i386/i586/memset.S>
+-weak_alias (BP_SYM (__bzero), BP_SYM (bzero))
++weak_alias (__bzero, bzero)
+diff --git a/sysdeps/i386/i586/lshift.S b/sysdeps/i386/i586/lshift.S
+index 23c5002d69f50f8f..2f25ed1d854e90c2 100644
+--- a/sysdeps/i386/i586/lshift.S
++++ b/sysdeps/i386/i586/lshift.S
+@@ -18,17 +18,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16		/* space for 4 saved regs */
++#define PARMS	4+16		/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S	RES+PTR_SIZE
+-#define SIZE	S+PTR_SIZE
++#define S	RES+4
++#define SIZE	S+4
+ #define CNT	SIZE+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_lshift))
++ENTRY (__mpn_lshift)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -254,4 +252,4 @@ L(L1):	movl	%edx,(%edi)		/* store last limb */
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_lshift))
++END (__mpn_lshift)
+diff --git a/sysdeps/i386/i586/memcpy.S b/sysdeps/i386/i586/memcpy.S
+index 07f5432d761c453d..baa8d11c44ccfd67 100644
+--- a/sysdeps/i386/i586/memcpy.S
++++ b/sysdeps/i386/i586/memcpy.S
+@@ -19,19 +19,17 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* BEWARE: `#ifdef memcpy' means that memcpy is redefined as `mempcpy',
+    and the return value is the byte after the last one copied in
+    the destination. */
+ #define MEMPCPY_P (defined memcpy)
+ 
+-#define PARMS	LINKAGE+8	/* space for 2 saved regs */
++#define PARMS	4+8	/* space for 2 saved regs */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
+-#define LEN	SRC+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
++#define LEN	SRC+4
+ 
+         .text
+ #if defined PIC && IS_IN (libc)
+@@ -41,7 +39,7 @@ ENTRY (__memcpy_chk)
+ 	jb	HIDDEN_JUMPTARGET (__chk_fail)
+ END (__memcpy_chk)
+ #endif
+-ENTRY (BP_SYM (memcpy))
++ENTRY (memcpy)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -124,8 +122,8 @@ L(1):	rep; movsb
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (memcpy))
++	ret
++END (memcpy)
+ #if !MEMPCPY_P
+ libc_hidden_builtin_def (memcpy)
+ #endif
+diff --git a/sysdeps/i386/i586/mempcpy.S b/sysdeps/i386/i586/mempcpy.S
+index f492be7ca0722839..afc112d9d7986697 100644
+--- a/sysdeps/i386/i586/mempcpy.S
++++ b/sysdeps/i386/i586/mempcpy.S
+@@ -2,6 +2,6 @@
+ #define __memcpy_chk __mempcpy_chk
+ #include <sysdeps/i386/i586/memcpy.S>
+ 
+-libc_hidden_def (BP_SYM (__mempcpy))
+-weak_alias (BP_SYM (__mempcpy), BP_SYM (mempcpy))
++libc_hidden_def (__mempcpy)
++weak_alias (__mempcpy, mempcpy)
+ libc_hidden_builtin_def (mempcpy)
+diff --git a/sysdeps/i386/i586/memset.S b/sysdeps/i386/i586/memset.S
+index 8234b99d734b24b0..c1b08e0f7357cc00 100644
+--- a/sysdeps/i386/i586/memset.S
++++ b/sysdeps/i386/i586/memset.S
+@@ -20,19 +20,17 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* BEWARE: `#ifdef memset' means that memset is redefined as `bzero' */
+ #define BZERO_P (defined memset)
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
++#define DEST	RTN
+ #if BZERO_P
+-# define LEN	DEST+PTR_SIZE
++# define LEN	DEST+4
+ #else
+-# define CHR	DEST+PTR_SIZE
++# define CHR	DEST+4
+ # define LEN	CHR+4
+ #endif
+ 
+@@ -44,7 +42,7 @@ ENTRY (__memset_chk)
+ 	jb	HIDDEN_JUMPTARGET (__chk_fail)
+ END (__memset_chk)
+ #endif
+-ENTRY (BP_SYM (memset))
++ENTRY (memset)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -117,7 +115,7 @@ L(2):	shrl	$2, %ecx	/* convert byte count to longword count */
+ #if BZERO_P
+ 	ret
+ #else
+-	RET_PTR
++	ret
+ #endif
+-END (BP_SYM (memset))
++END (memset)
+ libc_hidden_builtin_def (memset)
+diff --git a/sysdeps/i386/i586/mul_1.S b/sysdeps/i386/i586/mul_1.S
+index c694afb42141b16f..f5f119c9a9125ba6 100644
+--- a/sysdeps/i386/i586/mul_1.S
++++ b/sysdeps/i386/i586/mul_1.S
+@@ -19,13 +19,11 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define SIZE	S1+PTR_SIZE
++#define S1	RES+4
++#define SIZE	S1+4
+ #define S2LIMB	SIZE+4
+ 
+ #define res_ptr edi
+@@ -34,7 +32,7 @@
+ #define s2_limb ebx
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_mul_1))
++ENTRY (__mpn_mul_1)
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -89,4 +87,4 @@ L(oop):	adcl	$0, %ebp
+ 
+ 	ret
+ #undef size
+-END (BP_SYM (__mpn_mul_1))
++END (__mpn_mul_1)
+diff --git a/sysdeps/i386/i586/rshift.S b/sysdeps/i386/i586/rshift.S
+index ce3710391193dbac..2625cf9e04122d45 100644
+--- a/sysdeps/i386/i586/rshift.S
++++ b/sysdeps/i386/i586/rshift.S
+@@ -18,17 +18,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16		/* space for 4 saved regs */
++#define PARMS	4+16		/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S	RES+PTR_SIZE
+-#define SIZE	S+PTR_SIZE
++#define S	RES+4
++#define SIZE	S+4
+ #define CNT	SIZE+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_rshift))
++ENTRY (__mpn_rshift)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -254,4 +252,4 @@ L(L1):	movl	%edx,(%edi)		/* store last limb */
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_rshift))
++END (__mpn_rshift)
+diff --git a/sysdeps/i386/i586/strchr.S b/sysdeps/i386/i586/strchr.S
+index 35259fb085840180..3821331851bf843d 100644
+--- a/sysdeps/i386/i586/strchr.S
++++ b/sysdeps/i386/i586/strchr.S
+@@ -20,8 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* This version is especially optimized for the i586 (and following?)
+    processors.  This is mainly done by using the two pipelines.  The
+@@ -36,13 +34,13 @@
+ /* The magic value which is used throughout in the whole code.  */
+ #define magic 0xfefefeff
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define CHR	STR+PTR_SIZE
++#define STR	RTN
++#define CHR	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strchr))
++ENTRY (strchr)
+ 
+ 	pushl %edi		/* Save callee-safe registers.  */
+ 	cfi_adjust_cfa_offset (-4)
+@@ -301,7 +299,7 @@ L(out):	popl %ebp		/* restore saved registers */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
++	ret
+ 
+ 	cfi_adjust_cfa_offset (16)
+ 	cfi_rel_offset (edi, 12)
+@@ -343,8 +341,8 @@ L(4):	subl $4, %eax		/* adjust pointer */
+ 
+ L(3):	xorl %eax, %eax
+ 	jmp L(out)
+-END (BP_SYM (strchr))
++END (strchr)
+ 
+ #undef index
+-weak_alias (BP_SYM (strchr), BP_SYM (index))
++weak_alias (strchr, index)
+ libc_hidden_builtin_def (strchr)
+diff --git a/sysdeps/i386/i586/strcpy.S b/sysdeps/i386/i586/strcpy.S
+index edd21f135d46a732..56659182a784bb44 100644
+--- a/sysdeps/i386/i586/strcpy.S
++++ b/sysdeps/i386/i586/strcpy.S
+@@ -19,13 +19,11 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+12	/* space for 3 saved regs */
++#define PARMS	4+12	/* space for 3 saved regs */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
+ 
+ #ifndef USE_AS_STPCPY
+ # define STRCPY strcpy
+@@ -34,7 +32,7 @@
+ #define magic 0xfefefeff
+ 
+ 	.text
+-ENTRY (BP_SYM (STRCPY))
++ENTRY (STRCPY)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -149,7 +147,6 @@ L(4):	movb	%dl, (%edi)
+ L(end):	movb	%ah, (%edi)
+ 
+ L(end2):
+-	/* GKM FIXME: check high bounds  */
+ #ifdef USE_AS_STPCPY
+ 	movl	%edi, %eax
+ #else
+@@ -165,8 +162,8 @@ L(end2):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (STRCPY))
++	ret
++END (STRCPY)
+ #ifndef USE_AS_STPCPY
+ libc_hidden_builtin_def (strcpy)
+ #endif
+diff --git a/sysdeps/i386/i586/strlen.S b/sysdeps/i386/i586/strlen.S
+index 323cb950790174e6..6b5fee3acf360bc4 100644
+--- a/sysdeps/i386/i586/strlen.S
++++ b/sysdeps/i386/i586/strlen.S
+@@ -20,8 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* This version is especially optimized for the i586 (and following?)
+    processors.  This is mainly done by using the two pipelines.  The
+@@ -36,11 +34,11 @@
+ /* The magic value which is used throughout in the whole code.  */
+ #define magic 0xfefefeff
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define STR	PARMS
+ 
+ 	.text
+-ENTRY (BP_SYM (strlen))
++ENTRY (strlen)
+ 
+ 	movl STR(%esp), %eax
+ 	movl $3, %edx		/* load mask (= 3) */
+@@ -180,5 +178,5 @@ L(2):	subl STR(%esp), %eax	/* now compute the length as difference
+ 				   between start and terminating NUL
+ 				   character */
+ 	ret
+-END (BP_SYM (strlen))
++END (strlen)
+ libc_hidden_builtin_def (strlen)
+diff --git a/sysdeps/i386/i586/sub_n.S b/sysdeps/i386/i586/sub_n.S
+index 07bddca9a8ce7fe8..68442a688ac796a3 100644
+--- a/sysdeps/i386/i586/sub_n.S
++++ b/sysdeps/i386/i586/sub_n.S
+@@ -19,17 +19,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16		/* space for 4 saved regs */
++#define PARMS	4+16		/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define S2	S1+PTR_SIZE
+-#define SIZE	S2+PTR_SIZE
++#define S1	RES+4
++#define S2	S1+4
++#define SIZE	S2+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_sub_n))
++ENTRY (__mpn_sub_n)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -142,4 +140,4 @@ L(end2):
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_sub_n))
++END (__mpn_sub_n)
+diff --git a/sysdeps/i386/i586/submul_1.S b/sysdeps/i386/i586/submul_1.S
+index a028d7089798ceb7..b553d25804bc5091 100644
+--- a/sysdeps/i386/i586/submul_1.S
++++ b/sysdeps/i386/i586/submul_1.S
+@@ -19,13 +19,11 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define SIZE	S1+PTR_SIZE
++#define S1	RES+4
++#define SIZE	S1+4
+ #define S2LIMB	SIZE+4
+ 
+ #define res_ptr edi
+@@ -34,7 +32,7 @@
+ #define s2_limb ebx
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_submul_1))
++ENTRY (__mpn_submul_1)
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -93,4 +91,4 @@ L(oop):	adcl	$0, %ebp
+ 
+ 	ret
+ #undef size
+-END (BP_SYM (__mpn_submul_1))
++END (__mpn_submul_1)
+diff --git a/sysdeps/i386/i686/add_n.S b/sysdeps/i386/i686/add_n.S
+index f645a21c1cad52ab..2ccf0215549cda2b 100644
+--- a/sysdeps/i386/i686/add_n.S
++++ b/sysdeps/i386/i686/add_n.S
+@@ -19,21 +19,19 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+8		/* space for 2 saved regs */
++#define PARMS	4+8		/* space for 2 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define S2	S1+PTR_SIZE
+-#define SIZE	S2+PTR_SIZE
++#define S1	RES+4
++#define S2	S1+4
++#define SIZE	S2+4
+ 
+ 	.text
+ #ifdef PIC
+ L(1):	addl    (%esp), %eax
+ 	ret
+ #endif
+-ENTRY (BP_SYM (__mpn_add_n))
++ENTRY (__mpn_add_n)
+ 
+ 	pushl %edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -109,4 +107,4 @@ L(oop):	movl	(%esi),%eax
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_add_n))
++END (__mpn_add_n)
+diff --git a/sysdeps/i386/i686/bzero.S b/sysdeps/i386/i686/bzero.S
+index c1e4a6d50e5e8d99..34b0faa91b964303 100644
+--- a/sysdeps/i386/i686/bzero.S
++++ b/sysdeps/i386/i686/bzero.S
+@@ -1,3 +1,3 @@
+ #define memset __bzero
+ #include <sysdeps/i386/i686/memset.S>
+-weak_alias (BP_SYM (__bzero), BP_SYM (bzero))
++weak_alias (__bzero, bzero)
+diff --git a/sysdeps/i386/i686/memcmp.S b/sysdeps/i386/i686/memcmp.S
+index f45a22400242cb02..77cfb42b821fee78 100644
+--- a/sysdeps/i386/i686/memcmp.S
++++ b/sysdeps/i386/i686/memcmp.S
+@@ -18,13 +18,11 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS		LINKAGE+4	/* Preserve EBX.  */
++#define PARMS		4+4	/* Preserve EBX.  */
+ #define BLK1		PARMS
+-#define BLK2		BLK1+PTR_SIZE
+-#define LEN		BLK2+PTR_SIZE
++#define BLK2		BLK1+4
++#define LEN		BLK2+4
+ #define ENTRANCE	pushl %ebx; cfi_adjust_cfa_offset (4); \
+ 			cfi_rel_offset (ebx, 0)
+ #define RETURN		popl %ebx; cfi_adjust_cfa_offset (-4); \
+@@ -44,7 +42,7 @@
+ 
+         .text
+ 	ALIGN (4)
+-ENTRY (BP_SYM (memcmp))
++ENTRY (memcmp)
+ 	ENTRANCE
+ 
+ 	movl	BLK1(%esp), %eax
+@@ -366,7 +364,7 @@ L(set):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 	RETURN
+-END (BP_SYM (memcmp))
++END (memcmp)
+ 
+ 	.section	.rodata
+ 	ALIGN (2)
+@@ -406,5 +404,5 @@ L(table_32bytes) :
+ 
+ 
+ #undef bcmp
+-weak_alias (BP_SYM (memcmp), BP_SYM (bcmp))
+-libc_hidden_builtin_def (BP_SYM (memcmp))
++weak_alias (memcmp, bcmp)
++libc_hidden_builtin_def (memcmp)
+diff --git a/sysdeps/i386/i686/memcpy.S b/sysdeps/i386/i686/memcpy.S
+index 68f7e40031b1b4db..fae614e682c50995 100644
+--- a/sysdeps/i386/i686/memcpy.S
++++ b/sysdeps/i386/i686/memcpy.S
+@@ -20,14 +20,12 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
+-#define LEN	SRC+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
++#define LEN	SRC+4
+ 
+ 	.text
+ #if defined PIC && IS_IN (libc)
+@@ -37,7 +35,7 @@ ENTRY_CHK (__memcpy_chk)
+ 	jb	HIDDEN_JUMPTARGET (__chk_fail)
+ END_CHK (__memcpy_chk)
+ #endif
+-ENTRY (BP_SYM (memcpy))
++ENTRY (memcpy)
+ 
+ 	movl	%edi, %eax
+ 	movl	DEST(%esp), %edi
+@@ -81,7 +79,7 @@ ENTRY (BP_SYM (memcpy))
+ 	movl	%edx, %esi
+ 	movl	DEST(%esp), %eax
+ 
+-	RET_PTR
++	ret
+ 
+ 	/* When we come here the pointers do not have the same
+ 	   alignment or the length is too short.  No need to optimize for
+@@ -96,5 +94,5 @@ ENTRY (BP_SYM (memcpy))
+ 2:	rep
+ 	movsl
+ 	jmp	.Lend
+-END (BP_SYM (memcpy))
++END (memcpy)
+ libc_hidden_builtin_def (memcpy)
+diff --git a/sysdeps/i386/i686/memmove.S b/sysdeps/i386/i686/memmove.S
+index 683f45fc44fc4f4f..50cf1cf222b922e3 100644
+--- a/sysdeps/i386/i686/memmove.S
++++ b/sysdeps/i386/i686/memmove.S
+@@ -20,22 +20,20 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4	/* one spilled register */
++#define PARMS	4+4	/* one spilled register */
+ #define RTN	PARMS
+ 
+ 	.text
+ 
+ #ifdef USE_AS_BCOPY
+-# define SRC	RTN+RTN_SIZE
+-# define DEST	SRC+PTR_SIZE
+-# define LEN	DEST+PTR_SIZE
++# define SRC	RTN
++# define DEST	SRC+4
++# define LEN	DEST+4
+ #else
+-# define DEST	RTN+RTN_SIZE
+-# define SRC	DEST+PTR_SIZE
+-# define LEN	SRC+PTR_SIZE
++# define DEST	RTN
++# define SRC	DEST+4
++# define LEN	SRC+4
+ 
+ # if defined PIC && IS_IN (libc)
+ ENTRY_CHK (__memmove_chk)
+@@ -46,7 +44,7 @@ END_CHK (__memmove_chk)
+ # endif
+ #endif
+ 
+-ENTRY (BP_SYM (memmove))
++ENTRY (memmove)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -82,7 +80,7 @@ ENTRY (BP_SYM (memmove))
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
++	ret
+ 
+ 	cfi_adjust_cfa_offset (4)
+ 	cfi_rel_offset (edi, 0)
+@@ -115,8 +113,8 @@ ENTRY (BP_SYM (memmove))
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (memmove))
++	ret
++END (memmove)
+ #ifndef USE_AS_BCOPY
+ libc_hidden_builtin_def (memmove)
+ #endif
+diff --git a/sysdeps/i386/i686/mempcpy.S b/sysdeps/i386/i686/mempcpy.S
+index facff870e3f8f9de..c4b9d9dce361d0f0 100644
+--- a/sysdeps/i386/i686/mempcpy.S
++++ b/sysdeps/i386/i686/mempcpy.S
+@@ -20,14 +20,12 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
+-#define LEN	SRC+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
++#define LEN	SRC+4
+ 
+ 	.text
+ #if defined PIC && IS_IN (libc)
+@@ -37,7 +35,7 @@ ENTRY_CHK (__mempcpy_chk)
+ 	jb	HIDDEN_JUMPTARGET (__chk_fail)
+ END_CHK (__mempcpy_chk)
+ #endif
+-ENTRY (BP_SYM (__mempcpy))
++ENTRY (__mempcpy)
+ 
+ 	movl	LEN(%esp), %ecx
+ 	movl	%edi, %eax
+@@ -60,8 +58,8 @@ ENTRY (BP_SYM (__mempcpy))
+ 	movl	%edx, %esi
+ 	cfi_restore (esi)
+ 
+-	RET_PTR
+-END (BP_SYM (__mempcpy))
+-libc_hidden_def (BP_SYM (__mempcpy))
+-weak_alias (BP_SYM (__mempcpy), BP_SYM (mempcpy))
++	ret
++END (__mempcpy)
++libc_hidden_def (__mempcpy)
++weak_alias (__mempcpy, mempcpy)
+ libc_hidden_builtin_def (mempcpy)
+diff --git a/sysdeps/i386/i686/memset.S b/sysdeps/i386/i686/memset.S
+index 7db25497117b6258..b9cb50d1bbf12f3d 100644
+--- a/sysdeps/i386/i686/memset.S
++++ b/sysdeps/i386/i686/memset.S
+@@ -20,20 +20,18 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* BEWARE: `#ifdef memset' means that memset is redefined as `bzero' */
+ #define BZERO_P (defined memset)
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #if BZERO_P
+ # define DEST	PARMS
+-# define LEN	DEST+PTR_SIZE
++# define LEN	DEST+4
+ #else
+ # define RTN	PARMS
+-# define DEST	RTN+RTN_SIZE
+-# define CHR	DEST+PTR_SIZE
++# define DEST	RTN
++# define CHR	DEST+4
+ # define LEN	CHR+4
+ #endif
+ 
+@@ -45,7 +43,7 @@ ENTRY_CHK (__memset_chk)
+ 	jb	HIDDEN_JUMPTARGET (__chk_fail)
+ END_CHK (__memset_chk)
+ #endif
+-ENTRY (BP_SYM (memset))
++ENTRY (memset)
+ 
+ 	cld
+ 	pushl	%edi
+@@ -96,9 +94,9 @@ ENTRY (BP_SYM (memset))
+ #if BZERO_P
+ 	ret
+ #else
+-	RET_PTR
++	ret
+ #endif
+-END (BP_SYM (memset))
++END (memset)
+ libc_hidden_builtin_def (memset)
+ 
+ #if defined PIC && IS_IN (libc) && !BZERO_P
+diff --git a/sysdeps/i386/i686/strcmp.S b/sysdeps/i386/i686/strcmp.S
+index 0423aac297358c77..70c356e721c6c8b8 100644
+--- a/sysdeps/i386/i686/strcmp.S
++++ b/sysdeps/i386/i686/strcmp.S
+@@ -19,15 +19,13 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define STR1	PARMS
+-#define STR2	STR1+PTR_SIZE
++#define STR2	STR1+4
+ 
+         .text
+-ENTRY (BP_SYM (strcmp))
++ENTRY (strcmp)
+ 
+ 	movl	STR1(%esp), %ecx
+ 	movl	STR2(%esp), %edx
+@@ -50,5 +48,5 @@ L(neq):	movl	$1, %eax
+ 	cmovbl	%ecx, %eax
+ 
+ 	ret
+-END (BP_SYM (strcmp))
++END (strcmp)
+ libc_hidden_builtin_def (strcmp)
+diff --git a/sysdeps/i386/i686/strtok.S b/sysdeps/i386/i686/strtok.S
+index 372352e32a84f81d..cc5df557113b44c1 100644
+--- a/sysdeps/i386/i686/strtok.S
++++ b/sysdeps/i386/i686/strtok.S
+@@ -20,8 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* This file can be used for three variants of the strtok function:
+ 
+@@ -58,15 +56,15 @@ save_ptr:
+ #endif
+ 
+ #if !defined USE_AS_STRTOK_R && defined PIC
+-# define PARMS	LINKAGE+256+4	/* space for table and saved PIC register */
++# define PARMS	4+256+4	/* space for table and saved PIC register */
+ #else
+-# define PARMS	LINKAGE+256	/* space for table */
++# define PARMS	4+256	/* space for table */
+ #endif
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define DELIM	STR+PTR_SIZE
++#define STR	RTN
++#define DELIM	STR+4
+ #ifdef USE_AS_STRTOK_R
+-# define SAVE	DELIM+PTR_SIZE
++# define SAVE	DELIM+4
+ #endif
+ 
+ 	.text
+@@ -76,7 +74,7 @@ save_ptr:
+ 	ret
+ #endif
+ 
+-ENTRY (BP_SYM (FUNCTION))
++ENTRY (FUNCTION)
+ 
+ #if !defined USE_AS_STRTOK_R && defined PIC
+ 	pushl %ebx			/* Save PIC register.  */
+@@ -233,7 +231,7 @@ L(epilogue):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (ebx)
+ #endif
+-	RET_PTR
++	ret
+ 
+ L(returnNULL):
+ 	xorl %eax, %eax
+@@ -243,4 +241,4 @@ L(returnNULL):
+ 	movl %edx, SAVE_PTR
+ 	jmp L(epilogue)
+ 
+-END (BP_SYM (FUNCTION))
++END (FUNCTION)
+diff --git a/sysdeps/i386/i686/strtok_r.S b/sysdeps/i386/i686/strtok_r.S
+index 1c24ca85f5f084d7..353e076ba7bfe5d7 100644
+--- a/sysdeps/i386/i686/strtok_r.S
++++ b/sysdeps/i386/i686/strtok_r.S
+@@ -1,5 +1,5 @@
+ #define FUNCTION __strtok_r
+ #define USE_AS_STRTOK_R	1
+ #include <sysdeps/i386/i686/strtok.S>
+-weak_alias (BP_SYM (__strtok_r), BP_SYM (strtok_r))
+-strong_alias (BP_SYM (__strtok_r), BP_SYM (__GI___strtok_r))
++weak_alias (__strtok_r, strtok_r)
++strong_alias (__strtok_r, __GI___strtok_r)
+diff --git a/sysdeps/i386/lshift.S b/sysdeps/i386/lshift.S
+index b40d4ddd3a0e7fd7..7f70a85d6836b816 100644
+--- a/sysdeps/i386/lshift.S
++++ b/sysdeps/i386/lshift.S
+@@ -18,17 +18,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+12		/* space for 3 saved regs */
++#define PARMS	4+12		/* space for 3 saved regs */
+ #define RES	PARMS
+-#define S	RES+PTR_SIZE
+-#define SIZE	S+PTR_SIZE
++#define S	RES+4
++#define SIZE	S+4
+ #define CNT	SIZE+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_lshift))
++ENTRY (__mpn_lshift)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -102,4 +100,4 @@ L(end):	shll	%cl,%ebx		/* compute least significant limb */
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_lshift))
++END (__mpn_lshift)
+diff --git a/sysdeps/i386/memchr.S b/sysdeps/i386/memchr.S
+index 88651e527650b26b..c8ba5f0e9eb76d09 100644
+--- a/sysdeps/i386/memchr.S
++++ b/sysdeps/i386/memchr.S
+@@ -28,17 +28,15 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+8		/* space for 2 saved regs */
++#define PARMS	4+8		/* space for 2 saved regs */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define CHR	STR+PTR_SIZE
++#define STR	RTN
++#define CHR	STR+4
+ #define LEN	CHR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__memchr))
++ENTRY (__memchr)
+ 
+ 	/* Save callee-safe registers used in this function.  */
+ 	pushl %esi
+@@ -317,8 +315,8 @@ L(9):	popl %edi		/* pop saved registers */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 
+-	RET_PTR
+-END (BP_SYM (__memchr))
++	ret
++END (__memchr)
+ 
+-weak_alias (BP_SYM (__memchr), BP_SYM (memchr))
++weak_alias (__memchr, memchr)
+ libc_hidden_builtin_def (memchr)
+diff --git a/sysdeps/i386/memcmp.S b/sysdeps/i386/memcmp.S
+index 1d5535a29dd12b33..89512f0ed139f22e 100644
+--- a/sysdeps/i386/memcmp.S
++++ b/sysdeps/i386/memcmp.S
+@@ -18,16 +18,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #define BLK1	PARMS
+-#define BLK2	BLK1+PTR_SIZE
+-#define LEN	BLK2+PTR_SIZE
++#define BLK2	BLK1+4
++#define LEN	BLK2+4
+ 
+ 	.text
+-ENTRY (BP_SYM (memcmp))
++ENTRY (memcmp)
+ 
+ 	pushl %esi		/* Save callee-safe registers.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -68,8 +66,8 @@ L(1):	popl %esi		/* Restore registers.  */
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (memcmp))
++END (memcmp)
+ 
+ #undef bcmp
+-weak_alias (BP_SYM (memcmp), BP_SYM (bcmp))
+-libc_hidden_builtin_def (BP_SYM (memcmp))
++weak_alias (memcmp, bcmp)
++libc_hidden_builtin_def (memcmp)
+diff --git a/sysdeps/i386/mul_1.S b/sysdeps/i386/mul_1.S
+index 71f8dceb188057d9..6ed3a3a5a4ade481 100644
+--- a/sysdeps/i386/mul_1.S
++++ b/sysdeps/i386/mul_1.S
+@@ -19,13 +19,11 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define SIZE	S1+PTR_SIZE
++#define S1	RES+4
++#define SIZE	S1+4
+ #define S2LIMB	SIZE+4
+ 
+ #define res_ptr edi
+@@ -34,7 +32,7 @@
+ #define s2_limb ebx
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_mul_1))
++ENTRY (__mpn_mul_1)
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -85,4 +83,4 @@ L(oop):
+ 
+ 	ret
+ #undef size
+-END (BP_SYM (__mpn_mul_1))
++END (__mpn_mul_1)
+diff --git a/sysdeps/i386/rawmemchr.S b/sysdeps/i386/rawmemchr.S
+index 3ce497485e439c02..4988df295c212cd3 100644
+--- a/sysdeps/i386/rawmemchr.S
++++ b/sysdeps/i386/rawmemchr.S
+@@ -28,16 +28,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define CHR	STR+PTR_SIZE
++#define STR	RTN
++#define CHR	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__rawmemchr))
++ENTRY (__rawmemchr)
+ 
+ 	/* Save callee-safe register used in this function.  */
+ 	pushl %edi
+@@ -217,8 +215,8 @@ L(9):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (__rawmemchr))
++	ret
++END (__rawmemchr)
+ 
+-libc_hidden_def (BP_SYM (__rawmemchr))
+-weak_alias (BP_SYM (__rawmemchr), BP_SYM (rawmemchr))
++libc_hidden_def (__rawmemchr)
++weak_alias (__rawmemchr, rawmemchr)
+diff --git a/sysdeps/i386/rshift.S b/sysdeps/i386/rshift.S
+index 48f7c4f89dc408d3..eba15a2b7acf089d 100644
+--- a/sysdeps/i386/rshift.S
++++ b/sysdeps/i386/rshift.S
+@@ -18,17 +18,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+12		/* space for 3 saved regs */
++#define PARMS	4+12		/* space for 3 saved regs */
+ #define RES	PARMS
+-#define S	RES+PTR_SIZE
+-#define SIZE	S+PTR_SIZE
++#define S	RES+4
++#define SIZE	S+4
+ #define CNT	SIZE+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_rshift))
++ENTRY (__mpn_rshift)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -104,4 +102,4 @@ L(end):	shrl	%cl,%ebx		/* compute most significant limb */
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_rshift))
++END (__mpn_rshift)
+diff --git a/sysdeps/i386/setjmp.S b/sysdeps/i386/setjmp.S
+index 8e7a4df25bd2ff8d..56e6631c489362fb 100644
+--- a/sysdeps/i386/setjmp.S
++++ b/sysdeps/i386/setjmp.S
+@@ -19,15 +19,13 @@
+ #include <sysdep.h>
+ #include <jmpbuf-offsets.h>
+ #include <asm-syntax.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ #include <stap-probe.h>
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define JMPBUF	PARMS
+-#define SIGMSK	JMPBUF+PTR_SIZE
++#define SIGMSK	JMPBUF+4
+ 
+-ENTRY (BP_SYM (__sigsetjmp))
++ENTRY (__sigsetjmp)
+ 
+ 	movl JMPBUF(%esp), %eax
+ 
+@@ -40,7 +38,7 @@ ENTRY (BP_SYM (__sigsetjmp))
+ 	PTR_MANGLE (%ecx)
+ #endif
+      	movl %ecx, (JB_SP*4)(%eax)
+-	movl PCOFF(%esp), %ecx	/* Save PC we are returning to now.  */
++	movl 0(%esp), %ecx	/* Save PC we are returning to now.  */
+ 	LIBC_PROBE (setjmp, 3, 4@%eax, -4@SIGMSK(%esp), 4@%ecx)
+ #ifdef PTR_MANGLE
+ 	PTR_MANGLE (%ecx)
+@@ -56,4 +54,4 @@ ENTRY (BP_SYM (__sigsetjmp))
+ 	/* Make a tail call to __sigjmp_save; it takes the same args.  */
+ 	jmp __sigjmp_save
+ #endif
+-END (BP_SYM (__sigsetjmp))
++END (__sigsetjmp)
+diff --git a/sysdeps/i386/start.S b/sysdeps/i386/start.S
+index 990f3715d59fd6ea..4afb95205181e3f2 100644
+--- a/sysdeps/i386/start.S
++++ b/sysdeps/i386/start.S
+@@ -52,8 +52,6 @@
+ 					NULL
+ */
+ 
+-#include "bp-sym.h"
+-
+ 	.text
+ 	.globl _start
+ 	.type _start,@function
+@@ -97,11 +95,11 @@ _start:
+ 	pushl %ecx		/* Push second argument: argv.  */
+ 	pushl %esi		/* Push first argument: argc.  */
+ 
+-	pushl BP_SYM (main)@GOT(%ebx)
++	pushl main@GOT(%ebx)
+ 
+ 	/* Call the user's main function, and exit with its value.
+ 	   But let the libc call main.    */
+-	call BP_SYM (__libc_start_main)@PLT
++	call __libc_start_main@PLT
+ #else
+ 	/* Push address of our own entry points to .fini and .init.  */
+ 	pushl $__libc_csu_fini
+@@ -110,11 +108,11 @@ _start:
+ 	pushl %ecx		/* Push second argument: argv.  */
+ 	pushl %esi		/* Push first argument: argc.  */
+ 
+-	pushl $BP_SYM (main)
++	pushl $main
+ 
+ 	/* Call the user's main function, and exit with its value.
+ 	   But let the libc call main.    */
+-	call BP_SYM (__libc_start_main)
++	call __libc_start_main
+ #endif
+ 
+ 	hlt			/* Crash if somehow `exit' does return.  */
+diff --git a/sysdeps/i386/stpcpy.S b/sysdeps/i386/stpcpy.S
+index 3a01be3174ef0863..14573416254865c1 100644
+--- a/sysdeps/i386/stpcpy.S
++++ b/sysdeps/i386/stpcpy.S
+@@ -24,16 +24,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__stpcpy))
++ENTRY (__stpcpy)
+ 
+ 	movl DEST(%esp), %eax
+ 	movl SRC(%esp), %ecx
+@@ -83,9 +81,9 @@ L(4):	incl %eax
+ L(3):	incl %eax
+ L(2):
+ 
+-	RET_PTR
+-END (BP_SYM (__stpcpy))
++	ret
++END (__stpcpy)
+ 
+-weak_alias (BP_SYM (__stpcpy), BP_SYM (stpcpy))
++weak_alias (__stpcpy, stpcpy)
+ libc_hidden_def (__stpcpy)
+ libc_hidden_builtin_def (stpcpy)
+diff --git a/sysdeps/i386/stpncpy.S b/sysdeps/i386/stpncpy.S
+index 7f3ca8c3b775b42f..870176640450258c 100644
+--- a/sysdeps/i386/stpncpy.S
++++ b/sysdeps/i386/stpncpy.S
+@@ -25,17 +25,15 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #define RTN	PARMS
+-#define DEST	RTN+RTN_SIZE
+-#define SRC	DEST+PTR_SIZE
+-#define LEN	SRC+PTR_SIZE
++#define DEST	RTN
++#define SRC	DEST+4
++#define LEN	SRC+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__stpncpy))
++ENTRY (__stpncpy)
+ 
+ 	pushl %esi
+ 	cfi_adjust_cfa_offset (4)
+@@ -142,8 +140,8 @@ L(9):	popl %esi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 
+-	RET_PTR
+-END (BP_SYM (__stpncpy))
++	ret
++END (__stpncpy)
+ 
+-libc_hidden_def (BP_SYM (__stpncpy))
+-weak_alias (BP_SYM (__stpncpy), BP_SYM (stpncpy))
++libc_hidden_def (__stpncpy)
++weak_alias (__stpncpy, stpncpy)
+diff --git a/sysdeps/i386/strchr.S b/sysdeps/i386/strchr.S
+index aff95b9b7ee4c35c..0def0d2e8c4549ee 100644
+--- a/sysdeps/i386/strchr.S
++++ b/sysdeps/i386/strchr.S
+@@ -22,16 +22,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4		/* space for 1 saved reg */
++#define PARMS	4+4		/* space for 1 saved reg */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define CHR	STR+PTR_SIZE
++#define STR	RTN
++#define CHR	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strchr))
++ENTRY (strchr)
+ 
+ 	pushl %edi		/* Save callee-safe registers used here.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -246,7 +244,7 @@ L(2):	/* Return NULL.  */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
++	ret
+ 
+ 	cfi_adjust_cfa_offset (4)
+ 	cfi_rel_offset (edi, 0)
+@@ -286,8 +284,8 @@ L(6):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (strchr))
++	ret
++END (strchr)
+ 
+-weak_alias (BP_SYM (strchr), BP_SYM (index))
++weak_alias (strchr, index)
+ libc_hidden_builtin_def (strchr)
+diff --git a/sysdeps/i386/strchrnul.S b/sysdeps/i386/strchrnul.S
+index 2aa7d82cc8af1dfc..6d2da6d6b1f1d306 100644
+--- a/sysdeps/i386/strchrnul.S
++++ b/sysdeps/i386/strchrnul.S
+@@ -22,16 +22,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+4	/* space for 1 saved reg */
++#define PARMS	4+4	/* space for 1 saved reg */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define CHR	STR+PTR_SIZE
++#define STR	RTN
++#define CHR	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__strchrnul))
++ENTRY (__strchrnul)
+ 
+ 	pushl %edi		/* Save callee-safe registers used here.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -274,7 +272,7 @@ L(6):	popl %edi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (__strchrnul))
++	ret
++END (__strchrnul)
+ 
+-weak_alias (BP_SYM (__strchrnul), BP_SYM (strchrnul))
++weak_alias (__strchrnul, strchrnul)
+diff --git a/sysdeps/i386/strcspn.S b/sysdeps/i386/strcspn.S
+index 40b5207809f74530..78becc3862d0cf15 100644
+--- a/sysdeps/i386/strcspn.S
++++ b/sysdeps/i386/strcspn.S
+@@ -22,15 +22,13 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define STR	PARMS
+-#define STOP	STR+PTR_SIZE
++#define STOP	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strcspn))
++ENTRY (strcspn)
+ 
+ 	movl STR(%esp), %edx
+ 	movl STOP(%esp), %eax
+@@ -238,5 +236,5 @@ L(4):	addl $256, %esp		/* remove stopset */
+ 				   characters, so compute distance to first
+ 				   non-valid character */
+ 	ret
+-END (BP_SYM (strcspn))
++END (strcspn)
+ libc_hidden_builtin_def (strcspn)
+diff --git a/sysdeps/i386/strpbrk.S b/sysdeps/i386/strpbrk.S
+index ae35ba44f6a624a7..0ecd6dae9fcaa701 100644
+--- a/sysdeps/i386/strpbrk.S
++++ b/sysdeps/i386/strpbrk.S
+@@ -22,16 +22,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define STOP	STR+PTR_SIZE
++#define STR	RTN
++#define STOP	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strpbrk))
++ENTRY (strpbrk)
+ 
+ 	movl STR(%esp), %edx
+ 	movl STOP(%esp), %eax
+@@ -240,6 +238,6 @@ L(4):	addl $256, %esp		/* remove stopset */
+ 	jnz L(7)		/* no => return pointer */
+ 	xorl %eax, %eax
+ 
+-L(7):	RET_PTR
+-END (BP_SYM (strpbrk))
++L(7):	ret
++END (strpbrk)
+ libc_hidden_builtin_def (strpbrk)
+diff --git a/sysdeps/i386/strrchr.S b/sysdeps/i386/strrchr.S
+index 57931c165831aa55..1fed985db81f6da2 100644
+--- a/sysdeps/i386/strrchr.S
++++ b/sysdeps/i386/strrchr.S
+@@ -21,16 +21,14 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+8	/* space for 2 saved regs */
++#define PARMS	4+8	/* space for 2 saved regs */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define CHR	STR+PTR_SIZE
++#define STR	RTN
++#define CHR	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strrchr))
++ENTRY (strrchr)
+ 
+ 	pushl %edi		/* Save callee-safe registers used here.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -329,8 +327,8 @@ L(2):	popl %esi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	RET_PTR
+-END (BP_SYM (strrchr))
++	ret
++END (strrchr)
+ 
+-weak_alias (BP_SYM (strrchr), BP_SYM (rindex))
++weak_alias (strrchr, rindex)
+ libc_hidden_builtin_def (strrchr)
+diff --git a/sysdeps/i386/strspn.S b/sysdeps/i386/strspn.S
+index 2b5c2a4c670bdfa2..aec4f290a332b2cf 100644
+--- a/sysdeps/i386/strspn.S
++++ b/sysdeps/i386/strspn.S
+@@ -22,15 +22,13 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define STR	PARMS
+-#define SKIP	STR+PTR_SIZE
++#define SKIP	STR+4
+ 
+ 	.text
+-ENTRY (BP_SYM (strspn))
++ENTRY (strspn)
+ 
+ 	movl STR(%esp), %edx
+ 	movl SKIP(%esp), %eax
+@@ -238,5 +236,5 @@ L(4):	addl $256, %esp		/* remove stopset */
+ 				   characters, so compute distance to first
+ 				   non-valid character */
+ 	ret
+-END (BP_SYM (strspn))
++END (strspn)
+ libc_hidden_builtin_def (strspn)
+diff --git a/sysdeps/i386/strtok.S b/sysdeps/i386/strtok.S
+index eb586928eb19bf21..d852027b870b0530 100644
+--- a/sysdeps/i386/strtok.S
++++ b/sysdeps/i386/strtok.S
+@@ -20,8 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* This file can be used for three variants of the strtok function:
+ 
+@@ -57,14 +55,14 @@ save_ptr:
+ # define FUNCTION strtok
+ #endif
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define RTN	PARMS
+-#define STR	RTN+RTN_SIZE
+-#define DELIM	STR+PTR_SIZE
+-#define SAVE	DELIM+PTR_SIZE
++#define STR	RTN
++#define DELIM	STR+4
++#define SAVE	DELIM+4
+ 
+ 	.text
+-ENTRY (BP_SYM (FUNCTION))
++ENTRY (FUNCTION)
+ 
+ 	movl STR(%esp), %edx
+ 	movl DELIM(%esp), %eax
+@@ -347,7 +345,7 @@ L(epilogue):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (ebx)
+ #endif
+-	RET_PTR
++	ret
+ 
+ L(returnNULL):
+ 	xorl %eax, %eax
+@@ -357,4 +355,4 @@ L(returnNULL):
+ 	movl %edx, SAVE_PTR
+ 	jmp L(epilogue)
+ 
+-END (BP_SYM (FUNCTION))
++END (FUNCTION)
+diff --git a/sysdeps/i386/strtok_r.S b/sysdeps/i386/strtok_r.S
+index f4a6a2c409ed1e22..508729370a17069b 100644
+--- a/sysdeps/i386/strtok_r.S
++++ b/sysdeps/i386/strtok_r.S
+@@ -1,5 +1,5 @@
+ #define FUNCTION __strtok_r
+ #define USE_AS_STRTOK_R	1
+ #include <sysdeps/i386/strtok.S>
+-weak_alias (BP_SYM (__strtok_r), BP_SYM (strtok_r))
+-strong_alias (BP_SYM (__strtok_r), BP_SYM (__GI___strtok_r))
++weak_alias (__strtok_r, strtok_r)
++strong_alias (__strtok_r, __GI___strtok_r)
+diff --git a/sysdeps/i386/sub_n.S b/sysdeps/i386/sub_n.S
+index 2a09256f9c71f93a..1c6592db037cf19e 100644
+--- a/sysdeps/i386/sub_n.S
++++ b/sysdeps/i386/sub_n.S
+@@ -20,17 +20,15 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+8		/* space for 2 saved regs */
++#define PARMS	4+8		/* space for 2 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define S2	S1+PTR_SIZE
+-#define SIZE	S2+PTR_SIZE
++#define S1	RES+4
++#define S2	S1+4
++#define SIZE	S2+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_sub_n))
++ENTRY (__mpn_sub_n)
+ 
+ 	pushl %edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -111,4 +109,4 @@ L(oop):	movl	(%esi),%eax
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_sub_n))
++END (__mpn_sub_n)
+diff --git a/sysdeps/i386/submul_1.S b/sysdeps/i386/submul_1.S
+index c7054e0f6bd48a5e..9e03f504cf5070cd 100644
+--- a/sysdeps/i386/submul_1.S
++++ b/sysdeps/i386/submul_1.S
+@@ -19,13 +19,11 @@
+ 
+ #include "sysdep.h"
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-#define PARMS	LINKAGE+16	/* space for 4 saved regs */
++#define PARMS	4+16	/* space for 4 saved regs */
+ #define RES	PARMS
+-#define S1	RES+PTR_SIZE
+-#define SIZE	S1+PTR_SIZE
++#define S1	RES+4
++#define SIZE	S1+4
+ #define S2LIMB	SIZE+4
+ 
+ #define res_ptr edi
+@@ -34,7 +32,7 @@
+ #define s2_limb ebx
+ 
+ 	.text
+-ENTRY (BP_SYM (__mpn_submul_1))
++ENTRY (__mpn_submul_1)
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -85,4 +83,4 @@ L(oop):
+ 	cfi_restore (edi)
+ 
+ 	ret
+-END (BP_SYM (__mpn_submul_1))
++END (__mpn_submul_1)
+diff --git a/sysdeps/unix/i386/sysdep.S b/sysdeps/unix/i386/sysdep.S
+index 1795ace4136abdde..aee9655fe9497f9f 100644
+--- a/sysdeps/unix/i386/sysdep.S
++++ b/sysdeps/unix/i386/sysdep.S
+@@ -19,8 +19,6 @@
+ #include <sysdep.h>
+ #define _ERRNO_H
+ #include <bits/errno.h>
+-#include <bp-asm.h>
+-#include <bp-sym.h>
+ 
+ #if IS_IN (rtld)
+ # include <dl-sysdep.h>		/* Defines RTLD_PRIVATE_ERRNO.  */
+diff --git a/sysdeps/unix/sysv/linux/i386/clone.S b/sysdeps/unix/sysv/linux/i386/clone.S
+index 1aa2a1f828b944a6..da57c8e5df43ab54 100644
+--- a/sysdeps/unix/sysv/linux/i386/clone.S
++++ b/sysdeps/unix/sysv/linux/i386/clone.S
+@@ -23,20 +23,18 @@
+ #define _ERRNO_H	1
+ #include <bits/errno.h>
+ #include <asm-syntax.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* int clone(int (*fn)(void *arg), void *child_stack, int flags, void *arg,
+ 	     pid_t *ptid, struct user_desc *tls, pid_t *ctid); */
+ 
+-#define PARMS	LINKAGE		/* no space for saved regs */
++#define PARMS	4		/* no space for saved regs */
+ #define FUNC	PARMS
+ #define STACK	FUNC+4
+-#define FLAGS	STACK+PTR_SIZE
++#define FLAGS	STACK+4
+ #define ARG	FLAGS+4
+-#define PTID	ARG+PTR_SIZE
+-#define TLS	PTID+PTR_SIZE
+-#define CTID	TLS+PTR_SIZE
++#define PTID	ARG+4
++#define TLS	PTID+4
++#define CTID	TLS+4
+ 
+ #define __NR_clone 120
+ #define SYS_clone 120
+@@ -45,7 +43,7 @@
+ #define CLONE_THREAD	0x00010000
+ 
+         .text
+-ENTRY (BP_SYM (__clone))
++ENTRY (__clone)
+ 	/* Sanity check arguments.  */
+ 	movl	$-EINVAL,%eax
+ 	movl	FUNC(%esp),%ecx		/* no NULL function pointers */
+@@ -156,6 +154,6 @@ L(nomoregetpid):
+ 	cfi_endproc;
+ 
+ 	cfi_startproc
+-PSEUDO_END (BP_SYM (__clone))
++PSEUDO_END (__clone)
+ 
+-weak_alias (BP_SYM (__clone), BP_SYM (clone))
++weak_alias (__clone, clone)
+diff --git a/sysdeps/unix/sysv/linux/i386/mmap64.S b/sysdeps/unix/sysv/linux/i386/mmap64.S
+index 8855109ff935a666..6765cd87000e27b8 100644
+--- a/sysdeps/unix/sysv/linux/i386/mmap64.S
++++ b/sysdeps/unix/sysv/linux/i386/mmap64.S
+@@ -16,8 +16,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -25,9 +23,9 @@
+ #define ENOSYS	38
+ 
+ #define SVRSP	16		/* saved register space */
+-#define PARMS	LINKAGE+SVRSP	/* space for 4 saved regs */
++#define PARMS	4+SVRSP	/* space for 4 saved regs */
+ #define ADDR	PARMS
+-#define LEN	ADDR+PTR_SIZE
++#define LEN	ADDR+4
+ #define PROT	LEN+4
+ #define FLAGS	PROT+4
+ #define FD	FLAGS+4
+@@ -35,7 +33,7 @@
+ #define OFFHI	OFFLO+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__mmap64))
++ENTRY (__mmap64)
+ 
+ 	/* Save registers.  */
+ 	pushl %ebp
+@@ -115,6 +113,6 @@ L(einval):
+ 	movl $-EINVAL, %eax
+ 	jmp SYSCALL_ERROR_LABEL
+ 
+-PSEUDO_END (BP_SYM (__mmap64))
++PSEUDO_END (__mmap64)
+ 
+-weak_alias (BP_SYM (__mmap64), BP_SYM (mmap64))
++weak_alias (__mmap64, mmap64)
+diff --git a/sysdeps/unix/sysv/linux/i386/posix_fadvise64.S b/sysdeps/unix/sysv/linux/i386/posix_fadvise64.S
+index 00e6a4194d557645..1f29d8c37f61abd6 100644
+--- a/sysdeps/unix/sysv/linux/i386/posix_fadvise64.S
++++ b/sysdeps/unix/sysv/linux/i386/posix_fadvise64.S
+@@ -16,15 +16,13 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #define EINVAL	22
+ #define ENOSYS	38
+ #define EOVERFLOW 75
+ 
+ #define SVRSP	16		/* saved register space */
+-#define PARMS	LINKAGE+SVRSP	/* space for 4 saved regs */
++#define PARMS	4+SVRSP	/* space for 4 saved regs */
+ #define FD	PARMS
+ #define OFFLO	FD+4
+ #define OFFHI	OFFLO+4
+@@ -33,7 +31,7 @@
+ #define FLAGS	LENHI+4
+ 
+ 	.text
+-ENTRY (BP_SYM (__posix_fadvise64_l64))
++ENTRY (__posix_fadvise64_l64)
+ 
+ 	/* Save registers.  */
+ 	pushl	%ebp
+@@ -81,7 +79,7 @@ ENTRY (BP_SYM (__posix_fadvise64_l64))
+ 	/* Successful; return the syscall's value.  */
+ 	ret
+ 
+-END (BP_SYM (__posix_fadvise64_l64))
++END (__posix_fadvise64_l64)
+ 
+ 	.section	.text.compat, "ax"
+ ENTRY (__posix_fadvise64_l32)
+diff --git a/sysdeps/unix/sysv/linux/i386/semtimedop.S b/sysdeps/unix/sysv/linux/i386/semtimedop.S
+index 785be2efc9dd93c5..1acf775b80a20b53 100644
+--- a/sysdeps/unix/sysv/linux/i386/semtimedop.S
++++ b/sysdeps/unix/sysv/linux/i386/semtimedop.S
+@@ -21,14 +21,14 @@
+ #define SYSOP_semtimedop 4
+ 
+ #define SVRSP	12		/* saved register space */
+-#define PARMS	LINKAGE+SVRSP	/* space for 3 saved regs */
++#define PARMS	4+SVRSP	/* space for 3 saved regs */
+ #define SEMID	PARMS
+ #define SOPS	SEMID+4
+-#define NSOPS	SOPS+PTR_SIZE
++#define NSOPS	SOPS+4
+ #define TIMEOUT	NSOPS+4
+ 
+ 	.text
+-ENTRY (BP_SYM (semtimedop))
++ENTRY (semtimedop)
+ 
+ 	pushl	%ebp
+ 	cfi_adjust_cfa_offset (4)
+@@ -70,4 +70,4 @@ ENTRY (BP_SYM (semtimedop))
+ #ifdef PIC
+ 	.align	4
+ #endif
+-PSEUDO_END (BP_SYM (semtimedop))
++PSEUDO_END (semtimedop)
+diff --git a/sysdeps/unix/sysv/linux/i386/sysdep.h b/sysdeps/unix/sysv/linux/i386/sysdep.h
+index b99b67c830184e95..dfbdb2084491af90 100644
+--- a/sysdeps/unix/sysv/linux/i386/sysdep.h
++++ b/sysdeps/unix/sysv/linux/i386/sysdep.h
+@@ -21,8 +21,6 @@
+ 
+ /* There is some commonality.  */
+ #include <sysdeps/unix/i386/sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ /* Defines RTLD_PRIVATE_ERRNO and USE_DL_SYSINFO.  */
+ #include <dl-sysdep.h>
+ #include <tls.h>

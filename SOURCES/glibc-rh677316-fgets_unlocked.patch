@@ -1,0 +1,83 @@
+Partial backport of:
+
+commit c4eae75271734f820a7477dbce33f8752af6f003
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Nov 12 22:39:36 2014 +0000
+
+    Fix __get_nprocs fgets_unlocked namespace (bug 17582).
+
+(alpha part is missing)
+
+diff --git a/include/stdio.h b/include/stdio.h
+index 53a2c58ab0c7d7be..cc1908ef0566cea9 100644
+--- a/include/stdio.h
++++ b/include/stdio.h
+@@ -151,6 +151,8 @@ libc_hidden_proto (fflush_unlocked)
+ libc_hidden_proto (fread_unlocked)
+ libc_hidden_proto (fwrite_unlocked)
+ libc_hidden_proto (fgets_unlocked)
++extern __typeof (fgets_unlocked) __fgets_unlocked;
++libc_hidden_proto (__fgets_unlocked)
+ libc_hidden_proto (fputs_unlocked)
+ libc_hidden_proto (fmemopen)
+ libc_hidden_proto (open_memstream)
+diff --git a/libio/iofgets.c b/libio/iofgets.c
+index 984cb86103b13c0f..3621f1c00ec9ea4d 100644
+--- a/libio/iofgets.c
++++ b/libio/iofgets.c
+@@ -73,6 +73,8 @@ _IO_fgets (buf, n, fp)
+ weak_alias (_IO_fgets, fgets)
+ 
+ # ifndef _IO_MTSAFE_IO
++strong_alias (_IO_fgets, __fgets_unlocked)
++libc_hidden_def (__fgets_unlocked)
+ weak_alias (_IO_fgets, fgets_unlocked)
+ libc_hidden_weak (fgets_unlocked)
+ # endif
+diff --git a/libio/iofgets_u.c b/libio/iofgets_u.c
+index e524943a54ba107a..e2cf6373b8178097 100644
+--- a/libio/iofgets_u.c
++++ b/libio/iofgets_u.c
+@@ -28,7 +28,7 @@
+ #include <stdio.h>
+ 
+ char *
+-fgets_unlocked (buf, n, fp)
++__fgets_unlocked (buf, n, fp)
+      char *buf;
+      int n;
+      _IO_FILE *fp;
+@@ -66,4 +66,6 @@ fgets_unlocked (buf, n, fp)
+   fp->_IO_file_flags |= old_error;
+   return result;
+ }
+-libc_hidden_def (fgets_unlocked)
++libc_hidden_def (__fgets_unlocked)
++weak_alias (__fgets_unlocked, fgets_unlocked)
++libc_hidden_weak (fgets_unlocked)
+diff --git a/sysdeps/unix/sysv/linux/getsysstats.c b/sysdeps/unix/sysv/linux/getsysstats.c
+index 22285f39f33bf26c..9082b1a7ab29a9f9 100644
+--- a/sysdeps/unix/sysv/linux/getsysstats.c
++++ b/sysdeps/unix/sysv/linux/getsysstats.c
+@@ -304,7 +304,7 @@ phys_pages_info (const char *format)
+ 	 string "processor".  We don't have to fear extremely long
+ 	 lines since the kernel will not generate them.  8192
+ 	 bytes are really enough.  */
+-      while (fgets_unlocked (buffer, sizeof buffer, fp) != NULL)
++      while (__fgets_unlocked (buffer, sizeof buffer, fp) != NULL)
+ 	if (sscanf (buffer, format, &result) == 1)
+ 	  {
+ 	    result /= (__getpagesize () / 1024);
+diff --git a/sysdeps/unix/sysv/linux/sparc/getsysstats.c b/sysdeps/unix/sysv/linux/sparc/getsysstats.c
+index 57d9b95223c6ab33..ceb8a2ba1f9cc9d5 100644
+--- a/sysdeps/unix/sysv/linux/sparc/getsysstats.c
++++ b/sysdeps/unix/sysv/linux/sparc/getsysstats.c
+@@ -46,7 +46,7 @@
+ 	 probed cpus.  We don't have to fear extremely long lines since	 \
+ 	 the kernel will not generate them.  8192 bytes are really	 \
+ 	 enough.  */							 \
+-      while (fgets_unlocked ((BUFFER), sizeof (BUFFER), (FP)) != NULL)	 \
++      while (__fgets_unlocked ((BUFFER), sizeof (BUFFER), (FP)) != NULL) \
+ 	if (sscanf (buffer, "ncpus probed : %d", &(RESULT)) == 1)	 \
+ 	  break;							 \
+     }									 \

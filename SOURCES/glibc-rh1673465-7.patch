@@ -1,0 +1,81 @@
+commit c533244b8e00ae701583ec50aeb43377d292452d
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Mon Feb 4 20:07:18 2019 +0100
+
+    nscd: Do not use __inet_aton_exact@GLIBC_PRIVATE [BZ #20018]
+    
+    This commit avoids referencing the __inet_aton_exact@GLIBC_PRIVATE
+    symbol from nscd.  In master, the separately-compiled getaddrinfo
+    implementation in nscd needs it, however such an internal ABI change
+    is not desirable on a release branch if it can be avoided.
+
+(Note: This commit was backported from the release/2.28/master branch.)
+
+diff --git a/nscd/Makefile b/nscd/Makefile
+index 2dc98d3a3347f998..62f38fa824527e0a 100644
+--- a/nscd/Makefile
++++ b/nscd/Makefile
+@@ -36,7 +36,7 @@ nscd-modules := nscd connections pwdcache getpwnam_r getpwuid_r grpcache \
+ 		getsrvbynm_r getsrvbypt_r servicescache \
+ 		dbg_log nscd_conf nscd_stat cache mem nscd_setup_thread \
+ 		xmalloc xstrdup aicache initgrcache gai res_hconf \
+-		netgroupcache
++		netgroupcache nscd-inet_addr
+ 
+ ifeq ($(build-nscd)$(have-thread-library),yesyes)
+ 
+diff --git a/nscd/gai.c b/nscd/gai.c
+index dbe878fcf699dbc1..e7443904b4514836 100644
+--- a/nscd/gai.c
++++ b/nscd/gai.c
+@@ -32,6 +32,12 @@
+ /* nscd uses 1MB or 2MB thread stacks.  */
+ #define __libc_use_alloca(size) (size <= __MAX_ALLOCA_CUTOFF)
+ 
++/* We do not want to export __inet_aton_exact.  Get the prototype and
++   change its visibility to hidden.  */
++#include <arpa/inet.h>
++__typeof__ (__inet_aton_exact) __inet_aton_exact
++  __attribute__ ((visibility ("hidden")));
++
+ /* We are nscd, so we don't want to be talking to ourselves.  */
+ #undef  USE_NSCD
+ 
+diff --git a/nscd/nscd-inet_addr.c b/nscd/nscd-inet_addr.c
+new file mode 100644
+index 0000000000000000..f366b9567d914f99
+--- /dev/null
++++ b/nscd/nscd-inet_addr.c
+@@ -0,0 +1,32 @@
++/* Legacy IPv4 text-to-address functions.  Version for nscd.
++   Copyright (C) 2019 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <arpa/inet.h>
++
++/* We do not want to export __inet_aton_exact.  Get the prototype and
++   change the visibility to hidden.  */
++#include <arpa/inet.h>
++__typeof__ (__inet_aton_exact) __inet_aton_exact
++  __attribute__ ((visibility ("hidden")));
++
++/* Do not provide definitions of the public symbols exported from
++   libc.  */
++#undef weak_alias
++#define weak_alias(from, to)
++
++#include <resolv/inet_addr.c>

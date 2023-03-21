@@ -1,0 +1,114 @@
+commit 93a6d0820430bfe3d09695a1376c07abf6d2214f
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Fri Jun 20 19:50:16 2014 -0700
+
+    Clean up stack-coloring macros.
+
+Conflicts:
+	sysdeps/x86_64/nptl/Makefile
+
+File change was applied to nptl/sysdeps/x86_64/Makefile instead.
+
+diff --git a/nptl/allocatestack.c b/nptl/allocatestack.c
+index 2c126fd4ae447b25..0fba6ce3474e8b35 100644
+--- a/nptl/allocatestack.c
++++ b/nptl/allocatestack.c
+@@ -30,6 +30,7 @@
+ #include <list.h>
+ #include <lowlevellock.h>
+ #include <kernel-features.h>
++#include <stack-aliasing.h>
+ 
+ 
+ #ifndef NEED_SEPARATE_REGISTER_STACK
+diff --git a/nptl/stack-aliasing.h b/nptl/stack-aliasing.h
+new file mode 100644
+index 0000000000000000..526b54e18f7e0a27
+--- /dev/null
++++ b/nptl/stack-aliasing.h
+@@ -0,0 +1,29 @@
++/* Define macros for stack address aliasing issues for NPTL.  Stub version.
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++/* This is a number of bytes (less than a page) by which to "color" the
++   starting stack address of new threads.  This number is multiplied by the
++   number of threads created so far and then truncated modulo page size,
++   to get a roughly even distribution of values for different threads.  */
++#define COLORING_INCREMENT      0
++
++/* This is a number of bytes that is an alignment that should be avoided
++   when choosing the exact size of a new thread's stack.  If the size
++   chosen is aligned to this, an extra page will be added to render the
++   size off-aligned.  */
++#define MULTI_PAGE_ALIASING     0
+diff --git a/nptl/sysdeps/x86_64/Makefile b/nptl/sysdeps/x86_64/Makefile
+index d34dea709b363d2a..e2c47764e6e38c36 100644
+--- a/nptl/sysdeps/x86_64/Makefile
++++ b/nptl/sysdeps/x86_64/Makefile
+@@ -18,10 +18,3 @@
+ ifeq ($(subdir),csu)
+ gen-as-const-headers += tcb-offsets.sym
+ endif
+-
+-ifeq ($(subdir),nptl)
+-# P4s have problems with 4M aliasing.  We disturb the allocation of stacks
+-# just enough so the subsequent allocations do not use stack address
+-# (mod 4M) == 0.
+-CFLAGS-pthread_create.c += -DMULTI_PAGE_ALIASING=65536
+-endif
+diff --git a/sysdeps/i386/i686/stack-aliasing.h b/sysdeps/i386/i686/stack-aliasing.h
+new file mode 100644
+index 0000000000000000..1e35ceb2061d60f9
+--- /dev/null
++++ b/sysdeps/i386/i686/stack-aliasing.h
+@@ -0,0 +1,28 @@
++/* Define macros for stack address aliasing issues for NPTL.  i686 version.
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++/* It turns out that stack coloring is in general not good on P4s.  Some
++   applications will benefit.  We will probably have a configuration option
++   at some point.  To enable coloring, set this to 128.  */
++#define COLORING_INCREMENT      0
++
++/* What is useful is to avoid the 64k aliasing problem which reliably
++   happens if all stacks use sizes which are a multiple of 64k.  Tell
++   the stack allocator to disturb this by allocation one more page if
++   necessary.  */
++#define MULTI_PAGE_ALIASING     65536
+diff --git a/sysdeps/x86_64/stack-aliasing.h b/sysdeps/x86_64/stack-aliasing.h
+new file mode 100644
+index 0000000000000000..2efdacb3b4c44c40
+--- /dev/null
++++ b/sysdeps/x86_64/stack-aliasing.h
+@@ -0,0 +1 @@
++#include <sysdeps/i386/i686/stack-aliasing.h>

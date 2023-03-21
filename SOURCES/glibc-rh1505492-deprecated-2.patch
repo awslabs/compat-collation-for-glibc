@@ -1,0 +1,50 @@
+commit 0f88636c09686b1f8e876bfa88b40bacbcae8c11
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Dec 10 00:44:54 2014 +0000
+
+    Disable -Wdeprecated-declarations for register_printf_function calls in tst-printfsz.c.
+    
+    This patch uses diagnostic control pragmas to disable warnings in
+    stdio-common/tst-printfsz.c for use of the deprecated
+    register_printf_function.  Because this test is testing printf_size
+    and printf_size_info, and the latter has the interface expected for
+    register_printf_function instead of the newer
+    register_printf_specifier, it seems correct for this test to use the
+    deprecated interface (wrapping printf_size_info in some way to use
+    register_printf_specifier would seem an excessive change to what's
+    tested).
+    
+    Tested for x86_64.
+    
+            * stdio-common/tst-printfsz.c: Include <libc-internal.h>.
+            (main): Disable -Wdeprecated-declarations around calls to
+            register_printf_function.
+
+diff --git a/stdio-common/tst-printfsz.c b/stdio-common/tst-printfsz.c
+index 5925050b59e90b79..74d67d2f694f344b 100644
+--- a/stdio-common/tst-printfsz.c
++++ b/stdio-common/tst-printfsz.c
+@@ -2,6 +2,7 @@
+ #include <printf.h>
+ #include <stdio.h>
+ #include <string.h>
++#include <libc-internal.h>
+ 
+ #define V       12345678.12345678
+ 
+@@ -12,9 +13,15 @@ main (int argc, char *argv[])
+   char buf[1024];
+   int result = 0;
+ 
++  /* Testing printf_size_info requires using the deprecated
++     register_printf_function, resulting in warnings
++     "'register_printf_function' is deprecated".  */
++  DIAG_PUSH_NEEDS_COMMENT;
++  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wdeprecated-declarations");
+   /* Register the printf handlers.  */
+   register_printf_function ('b', printf_size, printf_size_info);
+   register_printf_function ('B', printf_size, printf_size_info);
++  DIAG_POP_NEEDS_COMMENT;
+ 
+ 
+   sprintf (buf, "%g %b %B %.0b %.0B %.1b %.1B %8.0b %08.0B",

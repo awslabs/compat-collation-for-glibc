@@ -1,0 +1,48 @@
+Fix -Wundef warnings related to __ASSUME_IPC64.  This was addressed
+differently upstream:
+
+be481652f272acc117907ac30157cdac46aa1973
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Tue Aug 18 10:29:30 2015 +0200
+
+    Remove __ASSUME_IPC64
+
+diff --git a/sysdeps/unix/sysv/linux/msgctl.c b/sysdeps/unix/sysv/linux/msgctl.c
+index 09d4dc11f779a63f..25f47ce6fdeb19c9 100644
+--- a/sysdeps/unix/sysv/linux/msgctl.c
++++ b/sysdeps/unix/sysv/linux/msgctl.c
+@@ -65,7 +65,7 @@ compat_symbol (libc, __old_msgctl, msgctl, GLIBC_2_0);
+ int
+ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+ {
+-#if __ASSUME_IPC64 > 0
++#ifdef __ASSUME_IPC64
+   return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+ 			 msqid, cmd | __IPC_64, 0, buf);
+ #else
+diff --git a/sysdeps/unix/sysv/linux/semctl.c b/sysdeps/unix/sysv/linux/semctl.c
+index 3a2f1b39cea657e5..f932fb70525a6876 100644
+--- a/sysdeps/unix/sysv/linux/semctl.c
++++ b/sysdeps/unix/sysv/linux/semctl.c
+@@ -122,7 +122,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+ 
+   va_end (ap);
+ 
+-#if __ASSUME_IPC64 > 0
++#ifdef __ASSUME_IPC64
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd | __IPC_64,
+ 			 &arg);
+ #else
+diff --git a/sysdeps/unix/sysv/linux/shmctl.c b/sysdeps/unix/sysv/linux/shmctl.c
+index f99ee77f92878b1b..378fda21ea699c73 100644
+--- a/sysdeps/unix/sysv/linux/shmctl.c
++++ b/sysdeps/unix/sysv/linux/shmctl.c
+@@ -72,7 +72,7 @@ compat_symbol (libc, __old_shmctl, shmctl, GLIBC_2_0);
+ int
+ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ {
+-#if __ASSUME_IPC64 > 0
++#ifdef __ASSUME_IPC64
+   return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd | __IPC_64, 0,
+ 			 buf);
+ #else

@@ -1,0 +1,11 @@
+This patch adds a <bits/types/res_state.h> header, to simplify
+backporting.
+
+diff --git a/include/bits/types/res_state.h b/include/bits/types/res_state.h
+new file mode 100644
+index 0000000000000000..568c768f444d0198
+--- /dev/null
++++ b/include/bits/types/res_state.h
+@@ -0,0 +1,2 @@
++#define __need_res_state
++#include <resolv.h>

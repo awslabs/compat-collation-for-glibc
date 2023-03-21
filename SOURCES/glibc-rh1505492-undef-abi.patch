@@ -1,0 +1,17 @@
+Add missing ABI versions which are referenced in
+glibc-rh677316-resolv.patch, to suppress -Wundef warnings.
+(Not needed upstream because it does not use future ABI versions.)
+
+diff --git a/Versions.def b/Versions.def
+index 41a0d84bcf29a780..725f5d827ba3ec94 100644
+--- a/Versions.def
++++ b/Versions.def
+@@ -109,6 +109,8 @@ libresolv {
+   GLIBC_2.2
+   GLIBC_2.3.2
+   GLIBC_2.9
++  GLIBC_2.25
++  GLIBC_2.26
+   GLIBC_PRIVATE
+ }
+ librt {

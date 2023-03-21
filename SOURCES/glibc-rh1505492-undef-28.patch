@@ -1,0 +1,198 @@
+commit 4cf5b6d0d7c8dd40526375f384133262ed7b2ccc
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jun 26 15:17:40 2014 +0530
+
+    Fix Wundef warning for ELF_MACHINE_NO_RELA
+    
+    This patch defines ELF_MACHINE_NO_RELA on all architectures.  Tested
+    only on x86_64 to verify that the sources before and after are
+    identical except for two instructions that pass the current line
+    number in dl-machine.h to assert_fail.
+
+Conflicts:
+	sysdeps/microblaze/dl-machine.h
+
+File removed manally due to missing microblaze port in our tree.
+
+diff --git a/elf/dl-runtime.c b/elf/dl-runtime.c
+index 1ad2e4da7a654633..a42e3c4924e067ba 100644
+--- a/elf/dl-runtime.c
++++ b/elf/dl-runtime.c
+@@ -29,7 +29,7 @@
+ #include <dl-irel.h>
+ 
+ 
+-#if (!defined ELF_MACHINE_NO_RELA && !defined ELF_MACHINE_PLT_REL) \
++#if (!ELF_MACHINE_NO_RELA && !defined ELF_MACHINE_PLT_REL) \
+     || ELF_MACHINE_NO_REL
+ # define PLTREL  ElfW(Rela)
+ #else
+diff --git a/sysdeps/aarch64/dl-machine.h b/sysdeps/aarch64/dl-machine.h
+index 40b0587ba42cd59e..4faf818b710d6ed7 100644
+--- a/sysdeps/aarch64/dl-machine.h
++++ b/sysdeps/aarch64/dl-machine.h
+@@ -198,6 +198,7 @@ _dl_start_user:							\n\
+ 
+ /* AArch64 uses RELA not REL */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ static inline ElfW(Addr)
+ elf_machine_fixup_plt (struct link_map *map, lookup_t t,
+diff --git a/sysdeps/hppa/dl-machine.h b/sysdeps/hppa/dl-machine.h
+index 1bee330f8b98b03f..3b6d7b8e776f1f57 100644
+--- a/sysdeps/hppa/dl-machine.h
++++ b/sysdeps/hppa/dl-machine.h
+@@ -488,6 +488,7 @@ asm (									\
+ 
+ /* We only use RELA. */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Return the address of the entry point. */
+ #define ELF_MACHINE_START_ADDRESS(map, start) \
+diff --git a/sysdeps/ia64/dl-machine.h b/sysdeps/ia64/dl-machine.h
+index 1ec69d759179b555..4e8dcb804ae9b7a3 100644
+--- a/sysdeps/ia64/dl-machine.h
++++ b/sysdeps/ia64/dl-machine.h
+@@ -320,6 +320,7 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+ 
+ /* According to the IA-64 specific documentation, Rela is always used.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Return the address of the entry point. */
+ #define ELF_MACHINE_START_ADDRESS(map, start)	\
+diff --git a/sysdeps/m68k/dl-machine.h b/sysdeps/m68k/dl-machine.h
+index b2914192d839021f..f40c9b580c49e0c7 100644
+--- a/sysdeps/m68k/dl-machine.h
++++ b/sysdeps/m68k/dl-machine.h
+@@ -178,6 +178,7 @@ _dl_start_user:\n\
+ 
+ /* The m68k never uses Elf32_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ static inline Elf32_Addr
+ elf_machine_fixup_plt (struct link_map *map, lookup_t t,
+diff --git a/sysdeps/mips/dl-machine.h b/sysdeps/mips/dl-machine.h
+index 9b970a26ed8bb42d..9d7b0f516c64207d 100644
+--- a/sysdeps/mips/dl-machine.h
++++ b/sysdeps/mips/dl-machine.h
+@@ -60,6 +60,8 @@
+    | (((type) == R_MIPS_COPY) * ELF_RTYPE_CLASS_COPY))
+ 
+ #define ELF_MACHINE_PLT_REL 1
++#define ELF_MACHINE_NO_REL 0
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Translate a processor specific dynamic tag to the index
+    in l_info array.  */
+diff --git a/sysdeps/powerpc/powerpc32/dl-machine.h b/sysdeps/powerpc/powerpc32/dl-machine.h
+index 3ae27a4924e95063..490de3281ff30ee8 100644
+--- a/sysdeps/powerpc/powerpc32/dl-machine.h
++++ b/sysdeps/powerpc/powerpc32/dl-machine.h
+@@ -148,6 +148,7 @@ __elf_preferred_address(struct link_map *loader, size_t maplength,
+ 
+ /* The PowerPC never uses REL relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Set up the loaded object described by MAP so its unrelocated PLT
+    entries will jump to the on-demand fixup code in dl-runtime.c.
+diff --git a/sysdeps/powerpc/powerpc64/dl-machine.h b/sysdeps/powerpc/powerpc64/dl-machine.h
+index d1d34835a02a1909..7937c0e1e4f846e0 100644
+--- a/sysdeps/powerpc/powerpc64/dl-machine.h
++++ b/sysdeps/powerpc/powerpc64/dl-machine.h
+@@ -294,6 +294,7 @@ BODY_PREFIX "_dl_start_user:\n"						\
+ 
+ /* The PowerPC never uses REL relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Stuff for the PLT.  */
+ #if _CALL_ELF != 2
+diff --git a/sysdeps/s390/s390-32/dl-machine.h b/sysdeps/s390/s390-32/dl-machine.h
+index d2f57e6bbe13ec9d..002ede7e935727cc 100644
+--- a/sysdeps/s390/s390-32/dl-machine.h
++++ b/sysdeps/s390/s390-32/dl-machine.h
+@@ -281,6 +281,7 @@ _dl_start_user:\n\
+ 
+ /* The S390 never uses Elf32_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* We define an initialization functions.  This is called very early in
+    _dl_sysdep_start.  */
+diff --git a/sysdeps/s390/s390-64/dl-machine.h b/sysdeps/s390/s390-64/dl-machine.h
+index c15f7e4d979b170c..d08ec8f783729db5 100644
+--- a/sysdeps/s390/s390-64/dl-machine.h
++++ b/sysdeps/s390/s390-64/dl-machine.h
+@@ -226,6 +226,7 @@ _dl_start_user:\n\
+ 
+ /* The 64 bit S/390 never uses Elf64_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* We define an initialization functions.  This is called very early in
+    _dl_sysdep_start.  */
+diff --git a/sysdeps/sh/dl-machine.h b/sysdeps/sh/dl-machine.h
+index 1bb5d156c2640e75..5cb888c12124a5d2 100644
+--- a/sysdeps/sh/dl-machine.h
++++ b/sysdeps/sh/dl-machine.h
+@@ -251,6 +251,7 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
+ 
+ /* SH never uses Elf32_Rel relocations.	 */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ #ifdef RESOLVE_MAP
+ 
+diff --git a/sysdeps/sparc/sparc32/dl-machine.h b/sysdeps/sparc/sparc32/dl-machine.h
+index 04ce7854a1b4f64c..b33280ded7eb4a1c 100644
+--- a/sysdeps/sparc/sparc32/dl-machine.h
++++ b/sysdeps/sparc/sparc32/dl-machine.h
+@@ -198,6 +198,7 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+ 
+ /* The SPARC never uses Elf32_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Undo the sub %sp, 6*4, %sp; add %sp, 22*4, %o0 below to get at the
+    value we want in __libc_stack_end.  */
+diff --git a/sysdeps/sparc/sparc64/dl-machine.h b/sysdeps/sparc/sparc64/dl-machine.h
+index dec2fa0808a16da5..de3ecdca0321db07 100644
+--- a/sysdeps/sparc/sparc64/dl-machine.h
++++ b/sysdeps/sparc/sparc64/dl-machine.h
+@@ -119,6 +119,7 @@ elf_machine_plt_value (struct link_map *map, const Elf64_Rela *reloc,
+ 
+ /* The SPARC never uses Elf64_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* Set up the loaded object described by L so its unrelocated PLT
+    entries will jump to the on-demand fixup code in dl-runtime.c.  */
+diff --git a/sysdeps/tile/dl-machine.h b/sysdeps/tile/dl-machine.h
+index 09a29935827e84c5..6a62d8007d464290 100644
+--- a/sysdeps/tile/dl-machine.h
++++ b/sysdeps/tile/dl-machine.h
+@@ -223,6 +223,7 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+ 
+ /* TILE never uses Elf32_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* We define an initialization functions.  This is called very early in
+    _dl_sysdep_start.  */
+diff --git a/sysdeps/x86_64/dl-machine.h b/sysdeps/x86_64/dl-machine.h
+index da89f2a6174a0d94..04edd797aa567bbe 100644
+--- a/sysdeps/x86_64/dl-machine.h
++++ b/sysdeps/x86_64/dl-machine.h
+@@ -209,6 +209,7 @@ _dl_start_user:\n\
+ 
+ /* The x86-64 never uses Elf64_Rel/Elf32_Rel relocations.  */
+ #define ELF_MACHINE_NO_REL 1
++#define ELF_MACHINE_NO_RELA 0
+ 
+ /* We define an initialization function.  This is called very early in
+    _dl_sysdep_start.  */

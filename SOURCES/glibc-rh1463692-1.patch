@@ -1,0 +1,50 @@
+From 4fa8ae49aa169fb8d97882938e8bee3ed9ce5410 Mon Sep 17 00:00:00 2001
+From: DJ Delorie <dj@delorie.com>
+Date: Fri, 14 Jul 2017 21:46:42 -0400
+Subject: [PATCH] Fix BZ #21654 - grp-merge.c alignment
+
+* grp/grp_merge.c (__copy_grp): Align char** to minimum pointer
+alignment not char alignment.
+(__merge_grp): Likewise.
+---
+ ChangeLog       |  7 +++++++
+ grp/grp-merge.c | 16 ++++++++++++++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/grp/grp-merge.c b/grp/grp-merge.c
+index 77c494d..6590e5d 100644
+--- a/grp/grp-merge.c
++++ b/grp/grp-merge.c
+@@ -85,6 +85,14 @@ __copy_grp (const struct group srcgrp, const size_t buflen,
+     }
+   members[i] = NULL;
+ 
++  /* Align for pointers.  We can't simply align C because we need to
++     align destbuf[c].  */
++  if ((((uintptr_t)destbuf + c) & (__alignof__(char **) - 1)) != 0)
++    {
++      uintptr_t mis_align = ((uintptr_t)destbuf + c) & (__alignof__(char **) - 1);
++      c += __alignof__(char **) - mis_align;
++    }
++
+   /* Copy the pointers from the members array into the buffer and assign them
+      to the gr_mem member of destgrp.  */
+   destgrp->gr_mem = (char **) &destbuf[c];
+@@ -168,6 +176,14 @@ __merge_grp (struct group *savedgrp, char *savedbuf, char *savedend,
+   /* Add the NULL-terminator.  */
+   members[savedmemcount + memcount] = NULL;
+ 
++  /* Align for pointers.  We can't simply align C because we need to
++     align savedbuf[c].  */
++  if ((((uintptr_t)savedbuf + c) & (__alignof__(char **) - 1)) != 0)
++    {
++      uintptr_t mis_align = ((uintptr_t)savedbuf + c) & (__alignof__(char **) - 1);
++      c += __alignof__(char **) - mis_align;
++    }
++
+   /* Copy the member array back into the buffer after the member list and free
+      the member array.  */
+   savedgrp->gr_mem = (char **) &savedbuf[c];
+-- 
+1.8.3.1
+

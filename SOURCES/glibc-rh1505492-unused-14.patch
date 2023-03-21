@@ -1,0 +1,26 @@
+commit 66cadc058dd7ce8106624df5732ea69a484621b9
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Dec 2 21:29:54 2014 +0000
+
+    Fix elf/tst-unique4lib.cc warning.
+    
+    This patch fixes a warning "tst-unique4lib.cc:17:12: warning: 'b'
+    defined but not used [-Wunused-variable]".  I'm not sure exactly what
+    aspects of the test are or are not significant for the issue it is
+    testing for; the patch makes the minimal change of marking the
+    variable with __attribute__ ((used)).
+    
+    Tested for x86_64.
+    
+            * elf/tst-unique4lib.cc (b): Mark with __attribute__ ((used)).
+
+diff --git a/elf/tst-unique4lib.cc b/elf/tst-unique4lib.cc
+index c9fdf9cfeacad6d5..20a10e93d0a6bb4b 100644
+--- a/elf/tst-unique4lib.cc
++++ b/elf/tst-unique4lib.cc
+@@ -14,4 +14,4 @@ static int a[24] =
+     S<23>::i, S<24>::i
+   };
+ 
+-static int b = S<1>::j;
++static int b __attribute__ ((used)) = S<1>::j;

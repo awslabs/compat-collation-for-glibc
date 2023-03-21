@@ -1,0 +1,123 @@
+commit 37f8abad1c7b274e66eaf2d04684bd8a7ba0bcef
+Author: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+Date:   Mon Jan 30 18:07:32 2017 -0200
+
+    nptl: Remove COLORING_INCREMENT
+    
+    This patch removes the COLORING_INCREMENT define and usage on allocatestack.c.
+    It has not been used since 564cd8b67ec487f (glibc-2.3.3) by any architecture.
+    The idea is to simplify the code by removing obsolete code.
+    
+            * nptl/allocatestack.c [COLORING_INCREMENT] (nptl_ncreated): Remove.
+            (allocate_stack): Remove COLORING_INCREMENT usage.
+            * nptl/stack-aliasing.h (COLORING_INCREMENT). Likewise.
+            * sysdeps/i386/i686/stack-aliasing.h (COLORING_INCREMENT): Likewise.
+
+Conflicts:
+	nptl/allocatestack.c
+
+Textual conflict due to missing backport of commit
+a1ffb40e32741f992c743e7b16c061fefa3747ac (Use glibc_likely instead
+__builtin_expect.).
+
+diff --git a/nptl/allocatestack.c b/nptl/allocatestack.c
+index 0fba6ce3474e8b35..00f9dcffe721a6b3 100644
+--- a/nptl/allocatestack.c
++++ b/nptl/allocatestack.c
+@@ -124,11 +124,6 @@ static uintptr_t in_flight_stack;
+ list_t __stack_user __attribute__ ((nocommon));
+ hidden_data_def (__stack_user)
+ 
+-#if COLORING_INCREMENT != 0
+-/* Number of threads created.  */
+-static unsigned int nptl_ncreated;
+-#endif
+-
+ 
+ /* Check whether the stack is still used or not.  */
+ #define FREE_P(descr) ((descr)->tid <= 0)
+@@ -456,14 +451,6 @@ allocate_stack (const struct pthread_attr *attr, struct pthread **pdp,
+       const int prot = (PROT_READ | PROT_WRITE
+ 			| ((GL(dl_stack_flags) & PF_X) ? PROT_EXEC : 0));
+ 
+-#if COLORING_INCREMENT != 0
+-      /* Add one more page for stack coloring.  Don't do it for stacks
+-	 with 16 times pagesize or larger.  This might just cause
+-	 unnecessary misalignment.  */
+-      if (size <= 16 * pagesize_m1)
+-	size += pagesize_m1 + 1;
+-#endif
+-
+       /* Adjust the stack size for alignment.  */
+       size &= ~__static_tls_align_m1;
+       assert (size != 0);
+@@ -506,34 +493,11 @@ allocate_stack (const struct pthread_attr *attr, struct pthread **pdp,
+ 	     So we can never get a null pointer back from mmap.  */
+ 	  assert (mem != NULL);
+ 
+-#if COLORING_INCREMENT != 0
+-	  /* Atomically increment NCREATED.  */
+-	  unsigned int ncreated = atomic_increment_val (&nptl_ncreated);
+-
+-	  /* We chose the offset for coloring by incrementing it for
+-	     every new thread by a fixed amount.  The offset used
+-	     module the page size.  Even if coloring would be better
+-	     relative to higher alignment values it makes no sense to
+-	     do it since the mmap() interface does not allow us to
+-	     specify any alignment for the returned memory block.  */
+-	  size_t coloring = (ncreated * COLORING_INCREMENT) & pagesize_m1;
+-
+-	  /* Make sure the coloring offsets does not disturb the alignment
+-	     of the TCB and static TLS block.  */
+-	  if (__builtin_expect ((coloring & __static_tls_align_m1) != 0, 0))
+-	    coloring = (((coloring + __static_tls_align_m1)
+-			 & ~(__static_tls_align_m1))
+-			& ~pagesize_m1);
+-#else
+-	  /* Unless specified we do not make any adjustments.  */
+-# define coloring 0
+-#endif
+-
+ 	  /* Place the thread descriptor at the end of the stack.  */
+ #if TLS_TCB_AT_TP
+-	  pd = (struct pthread *) ((char *) mem + size - coloring) - 1;
++	  pd = (struct pthread *) ((char *) mem + size) - 1;
+ #elif TLS_DTV_AT_TP
+-	  pd = (struct pthread *) ((((uintptr_t) mem + size - coloring
++	  pd = (struct pthread *) ((((uintptr_t) mem + size
+ 				    - __static_tls_size)
+ 				    & ~__static_tls_align_m1)
+ 				   - TLS_PRE_TCB_SIZE);
+diff --git a/nptl/stack-aliasing.h b/nptl/stack-aliasing.h
+index 526b54e18f7e0a27..62fdc9265e0038e6 100644
+--- a/nptl/stack-aliasing.h
++++ b/nptl/stack-aliasing.h
+@@ -16,12 +16,6 @@
+    License along with the GNU C Library; if not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
+-/* This is a number of bytes (less than a page) by which to "color" the
+-   starting stack address of new threads.  This number is multiplied by the
+-   number of threads created so far and then truncated modulo page size,
+-   to get a roughly even distribution of values for different threads.  */
+-#define COLORING_INCREMENT      0
+-
+ /* This is a number of bytes that is an alignment that should be avoided
+    when choosing the exact size of a new thread's stack.  If the size
+    chosen is aligned to this, an extra page will be added to render the
+diff --git a/sysdeps/i386/i686/stack-aliasing.h b/sysdeps/i386/i686/stack-aliasing.h
+index 1e35ceb2061d60f9..d73e45461f928a6a 100644
+--- a/sysdeps/i386/i686/stack-aliasing.h
++++ b/sysdeps/i386/i686/stack-aliasing.h
+@@ -16,11 +16,6 @@
+    License along with the GNU C Library; if not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
+-/* It turns out that stack coloring is in general not good on P4s.  Some
+-   applications will benefit.  We will probably have a configuration option
+-   at some point.  To enable coloring, set this to 128.  */
+-#define COLORING_INCREMENT      0
+-
+ /* What is useful is to avoid the 64k aliasing problem which reliably
+    happens if all stacks use sizes which are a multiple of 64k.  Tell
+    the stack allocator to disturb this by allocation one more page if

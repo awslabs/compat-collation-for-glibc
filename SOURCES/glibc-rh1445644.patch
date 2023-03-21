@@ -1,0 +1,78 @@
+commit e0ed2fb40a0e29c43cf60addc74741dab15f2e05
+Author: H.J. Lu <hjl.tools@gmail.com>
+Date:   Fri Mar 6 04:55:56 2015 -0800
+
+    Replace __attribute__((visibility("protected")))
+    
+    With copy relocation, address of protected data defined in the shared
+    library may be external.  Compiler shouldn't asssume protected data will
+    be local.  But due to
+    
+    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65248
+    
+    __attribute__((visibility("protected"))) doesn't work correctly, we need
+    to use asm (".protected xxx") instead.
+    
+            * elf/ifuncdep2.c (global): Replace
+            __attribute__((visibility("protected"))) with
+            asm (".protected global").
+            * elf/ifuncmod1.c (global): Likewise.
+            * elf/ifuncmod5.c (global): Likewise.
+
+Index: b/elf/ifuncdep2.c
+===================================================================
+--- a/elf/ifuncdep2.c
++++ b/elf/ifuncdep2.c
+@@ -2,7 +2,13 @@
+ 
+ #include "ifunc-sel.h"
+ 
+-int global __attribute__ ((visibility ("protected"))) = -1;
++int global = -1;
++/* Can't use __attribute__((visibility("protected"))) until the GCC bug:
++
++   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65248
++
++   is fixed.  */
++asm (".protected global");
+ 
+ static int
+ one (void)
+Index: b/elf/ifuncmod1.c
+===================================================================
+--- a/elf/ifuncmod1.c
++++ b/elf/ifuncmod1.c
+@@ -6,7 +6,13 @@
+  */
+ #include "ifunc-sel.h"
+ 
+-int global __attribute__ ((visibility ("protected"))) = -1;
++int global = -1;
++/* Can't use __attribute__((visibility("protected"))) until the GCC bug:
++
++   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65248
++
++   is fixed.  */
++asm (".protected global");
+ 
+ static int
+ one (void)
+Index: b/elf/ifuncmod5.c
+===================================================================
+--- a/elf/ifuncmod5.c
++++ b/elf/ifuncmod5.c
+@@ -1,7 +1,13 @@
+ /* Test STT_GNU_IFUNC symbols without direct function call.  */
+ #include "ifunc-sel.h"
+ 
+-int global __attribute__ ((visibility ("protected"))) = -1;
++int global = -1;
++/* Can't use __attribute__((visibility("protected"))) until the GCC bug:
++
++   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65248
++
++   is fixed.  */
++asm (".protected global");
+ 
+ static int
+ one (void)

@@ -1,0 +1,176 @@
+commit 5920a4a624b1f4db310d1c44997b640e2a4653e5
+Author: Carlos O'Donell <carlos@redhat.com>
+Date:   Sat Jul 29 00:02:03 2017 -0400
+
+    mutex: Fix robust mutex lock acquire (Bug 21778)
+    
+    65810f0ef05e8c9e333f17a44e77808b163ca298 fixed a robust mutex bug but
+    introduced BZ 21778: if the CAS used to try to acquire a lock fails, the
+    expected value is not updated, which breaks other cases in the loce
+    acquisition loop.  The fix is to simply update the expected value with
+    the value returned by the CAS, which ensures that behavior is as if the
+    first case with the CAS never happened (if the CAS fails).
+    
+    This is a regression introduced in the last release.
+    
+    Tested on x86_64, i686, ppc64, ppc64le, s390x, aarch64, armv7hl.
+
+Index: glibc-2.17-c758a686/nptl/Makefile
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/Makefile
++++ glibc-2.17-c758a686/nptl/Makefile
+@@ -204,7 +204,7 @@ CFLAGS-tst-thread-exit-clobber.o = -std=
+ tests = tst-typesizes \
+ 	tst-attr1 tst-attr2 tst-attr3 tst-default-attr \
+ 	tst-mutex1 tst-mutex2 tst-mutex3 tst-mutex4 tst-mutex5 tst-mutex6 \
+-	tst-mutex7 tst-mutex8 tst-mutex9 tst-mutex5a tst-mutex7a \
++	tst-mutex7 tst-mutex8 tst-mutex9 tst-mutex5a tst-mutex7a tst-mutex7robust \
+ 	tst-mutexpi1 tst-mutexpi2 tst-mutexpi3 tst-mutexpi4 tst-mutexpi5 \
+ 	tst-mutexpi5a tst-mutexpi6 tst-mutexpi7 tst-mutexpi7a tst-mutexpi8 \
+ 	tst-mutexpi9 \
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_lock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+@@ -198,11 +198,14 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	{
+ 	  /* Try to acquire the lock through a CAS from 0 (not acquired) to
+ 	     our TID | assume_other_futex_waiters.  */
+-	  if (__glibc_likely ((oldval == 0)
+-			      && (atomic_compare_and_exchange_bool_acq
+-				  (&mutex->__data.__lock,
+-				   id | assume_other_futex_waiters, 0) == 0)))
+-	      break;
++	  if (__glibc_likely (oldval == 0))
++	    {
++	      oldval
++	        = atomic_compare_and_exchange_val_acq (&mutex->__data.__lock,
++	            id | assume_other_futex_waiters, 0);
++	      if (__glibc_likely (oldval == 0))
++		break;
++	    }
+ 
+ 	  if ((oldval & FUTEX_OWNER_DIED) != 0)
+ 	    {
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_timedlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+@@ -154,11 +154,14 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	{
+ 	  /* Try to acquire the lock through a CAS from 0 (not acquired) to
+ 	     our TID | assume_other_futex_waiters.  */
+-	  if (__glibc_likely ((oldval == 0)
+-			      && (atomic_compare_and_exchange_bool_acq
+-				  (&mutex->__data.__lock,
+-				   id | assume_other_futex_waiters, 0) == 0)))
+-	      break;
++	  if (__glibc_likely (oldval == 0))
++	    {
++	      oldval
++	        = atomic_compare_and_exchange_val_acq (&mutex->__data.__lock,
++	            id | assume_other_futex_waiters, 0);
++	      if (__glibc_likely (oldval == 0))
++		break;
++	    }
+ 
+ 	  if ((oldval & FUTEX_OWNER_DIED) != 0)
+ 	    {
+Index: glibc-2.17-c758a686/nptl/tst-mutex7.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/tst-mutex7.c
++++ glibc-2.17-c758a686/nptl/tst-mutex7.c
+@@ -22,25 +22,41 @@
+ #include <stdlib.h>
+ #include <time.h>
+ 
+-
++/* This test is a template for other tests to use.  Other tests define
++   the following macros to change the behaviour of the template test.
++   The test is very simple, it configures N threads given the parameters
++   below and then proceeds to go through mutex lock and unlock
++   operations in each thread as described before for the thread
++   function.  */
+ #ifndef TYPE
+ # define TYPE PTHREAD_MUTEX_DEFAULT
+ #endif
+-
++#ifndef ROBUST
++# define ROBUST PTHREAD_MUTEX_STALLED
++#endif
++#ifndef DELAY_NSEC
++# define DELAY_NSEC 11000
++#endif
++#ifndef ROUNDS
++# define ROUNDS 1000
++#endif
++#ifndef N
++# define N 100
++#endif
+ 
+ static pthread_mutex_t lock;
+ 
+-
+-#define ROUNDS 1000
+-#define N 100
+-
+-
++/* Each thread locks and the subsequently unlocks the lock, yielding
++   the smallest critical section possible.  After the unlock the thread
++   waits DELAY_NSEC nanoseconds before doing the lock and unlock again.
++   Every thread does this ROUNDS times.  The lock and unlock are
++   checked for errors.  */
+ static void *
+ tf (void *arg)
+ {
+   int nr = (long int) arg;
+   int cnt;
+-  struct timespec ts = { .tv_sec = 0, .tv_nsec = 11000 };
++  struct timespec ts = { .tv_sec = 0, .tv_nsec = DELAY_NSEC };
+ 
+   for (cnt = 0; cnt < ROUNDS; ++cnt)
+     {
+@@ -56,13 +72,16 @@ tf (void *arg)
+ 	  return (void *) 1l;
+ 	}
+ 
+-      nanosleep (&ts, NULL);
++      if ((ts.tv_sec > 0) || (ts.tv_nsec > 0))
++	nanosleep (&ts, NULL);
+     }
+ 
+   return NULL;
+ }
+ 
+-
++/* Setup and run N threads, where each thread does as described
++   in the above thread function.  The threads are given a minimal 1MiB
++   stack since they don't do anything between the lock and unlock.  */
+ static int
+ do_test (void)
+ {
+@@ -80,6 +99,12 @@ do_test (void)
+       exit (1);
+     }
+ 
++  if (pthread_mutexattr_setrobust (&a, ROBUST) != 0)
++    {
++      puts ("mutexattr_setrobust failed");
++      exit (1);
++    }
++
+ #ifdef ENABLE_PI
+   if (pthread_mutexattr_setprotocol (&a, PTHREAD_PRIO_INHERIT) != 0)
+     {
+Index: glibc-2.17-c758a686/nptl/tst-mutex7robust.c
+===================================================================
+--- /dev/null
++++ glibc-2.17-c758a686/nptl/tst-mutex7robust.c
+@@ -0,0 +1,7 @@
++/* Bug 21778: Fix oversight in robust mutex lock acquisition.  */
++#define TYPE PTHREAD_MUTEX_NORMAL
++#define ROBUST PTHREAD_MUTEX_ROBUST
++#define DELAY_NSEC 0
++#define ROUNDS 1000
++#define N 32
++#include "tst-mutex7.c"

@@ -1,0 +1,1102 @@
+Recreation of this upstream patch, using the indicated git commands:
+
+commit 4372980f5881e7d537a52e3c49588ce116088061
+Author: Chris Metcalf <cmetcalf@tilera.com>
+Date:   Mon Feb 10 10:54:47 2014 -0500
+
+    Move tilegx, tilepro, and linux-generic from ports to libc.
+
+    I've moved the TILE-Gx and TILEPro ports to the main sysdeps hierarchy,
+    along with the linux-generic ports infrastructure.  Beyond the README
+    update, the move was just
+
+        git mv ports/sysdeps/tile sysdeps/tile
+        git mv ports/sysdeps/unix/sysv/linux/tile \
+          sysdeps/unix/sysv/linux/tile
+        git mv ports/sysdeps/unix/sysv/linux/generic \
+          sysdeps/unix/sysv/linux/generic
+
+diff --git a/ports/sysdeps/tile/Implies b/sysdeps/tile/Implies
+similarity index 100%
+rename from ports/sysdeps/tile/Implies
+rename to sysdeps/tile/Implies
+diff --git a/ports/sysdeps/tile/Makefile b/sysdeps/tile/Makefile
+similarity index 100%
+rename from ports/sysdeps/tile/Makefile
+rename to sysdeps/tile/Makefile
+diff --git a/ports/sysdeps/tile/Versions b/sysdeps/tile/Versions
+similarity index 100%
+rename from ports/sysdeps/tile/Versions
+rename to sysdeps/tile/Versions
+diff --git a/ports/sysdeps/tile/__longjmp.S b/sysdeps/tile/__longjmp.S
+similarity index 100%
+rename from ports/sysdeps/tile/__longjmp.S
+rename to sysdeps/tile/__longjmp.S
+diff --git a/ports/sysdeps/tile/__tls_get_addr.S b/sysdeps/tile/__tls_get_addr.S
+similarity index 100%
+rename from ports/sysdeps/tile/__tls_get_addr.S
+rename to sysdeps/tile/__tls_get_addr.S
+diff --git a/ports/sysdeps/tile/_mcount.S b/sysdeps/tile/_mcount.S
+similarity index 100%
+rename from ports/sysdeps/tile/_mcount.S
+rename to sysdeps/tile/_mcount.S
+diff --git a/ports/sysdeps/tile/abort-instr.h b/sysdeps/tile/abort-instr.h
+similarity index 100%
+rename from ports/sysdeps/tile/abort-instr.h
+rename to sysdeps/tile/abort-instr.h
+diff --git a/ports/sysdeps/tile/backtrace.c b/sysdeps/tile/backtrace.c
+similarity index 100%
+rename from ports/sysdeps/tile/backtrace.c
+rename to sysdeps/tile/backtrace.c
+diff --git a/ports/sysdeps/tile/bits/atomic.h b/sysdeps/tile/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/atomic.h
+rename to sysdeps/tile/bits/atomic.h
+diff --git a/ports/sysdeps/tile/bits/byteswap.h b/sysdeps/tile/bits/byteswap.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/byteswap.h
+rename to sysdeps/tile/bits/byteswap.h
+diff --git a/ports/sysdeps/tile/bits/endian.h b/sysdeps/tile/bits/endian.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/endian.h
+rename to sysdeps/tile/bits/endian.h
+diff --git a/ports/sysdeps/tile/bits/fenv.h b/sysdeps/tile/bits/fenv.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/fenv.h
+rename to sysdeps/tile/bits/fenv.h
+diff --git a/ports/sysdeps/tile/bits/link.h b/sysdeps/tile/bits/link.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/link.h
+rename to sysdeps/tile/bits/link.h
+diff --git a/ports/sysdeps/tile/bits/mathdef.h b/sysdeps/tile/bits/mathdef.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/mathdef.h
+rename to sysdeps/tile/bits/mathdef.h
+diff --git a/ports/sysdeps/tile/bits/mathinline.h b/sysdeps/tile/bits/mathinline.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/mathinline.h
+rename to sysdeps/tile/bits/mathinline.h
+diff --git a/ports/sysdeps/tile/bits/setjmp.h b/sysdeps/tile/bits/setjmp.h
+similarity index 100%
+rename from ports/sysdeps/tile/bits/setjmp.h
+rename to sysdeps/tile/bits/setjmp.h
+diff --git a/ports/sysdeps/tile/bsd-_setjmp.S b/sysdeps/tile/bsd-_setjmp.S
+similarity index 100%
+rename from ports/sysdeps/tile/bsd-_setjmp.S
+rename to sysdeps/tile/bsd-_setjmp.S
+diff --git a/ports/sysdeps/tile/bsd-setjmp.S b/sysdeps/tile/bsd-setjmp.S
+similarity index 100%
+rename from ports/sysdeps/tile/bsd-setjmp.S
+rename to sysdeps/tile/bsd-setjmp.S
+diff --git a/ports/sysdeps/tile/bzero.S b/sysdeps/tile/bzero.S
+similarity index 100%
+rename from ports/sysdeps/tile/bzero.S
+rename to sysdeps/tile/bzero.S
+diff --git a/ports/sysdeps/tile/crti.S b/sysdeps/tile/crti.S
+similarity index 100%
+rename from ports/sysdeps/tile/crti.S
+rename to sysdeps/tile/crti.S
+diff --git a/ports/sysdeps/tile/crtn.S b/sysdeps/tile/crtn.S
+similarity index 100%
+rename from ports/sysdeps/tile/crtn.S
+rename to sysdeps/tile/crtn.S
+diff --git a/ports/sysdeps/tile/dl-lookupcfg.h b/sysdeps/tile/dl-lookupcfg.h
+similarity index 100%
+rename from ports/sysdeps/tile/dl-lookupcfg.h
+rename to sysdeps/tile/dl-lookupcfg.h
+diff --git a/ports/sysdeps/tile/dl-machine.h b/sysdeps/tile/dl-machine.h
+similarity index 100%
+rename from ports/sysdeps/tile/dl-machine.h
+rename to sysdeps/tile/dl-machine.h
+diff --git a/ports/sysdeps/tile/dl-runtime.c b/sysdeps/tile/dl-runtime.c
+similarity index 100%
+rename from ports/sysdeps/tile/dl-runtime.c
+rename to sysdeps/tile/dl-runtime.c
+diff --git a/ports/sysdeps/tile/dl-start.S b/sysdeps/tile/dl-start.S
+similarity index 100%
+rename from ports/sysdeps/tile/dl-start.S
+rename to sysdeps/tile/dl-start.S
+diff --git a/ports/sysdeps/tile/dl-tls.c b/sysdeps/tile/dl-tls.c
+similarity index 100%
+rename from ports/sysdeps/tile/dl-tls.c
+rename to sysdeps/tile/dl-tls.c
+diff --git a/ports/sysdeps/tile/dl-tls.h b/sysdeps/tile/dl-tls.h
+similarity index 100%
+rename from ports/sysdeps/tile/dl-tls.h
+rename to sysdeps/tile/dl-tls.h
+diff --git a/ports/sysdeps/tile/dl-trampoline.S b/sysdeps/tile/dl-trampoline.S
+similarity index 100%
+rename from ports/sysdeps/tile/dl-trampoline.S
+rename to sysdeps/tile/dl-trampoline.S
+diff --git a/ports/sysdeps/tile/fegetenv.c b/sysdeps/tile/fegetenv.c
+similarity index 100%
+rename from ports/sysdeps/tile/fegetenv.c
+rename to sysdeps/tile/fegetenv.c
+diff --git a/ports/sysdeps/tile/fegetround.c b/sysdeps/tile/fegetround.c
+similarity index 100%
+rename from ports/sysdeps/tile/fegetround.c
+rename to sysdeps/tile/fegetround.c
+diff --git a/ports/sysdeps/tile/feholdexcpt.c b/sysdeps/tile/feholdexcpt.c
+similarity index 100%
+rename from ports/sysdeps/tile/feholdexcpt.c
+rename to sysdeps/tile/feholdexcpt.c
+diff --git a/ports/sysdeps/tile/fesetenv.c b/sysdeps/tile/fesetenv.c
+similarity index 100%
+rename from ports/sysdeps/tile/fesetenv.c
+rename to sysdeps/tile/fesetenv.c
+diff --git a/ports/sysdeps/tile/fesetround.c b/sysdeps/tile/fesetround.c
+similarity index 100%
+rename from ports/sysdeps/tile/fesetround.c
+rename to sysdeps/tile/fesetround.c
+diff --git a/ports/sysdeps/tile/feupdateenv.c b/sysdeps/tile/feupdateenv.c
+similarity index 100%
+rename from ports/sysdeps/tile/feupdateenv.c
+rename to sysdeps/tile/feupdateenv.c
+diff --git a/ports/sysdeps/tile/ffs.c b/sysdeps/tile/ffs.c
+similarity index 100%
+rename from ports/sysdeps/tile/ffs.c
+rename to sysdeps/tile/ffs.c
+diff --git a/ports/sysdeps/tile/ffsll.c b/sysdeps/tile/ffsll.c
+similarity index 100%
+rename from ports/sysdeps/tile/ffsll.c
+rename to sysdeps/tile/ffsll.c
+diff --git a/ports/sysdeps/tile/gccframe.h b/sysdeps/tile/gccframe.h
+similarity index 100%
+rename from ports/sysdeps/tile/gccframe.h
+rename to sysdeps/tile/gccframe.h
+diff --git a/ports/sysdeps/tile/jmpbuf-offsets.h b/sysdeps/tile/jmpbuf-offsets.h
+similarity index 100%
+rename from ports/sysdeps/tile/jmpbuf-offsets.h
+rename to sysdeps/tile/jmpbuf-offsets.h
+diff --git a/ports/sysdeps/tile/jmpbuf-unwind.h b/sysdeps/tile/jmpbuf-unwind.h
+similarity index 100%
+rename from ports/sysdeps/tile/jmpbuf-unwind.h
+rename to sysdeps/tile/jmpbuf-unwind.h
+diff --git a/ports/sysdeps/tile/ldsodefs.h b/sysdeps/tile/ldsodefs.h
+similarity index 100%
+rename from ports/sysdeps/tile/ldsodefs.h
+rename to sysdeps/tile/ldsodefs.h
+diff --git a/ports/sysdeps/tile/libm-test-ulps b/sysdeps/tile/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/tile/libm-test-ulps
+rename to sysdeps/tile/libm-test-ulps
+diff --git a/ports/sysdeps/tile/machine-gmon.h b/sysdeps/tile/machine-gmon.h
+similarity index 100%
+rename from ports/sysdeps/tile/machine-gmon.h
+rename to sysdeps/tile/machine-gmon.h
+diff --git a/ports/sysdeps/tile/math_private.h b/sysdeps/tile/math_private.h
+similarity index 100%
+rename from ports/sysdeps/tile/math_private.h
+rename to sysdeps/tile/math_private.h
+diff --git a/ports/sysdeps/tile/memcopy.h b/sysdeps/tile/memcopy.h
+similarity index 100%
+rename from ports/sysdeps/tile/memcopy.h
+rename to sysdeps/tile/memcopy.h
+diff --git a/ports/sysdeps/tile/nptl/Makefile b/sysdeps/tile/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/Makefile
+rename to sysdeps/tile/nptl/Makefile
+diff --git a/ports/sysdeps/tile/nptl/pthread_spin_lock.c b/sysdeps/tile/nptl/pthread_spin_lock.c
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/pthread_spin_lock.c
+rename to sysdeps/tile/nptl/pthread_spin_lock.c
+diff --git a/ports/sysdeps/tile/nptl/pthread_spin_trylock.c b/sysdeps/tile/nptl/pthread_spin_trylock.c
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/pthread_spin_trylock.c
+rename to sysdeps/tile/nptl/pthread_spin_trylock.c
+diff --git a/ports/sysdeps/tile/nptl/pthread_spin_unlock.c b/sysdeps/tile/nptl/pthread_spin_unlock.c
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/pthread_spin_unlock.c
+rename to sysdeps/tile/nptl/pthread_spin_unlock.c
+diff --git a/ports/sysdeps/tile/nptl/pthreaddef.h b/sysdeps/tile/nptl/pthreaddef.h
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/pthreaddef.h
+rename to sysdeps/tile/nptl/pthreaddef.h
+diff --git a/ports/sysdeps/tile/nptl/tcb-offsets.sym b/sysdeps/tile/nptl/tcb-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/tcb-offsets.sym
+rename to sysdeps/tile/nptl/tcb-offsets.sym
+diff --git a/ports/sysdeps/tile/nptl/tls.h b/sysdeps/tile/nptl/tls.h
+similarity index 100%
+rename from ports/sysdeps/tile/nptl/tls.h
+rename to sysdeps/tile/nptl/tls.h
+diff --git a/ports/sysdeps/tile/preconfigure b/sysdeps/tile/preconfigure
+similarity index 100%
+rename from ports/sysdeps/tile/preconfigure
+rename to sysdeps/tile/preconfigure
+diff --git a/ports/sysdeps/tile/s_fma.c b/sysdeps/tile/s_fma.c
+similarity index 100%
+rename from ports/sysdeps/tile/s_fma.c
+rename to sysdeps/tile/s_fma.c
+diff --git a/ports/sysdeps/tile/s_fmaf.c b/sysdeps/tile/s_fmaf.c
+similarity index 100%
+rename from ports/sysdeps/tile/s_fmaf.c
+rename to sysdeps/tile/s_fmaf.c
+diff --git a/ports/sysdeps/tile/setjmp.S b/sysdeps/tile/setjmp.S
+similarity index 100%
+rename from ports/sysdeps/tile/setjmp.S
+rename to sysdeps/tile/setjmp.S
+diff --git a/ports/sysdeps/tile/shlib-versions b/sysdeps/tile/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/tile/shlib-versions
+rename to sysdeps/tile/shlib-versions
+diff --git a/ports/sysdeps/tile/sotruss-lib.c b/sysdeps/tile/sotruss-lib.c
+similarity index 100%
+rename from ports/sysdeps/tile/sotruss-lib.c
+rename to sysdeps/tile/sotruss-lib.c
+diff --git a/ports/sysdeps/tile/stackguard-macros.h b/sysdeps/tile/stackguard-macros.h
+similarity index 100%
+rename from ports/sysdeps/tile/stackguard-macros.h
+rename to sysdeps/tile/stackguard-macros.h
+diff --git a/ports/sysdeps/tile/stackinfo.h b/sysdeps/tile/stackinfo.h
+similarity index 100%
+rename from ports/sysdeps/tile/stackinfo.h
+rename to sysdeps/tile/stackinfo.h
+diff --git a/ports/sysdeps/tile/start.S b/sysdeps/tile/start.S
+similarity index 100%
+rename from ports/sysdeps/tile/start.S
+rename to sysdeps/tile/start.S
+diff --git a/ports/sysdeps/tile/sysdep.h b/sysdeps/tile/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/tile/sysdep.h
+rename to sysdeps/tile/sysdep.h
+diff --git a/ports/sysdeps/tile/tilegx/Makefile b/sysdeps/tile/tilegx/Makefile
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/Makefile
+rename to sysdeps/tile/tilegx/Makefile
+diff --git a/ports/sysdeps/tile/tilegx/bits/atomic.h b/sysdeps/tile/tilegx/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/bits/atomic.h
+rename to sysdeps/tile/tilegx/bits/atomic.h
+diff --git a/ports/sysdeps/tile/tilegx/bits/wordsize.h b/sysdeps/tile/tilegx/bits/wordsize.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/bits/wordsize.h
+rename to sysdeps/tile/tilegx/bits/wordsize.h
+diff --git a/ports/sysdeps/tile/tilegx/memchr.c b/sysdeps/tile/tilegx/memchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/memchr.c
+rename to sysdeps/tile/tilegx/memchr.c
+diff --git a/ports/sysdeps/tile/tilegx/memcpy.c b/sysdeps/tile/tilegx/memcpy.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/memcpy.c
+rename to sysdeps/tile/tilegx/memcpy.c
+diff --git a/ports/sysdeps/tile/tilegx/memmove.c b/sysdeps/tile/tilegx/memmove.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/memmove.c
+rename to sysdeps/tile/tilegx/memmove.c
+diff --git a/ports/sysdeps/tile/tilegx/memset.c b/sysdeps/tile/tilegx/memset.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/memset.c
+rename to sysdeps/tile/tilegx/memset.c
+diff --git a/ports/sysdeps/tile/tilegx/memusage.h b/sysdeps/tile/tilegx/memusage.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/memusage.h
+rename to sysdeps/tile/tilegx/memusage.h
+diff --git a/ports/sysdeps/tile/tilegx/rawmemchr.c b/sysdeps/tile/tilegx/rawmemchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/rawmemchr.c
+rename to sysdeps/tile/tilegx/rawmemchr.c
+diff --git a/ports/sysdeps/tile/tilegx/strchr.c b/sysdeps/tile/tilegx/strchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/strchr.c
+rename to sysdeps/tile/tilegx/strchr.c
+diff --git a/ports/sysdeps/tile/tilegx/strchrnul.c b/sysdeps/tile/tilegx/strchrnul.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/strchrnul.c
+rename to sysdeps/tile/tilegx/strchrnul.c
+diff --git a/ports/sysdeps/tile/tilegx/string-endian.h b/sysdeps/tile/tilegx/string-endian.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/string-endian.h
+rename to sysdeps/tile/tilegx/string-endian.h
+diff --git a/ports/sysdeps/tile/tilegx/strlen.c b/sysdeps/tile/tilegx/strlen.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/strlen.c
+rename to sysdeps/tile/tilegx/strlen.c
+diff --git a/ports/sysdeps/tile/tilegx/strrchr.c b/sysdeps/tile/tilegx/strrchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/strrchr.c
+rename to sysdeps/tile/tilegx/strrchr.c
+diff --git a/ports/sysdeps/tile/tilegx/tilegx32/Implies b/sysdeps/tile/tilegx/tilegx32/Implies
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/tilegx32/Implies
+rename to sysdeps/tile/tilegx/tilegx32/Implies
+diff --git a/ports/sysdeps/tile/tilegx/tilegx64/Implies b/sysdeps/tile/tilegx/tilegx64/Implies
+similarity index 100%
+rename from ports/sysdeps/tile/tilegx/tilegx64/Implies
+rename to sysdeps/tile/tilegx/tilegx64/Implies
+diff --git a/ports/sysdeps/tile/tilepro/Implies b/sysdeps/tile/tilepro/Implies
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/Implies
+rename to sysdeps/tile/tilepro/Implies
+diff --git a/ports/sysdeps/tile/tilepro/bits/atomic.h b/sysdeps/tile/tilepro/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/bits/atomic.h
+rename to sysdeps/tile/tilepro/bits/atomic.h
+diff --git a/ports/sysdeps/tile/tilepro/bits/wordsize.h b/sysdeps/tile/tilepro/bits/wordsize.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/bits/wordsize.h
+rename to sysdeps/tile/tilepro/bits/wordsize.h
+diff --git a/ports/sysdeps/tile/tilepro/memchr.c b/sysdeps/tile/tilepro/memchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/memchr.c
+rename to sysdeps/tile/tilepro/memchr.c
+diff --git a/ports/sysdeps/tile/tilepro/memcpy.S b/sysdeps/tile/tilepro/memcpy.S
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/memcpy.S
+rename to sysdeps/tile/tilepro/memcpy.S
+diff --git a/ports/sysdeps/tile/tilepro/memset.c b/sysdeps/tile/tilepro/memset.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/memset.c
+rename to sysdeps/tile/tilepro/memset.c
+diff --git a/ports/sysdeps/tile/tilepro/memusage.h b/sysdeps/tile/tilepro/memusage.h
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/memusage.h
+rename to sysdeps/tile/tilepro/memusage.h
+diff --git a/ports/sysdeps/tile/tilepro/rawmemchr.c b/sysdeps/tile/tilepro/rawmemchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/rawmemchr.c
+rename to sysdeps/tile/tilepro/rawmemchr.c
+diff --git a/ports/sysdeps/tile/tilepro/strchr.c b/sysdeps/tile/tilepro/strchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/strchr.c
+rename to sysdeps/tile/tilepro/strchr.c
+diff --git a/ports/sysdeps/tile/tilepro/strchrnul.c b/sysdeps/tile/tilepro/strchrnul.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/strchrnul.c
+rename to sysdeps/tile/tilepro/strchrnul.c
+diff --git a/ports/sysdeps/tile/tilepro/strlen.c b/sysdeps/tile/tilepro/strlen.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/strlen.c
+rename to sysdeps/tile/tilepro/strlen.c
+diff --git a/ports/sysdeps/tile/tilepro/strrchr.c b/sysdeps/tile/tilepro/strrchr.c
+similarity index 100%
+rename from ports/sysdeps/tile/tilepro/strrchr.c
+rename to sysdeps/tile/tilepro/strrchr.c
+diff --git a/ports/sysdeps/tile/tls-macros.h b/sysdeps/tile/tls-macros.h
+similarity index 100%
+rename from ports/sysdeps/tile/tls-macros.h
+rename to sysdeps/tile/tls-macros.h
+diff --git a/ports/sysdeps/tile/tst-audit.h b/sysdeps/tile/tst-audit.h
+similarity index 100%
+rename from ports/sysdeps/tile/tst-audit.h
+rename to sysdeps/tile/tst-audit.h
+diff --git a/ports/sysdeps/tile/wordcopy.c b/sysdeps/tile/wordcopy.c
+similarity index 100%
+rename from ports/sysdeps/tile/wordcopy.c
+rename to sysdeps/tile/wordcopy.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/Makefile b/sysdeps/unix/sysv/linux/generic/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/Makefile
+rename to sysdeps/unix/sysv/linux/generic/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/____longjmp_chk.c b/sysdeps/unix/sysv/linux/generic/____longjmp_chk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/____longjmp_chk.c
+rename to sysdeps/unix/sysv/linux/generic/____longjmp_chk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/access.c b/sysdeps/unix/sysv/linux/generic/access.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/access.c
+rename to sysdeps/unix/sysv/linux/generic/access.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/fcntl.h b/sysdeps/unix/sysv/linux/generic/bits/fcntl.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/fcntl.h
+rename to sysdeps/unix/sysv/linux/generic/bits/fcntl.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/msq.h b/sysdeps/unix/sysv/linux/generic/bits/msq.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/msq.h
+rename to sysdeps/unix/sysv/linux/generic/bits/msq.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/sem.h b/sysdeps/unix/sysv/linux/generic/bits/sem.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/sem.h
+rename to sysdeps/unix/sysv/linux/generic/bits/sem.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/shm.h b/sysdeps/unix/sysv/linux/generic/bits/shm.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/shm.h
+rename to sysdeps/unix/sysv/linux/generic/bits/shm.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/stat.h b/sysdeps/unix/sysv/linux/generic/bits/stat.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/stat.h
+rename to sysdeps/unix/sysv/linux/generic/bits/stat.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/statfs.h b/sysdeps/unix/sysv/linux/generic/bits/statfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/statfs.h
+rename to sysdeps/unix/sysv/linux/generic/bits/statfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/bits/typesizes.h b/sysdeps/unix/sysv/linux/generic/bits/typesizes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/bits/typesizes.h
+rename to sysdeps/unix/sysv/linux/generic/bits/typesizes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/brk.c b/sysdeps/unix/sysv/linux/generic/brk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/brk.c
+rename to sysdeps/unix/sysv/linux/generic/brk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/chmod.c b/sysdeps/unix/sysv/linux/generic/chmod.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/chmod.c
+rename to sysdeps/unix/sysv/linux/generic/chmod.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/chown.c b/sysdeps/unix/sysv/linux/generic/chown.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/chown.c
+rename to sysdeps/unix/sysv/linux/generic/chown.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/creat.c b/sysdeps/unix/sysv/linux/generic/creat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/creat.c
+rename to sysdeps/unix/sysv/linux/generic/creat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/dl-origin.c b/sysdeps/unix/sysv/linux/generic/dl-origin.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/dl-origin.c
+rename to sysdeps/unix/sysv/linux/generic/dl-origin.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/dup2.c b/sysdeps/unix/sysv/linux/generic/dup2.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/dup2.c
+rename to sysdeps/unix/sysv/linux/generic/dup2.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/epoll_create.c b/sysdeps/unix/sysv/linux/generic/epoll_create.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/epoll_create.c
+rename to sysdeps/unix/sysv/linux/generic/epoll_create.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/epoll_wait.c b/sysdeps/unix/sysv/linux/generic/epoll_wait.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/epoll_wait.c
+rename to sysdeps/unix/sysv/linux/generic/epoll_wait.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/futimesat.c b/sysdeps/unix/sysv/linux/generic/futimesat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/futimesat.c
+rename to sysdeps/unix/sysv/linux/generic/futimesat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/getdents.c b/sysdeps/unix/sysv/linux/generic/getdents.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/getdents.c
+rename to sysdeps/unix/sysv/linux/generic/getdents.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/getdents64.c b/sysdeps/unix/sysv/linux/generic/getdents64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/getdents64.c
+rename to sysdeps/unix/sysv/linux/generic/getdents64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/inotify_init.c b/sysdeps/unix/sysv/linux/generic/inotify_init.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/inotify_init.c
+rename to sysdeps/unix/sysv/linux/generic/inotify_init.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/kernel_stat.h b/sysdeps/unix/sysv/linux/generic/kernel_stat.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/kernel_stat.h
+rename to sysdeps/unix/sysv/linux/generic/kernel_stat.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/lchown.c b/sysdeps/unix/sysv/linux/generic/lchown.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/lchown.c
+rename to sysdeps/unix/sysv/linux/generic/lchown.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/link.c b/sysdeps/unix/sysv/linux/generic/link.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/link.c
+rename to sysdeps/unix/sysv/linux/generic/link.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/lxstat.c b/sysdeps/unix/sysv/linux/generic/lxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/lxstat.c
+rename to sysdeps/unix/sysv/linux/generic/lxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/mkdir.c b/sysdeps/unix/sysv/linux/generic/mkdir.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/mkdir.c
+rename to sysdeps/unix/sysv/linux/generic/mkdir.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/not-cancel.h b/sysdeps/unix/sysv/linux/generic/not-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/not-cancel.h
+rename to sysdeps/unix/sysv/linux/generic/not-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/nptl/not-cancel.h b/sysdeps/unix/sysv/linux/generic/nptl/not-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/nptl/not-cancel.h
+rename to sysdeps/unix/sysv/linux/generic/nptl/not-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/open.c b/sysdeps/unix/sysv/linux/generic/open.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/open.c
+rename to sysdeps/unix/sysv/linux/generic/open.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/open64.c b/sysdeps/unix/sysv/linux/generic/open64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/open64.c
+rename to sysdeps/unix/sysv/linux/generic/open64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/pause.c b/sysdeps/unix/sysv/linux/generic/pause.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/pause.c
+rename to sysdeps/unix/sysv/linux/generic/pause.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/pipe.c b/sysdeps/unix/sysv/linux/generic/pipe.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/pipe.c
+rename to sysdeps/unix/sysv/linux/generic/pipe.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/poll.c b/sysdeps/unix/sysv/linux/generic/poll.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/poll.c
+rename to sysdeps/unix/sysv/linux/generic/poll.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/readlink.c b/sysdeps/unix/sysv/linux/generic/readlink.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/readlink.c
+rename to sysdeps/unix/sysv/linux/generic/readlink.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/readlink_chk.c b/sysdeps/unix/sysv/linux/generic/readlink_chk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/readlink_chk.c
+rename to sysdeps/unix/sysv/linux/generic/readlink_chk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/recv.c b/sysdeps/unix/sysv/linux/generic/recv.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/recv.c
+rename to sysdeps/unix/sysv/linux/generic/recv.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/rename.c b/sysdeps/unix/sysv/linux/generic/rename.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/rename.c
+rename to sysdeps/unix/sysv/linux/generic/rename.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/rmdir.c b/sysdeps/unix/sysv/linux/generic/rmdir.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/rmdir.c
+rename to sysdeps/unix/sysv/linux/generic/rmdir.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/select.c b/sysdeps/unix/sysv/linux/generic/select.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/select.c
+rename to sysdeps/unix/sysv/linux/generic/select.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/send.c b/sysdeps/unix/sysv/linux/generic/send.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/send.c
+rename to sysdeps/unix/sysv/linux/generic/send.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/symlink.c b/sysdeps/unix/sysv/linux/generic/symlink.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/symlink.c
+rename to sysdeps/unix/sysv/linux/generic/symlink.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/syscalls.list b/sysdeps/unix/sysv/linux/generic/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/syscalls.list
+rename to sysdeps/unix/sysv/linux/generic/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/sysctl.c b/sysdeps/unix/sysv/linux/generic/sysctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/sysctl.c
+rename to sysdeps/unix/sysv/linux/generic/sysctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/sysdep.h b/sysdeps/unix/sysv/linux/generic/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/sysdep.h
+rename to sysdeps/unix/sysv/linux/generic/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/umount.c b/sysdeps/unix/sysv/linux/generic/umount.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/umount.c
+rename to sysdeps/unix/sysv/linux/generic/umount.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/unlink.c b/sysdeps/unix/sysv/linux/generic/unlink.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/unlink.c
+rename to sysdeps/unix/sysv/linux/generic/unlink.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/ustat.c b/sysdeps/unix/sysv/linux/generic/ustat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/ustat.c
+rename to sysdeps/unix/sysv/linux/generic/ustat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/utimes.c b/sysdeps/unix/sysv/linux/generic/utimes.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/utimes.c
+rename to sysdeps/unix/sysv/linux/generic/utimes.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/Versions b/sysdeps/unix/sysv/linux/generic/wordsize-32/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/Versions
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fcntl.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/fcntl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fcntl.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/fcntl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fstatfs.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/fstatfs.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fstatfs.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/fstatfs.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/ftruncate64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fxstat.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/fxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fxstat.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/fxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fxstatat.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/fxstatat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/fxstatat.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/fxstatat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/getdents.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/getdents.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/getdents.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/getdents.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/llseek.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/llseek.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/llseek.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/llseek.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/lseek.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/lseek.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/lseek.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/lseek.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/lxstat64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/mmap.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/mmap.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/mmap.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/mmap.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/overflow.h b/sysdeps/unix/sysv/linux/generic/wordsize-32/overflow.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/overflow.h
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/overflow.h
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/posix_fadvise.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/posix_fadvise.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/posix_fadvise.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/posix_fadvise.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/preadv.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/preadv.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/preadv.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/preadv.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/preadv64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/preadv64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/preadv64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/preadv64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/pwritev64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/sendfile.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/sendfile.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/sendfile.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/sendfile.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/statfs.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/statfs.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/statfs.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/statfs.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/syscalls.list b/sysdeps/unix/sysv/linux/generic/wordsize-32/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/syscalls.list
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/truncate.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/truncate.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/truncate.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/truncate.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/truncate64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/truncate64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/truncate64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/truncate64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/xstat.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/xstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/xstat.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/xstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/wordsize-32/xstat64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/xstat64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/wordsize-32/xstat64.c
+rename to sysdeps/unix/sysv/linux/generic/wordsize-32/xstat64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/xmknod.c b/sysdeps/unix/sysv/linux/generic/xmknod.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/xmknod.c
+rename to sysdeps/unix/sysv/linux/generic/xmknod.c
+diff --git a/ports/sysdeps/unix/sysv/linux/generic/xstat.c b/sysdeps/unix/sysv/linux/generic/xstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/generic/xstat.c
+rename to sysdeps/unix/sysv/linux/generic/xstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/Makefile b/sysdeps/unix/sysv/linux/tile/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/Makefile
+rename to sysdeps/unix/sysv/linux/tile/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/Versions b/sysdeps/unix/sysv/linux/tile/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/Versions
+rename to sysdeps/unix/sysv/linux/tile/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/bits/environments.h b/sysdeps/unix/sysv/linux/tile/bits/environments.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/bits/environments.h
+rename to sysdeps/unix/sysv/linux/tile/bits/environments.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/bits/libc-vdso.h b/sysdeps/unix/sysv/linux/tile/bits/libc-vdso.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/bits/libc-vdso.h
+rename to sysdeps/unix/sysv/linux/tile/bits/libc-vdso.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/bits/local_lim.h b/sysdeps/unix/sysv/linux/tile/bits/local_lim.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/bits/local_lim.h
+rename to sysdeps/unix/sysv/linux/tile/bits/local_lim.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/bits/mman.h b/sysdeps/unix/sysv/linux/tile/bits/mman.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/bits/mman.h
+rename to sysdeps/unix/sysv/linux/tile/bits/mman.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/bits/sigaction.h b/sysdeps/unix/sysv/linux/tile/bits/sigaction.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/bits/sigaction.h
+rename to sysdeps/unix/sysv/linux/tile/bits/sigaction.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/bits/siginfo.h b/sysdeps/unix/sysv/linux/tile/bits/siginfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/bits/siginfo.h
+rename to sysdeps/unix/sysv/linux/tile/bits/siginfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/cacheflush.c b/sysdeps/unix/sysv/linux/tile/cacheflush.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/cacheflush.c
+rename to sysdeps/unix/sysv/linux/tile/cacheflush.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/configure b/sysdeps/unix/sysv/linux/tile/configure
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/configure
+rename to sysdeps/unix/sysv/linux/tile/configure
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/configure.in b/sysdeps/unix/sysv/linux/tile/configure.in
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/configure.in
+rename to sysdeps/unix/sysv/linux/tile/configure.in
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/getcontext.S b/sysdeps/unix/sysv/linux/tile/getcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/getcontext.S
+rename to sysdeps/unix/sysv/linux/tile/getcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/gettimeofday.c b/sysdeps/unix/sysv/linux/tile/gettimeofday.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/gettimeofday.c
+rename to sysdeps/unix/sysv/linux/tile/gettimeofday.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/init-first.c b/sysdeps/unix/sysv/linux/tile/init-first.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/init-first.c
+rename to sysdeps/unix/sysv/linux/tile/init-first.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/kernel-features.h b/sysdeps/unix/sysv/linux/tile/kernel-features.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/kernel-features.h
+rename to sysdeps/unix/sysv/linux/tile/kernel-features.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/makecontext.c b/sysdeps/unix/sysv/linux/tile/makecontext.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/makecontext.c
+rename to sysdeps/unix/sysv/linux/tile/makecontext.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/Makefile b/sysdeps/unix/sysv/linux/tile/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/Makefile
+rename to sysdeps/unix/sysv/linux/tile/nptl/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/bits/pthreadtypes.h b/sysdeps/unix/sysv/linux/tile/nptl/bits/pthreadtypes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/bits/pthreadtypes.h
+rename to sysdeps/unix/sysv/linux/tile/nptl/bits/pthreadtypes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/bits/semaphore.h b/sysdeps/unix/sysv/linux/tile/nptl/bits/semaphore.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/bits/semaphore.h
+rename to sysdeps/unix/sysv/linux/tile/nptl/bits/semaphore.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/clone.S b/sysdeps/unix/sysv/linux/tile/nptl/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/clone.S
+rename to sysdeps/unix/sysv/linux/tile/nptl/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/createthread.c b/sysdeps/unix/sysv/linux/tile/nptl/createthread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/createthread.c
+rename to sysdeps/unix/sysv/linux/tile/nptl/createthread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/fork.c b/sysdeps/unix/sysv/linux/tile/nptl/fork.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/fork.c
+rename to sysdeps/unix/sysv/linux/tile/nptl/fork.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/lowlevellock.h b/sysdeps/unix/sysv/linux/tile/nptl/lowlevellock.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/lowlevellock.h
+rename to sysdeps/unix/sysv/linux/tile/nptl/lowlevellock.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/pt-vfork.S b/sysdeps/unix/sysv/linux/tile/nptl/pt-vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/pt-vfork.S
+rename to sysdeps/unix/sysv/linux/tile/nptl/pt-vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/tile/nptl/pthread_once.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/pthread_once.c
+rename to sysdeps/unix/sysv/linux/tile/nptl/pthread_once.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/sysdep-cancel.h b/sysdeps/unix/sysv/linux/tile/nptl/sysdep-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/sysdep-cancel.h
+rename to sysdeps/unix/sysv/linux/tile/nptl/sysdep-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/vfork.S b/sysdeps/unix/sysv/linux/tile/nptl/vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/vfork.S
+rename to sysdeps/unix/sysv/linux/tile/nptl/vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/nptl/waitpid.S b/sysdeps/unix/sysv/linux/tile/nptl/waitpid.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/nptl/waitpid.S
+rename to sysdeps/unix/sysv/linux/tile/nptl/waitpid.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/profil-counter.h b/sysdeps/unix/sysv/linux/tile/profil-counter.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/profil-counter.h
+rename to sysdeps/unix/sysv/linux/tile/profil-counter.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/set_dataplane.c b/sysdeps/unix/sysv/linux/tile/set_dataplane.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/set_dataplane.c
+rename to sysdeps/unix/sysv/linux/tile/set_dataplane.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/setcontext.S b/sysdeps/unix/sysv/linux/tile/setcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/setcontext.S
+rename to sysdeps/unix/sysv/linux/tile/setcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sigcontextinfo.h b/sysdeps/unix/sysv/linux/tile/sigcontextinfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sigcontextinfo.h
+rename to sysdeps/unix/sysv/linux/tile/sigcontextinfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/swapcontext.S b/sysdeps/unix/sysv/linux/tile/swapcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/swapcontext.S
+rename to sysdeps/unix/sysv/linux/tile/swapcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/cachectl.h b/sysdeps/unix/sysv/linux/tile/sys/cachectl.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/cachectl.h
+rename to sysdeps/unix/sysv/linux/tile/sys/cachectl.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/dataplane.h b/sysdeps/unix/sysv/linux/tile/sys/dataplane.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/dataplane.h
+rename to sysdeps/unix/sysv/linux/tile/sys/dataplane.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/procfs.h b/sysdeps/unix/sysv/linux/tile/sys/procfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/procfs.h
+rename to sysdeps/unix/sysv/linux/tile/sys/procfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/ptrace.h b/sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+rename to sysdeps/unix/sysv/linux/tile/sys/ptrace.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/reg.h b/sysdeps/unix/sysv/linux/tile/sys/reg.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/reg.h
+rename to sysdeps/unix/sysv/linux/tile/sys/reg.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/ucontext.h b/sysdeps/unix/sysv/linux/tile/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/ucontext.h
+rename to sysdeps/unix/sysv/linux/tile/sys/ucontext.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sys/user.h b/sysdeps/unix/sysv/linux/tile/sys/user.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sys/user.h
+rename to sysdeps/unix/sysv/linux/tile/sys/user.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/syscall.S b/sysdeps/unix/sysv/linux/tile/syscall.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/syscall.S
+rename to sysdeps/unix/sysv/linux/tile/syscall.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sysdep.c b/sysdeps/unix/sysv/linux/tile/sysdep.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sysdep.c
+rename to sysdeps/unix/sysv/linux/tile/sysdep.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/sysdep.h b/sysdeps/unix/sysv/linux/tile/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/sysdep.h
+rename to sysdeps/unix/sysv/linux/tile/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/Makefile b/sysdeps/unix/sysv/linux/tile/tilegx/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/Makefile
+rename to sysdeps/unix/sysv/linux/tile/tilegx/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/ioctl.S b/sysdeps/unix/sysv/linux/tile/tilegx/ioctl.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/ioctl.S
+rename to sysdeps/unix/sysv/linux/tile/tilegx/ioctl.S
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/ldconfig.h b/sysdeps/unix/sysv/linux/tile/tilegx/ldconfig.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/ldconfig.h
+rename to sysdeps/unix/sysv/linux/tile/tilegx/ldconfig.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/register-dump.h b/sysdeps/unix/sysv/linux/tile/tilegx/register-dump.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/register-dump.h
+rename to sysdeps/unix/sysv/linux/tile/tilegx/register-dump.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/sched_getcpu.c b/sysdeps/unix/sysv/linux/tile/tilegx/sched_getcpu.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/sched_getcpu.c
+rename to sysdeps/unix/sysv/linux/tile/tilegx/sched_getcpu.c
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Implies b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Implies
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Makefile b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Makefile
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/c++-types.data b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/ld.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libc.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libm.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/librt.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx32/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Implies b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Implies
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Makefile b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Makefile
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/c++-types.data b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/ld.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libc.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libm.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/librt.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilegx/tilegx64/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/Implies b/sysdeps/unix/sysv/linux/tile/tilepro/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/Implies
+rename to sysdeps/unix/sysv/linux/tile/tilepro/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/ldconfig.h b/sysdeps/unix/sysv/linux/tile/tilepro/ldconfig.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/ldconfig.h
+rename to sysdeps/unix/sysv/linux/tile/tilepro/ldconfig.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/c++-types.data b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/ld.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libc.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libm.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/librt.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/tile/tilepro/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/tilepro/register-dump.h b/sysdeps/unix/sysv/linux/tile/tilepro/register-dump.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/tilepro/register-dump.h
+rename to sysdeps/unix/sysv/linux/tile/tilepro/register-dump.h
+diff --git a/ports/sysdeps/unix/sysv/linux/tile/ucontext_i.h b/sysdeps/unix/sysv/linux/tile/ucontext_i.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/tile/ucontext_i.h
+rename to sysdeps/unix/sysv/linux/tile/ucontext_i.h

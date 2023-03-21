@@ -1,0 +1,290 @@
+Recreation of this upstream commit:
+
+commit 29d73d867e1df54d703542cf7d076c5620dc2fb7
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Oct 4 16:02:33 2013 +0000
+
+    Move powerpc ports pieces to libc.
+
+Git commands used:
+
+git mv ports/sysdeps/powerpc/nofpu sysdeps/powerpc/nofpu
+git mv ports/sysdeps/powerpc/soft-fp sysdeps/powerpc/soft-fp
+git mv ports/sysdeps/powerpc/powerpc32/4* sysdeps/powerpc/powerpc32/
+git mv ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/* \
+  sysdeps/unix/sysv/linux/powerpc/powerpc32/
+git rm ports/sysdeps/powerpc/powerpc32/Makefile
+
+In addition, sysdeps/powerpc/powerpc32/Makefile was updated to handle
+the -mhard-float flag.
+
+diff --git a/ports/sysdeps/powerpc/powerpc32/Makefile b/ports/sysdeps/powerpc/powerpc32/Makefile
+deleted file mode 100644
+index 3d235deeb91330f6..0000000000000000
+--- a/ports/sysdeps/powerpc/powerpc32/Makefile
++++ /dev/null
+@@ -1,8 +0,0 @@
+-# Some Powerpc32 variants assume soft-fp is the default even though there is
+-# an fp variant so provide -mhard-float if --with-fp is explicitly passed.
+-
+-ifeq ($(with-fp),yes)
+-+cflags += -mhard-float
+-ASFLAGS += -mhard-float
+-sysdep-LDFLAGS += -mhard-float
+-endif
+diff --git a/ports/sysdeps/powerpc/nofpu/Makefile b/sysdeps/powerpc/nofpu/Makefile
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/Makefile
+rename to sysdeps/powerpc/nofpu/Makefile
+diff --git a/ports/sysdeps/powerpc/nofpu/Subdirs b/sysdeps/powerpc/nofpu/Subdirs
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/Subdirs
+rename to sysdeps/powerpc/nofpu/Subdirs
+diff --git a/ports/sysdeps/powerpc/nofpu/Versions b/sysdeps/powerpc/nofpu/Versions
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/Versions
+rename to sysdeps/powerpc/nofpu/Versions
+diff --git a/ports/sysdeps/powerpc/nofpu/fclrexcpt.c b/sysdeps/powerpc/nofpu/fclrexcpt.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fclrexcpt.c
+rename to sysdeps/powerpc/nofpu/fclrexcpt.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fedisblxcpt.c b/sysdeps/powerpc/nofpu/fedisblxcpt.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fedisblxcpt.c
+rename to sysdeps/powerpc/nofpu/fedisblxcpt.c
+diff --git a/ports/sysdeps/powerpc/nofpu/feenablxcpt.c b/sysdeps/powerpc/nofpu/feenablxcpt.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/feenablxcpt.c
+rename to sysdeps/powerpc/nofpu/feenablxcpt.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fegetenv.c b/sysdeps/powerpc/nofpu/fegetenv.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fegetenv.c
+rename to sysdeps/powerpc/nofpu/fegetenv.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fegetexcept.c b/sysdeps/powerpc/nofpu/fegetexcept.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fegetexcept.c
+rename to sysdeps/powerpc/nofpu/fegetexcept.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fegetround.c b/sysdeps/powerpc/nofpu/fegetround.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fegetround.c
+rename to sysdeps/powerpc/nofpu/fegetround.c
+diff --git a/ports/sysdeps/powerpc/nofpu/feholdexcpt.c b/sysdeps/powerpc/nofpu/feholdexcpt.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/feholdexcpt.c
+rename to sysdeps/powerpc/nofpu/feholdexcpt.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fenv_const.c b/sysdeps/powerpc/nofpu/fenv_const.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fenv_const.c
+rename to sysdeps/powerpc/nofpu/fenv_const.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fenv_libc.h b/sysdeps/powerpc/nofpu/fenv_libc.h
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fenv_libc.h
+rename to sysdeps/powerpc/nofpu/fenv_libc.h
+diff --git a/ports/sysdeps/powerpc/nofpu/fesetenv.c b/sysdeps/powerpc/nofpu/fesetenv.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fesetenv.c
+rename to sysdeps/powerpc/nofpu/fesetenv.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fesetround.c b/sysdeps/powerpc/nofpu/fesetround.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fesetround.c
+rename to sysdeps/powerpc/nofpu/fesetround.c
+diff --git a/ports/sysdeps/powerpc/nofpu/feupdateenv.c b/sysdeps/powerpc/nofpu/feupdateenv.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/feupdateenv.c
+rename to sysdeps/powerpc/nofpu/feupdateenv.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fgetexcptflg.c b/sysdeps/powerpc/nofpu/fgetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fgetexcptflg.c
+rename to sysdeps/powerpc/nofpu/fgetexcptflg.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fraiseexcpt.c b/sysdeps/powerpc/nofpu/fraiseexcpt.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fraiseexcpt.c
+rename to sysdeps/powerpc/nofpu/fraiseexcpt.c
+diff --git a/ports/sysdeps/powerpc/nofpu/fsetexcptflg.c b/sysdeps/powerpc/nofpu/fsetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/fsetexcptflg.c
+rename to sysdeps/powerpc/nofpu/fsetexcptflg.c
+diff --git a/ports/sysdeps/powerpc/nofpu/ftestexcept.c b/sysdeps/powerpc/nofpu/ftestexcept.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/ftestexcept.c
+rename to sysdeps/powerpc/nofpu/ftestexcept.c
+diff --git a/ports/sysdeps/powerpc/nofpu/get-rounding-mode.h b/sysdeps/powerpc/nofpu/get-rounding-mode.h
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/get-rounding-mode.h
+rename to sysdeps/powerpc/nofpu/get-rounding-mode.h
+diff --git a/ports/sysdeps/powerpc/nofpu/libm-test-ulps b/sysdeps/powerpc/nofpu/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/libm-test-ulps
+rename to sysdeps/powerpc/nofpu/libm-test-ulps
+diff --git a/ports/sysdeps/powerpc/nofpu/shlib-versions b/sysdeps/powerpc/nofpu/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/shlib-versions
+rename to sysdeps/powerpc/nofpu/shlib-versions
+diff --git a/ports/sysdeps/powerpc/nofpu/sim-full.c b/sysdeps/powerpc/nofpu/sim-full.c
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/sim-full.c
+rename to sysdeps/powerpc/nofpu/sim-full.c
+diff --git a/ports/sysdeps/powerpc/nofpu/soft-supp.h b/sysdeps/powerpc/nofpu/soft-supp.h
+similarity index 100%
+rename from ports/sysdeps/powerpc/nofpu/soft-supp.h
+rename to sysdeps/powerpc/nofpu/soft-supp.h
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/memcmp.S b/sysdeps/powerpc/powerpc32/405/memcmp.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/memcmp.S
+rename to sysdeps/powerpc/powerpc32/405/memcmp.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/memcpy.S b/sysdeps/powerpc/powerpc32/405/memcpy.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/memcpy.S
+rename to sysdeps/powerpc/powerpc32/405/memcpy.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/memset.S b/sysdeps/powerpc/powerpc32/405/memset.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/memset.S
+rename to sysdeps/powerpc/powerpc32/405/memset.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/strcmp.S b/sysdeps/powerpc/powerpc32/405/strcmp.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/strcmp.S
+rename to sysdeps/powerpc/powerpc32/405/strcmp.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/strcpy.S b/sysdeps/powerpc/powerpc32/405/strcpy.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/strcpy.S
+rename to sysdeps/powerpc/powerpc32/405/strcpy.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/strlen.S b/sysdeps/powerpc/powerpc32/405/strlen.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/strlen.S
+rename to sysdeps/powerpc/powerpc32/405/strlen.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/405/strncmp.S b/sysdeps/powerpc/powerpc32/405/strncmp.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/405/strncmp.S
+rename to sysdeps/powerpc/powerpc32/405/strncmp.S
+diff --git a/ports/sysdeps/powerpc/powerpc32/440/Implies b/sysdeps/powerpc/powerpc32/440/Implies
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/440/Implies
+rename to sysdeps/powerpc/powerpc32/440/Implies
+diff --git a/ports/sysdeps/powerpc/powerpc32/464/Implies b/sysdeps/powerpc/powerpc32/464/Implies
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/464/Implies
+rename to sysdeps/powerpc/powerpc32/464/Implies
+diff --git a/ports/sysdeps/powerpc/powerpc32/476/Implies b/sysdeps/powerpc/powerpc32/476/Implies
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/476/Implies
+rename to sysdeps/powerpc/powerpc32/476/Implies
+diff --git a/ports/sysdeps/powerpc/powerpc32/476/memset.S b/sysdeps/powerpc/powerpc32/476/memset.S
+similarity index 100%
+rename from ports/sysdeps/powerpc/powerpc32/476/memset.S
+rename to sysdeps/powerpc/powerpc32/476/memset.S
+diff --git a/sysdeps/powerpc/powerpc32/Makefile b/sysdeps/powerpc/powerpc32/Makefile
+index 64f79003af264964..0c515da52bc07d36 100644
+--- a/sysdeps/powerpc/powerpc32/Makefile
++++ b/sysdeps/powerpc/powerpc32/Makefile
+@@ -5,6 +5,15 @@ ifeq ($(with-fp),no)
+ sysdep-LDFLAGS += -msoft-float
+ endif
+ 
++# Some Powerpc32 variants assume soft-fp is the default even though there is
++# an fp variant so provide -mhard-float if --with-fp is explicitly passed.
++
++ifeq ($(with-fp),yes)
+++cflags += -mhard-float
++ASFLAGS += -mhard-float
++sysdep-LDFLAGS += -mhard-float
++endif
++
+ ifeq ($(subdir),gmon)
+ sysdep_routines += ppc-mcount compat-ppc-mcount
+ static-only-routines += ppc-mcount
+diff --git a/ports/sysdeps/powerpc/soft-fp/sfp-machine.h b/sysdeps/powerpc/soft-fp/sfp-machine.h
+similarity index 100%
+rename from ports/sysdeps/powerpc/soft-fp/sfp-machine.h
+rename to sysdeps/powerpc/soft-fp/sfp-machine.h
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/405/Implies b/sysdeps/unix/sysv/linux/powerpc/powerpc32/405/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/405/Implies
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/405/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/440/Implies b/sysdeps/unix/sysv/linux/powerpc/powerpc32/440/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/440/Implies
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/440/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/464/Implies b/sysdeps/unix/sysv/linux/powerpc/powerpc32/464/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/464/Implies
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/464/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/476/Implies b/sysdeps/unix/sysv/linux/powerpc/powerpc32/476/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/476/Implies
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/476/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/Implies b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/Implies
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/getcontext.S b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/getcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/getcontext.S
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/getcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/c++-types.data b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/ld.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libc.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libm.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/librt.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/localplt.data b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/localplt.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/localplt.data
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/nptl/localplt.data
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/setcontext.S b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/setcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/setcontext.S
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/setcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/swapcontext.S b/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/swapcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/swapcontext.S
+rename to sysdeps/unix/sysv/linux/powerpc/powerpc32/nofpu/swapcontext.S

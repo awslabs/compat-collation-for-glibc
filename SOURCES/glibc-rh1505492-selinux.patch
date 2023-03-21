@@ -1,0 +1,18 @@
+Remove unnecessary #include directives to avoid #warning directives from
+SELinux headers.  Further cleanup after glibc-rh1025934.patch.  Handled
+upstream as part of the original commit.
+
+diff --git a/nscd/selinux.c b/nscd/selinux.c
+index 2bf4d1a66a9623b5..24b554765264ae63 100644
+--- a/nscd/selinux.c
++++ b/nscd/selinux.c
+@@ -28,9 +28,7 @@
+ #include <syslog.h>
+ #include <unistd.h>
+ #include <sys/prctl.h>
+-#include <selinux/av_permissions.h>
+ #include <selinux/avc.h>
+-#include <selinux/flask.h>
+ #include <selinux/selinux.h>
+ #ifdef HAVE_LIBAUDIT
+ # include <libaudit.h>

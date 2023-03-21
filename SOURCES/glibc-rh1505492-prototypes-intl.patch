@@ -1,0 +1,725 @@
+Introduce prototype-style function definitions in the intl
+subdirectory.  Upstream, this was done as part of a gnulib import:
+
+commit 6d248857845aee307440a77062a93b167cd2ac9c
+Author: Will Newton <will.newton@linaro.org>
+Date:   Wed Dec 10 12:03:53 2014 +0000
+
+    intl: Merge with gettext version 0.19.3
+
+diff --git a/intl/bindtextdom.c b/intl/bindtextdom.c
+index 98a3606db1353957..64c683384e62ce36 100644
+--- a/intl/bindtextdom.c
++++ b/intl/bindtextdom.c
+@@ -96,10 +96,8 @@ static void set_binding_values PARAMS ((const char *domainname,
+    If DIRNAMEP or CODESETP is NULL, the corresponding attribute is neither
+    modified nor returned.  */
+ static void
+-set_binding_values (domainname, dirnamep, codesetp)
+-     const char *domainname;
+-     const char **dirnamep;
+-     const char **codesetp;
++set_binding_values (const char *domainname, const char **dirnamep,
++		    const char **codesetp)
+ {
+   struct binding *binding;
+   int modified;
+@@ -341,9 +339,7 @@ set_binding_values (domainname, dirnamep, codesetp)
+ /* Specify that the DOMAINNAME message catalog will be found
+    in DIRNAME rather than in the system locale data base.  */
+ char *
+-BINDTEXTDOMAIN (domainname, dirname)
+-     const char *domainname;
+-     const char *dirname;
++BINDTEXTDOMAIN (const char *domainname, const char *dirname)
+ {
+   set_binding_values (domainname, &dirname, NULL);
+   return (char *) dirname;
+@@ -352,9 +348,7 @@ BINDTEXTDOMAIN (domainname, dirname)
+ /* Specify the character encoding in which the messages from the
+    DOMAINNAME message catalog will be returned.  */
+ char *
+-BIND_TEXTDOMAIN_CODESET (domainname, codeset)
+-     const char *domainname;
+-     const char *codeset;
++BIND_TEXTDOMAIN_CODESET (const char *domainname, const char *codeset)
+ {
+   set_binding_values (domainname, NULL, &codeset);
+   return (char *) codeset;
+diff --git a/intl/dcgettext.c b/intl/dcgettext.c
+index 0f2942be4556ef97..a54c747e346b7599 100644
+--- a/intl/dcgettext.c
++++ b/intl/dcgettext.c
+@@ -44,10 +44,7 @@
+ /* Look up MSGID in the DOMAINNAME message catalog for the current CATEGORY
+    locale.  */
+ char *
+-DCGETTEXT (domainname, msgid, category)
+-     const char *domainname;
+-     const char *msgid;
+-     int category;
++DCGETTEXT (const char *domainname, const char *msgid, int category)
+ {
+   return DCIGETTEXT (domainname, msgid, NULL, 0, 0, category);
+ }
+diff --git a/intl/dcigettext.c b/intl/dcigettext.c
+index c005f1b88d2da1a5..02eb8ad10ebd6eb4 100644
+--- a/intl/dcigettext.c
++++ b/intl/dcigettext.c
+@@ -225,9 +225,7 @@ static void *root;
+ /* Function to compare two entries in the table of known translations.  */
+ static int transcmp PARAMS ((const void *p1, const void *p2));
+ static int
+-transcmp (p1, p2)
+-     const void *p1;
+-     const void *p2;
++transcmp (const void *p1, const void *p2)
+ {
+   const struct known_translation_t *s1;
+   const struct known_translation_t *s2;
+@@ -407,13 +405,8 @@ static int enable_secure;
+    CATEGORY locale and, if PLURAL is nonzero, search over string
+    depending on the plural form determined by N.  */
+ char *
+-DCIGETTEXT (domainname, msgid1, msgid2, plural, n, category)
+-     const char *domainname;
+-     const char *msgid1;
+-     const char *msgid2;
+-     int plural;
+-     unsigned long int n;
+-     int category;
++DCIGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
++	    int plural, unsigned long int n, int category)
+ {
+ #ifndef HAVE_ALLOCA
+   struct block_list *block_list = NULL;
+@@ -743,12 +736,8 @@ DCIGETTEXT (domainname, msgid1, msgid2, plural, n, category)
+ 
+ char *
+ internal_function
+-_nl_find_msg (domain_file, domainbinding, msgid, convert, lengthp)
+-     struct loaded_l10nfile *domain_file;
+-     struct binding *domainbinding;
+-     const char *msgid;
+-     int convert;
+-     size_t *lengthp;
++_nl_find_msg (struct loaded_l10nfile *domain_file, struct binding *domainbinding,
++	      const char *msgid, int convert, size_t *lengthp)
+ {
+   struct loaded_domain *domain;
+   nls_uint32 nstrings;
+@@ -1242,11 +1231,8 @@ _nl_find_msg (domain_file, domainbinding, msgid, convert, lengthp)
+ /* Look up a plural variant.  */
+ static char *
+ internal_function
+-plural_lookup (domain, n, translation, translation_len)
+-     struct loaded_l10nfile *domain;
+-     unsigned long int n;
+-     const char *translation;
+-     size_t translation_len;
++plural_lookup (struct loaded_l10nfile *domain, unsigned long int n,
++	       const char *translation, size_t translation_len)
+ {
+   struct loaded_domain *domaindata = (struct loaded_domain *) domain->data;
+   unsigned long int index;
+@@ -1283,8 +1269,7 @@ plural_lookup (domain, n, translation, translation_len)
+ /* Return string representation of locale CATEGORY.  */
+ static const char *
+ internal_function
+-category_to_name (category)
+-     int category;
++category_to_name (int category)
+ {
+   const char *retval;
+ 
+@@ -1344,9 +1329,7 @@ category_to_name (category)
+ /* Guess value of current locale from value of the environment variables.  */
+ static const char *
+ internal_function
+-guess_category_value (category, categoryname)
+-     int category;
+-     const char *categoryname;
++guess_category_value (int category, const char *categoryname)
+ {
+   const char *language;
+   const char *retval;
+@@ -1374,8 +1357,7 @@ guess_category_value (category, categoryname)
+ /* Returns the output charset.  */
+ static const char *
+ internal_function
+-get_output_charset (domainbinding)
+-     struct binding *domainbinding;
++get_output_charset (struct binding *domainbinding)
+ {
+   /* The output charset should normally be determined by the locale.  But
+      sometimes the locale is not used or not correctly set up, so we provide
+@@ -1433,9 +1415,7 @@ get_output_charset (domainbinding)
+    to be defined.  */
+ #if !_LIBC && !HAVE_STPCPY
+ static char *
+-stpcpy (dest, src)
+-     char *dest;
+-     const char *src;
++stpcpy (char *dest, const char *src)
+ {
+   while ((*dest++ = *src++) != '\0')
+     /* Do nothing. */ ;
+@@ -1445,10 +1425,7 @@ stpcpy (dest, src)
+ 
+ #if !_LIBC && !HAVE_MEMPCPY
+ static void *
+-mempcpy (dest, src, n)
+-     void *dest;
+-     const void *src;
+-     size_t n;
++mempcpy (void *dest, const void *src, size_t n)
+ {
+   return (void *) ((char *) memcpy (dest, src, n) + n);
+ }
+diff --git a/intl/dcngettext.c b/intl/dcngettext.c
+index b0e2ee8d8cb214ea..1a64fd1f818823c8 100644
+--- a/intl/dcngettext.c
++++ b/intl/dcngettext.c
+@@ -44,12 +44,8 @@
+ /* Look up MSGID in the DOMAINNAME message catalog for the current CATEGORY
+    locale.  */
+ char *
+-DCNGETTEXT (domainname, msgid1, msgid2, n, category)
+-     const char *domainname;
+-     const char *msgid1;
+-     const char *msgid2;
+-     unsigned long int n;
+-     int category;
++DCNGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
++            unsigned long int n, int category)
+ {
+   return DCIGETTEXT (domainname, msgid1, msgid2, 1, n, category);
+ }
+diff --git a/intl/dgettext.c b/intl/dgettext.c
+index 7718f4e4e021bbfd..eba96b745c0c24c7 100644
+--- a/intl/dgettext.c
++++ b/intl/dgettext.c
+@@ -46,9 +46,7 @@
+ /* Look up MSGID in the DOMAINNAME message catalog of the current
+    LC_MESSAGES locale.  */
+ char *
+-DGETTEXT (domainname, msgid)
+-     const char *domainname;
+-     const char *msgid;
++DGETTEXT (const char *domainname, const char *msgid)
+ {
+   return DCGETTEXT (domainname, msgid, LC_MESSAGES);
+ }
+diff --git a/intl/dngettext.c b/intl/dngettext.c
+index 18ff68e94e7b19b3..8b62b1b7d60608b3 100644
+--- a/intl/dngettext.c
++++ b/intl/dngettext.c
+@@ -46,11 +46,8 @@
+ /* Look up MSGID in the DOMAINNAME message catalog of the current
+    LC_MESSAGES locale and skip message according to the plural form.  */
+ char *
+-DNGETTEXT (domainname, msgid1, msgid2, n)
+-     const char *domainname;
+-     const char *msgid1;
+-     const char *msgid2;
+-     unsigned long int n;
++DNGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
++           unsigned long int n)
+ {
+   return DCNGETTEXT (domainname, msgid1, msgid2, n, LC_MESSAGES);
+ }
+diff --git a/intl/explodename.c b/intl/explodename.c
+index 52506c4c70671a29..679deebfc4a8a628 100644
+--- a/intl/explodename.c
++++ b/intl/explodename.c
+@@ -40,8 +40,7 @@
+ static char *_nl_find_language PARAMS ((const char *name));
+ 
+ static char *
+-_nl_find_language (name)
+-     const char *name;
++_nl_find_language (const char *name)
+ {
+   while (name[0] != '\0' && name[0] != '_' && name[0] != '@' && name[0] != '.')
+     ++name;
+@@ -51,14 +50,9 @@ _nl_find_language (name)
+ 
+ 
+ int
+-_nl_explode_name (name, language, modifier, territory, codeset,
+-		  normalized_codeset)
+-     char *name;
+-     const char **language;
+-     const char **modifier;
+-     const char **territory;
+-     const char **codeset;
+-     const char **normalized_codeset;
++_nl_explode_name (char *name, const char **language, const char **modifier,
++		  const char **territory, const char **codeset,
++		  const char **normalized_codeset)
+ {
+   char *cp;
+   int mask;
+diff --git a/intl/finddomain.c b/intl/finddomain.c
+index 4fff9dad5de54dad..6c3b80b26b6fc88f 100644
+--- a/intl/finddomain.c
++++ b/intl/finddomain.c
+@@ -49,11 +49,8 @@ static struct loaded_l10nfile *_nl_loaded_domains;
+    established bindings.  */
+ struct loaded_l10nfile *
+ internal_function
+-_nl_find_domain (dirname, locale, domainname, domainbinding)
+-     const char *dirname;
+-     char *locale;
+-     const char *domainname;
+-     struct binding *domainbinding;
++_nl_find_domain (const char *dirname, char *locale, const char *domainname,
++		 struct binding *domainbinding)
+ {
+   struct loaded_l10nfile *retval;
+   const char *language;
+diff --git a/intl/gettext.c b/intl/gettext.c
+index fbc598407d9a7e3a..028f0e713971b475 100644
+--- a/intl/gettext.c
++++ b/intl/gettext.c
+@@ -52,8 +52,7 @@
+    LC_MESSAGES locale.  If not found, returns MSGID itself (the default
+    text).  */
+ char *
+-GETTEXT (msgid)
+-     const char *msgid;
++GETTEXT (const char *msgid)
+ {
+   return DCGETTEXT (NULL, msgid, LC_MESSAGES);
+ }
+diff --git a/intl/hash-string.c b/intl/hash-string.c
+index 1b6cfa01b683a9f2..cf267492cc8d3834 100644
+--- a/intl/hash-string.c
++++ b/intl/hash-string.c
+@@ -23,8 +23,7 @@
+    [see Aho/Sethi/Ullman, COMPILERS: Principles, Techniques and Tools,
+    1986, 1987 Bell Telephone Laboratories, Inc.]  */
+ unsigned long int
+-__hash_string (str_param)
+-     const char *str_param;
++__hash_string (const char *str_param)
+ {
+   unsigned long int hval, g;
+   const char *str = str_param;
+diff --git a/intl/l10nflist.c b/intl/l10nflist.c
+index 424f2dffc3d7b8e6..7bc2ec81bbbc3d9c 100644
+--- a/intl/l10nflist.c
++++ b/intl/l10nflist.c
+@@ -69,9 +69,7 @@ static char *stpcpy PARAMS ((char *dest, const char *src));
+ static size_t argz_count__ PARAMS ((const char *argz, size_t len));
+ 
+ static size_t
+-argz_count__ (argz, len)
+-     const char *argz;
+-     size_t len;
++argz_count__ (const char *argz, size_t len)
+ {
+   size_t count = 0;
+   while (len > 0)
+@@ -93,10 +91,7 @@ argz_count__ (argz, len)
+ static void argz_stringify__ PARAMS ((char *argz, size_t len, int sep));
+ 
+ static void
+-argz_stringify__ (argz, len, sep)
+-     char *argz;
+-     size_t len;
+-     int sep;
++argz_stringify__ (char *argz, size_t len, int sep)
+ {
+   while (len > 0)
+     {
+@@ -116,10 +111,7 @@ static char *argz_next__ PARAMS ((char *argz, size_t argz_len,
+ 				  const char *entry));
+ 
+ static char *
+-argz_next__ (argz, argz_len, entry)
+-     char *argz;
+-     size_t argz_len;
+-     const char *entry;
++argz_next__ (char *argz, size_t argz_len, const char *entry)
+ {
+   if (entry)
+     {
+@@ -144,8 +136,7 @@ argz_next__ (argz, argz_len, entry)
+ static int pop PARAMS ((int x));
+ 
+ static inline int
+-pop (x)
+-     int x;
++pop (int x)
+ {
+   /* We assume that no more than 16 bits are used.  */
+   x = ((x & ~0x5555) >> 1) + (x & 0x5555);
+@@ -159,20 +150,12 @@ pop (x)
+ 
+ 
+ struct loaded_l10nfile *
+-_nl_make_l10nflist (l10nfile_list, dirlist, dirlist_len, mask, language,
+-		    territory, codeset, normalized_codeset, modifier,
+-		    filename, do_allocate)
+-     struct loaded_l10nfile **l10nfile_list;
+-     const char *dirlist;
+-     size_t dirlist_len;
+-     int mask;
+-     const char *language;
+-     const char *territory;
+-     const char *codeset;
+-     const char *normalized_codeset;
+-     const char *modifier;
+-     const char *filename;
+-     int do_allocate;
++_nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
++		    const char *dirlist, size_t dirlist_len,
++		    int mask, const char *language,
++		    const char *territory, const char *codeset,
++		    const char *normalized_codeset, const char *modifier,
++		    const char *filename, int do_allocate)
+ {
+   char *abs_filename;
+   struct loaded_l10nfile *last = NULL;
+@@ -315,9 +298,7 @@ _nl_make_l10nflist (l10nfile_list, dirlist, dirlist_len, mask, language,
+    names.  The return value is dynamically allocated and has to be
+    freed by the caller.  */
+ const char *
+-_nl_normalize_codeset (codeset, name_len)
+-     const char *codeset;
+-     size_t name_len;
++_nl_normalize_codeset (const char *codeset, size_t name_len)
+ {
+   int len = 0;
+   int only_digit = 1;
+@@ -368,9 +349,7 @@ _nl_normalize_codeset (codeset, name_len)
+    to be defined.  */
+ #if !_LIBC && !HAVE_STPCPY
+ static char *
+-stpcpy (dest, src)
+-     char *dest;
+-     const char *src;
++stpcpy (char *dest, const char *src)
+ {
+   while ((*dest++ = *src++) != '\0')
+     /* Do nothing. */ ;
+diff --git a/intl/loadmsgcat.c b/intl/loadmsgcat.c
+index 243783a9ac4d0929..8ee719d9c3034724 100644
+--- a/intl/loadmsgcat.c
++++ b/intl/loadmsgcat.c
+@@ -487,8 +487,7 @@ int _nl_msg_cat_cntr;
+ 
+ /* Expand a system dependent string segment.  Return NULL if unsupported.  */
+ static const char *
+-get_sysdep_segment_value (name)
+-     const char *name;
++get_sysdep_segment_value (const char *name)
+ {
+   /* Test for an ISO C 99 section 7.8.1 format string directive.
+      Syntax:
+@@ -757,9 +756,8 @@ get_sysdep_segment_value (name)
+    message catalog do nothing.  */
+ void
+ internal_function
+-_nl_load_domain (domain_file, domainbinding)
+-     struct loaded_l10nfile *domain_file;
+-     struct binding *domainbinding;
++_nl_load_domain (struct loaded_l10nfile *domain_file,
++		 struct binding *domainbinding)
+ {
+   __libc_lock_define_initialized_recursive (static, lock);
+   int fd = -1;
+@@ -1278,8 +1276,7 @@ _nl_load_domain (domain_file, domainbinding)
+ #ifdef _LIBC
+ void
+ internal_function __libc_freeres_fn_section
+-_nl_unload_domain (domain)
+-     struct loaded_domain *domain;
++_nl_unload_domain (struct loaded_domain *domain)
+ {
+   size_t i;
+ 
+diff --git a/intl/localealias.c b/intl/localealias.c
+index 2f067dfe2cd7a130..29eef89c9e3d86bc 100644
+--- a/intl/localealias.c
++++ b/intl/localealias.c
+@@ -137,8 +137,7 @@ static int alias_compare PARAMS ((const struct alias_map *map1,
+ 
+ 
+ const char *
+-_nl_expand_alias (name)
+-    const char *name;
++_nl_expand_alias (const char *name)
+ {
+   static const char *locale_alias_path = LOCALE_ALIAS_PATH;
+   struct alias_map *retval;
+@@ -200,9 +199,7 @@ _nl_expand_alias (name)
+ 
+ static size_t
+ internal_function
+-read_alias_file (fname, fname_len)
+-     const char *fname;
+-     int fname_len;
++read_alias_file (const char *fname, int fname_len)
+ {
+   FILE *fp;
+   char *full_fname;
+@@ -381,9 +378,7 @@ extend_alias_table (void)
+ 
+ 
+ static int
+-alias_compare (map1, map2)
+-     const struct alias_map *map1;
+-     const struct alias_map *map2;
++alias_compare (const struct alias_map *map1, const struct alias_map *map2)
+ {
+ #if defined _LIBC || defined HAVE_STRCASECMP
+   return strcasecmp (map1->alias, map2->alias);
+diff --git a/intl/ngettext.c b/intl/ngettext.c
+index 109e9da0e5cdc5d4..f3f8e076a1fc55aa 100644
+--- a/intl/ngettext.c
++++ b/intl/ngettext.c
+@@ -54,10 +54,7 @@
+    LC_MESSAGES locale.  If not found, returns MSGID itself (the default
+    text).  */
+ char *
+-NGETTEXT (msgid1, msgid2, n)
+-     const char *msgid1;
+-     const char *msgid2;
+-     unsigned long int n;
++NGETTEXT (const char *msgid1, const char *msgid2, unsigned long int n)
+ {
+   return DCNGETTEXT (NULL, msgid1, msgid2, n, LC_MESSAGES);
+ }
+diff --git a/intl/plural-eval.c b/intl/plural-eval.c
+index e692e379b14100b7..d44eb257e466e852 100644
+--- a/intl/plural-eval.c
++++ b/intl/plural-eval.c
+@@ -22,9 +22,7 @@ static unsigned long int plural_eval (const struct expression *pexp,
+ 
+ static unsigned long int
+ internal_function
+-plural_eval (pexp, n)
+-     const struct expression *pexp;
+-     unsigned long int n;
++plural_eval (const struct expression *pexp, unsigned long int n)
+ {
+   switch (pexp->nargs)
+     {
+diff --git a/intl/plural-exp.c b/intl/plural-exp.c
+index e157bba4adfca8df..abfbf0a1ef26a76d 100644
+--- a/intl/plural-exp.c
++++ b/intl/plural-exp.c
+@@ -96,10 +96,9 @@ init_germanic_plural (void)
+ 
+ void
+ internal_function
+-EXTRACT_PLURAL_EXPRESSION (nullentry, pluralp, npluralsp)
+-     const char *nullentry;
+-     const struct expression **pluralp;
+-     unsigned long int *npluralsp;
++EXTRACT_PLURAL_EXPRESSION (const char *nullentry,
++			   const struct expression **pluralp,
++			   unsigned long int *npluralsp)
+ {
+   if (nullentry != NULL)
+     {
+diff --git a/intl/plural.c b/intl/plural.c
+index 0d8bf4c6d59ff646..3898ab6aeaadcc2d 100644
+--- a/intl/plural.c
++++ b/intl/plural.c
+@@ -212,10 +212,7 @@ static void yyerror PARAMS ((const char *str));
+ /* Allocation of expressions.  */
+ 
+ static struct expression *
+-new_exp (nargs, op, args)
+-     int nargs;
+-     enum operator op;
+-     struct expression * const *args;
++new_exp (int nargs, enum operator op, struct expression * const *args)
+ {
+   int i;
+   struct expression *newp;
+@@ -244,16 +241,13 @@ new_exp (nargs, op, args)
+ }
+ 
+ static inline struct expression *
+-new_exp_0 (op)
+-     enum operator op;
++new_exp_0 (enum operator op)
+ {
+   return new_exp (0, op, NULL);
+ }
+ 
+ static inline struct expression *
+-new_exp_1 (op, right)
+-     enum operator op;
+-     struct expression *right;
++new_exp_1 (enum operator op, struct expression *right)
+ {
+   struct expression *args[1];
+ 
+@@ -262,10 +256,7 @@ new_exp_1 (op, right)
+ }
+ 
+ static struct expression *
+-new_exp_2 (op, left, right)
+-     enum operator op;
+-     struct expression *left;
+-     struct expression *right;
++new_exp_2 (enum operator op, struct expression *left, struct expression *right)
+ {
+   struct expression *args[2];
+ 
+@@ -275,11 +266,8 @@ new_exp_2 (op, left, right)
+ }
+ 
+ static inline struct expression *
+-new_exp_3 (op, bexp, tbranch, fbranch)
+-     enum operator op;
+-     struct expression *bexp;
+-     struct expression *tbranch;
+-     struct expression *fbranch;
++new_exp_3 (enum operator op, struct expression *bexp,
++	   struct expression *tbranch, struct expression *fbranch)
+ {
+   struct expression *args[3];
+ 
+@@ -1874,8 +1862,7 @@ yyreturn:
+ 
+ void
+ internal_function
+-FREE_EXPRESSION (exp)
+-     struct expression *exp;
++FREE_EXPRESSION (struct expression *exp)
+ {
+   if (exp == NULL)
+     return;
+@@ -1901,9 +1888,7 @@ FREE_EXPRESSION (exp)
+ 
+ 
+ static int
+-yylex (lval, pexp)
+-     YYSTYPE *lval;
+-     const char **pexp;
++yylex (YYSTYPE *lval, const char **pexp)
+ {
+   const char *exp = *pexp;
+   int result;
+@@ -2046,8 +2031,7 @@ yylex (lval, pexp)
+ 
+ 
+ static void
+-yyerror (str)
+-     const char *str;
++yyerror (const char *str)
+ {
+   /* Do nothing.  We don't print error messages here.  */
+ }
+diff --git a/intl/plural.y b/intl/plural.y
+index 2df3604dcf7ecfb6..7cfac172bd157b8a 100644
+--- a/intl/plural.y
++++ b/intl/plural.y
+@@ -72,10 +72,7 @@ static void yyerror PARAMS ((const char *str));
+ /* Allocation of expressions.  */
+ 
+ static struct expression *
+-new_exp (nargs, op, args)
+-     int nargs;
+-     enum operator op;
+-     struct expression * const *args;
++new_exp (int nargs, enum operator op, struct expression * const *args)
+ {
+   int i;
+   struct expression *newp;
+@@ -104,16 +101,13 @@ new_exp (nargs, op, args)
+ }
+ 
+ static inline struct expression *
+-new_exp_0 (op)
+-     enum operator op;
++new_exp_0 (enum operator op)
+ {
+   return new_exp (0, op, NULL);
+ }
+ 
+ static inline struct expression *
+-new_exp_1 (op, right)
+-     enum operator op;
+-     struct expression *right;
++new_exp_1 (enum operator op, struct expression *right)
+ {
+   struct expression *args[1];
+ 
+@@ -122,10 +116,7 @@ new_exp_1 (op, right)
+ }
+ 
+ static struct expression *
+-new_exp_2 (op, left, right)
+-     enum operator op;
+-     struct expression *left;
+-     struct expression *right;
++new_exp_2 (enum operator op, struct expression *left, struct expression *right)
+ {
+   struct expression *args[2];
+ 
+@@ -135,11 +126,8 @@ new_exp_2 (op, left, right)
+ }
+ 
+ static inline struct expression *
+-new_exp_3 (op, bexp, tbranch, fbranch)
+-     enum operator op;
+-     struct expression *bexp;
+-     struct expression *tbranch;
+-     struct expression *fbranch;
++new_exp_3 (enum operator op, struct expression *bexp,
++	   struct expression *tbranch, struct expression *fbranch)
+ {
+   struct expression *args[3];
+ 
+@@ -230,8 +218,7 @@ exp:	  exp '?' exp ':' exp
+ 
+ void
+ internal_function
+-FREE_EXPRESSION (exp)
+-     struct expression *exp;
++FREE_EXPRESSION (struct expression *exp)
+ {
+   if (exp == NULL)
+     return;
+@@ -257,9 +244,7 @@ FREE_EXPRESSION (exp)
+ 
+ 
+ static int
+-yylex (lval, pexp)
+-     YYSTYPE *lval;
+-     const char **pexp;
++yylex (YYSTYPE *lval, const char **pexp)
+ {
+   const char *exp = *pexp;
+   int result;
+@@ -402,8 +387,7 @@ yylex (lval, pexp)
+ 
+ 
+ static void
+-yyerror (str)
+-     const char *str;
++yyerror (const char *str)
+ {
+   /* Do nothing.  We don't print error messages here.  */
+ }
+diff --git a/intl/textdomain.c b/intl/textdomain.c
+index 35fb2e4c9951fe74..7d1029fa02ffdb34 100644
+--- a/intl/textdomain.c
++++ b/intl/textdomain.c
+@@ -77,8 +77,7 @@ __libc_rwlock_define (extern, _nl_state_lock attribute_hidden)
+    If DOMAINNAME is null, return the current default.
+    If DOMAINNAME is "", reset to the default of "messages".  */
+ char *
+-TEXTDOMAIN (domainname)
+-     const char *domainname;
++TEXTDOMAIN (const char *domainname)
+ {
+   char *new_domain;
+   char *old_domain;

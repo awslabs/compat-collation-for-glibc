@@ -1,0 +1,21 @@
+Fix -Wundef warning.  Addressed upstream as part of this commit:
+
+commit 888c679ba406e89d86bdfbde033e307f5af5198f
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 10 14:24:30 2014 +0530
+
+    Sync up error.c with gnulib
+
+diff --git a/misc/error.c b/misc/error.c
+index 6fb192da4b38a4f9..3d0156e406fa1539 100644
+--- a/misc/error.c
++++ b/misc/error.c
+@@ -100,7 +100,7 @@ print_errno_message (int errnum)
+ 
+ #if defined HAVE_STRERROR_R || _LIBC
+   char errbuf[1024];
+-# if STRERROR_R_CHAR_P || _LIBC
++# if _LIBC || STRERROR_R_CHAR_P
+   s = __strerror_r (errnum, errbuf, sizeof errbuf);
+ # else
+   if (__strerror_r (errnum, errbuf, sizeof errbuf) == 0)

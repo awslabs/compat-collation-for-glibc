@@ -1,0 +1,109 @@
+Move __isnanl_pseudo to its own file in sysdeps/x86/isnanl-pseudo.c so
+that it only links into libc.so.  This way it is only available to
+functions in libc and should not affect libm.
+
+diff --git a/include/math.h b/include/math.h
+index 4eddc81be0dccad9..c42c8101dd8ebc88 100644
+--- a/include/math.h
++++ b/include/math.h
+@@ -7,8 +7,7 @@
+ extern int __matherr (struct exception *__exc);
+ 
+ # if IS_IN (libc)
+-extern int __isnanl_pseudo (long double);
+-hidden_proto (__isnanl_pseudo)
++extern int __isnanl_pseudo (long double) attribute_hidden;
+ #endif
+ 
+ # if IS_IN (libc) || IS_IN (libm)
+diff --git a/sysdeps/i386/fpu/s_isnanl.c b/sysdeps/i386/fpu/s_isnanl.c
+index dc83d7a85fb3318b..816396d8fbc79dde 100644
+--- a/sysdeps/i386/fpu/s_isnanl.c
++++ b/sysdeps/i386/fpu/s_isnanl.c
+@@ -41,23 +41,3 @@ int __isnanl(long double x)
+ }
+ hidden_def (__isnanl)
+ weak_alias (__isnanl, isnanl)
+-
+-#if IS_IN (libc)
+-/* Exact backport from glibc-2.33, used only in printf_fp.c.  */
+-int __isnanl_pseudo (long double x)
+-{
+-	int32_t se,hx,lx,pn;
+-	GET_LDOUBLE_WORDS(se,hx,lx,x);
+-	se = (se & 0x7fff) << 1;
+-	/* Detect pseudo-normal numbers, i.e. exponent is non-zero and the top
+-	   bit of the significand is not set.   */
+-	pn = (uint32_t)((~hx & 0x80000000) & (se|(-se)))>>31;
+-	/* Clear the significand bit when computing mantissa.  */
+-	lx |= hx & 0x7fffffff;
+-	se |= (uint32_t)(lx|(-lx))>>31;
+-	se = 0xfffe - se;
+-
+-	return (int)(((uint32_t)(se)) >> 16) | pn;
+-}
+-hidden_def (__isnanl_pseudo)
+-#endif
+diff --git a/sysdeps/x86/Makefile b/sysdeps/x86/Makefile
+index f1da941dbbadadb3..d2f7b05db6ff6f72 100644
+--- a/sysdeps/x86/Makefile
++++ b/sysdeps/x86/Makefile
+@@ -22,3 +22,7 @@ endif
+ ifeq ($(subdir),math)
+ tests += tst-ldbl-nonnormal-printf
+ endif # $(subdir) == math
++
++ifeq ($(subdir),stdio-common)
++sysdep_routines += isnanl-pseudo
++endif
+diff --git a/sysdeps/x86/isnanl-pseudo.c b/sysdeps/x86/isnanl-pseudo.c
+new file mode 100644
+index 0000000000000000..95aba4672ba51a16
+--- /dev/null
++++ b/sysdeps/x86/isnanl-pseudo.c
+@@ -0,0 +1,45 @@
++/* s_isnanl.c -- long double version for i387 of s_isnan.c.
++ * Conversion to long double by Ulrich Drepper,
++ * Cygnus Support, drepper@cygnus.com.
++ */
++
++/*
++ * ====================================================
++ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
++ *
++ * Developed at SunPro, a Sun Microsystems, Inc. business.
++ * Permission to use, copy, modify, and distribute this
++ * software is freely granted, provided that this notice
++ * is preserved.
++ * ====================================================
++ */
++
++#if defined(LIBM_SCCS) && !defined(lint)
++static char rcsid[] = "$NetBSD: $";
++#endif
++
++/*
++ * isnanl(x) returns 1 is x is nan, else 0;
++ * no branching!
++ */
++
++#include <math.h>
++#include <math_private.h>
++
++int
++attribute_hidden
++__isnanl_pseudo(long double x)
++{
++	int32_t se,hx,lx,pn;
++	GET_LDOUBLE_WORDS(se,hx,lx,x);
++	se = (se & 0x7fff) << 1;
++	/* Detect pseudo-normal numbers, i.e. exponent is non-zero and the top
++	   bit of the significand is not set.   */
++	pn = (uint32_t)((~hx & 0x80000000) & (se|(-se)))>>31;
++	/* Clear the significand bit when computing mantissa.  */
++	lx |= hx & 0x7fffffff;
++	se |= (uint32_t)(lx|(-lx))>>31;
++	se = 0xfffe - se;
++
++	return (int)(((uint32_t)(se)) >> 16) | pn;
++}

@@ -1,0 +1,31 @@
+commit 73ba67cbc3941c3bcfda31a22a9d0d97ac928f3b
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Tue May 13 17:04:27 2014 +0200
+
+    Fix macro warning on HAVE_PT_CHOWN
+
+diff --git a/config.h.in b/config.h.in
+index ef33c23c75ad2220..820ada7bb209b6f1 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -258,6 +258,6 @@
+ #undef HAVE_ARM_PCS_VFP
+ 
+ /* The pt_chown binary is being built and used by grantpt.  */
+-#undef HAVE_PT_CHOWN
++#define HAVE_PT_CHOWN 0
+ 
+ #endif
+diff --git a/sysdeps/unix/grantpt.c b/sysdeps/unix/grantpt.c
+index 66ff3d9f41ae50a7..b7fb61ada3c789c4 100644
+--- a/sysdeps/unix/grantpt.c
++++ b/sysdeps/unix/grantpt.c
+@@ -176,7 +176,7 @@ grantpt (int fd)
+   /* We have to use the helper program if it is available.  */
+  helper:;
+ 
+-#ifdef HAVE_PT_CHOWN
++#if HAVE_PT_CHOWN
+   pid_t pid = __fork ();
+   if (pid == -1)
+     goto cleanup;

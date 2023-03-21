@@ -1,0 +1,22 @@
+commit f178e59fa5eefbbd37fde040ae8334aa5c857ee1
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Tue Mar 27 12:16:11 2018 +0200
+
+    Fix crash in resolver on memory allocation failure (bug 23005)
+
+diff --git a/resolv/res_send.c b/resolv/res_send.c
+index b396aae03c9eeb6e..01e4da4188b63d39 100644
+--- a/resolv/res_send.c
++++ b/resolv/res_send.c
+@@ -471,6 +471,11 @@ __res_context_send (struct resolv_context *ctx,
+ 					'\0',
+ 					sizeof (struct sockaddr_in6)
+ 					- sizeof (struct sockaddr_in));
++			else
++			  {
++			    __set_errno (ENOMEM);
++			    return -1;
++			  }
+ 		}
+ 		EXT(statp).nscount = statp->nscount;
+ 	}

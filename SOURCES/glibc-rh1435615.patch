@@ -1,0 +1,27 @@
+From 3de93d194a5d27cabfe40ddf58aea36939498ba4 Mon Sep 17 00:00:00 2001
+From: DJ Delorie <dj@redhat.com>
+Date: Mon, 25 Sep 2017 19:43:09 -0400
+Subject: nscd: Release read lock after resetting timeout.
+
+	[BZ #22161]
+	* nscd/netgroupcache.c (addinnetgrX): Release read lock after
+	resetting timeout.
+
+Reviewed-by: Jonathan Nieder <jrnieder@gmail.com>
+Reviewed-by: Andreas Schwab <schwab@suse.de>
+
+A lock is held by mempool_allocate() when CACHEABLE is true; we
+must release this lock if we exit early.
+
+diff -rup a/nscd/netgroupcache.c b/nscd/netgroupcache.c
+--- a/nscd/netgroupcache.c	2017-09-19 15:37:22.000000000 -0400
++++ b/nscd/netgroupcache.c	2017-09-20 16:33:54.982679050 -0400
+@@ -586,6 +586,8 @@ addinnetgrX (struct database_dyn *db, in
+       dh->timeout = timeout;
+       dh->ttl = dataset->head.ttl;
+       ++dh->nreloads;
++      if (cacheable)
++	pthread_rwlock_unlock (&db->lock);
+       return timeout;
+     }
+ 

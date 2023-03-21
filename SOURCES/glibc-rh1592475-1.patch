@@ -1,0 +1,194 @@
+From f2857da7cdb65bfad75ee30981f5b2fde5bbb1dc Mon Sep 17 00:00:00 2001
+From: Joseph Myers <joseph@codesourcery.com>
+Date: Mon, 18 Jun 2018 13:37:57 +0000
+Subject: [PATCH] Add SHM_STAT_ANY from Linux 4.17 to bits/shm.h.
+
+Linux 4.17 adds a SHM_STAT_ANY constant (ipcs command).  This patch
+adds it to the relevant bits/shm.h headers.
+
+Tested for x86_64.
+
+	* sysdeps/unix/sysv/linux/alpha/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): New macro.
+	* sysdeps/unix/sysv/linux/arm/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/generic/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/hppa/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/ia64/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/mips/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/s390/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/sh/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/sparc/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/x86/bits/shm.h [__USE_MISC]
+	(SHM_STAT_ANY): Likewise.
+---
+ ChangeLog                                  | 25 ++++++++++++++++++++++
+ sysdeps/unix/sysv/linux/alpha/bits/shm.h   |  1 +
+ sysdeps/unix/sysv/linux/arm/bits/shm.h     |  1 +
+ sysdeps/unix/sysv/linux/bits/shm.h         |  1 +
+ sysdeps/unix/sysv/linux/generic/bits/shm.h |  1 +
+ sysdeps/unix/sysv/linux/hppa/bits/shm.h    |  1 +
+ sysdeps/unix/sysv/linux/ia64/bits/shm.h    |  1 +
+ sysdeps/unix/sysv/linux/mips/bits/shm.h    |  1 +
+ sysdeps/unix/sysv/linux/powerpc/bits/shm.h |  1 +
+ sysdeps/unix/sysv/linux/s390/bits/shm.h    |  1 +
+ sysdeps/unix/sysv/linux/sh/bits/shm.h      |  1 +
+ sysdeps/unix/sysv/linux/sparc/bits/shm.h   |  1 +
+ sysdeps/unix/sysv/linux/x86/bits/shm.h     |  1 +
+ 13 files changed, 37 insertions(+)
+
+Index: b/sysdeps/unix/sysv/linux/alpha/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/alpha/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/alpha/bits/shm.h
+@@ -65,6 +65,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/arm/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/arm/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/arm/bits/shm.h
+@@ -69,6 +69,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/bits/shm.h
+@@ -68,6 +68,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/generic/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/generic/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/generic/bits/shm.h
+@@ -76,6 +76,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/hppa/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/hppa/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/hppa/bits/shm.h
+@@ -73,6 +73,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/ia64/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/ia64/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/ia64/bits/shm.h
+@@ -61,6 +61,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/mips/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/mips/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/mips/bits/shm.h
+@@ -62,6 +62,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT	13
+ # define SHM_INFO	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/powerpc/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/powerpc/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/powerpc/bits/shm.h
+@@ -78,6 +78,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT      13
+ # define SHM_INFO      14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST      01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/s390/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/s390/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/s390/bits/shm.h
+@@ -75,6 +75,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT	13
+ # define SHM_INFO	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/sh/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/sh/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/sh/bits/shm.h
+@@ -66,6 +66,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/sparc/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/sparc/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/sparc/bits/shm.h
+@@ -76,6 +76,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */
+Index: b/sysdeps/unix/sysv/linux/x86/bits/shm.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/x86/bits/shm.h
++++ b/sysdeps/unix/sysv/linux/x86/bits/shm.h
+@@ -74,6 +74,7 @@ struct shmid_ds
+ /* ipcs ctl commands */
+ # define SHM_STAT 	13
+ # define SHM_INFO 	14
++# define SHM_STAT_ANY	15
+ 
+ /* shm_mode upper byte flags */
+ # define SHM_DEST	01000	/* segment will be destroyed on last detach */

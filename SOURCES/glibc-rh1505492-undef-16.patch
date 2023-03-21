@@ -1,0 +1,23 @@
+commit a28a9b94c2d45df5223777cc4b88e1cab9b91c1e
+Author: Steve Ellcey <sellcey@mips.com>
+Date:   Tue Apr 29 10:19:30 2014 -0700
+
+    2014-04-29  Steve Ellcey  <sellcey@mips.com>
+    
+            * iconf/skeleton.c (ONE_DIRECTION): Set default value if not set.
+
+diff --git a/iconv/skeleton.c b/iconv/skeleton.c
+index 176436a4c81f071b..527ef0380c999740 100644
+--- a/iconv/skeleton.c
++++ b/iconv/skeleton.c
+@@ -162,6 +162,10 @@
+ # endif
+ #endif
+ 
++#ifndef ONE_DIRECTION
++# define ONE_DIRECTION 0
++#endif
++
+ 
+ /* How many bytes are needed at most for the from-charset.  */
+ #ifndef MAX_NEEDED_FROM

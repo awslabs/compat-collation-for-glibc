@@ -1,0 +1,182 @@
+commit 27822ce67fbf7f2b204992a410e7da2e8c1e2607
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Wed Mar 26 15:37:35 2014 -0500
+
+    Define _STRING_ARCH_unaligned unconditionally
+    
+    This patch defines _STRING_ARCH_unaligned to 0 on default bits/string.h
+    header to avoid undefined compiler warnings on platforms that do not
+    define it.  It also make adjustments in code where tests checked if macro
+    existed or not.
+
+Conflicts:
+	resolv/res_send.c
+
+Conflict due to stub resolver rebase in glibc-rh677316-resolv.patch.
+
+diff --git a/bits/string.h b/bits/string.h
+index f8630d2c52a9298a..b88a6bc601803f68 100644
+--- a/bits/string.h
++++ b/bits/string.h
+@@ -8,5 +8,7 @@
+ #ifndef _BITS_STRING_H
+ #define _BITS_STRING_H	1
+ 
++/* Define if architecture can access unaligned multi-byte variables.  */
++#define _STRING_ARCH_unaligned   0
+ 
+ #endif /* bits/string.h */
+diff --git a/crypt/sha256.c b/crypt/sha256.c
+index aea94651391f19ae..1cbd2bc8381d6778 100644
+--- a/crypt/sha256.c
++++ b/crypt/sha256.c
+@@ -124,7 +124,7 @@ __sha256_finish_ctx (ctx, resbuf)
+   memcpy (&ctx->buffer[bytes], fillbuf, pad);
+ 
+   /* Put the 64-bit file length in *bits* at the end of the buffer.  */
+-#ifdef _STRING_ARCH_unaligned
++#if _STRING_ARCH_unaligned
+   ctx->buffer64[(bytes + pad) / 8] = SWAP64 (ctx->total64 << 3);
+ #else
+   ctx->buffer32[(bytes + pad + 4) / 4] = SWAP (ctx->total[TOTAL64_low] << 3);
+diff --git a/iconv/gconv_simple.c b/iconv/gconv_simple.c
+index 48932ee695083595..03fa5f2e2c771ebc 100644
+--- a/iconv/gconv_simple.c
++++ b/iconv/gconv_simple.c
+@@ -112,7 +112,7 @@ internal_ucs4_loop (struct __gconv_step *step,
+   return result;
+ }
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ static inline int
+ __attribute ((always_inline))
+ internal_ucs4_loop_unaligned (struct __gconv_step *step,
+@@ -289,7 +289,7 @@ ucs4_internal_loop (struct __gconv_step *step,
+   return result;
+ }
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ static inline int
+ __attribute ((always_inline))
+ ucs4_internal_loop_unaligned (struct __gconv_step *step,
+@@ -478,7 +478,7 @@ internal_ucs4le_loop (struct __gconv_step *step,
+   return result;
+ }
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ static inline int
+ __attribute ((always_inline))
+ internal_ucs4le_loop_unaligned (struct __gconv_step *step,
+@@ -660,7 +660,7 @@ ucs4le_internal_loop (struct __gconv_step *step,
+   return result;
+ }
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ static inline int
+ __attribute ((always_inline))
+ ucs4le_internal_loop_unaligned (struct __gconv_step *step,
+diff --git a/iconv/loop.c b/iconv/loop.c
+index e11e86b5ecd4abd9..7b2499a3d0657265 100644
+--- a/iconv/loop.c
++++ b/iconv/loop.c
+@@ -63,7 +63,7 @@
+    representations with a fixed width of 2 or 4 bytes.  But if we cannot
+    access unaligned memory we still have to read byte-wise.  */
+ #undef FCTNAME2
+-#if defined _STRING_ARCH_unaligned || !defined DEFINE_UNALIGNED
++#if _STRING_ARCH_unaligned || !defined DEFINE_UNALIGNED
+ /* We can handle unaligned memory access.  */
+ # define get16(addr) *((const uint16_t *) (addr))
+ # define get32(addr) *((const uint32_t *) (addr))
+@@ -342,7 +342,7 @@ FCTNAME (LOOPFCT) (struct __gconv_step *step,
+ 
+ /* Include the file a second time to define the function to handle
+    unaligned access.  */
+-#if !defined DEFINE_UNALIGNED && !defined _STRING_ARCH_unaligned \
++#if !defined DEFINE_UNALIGNED && !_STRING_ARCH_unaligned \
+     && MIN_NEEDED_INPUT != 1 && MAX_NEEDED_INPUT % MIN_NEEDED_INPUT == 0 \
+     && MIN_NEEDED_OUTPUT != 1 && MAX_NEEDED_OUTPUT % MIN_NEEDED_OUTPUT == 0
+ # undef get16
+diff --git a/iconv/skeleton.c b/iconv/skeleton.c
+index 934b1fdde8d277df..176436a4c81f071b 100644
+--- a/iconv/skeleton.c
++++ b/iconv/skeleton.c
+@@ -203,7 +203,7 @@
+ /* Define macros which can access unaligned buffers.  These macros are
+    supposed to be used only in code outside the inner loops.  For the inner
+    loops we have other definitions which allow optimized access.  */
+-#ifdef _STRING_ARCH_unaligned
++#if _STRING_ARCH_unaligned
+ /* We can handle unaligned memory access.  */
+ # define get16u(addr) *((const uint16_t *) (addr))
+ # define get32u(addr) *((const uint32_t *) (addr))
+@@ -522,7 +522,7 @@ FUNCTION_NAME (struct __gconv_step *step, struct __gconv_step_data *data,
+ 	 INTERNAL, for which the subexpression evaluates to 1, but INTERNAL
+ 	 buffers are always aligned correctly.  */
+ #define POSSIBLY_UNALIGNED \
+-  (!defined _STRING_ARCH_unaligned					      \
++  (!_STRING_ARCH_unaligned					              \
+    && (((FROM_LOOP_MIN_NEEDED_FROM != 1					      \
+ 	 && FROM_LOOP_MAX_NEEDED_FROM % FROM_LOOP_MIN_NEEDED_FROM == 0)	      \
+ 	&& (FROM_LOOP_MIN_NEEDED_TO != 1				      \
+diff --git a/nscd/nscd_gethst_r.c b/nscd/nscd_gethst_r.c
+index 41488ed6c033ffcd..5fe9f2f62fa28fd4 100644
+--- a/nscd/nscd_gethst_r.c
++++ b/nscd/nscd_gethst_r.c
+@@ -190,7 +190,7 @@ nscd_gethst_r (const char *key, size_t keylen, request_type type,
+ 	      goto out;
+ 	    }
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ 	  /* The aliases_len array in the mapped database might very
+ 	     well be unaligned.  We will access it word-wise so on
+ 	     platforms which do not tolerate unaligned accesses we
+diff --git a/nscd/nscd_getserv_r.c b/nscd/nscd_getserv_r.c
+index acf7e22f82582dbb..5880b1bc023d1c02 100644
+--- a/nscd/nscd_getserv_r.c
++++ b/nscd/nscd_getserv_r.c
+@@ -140,7 +140,7 @@ nscd_getserv_r (const char *crit, size_t critlen, const char *proto,
+ 				> recend, 0))
+ 	    goto out;
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ 	  /* The aliases_len array in the mapped database might very
+ 	     well be unaligned.  We will access it word-wise so on
+ 	     platforms which do not tolerate unaligned accesses we
+diff --git a/nscd/nscd_helper.c b/nscd/nscd_helper.c
+index 96fb93db768703cc..a46047b1fa0d502e 100644
+--- a/nscd/nscd_helper.c
++++ b/nscd/nscd_helper.c
+@@ -489,7 +489,7 @@ __nscd_cache_search (request_type type, const char *key, size_t keylen,
+       struct hashentry *here = (struct hashentry *) (mapped->data + work);
+       ref_t here_key, here_packet;
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+       /* Although during garbage collection when moving struct hashentry
+ 	 records around we first copy from old to new location and then
+ 	 adjust pointer from previous hashentry to it, there is no barrier
+@@ -511,7 +511,7 @@ __nscd_cache_search (request_type type, const char *key, size_t keylen,
+ 	  struct datahead *dh
+ 	    = (struct datahead *) (mapped->data + here_packet);
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ 	  if ((uintptr_t) dh & (__alignof__ (*dh) - 1))
+ 	    return NULL;
+ #endif
+@@ -535,7 +535,7 @@ __nscd_cache_search (request_type type, const char *key, size_t keylen,
+ 	  struct hashentry *trailelem;
+ 	  trailelem = (struct hashentry *) (mapped->data + trail);
+ 
+-#ifndef _STRING_ARCH_unaligned
++#if !_STRING_ARCH_unaligned
+ 	  /* We have to redo the checks.  Maybe the data changed.  */
+ 	  if ((uintptr_t) trailelem & (__alignof__ (*trailelem) - 1))
+ 	    return NULL;

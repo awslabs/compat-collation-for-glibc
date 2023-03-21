@@ -1,0 +1,1316 @@
+commit ae5c498d93d049d9574d3f8f18e62cac64cbdf5c
+Author: DJ Delorie <dj@delorie.com>
+Date:   Mon Jul 17 15:50:43 2017 -0400
+
+    Extend NSS test suite
+    
+    * nss/nss_test.h: New.
+    * nss/nss_test1.h: Rewrite to use test-provided data.  Add group
+    tests.  Parameterize to allow multiple instances.
+    * nss/nss_test2.h: New.  Second instance.
+    * nss/nss_test.ver: New.
+    * nss/nss_test1.c: Update to use new framework.
+    * nss/nss_test2.c: New.
+    * nss/nss_test3.c: New.
+    * nss/nss_test4.c: New.
+    * nss/nss_test5.c: New.
+    * nss/Makefile: Build new tests.
+    * shlib-versions: Add libnss_test2.
+
+Moved nss/Makefile to separate patch to resolve conflicts. 
+
+diff --git a/nss/nss_test.h b/nss/nss_test.h
+new file mode 100644
+index 0000000000..0a0e00b4e6
+--- /dev/null
++++ b/nss/nss_test.h
+@@ -0,0 +1,308 @@
++/* Common code for NSS test cases.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++
++/* There are two (or more) NSS test modules named nss_test1,
++   nss_test2, etc.  Each one will call a function IN THE TEST CASE
++   called _nss_test1_init_hook(test_tables *) (or _nss_test2_*, etc).
++
++   In your copy of the hook function, you may change the *_table
++   pointers in the passed struct to point to static tables in your
++   test case, and the test modules will use that table instead.
++
++   Your tables MUST end with an entry that has a *_LAST() macro.
++   Use the *_ISLAST() macro to test for end of list.
++
++   Use __nss_configure_lookup("passwd", "test1 test2") (for example) to
++   configure NSS to use the test modules.  */
++
++#include <pwd.h>
++#include <grp.h>
++
++typedef struct test_tables {
++  struct passwd *pwd_table;
++  struct group *grp_table;
++} test_tables;
++
++extern void _nss_test1_init_hook (test_tables *) __attribute__((weak));
++extern void _nss_test2_init_hook (test_tables *) __attribute__((weak));
++
++#define PWD_LAST()    { .pw_name = NULL, .pw_uid = 0 }
++#define GRP_LAST()    { .gr_name = NULL, .gr_gid = 0 }
++
++#define PWD_ISLAST(p)    ((p)->pw_name == NULL && (p)->pw_uid == 0)
++#define GRP_ISLAST(g)    ((g)->gr_name == NULL && (g)->gr_gid == 0)
++
++/* Macros to fill in the tables easily.  */
++
++/* Note that the "unparameterized" fields are not magic; they're just
++   arbitrary values.  Tests which need to verify those fields should
++   fill them in explicitly.  */
++
++#define PWD(u) \
++    { .pw_name = (char *) "name" #u, .pw_passwd = (char *) "*", .pw_uid = u,  \
++      .pw_gid = 100, .pw_gecos = (char *) "*", .pw_dir = (char *) "*",	      \
++      .pw_shell = (char *) "*" }
++
++#define PWD_N(u,n)								\
++    { .pw_name = (char *) n, .pw_passwd = (char *) "*", .pw_uid = u,  \
++      .pw_gid = 100, .pw_gecos = (char *) "*", .pw_dir = (char *) "*",	      \
++      .pw_shell = (char *) "*" }
++
++#define GRP(u) \
++    { .gr_name = (char *) "name" #u, .gr_passwd = (char *) "*", .gr_gid = u, \
++      .gr_mem = (char **) group_##u }
++
++#define GRP_N(u,n,m)						     \
++    { .gr_name = (char *) n, .gr_passwd = (char *) "*", .gr_gid = u, \
++      .gr_mem = (char **) m }
++
++/*------------------------------------------------------------*/
++
++/* Helper functions for testing passwd entries.  Call
++   compare_passwds() passing a test index, the passwd entry you got,
++   and the expected passwd entry.  The function will return the number
++   of mismatches, or zero of the two records are the same.  */
++
++static void __attribute__((used))
++print_passwd (struct passwd *p)
++{
++  printf ("    passwd %u.%s (%s) :", p->pw_uid, p->pw_name, p->pw_passwd);
++  printf (" %u, %s, %s, %s\n", p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
++  printf ("\n");
++}
++
++static int  __attribute__((used))
++compare_passwd_field (int i, struct passwd *p, const char *got,
++		      const char *exp, const char *name)
++{
++  /* Does the entry have a value?  */
++  if (got == NULL)
++    {
++      printf ("[%d] passwd %s for %u.%s was (null)\n",
++	      i, name,
++	      p->pw_uid, p->pw_name);
++      return 1;
++    }
++  /* Does the entry have an unexpected name?  */
++  else if (exp == NULL)
++    {
++      printf ("[%d] passwd %s for %u.(null) was %s\n",
++	      i, name,
++	      p->pw_uid, got);
++      return 1;
++    }
++  /* And is it correct?  */
++  else if (got && strcmp (got, exp) != 0)
++    {
++      printf("[%d] passwd entry %u.%s had %s \"%s\" (expected \"%s\") \n",
++	     i,
++	     p->pw_uid, p->pw_name, name,
++	     got, exp);
++      return 1;
++    }
++  return 0;
++}
++
++#define COMPARE_PWD_FIELD(f) \
++  retval += compare_passwd_field (i, e, p->f, e->f, #f)
++
++/* Compare passwd to expected passwd, return number of "problems".
++   "I" is the index into the testcase data.  */
++static int  __attribute__((used))
++compare_passwds (int i, struct passwd *p, struct passwd *e)
++{
++  int retval = 0;
++
++  /* Did we get the expected uid?  */
++  if (p->pw_uid != e->pw_uid)
++    {
++      printf("[%d] passwd entry %u.%s had uid %u\n", i,
++	     e->pw_uid, e->pw_name,
++	     p->pw_uid);
++      ++retval;
++    }
++
++  /* Did we get the expected gid?  */
++  if (p->pw_gid != e->pw_gid)
++    {
++      printf("[%d] passwd entry %u.%s had gid %u (expected %u)\n", i,
++	     e->pw_uid, e->pw_name,
++	     p->pw_gid, e->pw_gid);
++      ++retval;
++    }
++
++  COMPARE_PWD_FIELD (pw_name);
++  COMPARE_PWD_FIELD (pw_passwd);
++  COMPARE_PWD_FIELD (pw_gecos);
++  COMPARE_PWD_FIELD (pw_dir);
++  COMPARE_PWD_FIELD (pw_shell);
++
++  if (retval > 0)
++    {
++      /* Left in for debugging later, if needed.  */
++      print_passwd (p);
++      print_passwd (e);
++    }
++
++  return retval;
++}
++
++/*------------------------------------------------------------*/
++
++/* Helpers for checking group entries.  See passwd helper comment
++   above for details.  */
++
++static void __attribute__((used))
++print_group (struct group *g)
++{
++  int j;
++
++  printf ("    group %u.%s (%s) :", g->gr_gid, g->gr_name, g->gr_passwd);
++  if (g->gr_mem)
++    for (j=0; g->gr_mem[j]; j++)
++      printf ("%s%s", j==0 ? " " : ", ", g->gr_mem[j]);
++  printf ("\n");
++}
++
++/* Compare group to expected group, return number of "problems".  "I"
++   is the index into the testcase data.  */
++static int  __attribute__((used))
++compare_groups (int i, struct group *g, struct group *e)
++{
++  int j;
++  int retval = 0;
++
++  /* Did we get the expected gid?  */
++  if (g->gr_gid != e->gr_gid)
++    {
++      printf("[%d] group entry %u.%s had gid %u\n", i,
++	     e->gr_gid, e->gr_name,
++	     g->gr_gid);
++      ++retval;
++    }
++
++  /* Does the entry have a name?  */
++  if (g->gr_name == NULL)
++    {
++      printf ("[%d] group name for %u.%s was (null)\n", i,
++	      e->gr_gid, e->gr_name);
++      ++retval;
++    }
++  /* Does the entry have an unexpected name?  */
++  else if (e->gr_name == NULL)
++    {
++      printf ("[%d] group name for %u.(null) was %s\n", i,
++	      e->gr_gid, g->gr_name);
++      ++retval;
++    }
++  /* And is it correct?  */
++  else if (strcmp (g->gr_name, e->gr_name) != 0)
++    {
++      printf("[%d] group entry %u.%s had name \"%s\"\n", i,
++	     e->gr_gid, e->gr_name,
++	     g->gr_name);
++      ++retval;
++    }
++
++  /* Does the entry have a password?  */
++  if (g->gr_passwd == NULL && e->gr_passwd != NULL)
++    {
++      printf ("[%d] group password for %u.%s was NULL\n", i,
++	      e->gr_gid, e->gr_name);
++      ++retval;
++    }
++  else if (g->gr_passwd != NULL && e->gr_passwd == NULL)
++    {
++      printf ("[%d] group password for %u.%s was not NULL\n", i,
++	      e->gr_gid, e->gr_name);
++      ++retval;
++    }
++  /* And is it correct?  */
++  else if (g->gr_passwd && strcmp (g->gr_passwd, e->gr_passwd) != 0)
++    {
++      printf("[%d] group entry %u.%s had password \"%s\" (not \"%s\")\n", i,
++	     e->gr_gid, e->gr_name,
++	     g->gr_passwd, e->gr_passwd);
++      ++retval;
++    }
++
++  /* Now compare group members... */
++
++  if (e->gr_mem != NULL && g->gr_mem == NULL)
++    {
++      printf("[%d] group entry %u.%s missing member list\n", i,
++	     e->gr_gid, e->gr_name);
++      ++retval;
++    }
++  else if (e->gr_mem == NULL && g->gr_mem != NULL)
++    {
++      printf("[%d] group entry %u.%s has unexpected member list\n", i,
++	     e->gr_gid, e->gr_name);
++      ++retval;
++    }
++  else if (e->gr_mem == NULL && g->gr_mem == NULL)
++    {
++      /* This case is OK.  */
++    }
++  else
++    {
++      /* Compare two existing lists.  */
++      j = 0;
++      for (;;)
++	{
++	  if (g->gr_mem[j] == NULL && e->gr_mem[j] == NULL)
++	    {
++	      /* Matching end-of-lists.  */
++	      break;
++	    }
++	  if (g->gr_mem[j] == NULL)
++	    {
++	      printf ("[%d] group member list for %u.%s is too short.\n", i,
++		      e->gr_gid, e->gr_name);
++	      ++retval;
++	      break;
++	    }
++	  if (e->gr_mem[j] == NULL)
++	    {
++	      printf ("[%d] group member list for %u.%s is too long.\n", i,
++		      e->gr_gid, e->gr_name);
++	      ++retval;
++	      break;
++	    }
++	  if (strcmp (g->gr_mem[j], e->gr_mem[j]) != 0)
++	    {
++	      printf ("[%d] group member list for %u.%s differs: %s vs %s.\n", i,
++		      e->gr_gid, e->gr_name,
++		      e->gr_mem[j], g->gr_mem[j]);
++	      ++retval;
++	    }
++
++	  j++;
++	}
++    }
++
++  if (retval > 0)
++    {
++      /* Left in for debugging later, if needed.  */
++      print_group (g);
++      print_group (e);
++    }
++
++  return retval;
++}
+diff --git a/nss/nss_test.ver b/nss/nss_test.ver
+new file mode 100644
+index 0000000000..2e21176b40
+--- /dev/null
++++ b/nss/nss_test.ver
+@@ -0,0 +1,4 @@
++{
++  _nss_test1_init_hook;
++  _nss_test2_init_hook;
++};
+diff --git a/nss/nss_test1.c b/nss/nss_test1.c
+index 3beb488fcf..b728e418a3 100644
+--- a/nss/nss_test1.c
++++ b/nss/nss_test1.c
+@@ -1,84 +1,168 @@
++/* Template generic NSS service provider.  See nss_test.h for usage.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
+ #include <errno.h>
+ #include <nss.h>
+ #include <pthread.h>
+ #include <string.h>
++#include <stdio.h>
++#include <alloc_buffer.h>
+ 
+ 
+-#define COPY_IF_ROOM(s) \
+-  ({ size_t len_ = strlen (s) + 1;		\
+-     char *start_ = cp;				\
+-     buflen - (cp - buffer) < len_		\
+-     ? NULL					\
+-     : (cp = mempcpy (cp, s, len_), start_); })
++/* We need to be able to handle NULLs "properly" within the testsuite,
++   to test known bad data.  */
++#define alloc_buffer_maybe_copy_string(b,s) s ? alloc_buffer_copy_string (b, s) : NULL;
+ 
++/* This file is the master template.  Other instances of this test
++   module should define NAME(x) to have their name instead of "test1",
++   then include this file.
++*/
++#define NAME_(x,n) _nss_##n##_##x
++#ifndef NAME
++#define NAME(x) NAME_(x,test1)
++#endif
++#define NAMESTR__(x) #x
++#define NAMESTR_(x) NAMESTR__(x)
++#define NAMESTR(x) NAMESTR_(NAME(x))
+ 
+-/* Password handling.  */
+-#include <pwd.h>
++#include "nss_test.h"
++
++/* -------------------------------------------------- */
++/* Default Data.  */
+ 
+-static struct passwd pwd_data[] =
++static struct passwd default_pwd_data[] =
+   {
+ #define PWD(u) \
+     { .pw_name = (char *) "name" #u, .pw_passwd = (char *) "*", .pw_uid = u,  \
+       .pw_gid = 100, .pw_gecos = (char *) "*", .pw_dir = (char *) "*",	      \
+       .pw_shell = (char *) "*" }
+-    PWD (100),
+     PWD (30),
++    PWD (100),
+     PWD (200),
+     PWD (60),
+     PWD (20000)
+   };
+-#define npwd_data (sizeof (pwd_data) / sizeof (pwd_data[0]))
++#define default_npwd_data (sizeof (pwd_data) / sizeof (pwd_data[0]))
++
++static struct passwd *pwd_data = default_pwd_data;
++static int npwd_data = default_npwd_data;
++
++static struct group *grp_data = NULL;
++static int ngrp_data = 0;
++
++/* This function will get called, and once per session, look back into
++   the test case's executable for an init hook function, and call
++   it.  */
++
++static int initted = 0;
++static void
++init(void)
++{
++  test_tables t;
++  int i;
++
++  if (initted)
++    return;
++  if (NAME(init_hook))
++    {
++      memset (&t, 0, sizeof(t));
++      NAME(init_hook)(&t);
++
++      if (t.pwd_table)
++	{
++	  pwd_data = t.pwd_table;
++	  for (i=0; ! PWD_ISLAST(& pwd_data[i]); i++)
++	    ;
++	  npwd_data = i;
++	}
++
++      if (t.grp_table)
++	{
++	  grp_data = t.grp_table;
++	  for (i=0; ! GRP_ISLAST(& grp_data[i]); i++)
++	    ;
++	  ngrp_data = i;
++	}
++    }
++  initted = 1;
++}
++
++/* -------------------------------------------------- */
++/* Password handling.  */
+ 
+ static size_t pwd_iter;
+ #define CURPWD pwd_data[pwd_iter]
+ 
+ static pthread_mutex_t pwd_lock = PTHREAD_MUTEX_INITIALIZER;
+ 
+-
+ enum nss_status
+-_nss_test1_setpwent (int stayopen)
++NAME(setpwent) (int stayopen)
+ {
++  init();
+   pwd_iter = 0;
+   return NSS_STATUS_SUCCESS;
+ }
+ 
+ 
+ enum nss_status
+-_nss_test1_endpwent (void)
++NAME(endpwent) (void)
+ {
++  init();
+   return NSS_STATUS_SUCCESS;
+ }
+ 
++static enum nss_status
++copy_passwd (struct passwd *result, struct passwd *local,
++	    char *buffer, size_t buflen, int *errnop)
++{
++  struct alloc_buffer buf = alloc_buffer_create (buffer, buflen);
++
++  result->pw_name = alloc_buffer_maybe_copy_string (&buf, local->pw_name);
++  result->pw_passwd = alloc_buffer_maybe_copy_string (&buf, local->pw_passwd);
++  result->pw_uid = local->pw_uid;
++  result->pw_gid = local->pw_gid;
++  result->pw_gecos = alloc_buffer_maybe_copy_string (&buf, local->pw_gecos);
++  result->pw_dir = alloc_buffer_maybe_copy_string (&buf, local->pw_dir);
++  result->pw_shell = alloc_buffer_maybe_copy_string (&buf, local->pw_shell);
++
++  if (alloc_buffer_has_failed (&buf))
++    {
++      *errnop = ERANGE;
++      return NSS_STATUS_TRYAGAIN;
++    }
++
++  return NSS_STATUS_SUCCESS;
++}
+ 
+ enum nss_status
+-_nss_test1_getpwent_r (struct passwd *result, char *buffer, size_t buflen,
++NAME(getpwent_r) (struct passwd *result, char *buffer, size_t buflen,
+ 		       int *errnop)
+ {
+-  char *cp = buffer;
+   int res = NSS_STATUS_SUCCESS;
+ 
++  init();
+   pthread_mutex_lock (&pwd_lock);
+ 
+   if (pwd_iter >= npwd_data)
+     res = NSS_STATUS_NOTFOUND;
+   else
+     {
+-      result->pw_name = COPY_IF_ROOM (CURPWD.pw_name);
+-      result->pw_passwd = COPY_IF_ROOM (CURPWD.pw_passwd);
+-      result->pw_uid = CURPWD.pw_uid;
+-      result->pw_gid = CURPWD.pw_gid;
+-      result->pw_gecos = COPY_IF_ROOM (CURPWD.pw_gecos);
+-      result->pw_dir = COPY_IF_ROOM (CURPWD.pw_dir);
+-      result->pw_shell = COPY_IF_ROOM (CURPWD.pw_shell);
+-
+-      if (result->pw_name == NULL || result->pw_passwd == NULL
+-	  || result->pw_gecos == NULL || result->pw_dir == NULL
+-	  || result->pw_shell == NULL)
+-	{
+-	  *errnop = ERANGE;
+-	  res = NSS_STATUS_TRYAGAIN;
+-	}
+-
++      res = copy_passwd (result, &CURPWD, buffer, buflen, errnop);
+       ++pwd_iter;
+     }
+ 
+@@ -89,65 +173,140 @@ _nss_test1_getpwent_r (struct passwd *result, char *buffer, size_t buflen,
+ 
+ 
+ enum nss_status
+-_nss_test1_getpwuid_r (uid_t uid, struct passwd *result, char *buffer,
++NAME(getpwuid_r) (uid_t uid, struct passwd *result, char *buffer,
+ 		       size_t buflen, int *errnop)
+ {
++  init();
+   for (size_t idx = 0; idx < npwd_data; ++idx)
+     if (pwd_data[idx].pw_uid == uid)
+-      {
+-	char *cp = buffer;
+-	int res = NSS_STATUS_SUCCESS;
+-
+-	result->pw_name = COPY_IF_ROOM (pwd_data[idx].pw_name);
+-	result->pw_passwd = COPY_IF_ROOM (pwd_data[idx].pw_passwd);
+-	result->pw_uid = pwd_data[idx].pw_uid;
+-	result->pw_gid = pwd_data[idx].pw_gid;
+-	result->pw_gecos = COPY_IF_ROOM (pwd_data[idx].pw_gecos);
+-	result->pw_dir = COPY_IF_ROOM (pwd_data[idx].pw_dir);
+-	result->pw_shell = COPY_IF_ROOM (pwd_data[idx].pw_shell);
+-
+-	if (result->pw_name == NULL || result->pw_passwd == NULL
+-	    || result->pw_gecos == NULL || result->pw_dir == NULL
+-	    || result->pw_shell == NULL)
+-	  {
+-	    *errnop = ERANGE;
+-	    res = NSS_STATUS_TRYAGAIN;
+-	  }
+-
+-	return res;
+-      }
++      return copy_passwd (result, &pwd_data[idx], buffer, buflen, errnop);
+ 
+   return NSS_STATUS_NOTFOUND;
+ }
+ 
+ 
+ enum nss_status
+-_nss_test1_getpwnam_r (const char *name, struct passwd *result, char *buffer,
++NAME(getpwnam_r) (const char *name, struct passwd *result, char *buffer,
+ 		       size_t buflen, int *errnop)
+ {
++  init();
+   for (size_t idx = 0; idx < npwd_data; ++idx)
++    if (strcmp (pwd_data[idx].pw_name, name) == 0)
++      return copy_passwd (result, &pwd_data[idx], buffer, buflen, errnop);
++
++  return NSS_STATUS_NOTFOUND;
++}
++
++/* -------------------------------------------------- */
++/* Group handling.  */
++
++static size_t grp_iter;
++#define CURGRP grp_data[grp_iter]
++
++static pthread_mutex_t grp_lock = PTHREAD_MUTEX_INITIALIZER;
++
++enum nss_status
++NAME(setgrent) (int stayopen)
++{
++  init();
++  grp_iter = 0;
++  return NSS_STATUS_SUCCESS;
++}
++
++
++enum nss_status
++NAME(endgrent) (void)
++{
++  init();
++  return NSS_STATUS_SUCCESS;
++}
++
++static enum nss_status
++copy_group (struct group *result, struct group *local,
++	    char *buffer, size_t buflen, int *errnop)
++{
++  struct alloc_buffer buf = alloc_buffer_create (buffer, buflen);
++  char **memlist;
++  int i;
++
++  if (local->gr_mem)
++    {
++      i = 0;
++      while (local->gr_mem[i])
++	++i;
++
++      memlist = alloc_buffer_alloc_array (&buf, char *, i + 1);
++
++      if (memlist) {
++	for (i = 0; local->gr_mem[i]; ++i)
++	  memlist[i] = alloc_buffer_maybe_copy_string (&buf, local->gr_mem[i]);
++	memlist[i] = NULL;
++      }
++
++      result->gr_mem = memlist;
++    }
++  else
++    result->gr_mem = NULL;
++
++  result->gr_name = alloc_buffer_maybe_copy_string (&buf, local->gr_name);
++  result->gr_passwd = alloc_buffer_maybe_copy_string (&buf, local->gr_passwd);
++  result->gr_gid = local->gr_gid;
++
++  if (alloc_buffer_has_failed (&buf))
++    {
++      *errnop = ERANGE;
++      return NSS_STATUS_TRYAGAIN;
++    }
++
++  return NSS_STATUS_SUCCESS;
++}
++
++
++enum nss_status
++NAME(getgrent_r) (struct group *result, char *buffer, size_t buflen,
++		       int *errnop)
++{
++  int res = NSS_STATUS_SUCCESS;
++
++  init();
++  pthread_mutex_lock (&grp_lock);
++
++  if (grp_iter >= ngrp_data)
++    res = NSS_STATUS_NOTFOUND;
++  else
++    {
++      res = copy_group (result, &CURGRP, buffer, buflen, errnop);
++      ++grp_iter;
++    }
++
++  pthread_mutex_unlock (&pwd_lock);
++
++  return res;
++}
++
++
++enum nss_status
++NAME(getgrgid_r) (gid_t gid, struct group *result, char *buffer,
++		  size_t buflen, int *errnop)
++{
++  init();
++  for (size_t idx = 0; idx < ngrp_data; ++idx)
++    if (grp_data[idx].gr_gid == gid)
++      return copy_group (result, &grp_data[idx], buffer, buflen, errnop);
++
++  return NSS_STATUS_NOTFOUND;
++}
++
++
++enum nss_status
++NAME(getgrnam_r) (const char *name, struct group *result, char *buffer,
++		       size_t buflen, int *errnop)
++{
++  init();
++  for (size_t idx = 0; idx < ngrp_data; ++idx)
+     if (strcmp (pwd_data[idx].pw_name, name) == 0)
+       {
+-	char *cp = buffer;
+-	int res = NSS_STATUS_SUCCESS;
+-
+-	result->pw_name = COPY_IF_ROOM (pwd_data[idx].pw_name);
+-	result->pw_passwd = COPY_IF_ROOM (pwd_data[idx].pw_passwd);
+-	result->pw_uid = pwd_data[idx].pw_uid;
+-	result->pw_gid = pwd_data[idx].pw_gid;
+-	result->pw_gecos = COPY_IF_ROOM (pwd_data[idx].pw_gecos);
+-	result->pw_dir = COPY_IF_ROOM (pwd_data[idx].pw_dir);
+-	result->pw_shell = COPY_IF_ROOM (pwd_data[idx].pw_shell);
+-
+-	if (result->pw_name == NULL || result->pw_passwd == NULL
+-	    || result->pw_gecos == NULL || result->pw_dir == NULL
+-	    || result->pw_shell == NULL)
+-	  {
+-	    *errnop = ERANGE;
+-	    res = NSS_STATUS_TRYAGAIN;
+-	  }
+-
+-	return res;
++	return copy_group (result, &grp_data[idx], buffer, buflen, errnop);
+       }
+ 
+   return NSS_STATUS_NOTFOUND;
+diff --git a/nss/nss_test2.c b/nss/nss_test2.c
+new file mode 100644
+index 0000000000..0169344e5f
+--- /dev/null
++++ b/nss/nss_test2.c
+@@ -0,0 +1,20 @@
++/* Instance of a generic NSS service provider.  See nss_test.h for usage.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#define NAME(x) NAME_(x,test2)
++#include "nss_test1.c"
+diff --git a/nss/tst-nss-test2.c b/nss/tst-nss-test2.c
+new file mode 100644
+index 0000000000..11c2edf118
+--- /dev/null
++++ b/nss/tst-nss-test2.c
+@@ -0,0 +1,136 @@
++/* Basic test for two passwd databases.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <nss.h>
++#include <pwd.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "nss_test.h"
++
++/* The data in these tables is arbitrary, but the merged data based on
++   the first two tables will be compared against the expected data in
++   the pwd_expected table, and the tests[] array.  */
++
++static struct passwd pwd_table_1[] = {
++    PWD (100),
++    PWD (30),
++    PWD (200),
++    PWD (60),
++    PWD (20000),
++    PWD_LAST ()
++  };
++
++static struct passwd pwd_table_2[] = {
++    PWD (5),
++    PWD_N(200, "name30"),
++    PWD (16),
++    PWD_LAST ()
++  };
++
++void
++_nss_test1_init_hook(test_tables *t)
++{
++  t->pwd_table = pwd_table_1;
++}
++
++void
++_nss_test2_init_hook(test_tables *t)
++{
++  t->pwd_table = pwd_table_2;
++}
++
++static struct passwd pwd_expected[] = {
++  PWD(100),
++  PWD(30),
++  PWD(200),
++  PWD(60),
++  PWD(20000),
++  PWD(5),
++  PWD_N(200, "name30"),
++  PWD(16),
++  PWD_LAST ()
++};
++
++static struct {
++  uid_t uid;
++  const char *name;
++} tests[] = {
++  { 100, "name100" }, /* control, first db */
++  {  16, "name16"  }, /* second db */
++  {  30, "name30"  }, /* test overlaps in name */
++  { 200, "name200" }, /* test overlaps uid */
++  { 0, NULL }
++};
++
++static int
++do_test (void)
++{
++  int retval = 0;
++  int i;
++
++  __nss_configure_lookup ("passwd", "test1 test2");
++
++  setpwent ();
++
++  i = 0;
++  for (struct passwd *p = getpwent (); p != NULL; ++i, p = getpwent ())
++    {
++      retval += compare_passwds (i, & pwd_expected[i], p);
++
++      if (p->pw_uid != pwd_expected[i].pw_uid || strcmp (p->pw_name, pwd_expected[i].pw_name) != 0)
++      {
++	printf ("FAIL: getpwent for %u.%s returned %u.%s\n",
++		pwd_expected[i].pw_uid, pwd_expected[i].pw_name,
++		p->pw_uid, p->pw_name);
++	retval = 1;
++	break;
++      }
++    }
++
++  endpwent ();
++
++  for (i=0; tests[i].name; i++)
++    {
++      struct passwd *p = getpwnam (tests[i].name);
++      if (strcmp (p->pw_name, tests[i].name) != 0
++	  || p->pw_uid != tests[i].uid)
++	{
++	  printf("FAIL: getpwnam for %u.%s returned %u.%s\n",
++		 tests[i].uid, tests[i].name,
++		 p->pw_uid, p->pw_name);
++	  retval = 1;
++	}
++
++      p = getpwuid (tests[i].uid);
++      if (strcmp (p->pw_name, tests[i].name) != 0
++	  || p->pw_uid != tests[i].uid)
++	{
++	  printf("FAIL: getpwuid for %u.%s returned %u.%s\n",
++		 tests[i].uid, tests[i].name,
++		 p->pw_uid, p->pw_name);
++	  retval = 1;
++	}
++    }
++
++  return retval;
++}
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+diff --git a/nss/tst-nss-test3.c b/nss/tst-nss-test3.c
+new file mode 100644
+index 0000000000..308708f387
+--- /dev/null
++++ b/nss/tst-nss-test3.c
+@@ -0,0 +1,150 @@
++/* Test error checking for group entries.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <nss.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/signal.h>
++
++#include "nss_test.h"
++
++/* The names here are arbitrary, but the *lengths* of the arrays is
++   not, and groups 6 and 7 test for partial matches.  */
++
++static const char *group_2[] = {
++  "foo", "bar", NULL
++};
++
++static const char *group_3[] = {
++  "tom", "dick", "harry", NULL
++};
++
++static const char *group_4[] = {
++  "alpha", "beta", "gamma", "fred", NULL
++};
++
++static const char *group_6[] = {
++  "larry", "curly", "moe", NULL
++};
++
++static const char *group_7[] = {
++  "larry", "curly", "darryl", NULL
++};
++
++static const char *group_14[] = {
++  "huey", "dewey", "louis", NULL
++};
++
++/* Note that we're intentionally causing mis-matches here; the purpose
++   of this test case is to test each error check and make sure they
++   detect the errors they check for, and to ensure that the harness
++   can process all the error cases properly (i.e. a NULL gr_name
++   field).  We check for the correct number of mismatches at the
++   end.  */
++
++/* This is the data we're giving the service.  */
++static struct group group_table_data[] = {
++  GRP(4), /* match */
++  GRP_N(8, "name6", group_6), /* wrong gid */
++  GRP_N(14, NULL, group_14), /* missing name */
++  GRP(14), /* unexpected name */
++  GRP_N(7, "name7_wrong", group_7), /* wrong name */
++  { .gr_name =  (char *)"name5", .gr_passwd =  (char *)"wilma", .gr_gid = 5, .gr_mem = NULL }, /* unexpected passwd */
++  { .gr_name =  (char *)"name5", .gr_passwd = NULL, .gr_gid = 5, .gr_mem = NULL }, /* missing passwd */
++  { .gr_name =  (char *)"name5", .gr_passwd = (char *)"wilma", .gr_gid = 5, .gr_mem = NULL }, /* wrong passwd */
++  GRP_N(3, "name3a", NULL),   /* missing member list */
++  GRP_N(3, "name3b", group_3), /* unexpected member list */
++  GRP_N(3, "name3c", group_3), /* wrong/short member list */
++  GRP_N(3, "name3d", group_4), /* wrong/long member list */
++  GRP_LAST ()
++};
++
++/* This is the data we compare against.  */
++static struct group group_table[] = {
++  GRP(4),
++  GRP(6),
++  GRP(14),
++  GRP_N(14, NULL, group_14),
++  GRP(7),
++  { .gr_name =  (char *)"name5", .gr_passwd = NULL, .gr_gid = 5, .gr_mem = NULL },
++  { .gr_name =  (char *)"name5", .gr_passwd =  (char *)"fred", .gr_gid = 5, .gr_mem = NULL },
++  { .gr_name =  (char *)"name5", .gr_passwd =  (char *)"fred", .gr_gid = 5, .gr_mem = NULL },
++  GRP_N(3, "name3a", group_3),
++  GRP_N(3, "name3b", NULL),
++  GRP_N(3, "name3c", group_4),
++  GRP_N(3, "name3d", group_3),
++  GRP(2),
++  GRP_LAST ()
++};
++
++void
++_nss_test1_init_hook(test_tables *t)
++{
++  t->grp_table = group_table_data;
++}
++
++static int
++do_test (void)
++{
++  int retval = 0;
++  int i;
++  struct group *g = NULL;
++
++  __nss_configure_lookup ("group", "test1");
++
++  setgrent ();
++
++  i = 0;
++  for (g = getgrent () ;
++       g != NULL && ! GRP_ISLAST(&group_table[i]);
++       ++i, g = getgrent ())
++    {
++      retval += compare_groups (i, g, & group_table[i]);
++    }
++
++  endgrent ();
++
++  if (g)
++    {
++      printf ("FAIL: [?] group entry %u.%s unexpected\n", g->gr_gid, g->gr_name);
++      ++retval;
++    }
++  if (group_table[i].gr_name || group_table[i].gr_gid)
++    {
++      printf ("FAIL: [%d] group entry %u.%s missing\n", i,
++	      group_table[i].gr_gid, group_table[i].gr_name);
++      ++retval;
++    }
++
++#define EXPECTED 18
++  if (retval == EXPECTED)
++    {
++      if (retval > 0)
++	printf ("PASS: Found %d expected errors\n", retval);
++      return 0;
++    }
++  else
++    {
++      printf ("FAIL: Found %d errors, expected %d\n", retval, EXPECTED);
++      return 1;
++    }
++}
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+diff --git a/nss/tst-nss-test4.c b/nss/tst-nss-test4.c
+new file mode 100644
+index 0000000000..731e0ed10a
+--- /dev/null
++++ b/nss/tst-nss-test4.c
+@@ -0,0 +1,137 @@
++/* Test group merging.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <nss.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/signal.h>
++
++#include "nss_test.h"
++
++/* The name choices here are arbitrary, aside from the merge_1 list
++   needing to be an expected merge of group_1 and group_2.  */
++
++static const char *group_1[] = {
++  "foo", "bar", NULL
++};
++
++static const char *group_2[] = {
++  "foo", "dick", "harry", NULL
++};
++
++/* Note that deduplication is NOT supposed to happen.  */
++static const char *merge_1[] = {
++  "foo", "bar", "foo", "dick", "harry", NULL
++};
++
++static const char *group_4[] = {
++  "fred", "wilma", NULL
++};
++
++/* This is the data we're giving the service.  */
++static struct group group_table_data1[] = {
++  GRP_N(1, "name1", group_1),
++  GRP(2),
++  GRP_LAST ()
++};
++
++/* This is the data we're giving the service.  */
++static struct group group_table_data2[] = {
++  GRP_N(1, "name1", group_2),
++  GRP(4),
++  GRP_LAST ()
++};
++
++/* This is the data we compare against.  */
++static struct group group_table[] = {
++  GRP_N(1, "name1", merge_1),
++  GRP(2),
++  GRP(4),
++  GRP_LAST ()
++};
++
++void
++_nss_test1_init_hook(test_tables *t)
++{
++  t->grp_table = group_table_data1;
++}
++
++void
++_nss_test2_init_hook(test_tables *t)
++{
++  t->grp_table = group_table_data2;
++}
++
++static int
++do_test (void)
++{
++  int retval = 0;
++  int i;
++  struct group *g = NULL;
++  uintptr_t align_mask;
++
++  __nss_configure_lookup ("group", "test1 [SUCCESS=merge] test2");
++
++  align_mask = __alignof__ (struct group *) - 1;
++
++  setgrent ();
++
++  for (i = 0; group_table[i].gr_gid; ++i)
++    {
++      g = getgrgid (group_table[i].gr_gid);
++      if (g)
++	{
++	  retval += compare_groups (i, g, & group_table[i]);
++	  if ((uintptr_t)g & align_mask)
++	    {
++	      printf("FAIL: [%d] unaligned group %p\n", i, g);
++	      ++retval;
++	    }
++	  if ((uintptr_t)(g->gr_mem) & align_mask)
++	    {
++	      printf("FAIL: [%d] unaligned member list %p\n", i, g->gr_mem);
++	      ++retval;
++	    }
++	}
++      else
++	{
++	  printf ("FAIL: [%d] group %u.%s not found\n", i,
++	      group_table[i].gr_gid, group_table[i].gr_name);
++	  ++retval;
++	}
++    }
++
++  endgrent ();
++
++#define EXPECTED 0
++  if (retval == EXPECTED)
++    {
++      if (retval > 0)
++	printf ("PASS: Found %d expected errors\n", retval);
++      return 0;
++    }
++  else
++    {
++      printf ("FAIL: Found %d errors, expected %d\n", retval, EXPECTED);
++      return 1;
++    }
++}
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+diff --git a/nss/tst-nss-test5.c b/nss/tst-nss-test5.c
+new file mode 100644
+index 0000000000..b70f21e8e5
+--- /dev/null
++++ b/nss/tst-nss-test5.c
+@@ -0,0 +1,108 @@
++/* Test error checking for passwd entries.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <nss.h>
++#include <pwd.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "nss_test.h"
++
++/* The specific values and names used here are arbitrary, other than
++   correspondence (with suitable differences according to the tests as
++   commented) between the given and expected entries.  */
++
++static struct passwd pwd_table[] = {
++  PWD (100),  /* baseline, matches */
++  PWD (300),  /* wrong name and uid */
++  PWD_N (200, NULL), /* missing name */
++  PWD (60), /* unexpected name */
++  { .pw_name = (char *)"name20000",  .pw_passwd = (char *) "*", .pw_uid = 20000,  \
++    .pw_gid = 200, .pw_gecos = (char *) "*", .pw_dir = (char *) "*",	\
++    .pw_shell = (char *) "*" }, /* wrong gid */
++  { .pw_name = (char *)"name2",  .pw_passwd = (char *) "x", .pw_uid = 2,  \
++    .pw_gid = 2, .pw_gecos = (char *) "y", .pw_dir = (char *) "z",	\
++    .pw_shell = (char *) "*" }, /* spot check other text fields */
++  PWD_LAST ()
++};
++
++static struct passwd exp_table[] = {
++  PWD (100),
++  PWD (30),
++  PWD (200),
++  PWD_N (60, NULL),
++  PWD (20000),
++  PWD (2),
++  PWD_LAST ()
++};
++
++void
++_nss_test1_init_hook(test_tables *t)
++{
++  t->pwd_table = pwd_table;
++}
++
++static int
++do_test (void)
++{
++  int retval = 0;
++  int i;
++  struct passwd *p;
++
++  __nss_configure_lookup ("passwd", "test1 test2");
++
++  setpwent ();
++
++  i = 0;
++  for (p = getpwent ();
++       p != NULL && ! PWD_ISLAST (& exp_table[i]);
++       ++i, p = getpwent ())
++    retval += compare_passwds (i, p, & exp_table[i]);
++
++  endpwent ();
++
++
++  if (p)
++    {
++      printf ("FAIL: [?] passwd entry %u.%s unexpected\n", p->pw_uid, p->pw_name);
++      ++retval;
++    }
++  if (! PWD_ISLAST (& exp_table[i]))
++    {
++      printf ("FAIL: [%d] passwd entry %u.%s missing\n", i,
++	      exp_table[i].pw_uid, exp_table[i].pw_name);
++      ++retval;
++    }
++
++#define EXPECTED 9
++  if (retval == EXPECTED)
++    {
++      if (retval > 0)
++	printf ("PASS: Found %d expected errors\n", retval);
++      return 0;
++    }
++  else
++    {
++      printf ("FAIL: Found %d errors, expected %d\n", retval, EXPECTED);
++      return 1;
++    }
++}
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"

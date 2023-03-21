@@ -1,0 +1,18 @@
+commit e7300fef49147a73d5dc7e0a462cc60aabb58400
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date:   Thu Nov 27 11:07:16 2014 +0100
+
+    Add missing include of libc-internal.h.
+
+diff --git a/nscd/connections.c b/nscd/connections.c
+index 54b70e88d894523a..391381bbdde8fcc9 100644
+--- a/nscd/connections.c
++++ b/nscd/connections.c
+@@ -58,6 +58,7 @@
+ #include <resolv/resolv.h>
+ 
+ #include <kernel-features.h>
++#include <libc-internal.h>
+ 
+ 
+ /* Support to run nscd as an unprivileged user */

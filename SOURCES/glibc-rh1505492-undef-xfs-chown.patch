@@ -1,0 +1,21 @@
+Fix -Wundef warning.  Upstream addressed this differently via:
+
+commit a4ccbc9b243926a9904624b387fb18583c3d4d4d
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Jun 25 16:39:33 2014 +0000
+
+    Remove __ASSUME_XFS_RESTRICTED_CHOWN.
+
+diff --git a/sysdeps/unix/sysv/linux/pathconf.c b/sysdeps/unix/sysv/linux/pathconf.c
+index febdc3731119bfce..0ed2abb9cb1d618d 100644
+--- a/sysdeps/unix/sysv/linux/pathconf.c
++++ b/sysdeps/unix/sysv/linux/pathconf.c
+@@ -284,7 +284,7 @@ __statfs_chown_restricted (int result, const struct statfs *fsbuf)
+       return -1;
+     }
+ 
+-#if __ASSUME_XFS_RESTRICTED_CHOWN
++#ifdef __ASSUME_XFS_RESTRICTED_CHOWN
+   return 1;
+ #else
+   int fd;

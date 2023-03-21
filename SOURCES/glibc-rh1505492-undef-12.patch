@@ -1,0 +1,19 @@
+commit 78b6eebcf1b33c71ae5028422f500a0e48b20544
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date:   Mon Mar 24 16:32:47 2014 +0100
+
+    Use += before-compile instead of a :=.
+
+diff --git a/posix/Makefile b/posix/Makefile
+index 683b6e4b272fdebb..4034282866139aaa 100644
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -96,7 +96,7 @@ others		:= getconf
+ install-bin	:= getconf
+ install-others-programs	:= $(inst_libexecdir)/getconf
+ 
+-before-compile	:= testcases.h ptestcases.h
++before-compile	+= testcases.h ptestcases.h
+ 
+ # So they get cleaned up.
+ generated := $(addprefix wordexp-test-result, 1 2 3 4 5 6 7 8 9 10) \

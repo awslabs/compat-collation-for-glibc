@@ -1,0 +1,27 @@
+commit c3c7c3604fdf934d7a8ec70d79915cd8c8984ad1
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 10 14:18:13 2014 +0530
+
+    Fix -Wundef warning for HAVE_OBSTACK
+    
+    Remove the HAVE_OBSTACK macro check and include obstack check in
+    include path order since we don't have a copy of obstack.h in the
+    current directory.
+
+diff --git a/locale/programs/simple-hash.c b/locale/programs/simple-hash.c
+index bb3076612da90ca1..30d3247d5ce98374 100644
+--- a/locale/programs/simple-hash.c
++++ b/locale/programs/simple-hash.c
+@@ -26,11 +26,7 @@
+ #include <string.h>
+ #include <sys/types.h>
+ 
+-#if HAVE_OBSTACK
+-# include <obstack.h>
+-#else
+-# include "obstack.h"
+-#endif
++#include <obstack.h>
+ 
+ #ifdef HAVE_VALUES_H
+ # include <values.h>

@@ -1,0 +1,20 @@
+commit d22f1fe2f369a273533e50d757c4590adf147ef1
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 10 14:20:42 2014 +0530
+
+    Fix Wundef warning for HAVE_STRFTIME
+    
+    Define it to 0
+
+diff --git a/time/strftime_l.c b/time/strftime_l.c
+index d33a9687e02457f5..21303c9735baeb5f 100644
+--- a/time/strftime_l.c
++++ b/time/strftime_l.c
+@@ -29,6 +29,7 @@
+ # define HAVE_TM_ZONE 1
+ # define HAVE_TZNAME 1
+ # define HAVE_TZSET 1
++# define HAVE_STRFTIME 0
+ # define MULTIBYTE_IS_FORMAT_SAFE 1
+ # define STDC_HEADERS 1
+ # include "../locale/localeinfo.h"

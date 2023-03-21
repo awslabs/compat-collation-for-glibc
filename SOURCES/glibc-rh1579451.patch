@@ -1,0 +1,112 @@
+[RHBZ #1579451]
+This is a backport of the following two upstream patches:
+
+commit 31545c23277cd54a1edd41c85d8255fb589158e3
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Mon Jun 29 14:38:46 2015 +0000
+
+    Update headers for Linux 4.0, 4.1 definitions.
+
+    This patch updates installed glibc headers for new definitions from
+    Linux 4.0 and 4.1 that seem relevant to glibc headers.  In addition, I
+    noticed that PF_IB / AF_IB, added in Linux 3.11, were missing for no
+    obvious reason, so added those as well.
+
+    Tested for x86_64 (testsuite, and that installed stripped shared
+    libraries are unchanged by the patch).
+
+        * sysdeps/unix/sysv/linux/bits/in.h (IP_CHECKSUM): New macro.
+        * sysdeps/unix/sysv/linux/bits/socket.h (PF_IB): Likewise.
+        (PF_MPLS): Likewise.
+        (AF_IB): Likewise.
+        (AF_MPLS): Likewise.
+        * sysdeps/unix/sysv/linux/sys/mount.h (MS_LAZYTIME): New enum
+        value and macro.
+        (MS_RMT_MASK): Include MS_LAZYTIME.
+
+commit 04d9a38bafddb92ab79bc0015533689e15848522
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Sep 1 13:47:25 2015 +0000
+
+    Add netinet/in.h values from Linux 4.2.
+
+    This patch adds new constants from Linux 4.2 to netinet/in.h:
+    IPPROTO_MPLS and IP_BIND_ADDRESS_NO_PORT (both in
+    include/uapi/linux/in.h in Linux; one directly in netinet/in.h, one in
+    bits/in.h in glibc).
+
+    Tested for x86_64 (testsuite, and that installed stripped shared
+    libraries are unchanged by the patch).
+
+        * inet/netinet/in.h (IPPROTO_MPLS): New enum value and macro.
+        * sysdeps/unix/sysv/linux/bits/in.h (IP_BIND_ADDRESS_NO_PORT): New
+        macro.
+
+
+diff -Nrup a/inet/netinet/in.h b/inet/netinet/in.h
+--- a/inet/netinet/in.h	2019-07-30 12:03:33.082066705 -0400
++++ b/inet/netinet/in.h	2019-07-30 12:22:54.461572719 -0400
+@@ -86,6 +86,8 @@ enum
+ #define IPPROTO_SCTP		IPPROTO_SCTP
+     IPPROTO_UDPLITE = 136, /* UDP-Lite protocol.  */
+ #define IPPROTO_UDPLITE		IPPROTO_UDPLITE
++    IPPROTO_MPLS = 137,    /* MPLS in IP.  */
++#define IPPROTO_MPLS           IPPROTO_MPLS
+     IPPROTO_RAW = 255,	   /* Raw IP packets.  */
+ #define IPPROTO_RAW		IPPROTO_RAW
+     IPPROTO_MAX
+diff -Nrup a/sysdeps/unix/sysv/linux/bits/in.h b/sysdeps/unix/sysv/linux/bits/in.h
+--- a/sysdeps/unix/sysv/linux/bits/in.h	2019-07-30 12:03:35.863052019 -0400
++++ b/sysdeps/unix/sysv/linux/bits/in.h	2019-07-30 12:51:15.293703728 -0400
+@@ -99,6 +99,8 @@
+ 
+ #define IP_MINTTL       21
+ #define IP_NODEFRAG     22
++#define IP_CHECKSUM     23
++#define IP_BIND_ADDRESS_NO_PORT 24
+ 
+ /* IP_MTU_DISCOVER arguments.  */
+ #define IP_PMTUDISC_DONT   0	/* Never send DF frames.  */
+diff -Nrup a/sysdeps/unix/sysv/linux/bits/socket.h b/sysdeps/unix/sysv/linux/bits/socket.h
+--- a/sysdeps/unix/sysv/linux/bits/socket.h	2019-07-30 12:03:33.757063141 -0400
++++ b/sysdeps/unix/sysv/linux/bits/socket.h	2019-07-30 12:54:02.612870856 -0400
+@@ -69,6 +69,8 @@ typedef __socklen_t socklen_t;
+ #define	PF_PPPOX	24	/* PPPoX sockets.  */
+ #define	PF_WANPIPE	25	/* Wanpipe API sockets.  */
+ #define PF_LLC		26	/* Linux LLC.  */
++#define PF_IB		27      /* Native InfiniBand address.  */
++#define PF_MPLS		28      /* MPLS.  */
+ #define PF_CAN		29	/* Controller Area Network.  */
+ #define PF_TIPC		30	/* TIPC sockets.  */
+ #define	PF_BLUETOOTH	31	/* Bluetooth sockets.  */
+@@ -114,6 +116,8 @@ typedef __socklen_t socklen_t;
+ #define	AF_PPPOX	PF_PPPOX
+ #define	AF_WANPIPE	PF_WANPIPE
+ #define AF_LLC		PF_LLC
++#define AF_IB		PF_IB
++#define AF_MPLS		PF_MPLS
+ #define AF_CAN		PF_CAN
+ #define AF_TIPC		PF_TIPC
+ #define	AF_BLUETOOTH	PF_BLUETOOTH
+diff -Nrup a/sysdeps/unix/sysv/linux/sys/mount.h b/sysdeps/unix/sysv/linux/sys/mount.h
+--- a/sysdeps/unix/sysv/linux/sys/mount.h	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/sys/mount.h	2019-07-30 12:58:23.595571750 -0400
+@@ -78,6 +78,8 @@ enum
+ #define MS_I_VERSION	MS_I_VERSION
+   MS_STRICTATIME = 1 << 24,	/* Always perform atime updates.  */
+ #define MS_STRICTATIME	MS_STRICTATIME
++  MS_LAZYTIME = 1 << 25,       /* Update the on-disk [acm]times lazily.  */
++#define MS_LAZYTIME    MS_LAZYTIME
+   MS_ACTIVE = 1 << 30,
+ #define MS_ACTIVE	MS_ACTIVE
+   MS_NOUSER = 1 << 31
+@@ -85,7 +87,8 @@ enum
+ };
+ 
+ /* Flags that can be altered by MS_REMOUNT  */
+-#define MS_RMT_MASK (MS_RDONLY|MS_SYNCHRONOUS|MS_MANDLOCK|MS_I_VERSION)
++#define MS_RMT_MASK (MS_RDONLY|MS_SYNCHRONOUS|MS_MANDLOCK|MS_I_VERSION \
++		    |MS_LAZYTIME)
+ 
+ 
+ /* Magic mount flag number. Has to be or-ed to the flag values.  */

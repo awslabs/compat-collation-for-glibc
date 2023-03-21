@@ -1,0 +1,520 @@
+commit 2969121014b150036551c93a09da7686ffcac817
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sun Feb 17 21:57:26 2013 +0000
+
+    Remove bounded-pointers handling from x86_64 assembly sources.
+
+Conflicts:
+	sysdeps/x86_64/bp-asm.h
+	  (Copyright header change, file removed manually.)
+	sysdeps/x86_64/strcmp.S
+	  (Context change due to earlier IS_IN backport.)
+
+diff --git a/sysdeps/unix/sysv/linux/x86_64/clone.S b/sysdeps/unix/sysv/linux/x86_64/clone.S
+index 53f9fbd782848988..9a88bbc94e3f14e9 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/clone.S
++++ b/sysdeps/unix/sysv/linux/x86_64/clone.S
+@@ -22,8 +22,6 @@
+ #define _ERRNO_H	1
+ #include <bits/errno.h>
+ #include <asm-syntax.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #define CLONE_VM	0x00000100
+ #define CLONE_THREAD	0x00010000
+@@ -52,7 +50,7 @@
+ 
+ 
+         .text
+-ENTRY (BP_SYM (__clone))
++ENTRY (__clone)
+ 	/* Sanity check arguments.  */
+ 	movq	$-EINVAL,%rax
+ 	testq	%rdi,%rdi		/* no NULL function pointers */
+@@ -117,6 +115,6 @@ L(thread_start):
+ 	cfi_endproc;
+ 
+ 	cfi_startproc;
+-PSEUDO_END (BP_SYM (__clone))
++PSEUDO_END (__clone)
+ 
+-weak_alias (BP_SYM (__clone), BP_SYM (clone))
++weak_alias (__clone, clone)
+diff --git a/sysdeps/unix/sysv/linux/x86_64/sysdep.h b/sysdeps/unix/sysv/linux/x86_64/sysdep.h
+index 3e91c38dcf83bd8b..4b5105dbfde763d2 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/sysdep.h
++++ b/sysdeps/unix/sysv/linux/x86_64/sysdep.h
+@@ -20,8 +20,6 @@
+ 
+ /* There is some commonality.  */
+ #include <sysdeps/unix/x86_64/sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ #include <tls.h>
+ 
+ #if IS_IN (rtld)
+diff --git a/sysdeps/unix/x86_64/sysdep.S b/sysdeps/unix/x86_64/sysdep.S
+index db13ac49d7e19f4e..f8f66ed03ef5fb0d 100644
+--- a/sysdeps/unix/x86_64/sysdep.S
++++ b/sysdeps/unix/x86_64/sysdep.S
+@@ -18,8 +18,6 @@
+ #include <sysdep.h>
+ #define _ERRNO_H
+ #include <bits/errno.h>
+-#include <bp-asm.h>
+-#include <bp-sym.h>
+ #include <tls.h>
+ 
+ #if IS_IN (rtld)
+diff --git a/sysdeps/x86_64/bp-asm.h b/sysdeps/x86_64/bp-asm.h
+deleted file mode 100644
+index 355ec8f634bc8e8e..0000000000000000
+--- a/sysdeps/x86_64/bp-asm.h
++++ /dev/null
+@@ -1,140 +0,0 @@
+-/* Bounded-pointer definitions for x86-64 assembler.
+-   Copyright (C) 2001 Free Software Foundation, Inc.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _bp_asm_h_
+-# define _bp_asm_h_ 1
+-
+-# if __ASSEMBLER__
+-
+-#  if __BOUNDED_POINTERS__
+-
+-/* Bounded pointers occupy three words.  */
+-#   define PTR_SIZE 24
+-/* Bounded pointer return values are passed back through a hidden
+-   argument that points to caller-allocate space.  The hidden arg
+-   occupies one word on the stack.  */
+-#   define RTN_SIZE 6
+-/* Although the caller pushes the hidden arg, the callee is
+-   responsible for popping it.  */
+-#   define RET_PTR ret $RTN_SIZE
+-/* Maintain frame pointer chain in leaf assembler functions for the benefit
+-   of debugging stack traces when bounds violations occur.  */
+-#   define ENTER pushq %rbp; movq %rsp, %rbp
+-#   define LEAVE movq %rbp, %rsp; popq %rbp
+-/* Stack space overhead of procedure-call linkage: return address and
+-   frame pointer.  */
+-#   define LINKAGE 16
+-/* Stack offset of return address after calling ENTER.  */
+-#   define PCOFF 8
+-
+-/* Int 5 is the "bound range" exception also raised by the "bound"
+-   instruction.  */
+-#   define BOUNDS_VIOLATED int $5
+-
+-#   define CHECK_BOUNDS_LOW(VAL_REG, BP_MEM)	\
+-	cmpq 8+BP_MEM, VAL_REG;			\
+-	jae 0f; /* continue if value >= low */	\
+-	BOUNDS_VIOLATED;			\
+-    0:
+-
+-#   define CHECK_BOUNDS_HIGH(VAL_REG, BP_MEM, Jcc)	\
+-	cmpq 16+BP_MEM, VAL_REG;			\
+-	Jcc 0f; /* continue if value < high */		\
+-	BOUNDS_VIOLATED;				\
+-    0:
+-
+-#   define CHECK_BOUNDS_BOTH(VAL_REG, BP_MEM)	\
+-	cmpq 8+BP_MEM, VAL_REG;			\
+-	jb 1f; /* die if value < low */		\
+-	cmpq 16+BP_MEM, VAL_REG;		\
+-	jb 0f; /* continue if value < high */	\
+-    1:	BOUNDS_VIOLATED;			\
+-    0:
+-
+-#   define CHECK_BOUNDS_BOTH_WIDE(VAL_REG, BP_MEM, LENGTH)	\
+-	CHECK_BOUNDS_LOW(VAL_REG, BP_MEM);			\
+-	addl LENGTH, VAL_REG;					\
+-	cmpq 16+BP_MEM, VAL_REG;					\
+-	jbe 0f; /* continue if value <= high */			\
+-	BOUNDS_VIOLATED;					\
+-    0:	subq LENGTH, VAL_REG /* restore value */
+-
+-/* Take bounds from BP_MEM and affix them to the pointer
+-   value in %rax, stuffing all into memory at RTN(%esp).
+-   Use %rdx as a scratch register.  */
+-
+-#   define RETURN_BOUNDED_POINTER(BP_MEM)	\
+-	movq RTN(%rsp), %rdx;			\
+-	movq %rax, 0(%rdx);			\
+-	movq 8+BP_MEM, %rax;			\
+-	movq %rax, 4(%rdx);			\
+-	movq 16+BP_MEM, %rax;			\
+-	movq %rax, 8(%rdx)
+-
+-#   define RETURN_NULL_BOUNDED_POINTER		\
+-	movl RTN(%rsp), %rdx;			\
+-	movl %rax, 0(%rdx);			\
+-	movl %rax, 4(%rdx);			\
+-	movl %rax, 8(%rdx)
+-
+-/* The caller of __errno_location is responsible for allocating space
+-   for the three-word BP return-value and passing pushing its address
+-   as an implicit first argument.  */
+-#   define PUSH_ERRNO_LOCATION_RETURN		\
+-	subl $16, %esp;				\
+-	subl $8, %esp;				\
+-	pushq %rsp
+-
+-/* __errno_location is responsible for popping the implicit first
+-   argument, but we must pop the space for the BP itself.  We also
+-   dereference the return value in order to dig out the pointer value.  */
+-#   define POP_ERRNO_LOCATION_RETURN		\
+-	popq %rax;				\
+-	addq $16, %rsp
+-
+-#  else /* !__BOUNDED_POINTERS__ */
+-
+-/* Unbounded pointers occupy one word.  */
+-#   define PTR_SIZE 8
+-/* Unbounded pointer return values are passed back in the register %rax.  */
+-#   define RTN_SIZE 0
+-/* Use simple return instruction for unbounded pointer values.  */
+-#   define RET_PTR ret
+-/* Don't maintain frame pointer chain for leaf assembler functions.  */
+-#   define ENTER
+-#   define LEAVE
+-/* Stack space overhead of procedure-call linkage: return address only.  */
+-#   define LINKAGE 8
+-/* Stack offset of return address after calling ENTER.  */
+-#   define PCOFF 0
+-
+-#   define CHECK_BOUNDS_LOW(VAL_REG, BP_MEM)
+-#   define CHECK_BOUNDS_HIGH(VAL_REG, BP_MEM, Jcc)
+-#   define CHECK_BOUNDS_BOTH(VAL_REG, BP_MEM)
+-#   define CHECK_BOUNDS_BOTH_WIDE(VAL_REG, BP_MEM, LENGTH)
+-#   define RETURN_BOUNDED_POINTER(BP_MEM)
+-
+-#   define RETURN_NULL_BOUNDED_POINTER
+-
+-#   define PUSH_ERRNO_LOCATION_RETURN
+-#   define POP_ERRNO_LOCATION_RETURN
+-
+-#  endif /* !__BOUNDED_POINTERS__ */
+-
+-# endif /* __ASSEMBLER__ */
+-
+-#endif /* _bp_asm_h_ */
+diff --git a/sysdeps/x86_64/bsd-_setjmp.S b/sysdeps/x86_64/bsd-_setjmp.S
+index 434e342aec5699c7..5591dd67562506bb 100644
+--- a/sysdeps/x86_64/bsd-_setjmp.S
++++ b/sysdeps/x86_64/bsd-_setjmp.S
+@@ -25,16 +25,14 @@
+ #define _ASM
+ #define _SETJMP_H
+ #include <bits/setjmp.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-ENTRY (BP_SYM (_setjmp))
++ENTRY (_setjmp)
+ 	/* Set up arguments, we only need to set the second arg.  */
+ 	xorl %esi, %esi
+ #ifdef PIC
+ 	jmp HIDDEN_JUMPTARGET (__sigsetjmp)
+ #else
+-	jmp BP_SYM (__sigsetjmp)
++	jmp __sigsetjmp
+ #endif
+-END (BP_SYM (_setjmp))
++END (_setjmp)
+ libc_hidden_def (_setjmp)
+diff --git a/sysdeps/x86_64/bsd-setjmp.S b/sysdeps/x86_64/bsd-setjmp.S
+index 17717f703b3aa360..87e8bc07495d68d1 100644
+--- a/sysdeps/x86_64/bsd-setjmp.S
++++ b/sysdeps/x86_64/bsd-setjmp.S
+@@ -25,15 +25,13 @@
+ #define _ASM
+ #define _SETJMP_H
+ #include <bits/setjmp.h>
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+-ENTRY (BP_SYM (setjmp))
++ENTRY (setjmp)
+ 	/* Set up arguments, we only need to set the 2nd arg.  */
+ 	movl $1, %esi
+ #ifdef	PIC
+ 	jmp HIDDEN_JUMPTARGET (__sigsetjmp)
+ #else
+-	jmp BP_SYM (__sigsetjmp)
++	jmp __sigsetjmp
+ #endif
+-END (BP_SYM (setjmp))
++END (setjmp)
+diff --git a/sysdeps/x86_64/mempcpy.S b/sysdeps/x86_64/mempcpy.S
+index 5cb256e65bdffd77..acee5e56b174c8bb 100644
+--- a/sysdeps/x86_64/mempcpy.S
++++ b/sysdeps/x86_64/mempcpy.S
+@@ -3,6 +3,6 @@
+ #define __memcpy_chk __mempcpy_chk
+ #include <sysdeps/x86_64/memcpy.S>
+ 
+-libc_hidden_def (BP_SYM (__mempcpy))
+-weak_alias (BP_SYM (__mempcpy), BP_SYM (mempcpy))
++libc_hidden_def (__mempcpy)
++weak_alias (__mempcpy, mempcpy)
+ libc_hidden_builtin_def (mempcpy)
+diff --git a/sysdeps/x86_64/rtld-strchr.S b/sysdeps/x86_64/rtld-strchr.S
+index dcd26da84009c6f3..2148190dc1312411 100644
+--- a/sysdeps/x86_64/rtld-strchr.S
++++ b/sysdeps/x86_64/rtld-strchr.S
+@@ -19,12 +19,10 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ 
+ 	.text
+-ENTRY (BP_SYM (strchr))
++ENTRY (strchr)
+ 
+ 	/* Before we start with the main loop we process single bytes
+ 	   until the source pointer is aligned.  This has two reasons:
+@@ -284,7 +282,7 @@ ENTRY (BP_SYM (strchr))
+ 6:
+ 	nop
+ 	retq
+-END (BP_SYM (strchr))
++END (strchr)
+ 
+-weak_alias (BP_SYM (strchr), BP_SYM (index))
++weak_alias (strchr, index)
+ libc_hidden_builtin_def (strchr)
+diff --git a/sysdeps/x86_64/rtld-strlen.S b/sysdeps/x86_64/rtld-strlen.S
+index 7293f875513ce3e5..0d4f5b3c474b42a6 100644
+--- a/sysdeps/x86_64/rtld-strlen.S
++++ b/sysdeps/x86_64/rtld-strlen.S
+@@ -19,8 +19,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ 
+ 	.text
+diff --git a/sysdeps/x86_64/setjmp.S b/sysdeps/x86_64/setjmp.S
+index dd87c484f9dac4ce..0d3865a7efd78ac4 100644
+--- a/sysdeps/x86_64/setjmp.S
++++ b/sysdeps/x86_64/setjmp.S
+@@ -61,10 +61,10 @@ ENTRY (__sigsetjmp)
+ #else
+ 	/* Make a tail call to __sigjmp_save; it takes the same args.  */
+ # ifdef	PIC
+-	jmp C_SYMBOL_NAME (BP_SYM (__sigjmp_save))@PLT
++	jmp C_SYMBOL_NAME (__sigjmp_save)@PLT
+ # else
+-	jmp BP_SYM (__sigjmp_save)
++	jmp __sigjmp_save
+ # endif
+ #endif
+-END (BP_SYM (__sigsetjmp))
++END (__sigsetjmp)
+ hidden_def (__sigsetjmp)
+diff --git a/sysdeps/x86_64/start.S b/sysdeps/x86_64/start.S
+index e603463044eee26f..a288aa3265679fac 100644
+--- a/sysdeps/x86_64/start.S
++++ b/sysdeps/x86_64/start.S
+@@ -54,7 +54,6 @@
+ */
+ 
+ #include <sysdep.h>
+-#include "bp-sym.h"
+ 
+ 	.text
+ 	.globl _start
+@@ -106,21 +105,21 @@ _start:
+ 	mov __libc_csu_fini@GOTPCREL(%rip), %R8_LP
+ 	mov __libc_csu_init@GOTPCREL(%rip), %RCX_LP
+ 
+-	mov BP_SYM (main)@GOTPCREL(%rip), %RDI_LP
++	mov main@GOTPCREL(%rip), %RDI_LP
+ 
+ 	/* Call the user's main function, and exit with its value.
+ 	   But let the libc call main.	  */
+-	call BP_SYM (__libc_start_main)@PLT
++	call __libc_start_main@PLT
+ #else
+ 	/* Pass address of our own entry points to .fini and .init.  */
+ 	mov $__libc_csu_fini, %R8_LP
+ 	mov $__libc_csu_init, %RCX_LP
+ 
+-	mov $BP_SYM (main), %RDI_LP
++	mov $main, %RDI_LP
+ 
+ 	/* Call the user's main function, and exit with its value.
+ 	   But let the libc call main.	  */
+-	call BP_SYM (__libc_start_main)
++	call __libc_start_main
+ #endif
+ 
+ 	hlt			/* Crash if somehow `exit' does return.	 */
+diff --git a/sysdeps/x86_64/strcat.S b/sysdeps/x86_64/strcat.S
+index 535a18dd3f82cf8c..bd0ebda1ce806234 100644
+--- a/sysdeps/x86_64/strcat.S
++++ b/sysdeps/x86_64/strcat.S
+@@ -20,12 +20,10 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ 
+ 	.text
+-ENTRY (BP_SYM (strcat))
++ENTRY (strcat)
+ 	movq %rdi, %rcx		/* Dest. register. */
+ 	andl $7, %ecx		/* mask alignment bits */
+ 	movq %rdi, %rax		/* Duplicate destination pointer.  */
+@@ -255,5 +253,5 @@ ENTRY (BP_SYM (strcat))
+ 24:
+ 	movq	%rdi, %rax	/* Source is return value.  */
+ 	retq
+-END (BP_SYM (strcat))
++END (strcat)
+ libc_hidden_builtin_def (strcat)
+diff --git a/sysdeps/x86_64/strcmp.S b/sysdeps/x86_64/strcmp.S
+index ac10cc70d10f84cf..6d5aa19f87afca00 100644
+--- a/sysdeps/x86_64/strcmp.S
++++ b/sysdeps/x86_64/strcmp.S
+@@ -22,8 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ #undef UPDATE_STRNCMP_COUNTER
+ 
+@@ -128,7 +126,7 @@ libc_hidden_def (__strncasecmp)
+ 	/* FALLTHROUGH to strncasecmp_l.  */
+ #endif
+ 
+-ENTRY (BP_SYM (STRCMP))
++ENTRY (STRCMP)
+ #if !IS_IN (libc)
+ /* Simple version since we can't use SSE registers in ld.so.  */
+ L(oop):	movb	(%rdi), %al
+@@ -146,7 +144,7 @@ L(neq):	movl	$1, %eax
+ 	movl	$-1, %ecx
+ 	cmovbl	%ecx, %eax
+ 	ret
+-END (BP_SYM (STRCMP))
++END (STRCMP)
+ #else	/* !IS_IN (libc) */
+ # ifdef USE_AS_STRCASECMP_L
+ 	/* We have to fall back on the C implementation for locales
+@@ -2282,7 +2280,7 @@ LABEL(Byte0):
+ 
+ 	sub	%ecx, %eax
+ 	ret
+-END (BP_SYM (STRCMP))
++END (STRCMP)
+ 
+ 	.section .rodata,"a",@progbits
+ 	.p2align 3
+diff --git a/sysdeps/x86_64/strcpy.S b/sysdeps/x86_64/strcpy.S
+index 65216d26e1475489..5444658236bcb668 100644
+--- a/sysdeps/x86_64/strcpy.S
++++ b/sysdeps/x86_64/strcpy.S
+@@ -19,15 +19,13 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ #ifndef USE_AS_STPCPY
+ # define STRCPY strcpy
+ #endif
+ 
+ 	.text
+-ENTRY (BP_SYM (STRCPY))
++ENTRY (STRCPY)
+ 	movq %rsi, %rcx		/* Source register. */
+ 	andl $7, %ecx		/* mask alignment bits */
+ 	movq %rdi, %rdx		/* Duplicate destination pointer.  */
+@@ -152,7 +150,7 @@ ENTRY (BP_SYM (STRCPY))
+ 	movq	%rdi, %rax	/* Source is return value.  */
+ #endif
+ 	retq
+-END (BP_SYM (STRCPY))
++END (STRCPY)
+ #ifndef USE_AS_STPCPY
+ libc_hidden_builtin_def (strcpy)
+ #endif
+diff --git a/sysdeps/x86_64/strcpy_chk.S b/sysdeps/x86_64/strcpy_chk.S
+index 1640e69235bf6808..ad8f594fa5b9f2db 100644
+--- a/sysdeps/x86_64/strcpy_chk.S
++++ b/sysdeps/x86_64/strcpy_chk.S
+@@ -20,8 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ #ifndef USE_AS_STPCPY_CHK
+ # define STRCPY_CHK __strcpy_chk
+diff --git a/sysdeps/x86_64/strtok.S b/sysdeps/x86_64/strtok.S
+index 4028a47f243d9a54..b221e4cd724f7234 100644
+--- a/sysdeps/x86_64/strtok.S
++++ b/sysdeps/x86_64/strtok.S
+@@ -21,8 +21,6 @@
+ 
+ #include <sysdep.h>
+ #include "asm-syntax.h"
+-#include "bp-sym.h"
+-#include "bp-asm.h"
+ 
+ /* This file can be used for the strtok and strtok_r functions:
+ 
+@@ -59,7 +57,7 @@ save_ptr:
+ #endif
+ 
+ 	.text
+-ENTRY (BP_SYM (FUNCTION))
++ENTRY (FUNCTION)
+ 	/* First we create a table with flags for all possible characters.
+ 	   For the ASCII (7bit/8bit) or ISO-8859-X character sets which are
+ 	   supported by the C string functions we have 256 characters.
+@@ -207,4 +205,4 @@ L(returnNULL):
+ 	mov %RDX_LP, SAVE_PTR
+ 	jmp L(epilogue)
+ 
+-END (BP_SYM (FUNCTION))
++END (FUNCTION)
+diff --git a/sysdeps/x86_64/strtok_r.S b/sysdeps/x86_64/strtok_r.S
+index 8ce0089c7b72390d..f0db78c67a8ef6a4 100644
+--- a/sysdeps/x86_64/strtok_r.S
++++ b/sysdeps/x86_64/strtok_r.S
+@@ -1,5 +1,5 @@
+ #define FUNCTION __strtok_r
+ #define USE_AS_STRTOK_R	1
+ #include <sysdeps/x86_64/strtok.S>
+-weak_alias (BP_SYM (__strtok_r), BP_SYM (strtok_r))
+-strong_alias (BP_SYM (__strtok_r), BP_SYM (__GI___strtok_r))
++weak_alias (__strtok_r, strtok_r)
++strong_alias (__strtok_r, __GI___strtok_r)

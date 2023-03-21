@@ -1,0 +1,59 @@
+commit 49051f8ea4551229fa656eba04031af51a5491c5
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Nov 27 16:01:04 2014 +0000
+
+    Fix libio/bug-ungetwc1.c warning.
+    
+    This patch fixes a warning "variable 'wc' set but not used" in
+    libio/bug-ungetwc1.c.
+    
+    The test didn't verify much about the results of the functions it
+    called.  This patch makes it check the result of getwc (thereby fixing
+    the warning), check end of file does not arrive too late in the getwc
+    loop, and check EOF is no longer set after ungetwc.
+    
+    Tested for x86_64.
+    
+            * libio/bug-ungetwc1.c (do_test): Verify results of getwc and
+            feof.
+
+diff --git a/libio/bug-ungetwc1.c b/libio/bug-ungetwc1.c
+index 8ed6acd175e86858..56a3d336ae89d69f 100644
+--- a/libio/bug-ungetwc1.c
++++ b/libio/bug-ungetwc1.c
+@@ -53,8 +53,22 @@ do_test (void)
+   /* Read from the file. */
+   fp = fopen (fname, "r");
+ 
++  size_t i = 0;
+   while (!feof (fp))
+-    wc = getwc (fp);
++    {
++      wc = getwc (fp);
++      if (i >= sizeof (write_chars))
++	{
++	  printf ("Did not get end-of-file when expected.\n");
++	  return 1;
++	}
++      else if (wc != (write_chars[i] ? write_chars[i] : WEOF))
++	{
++	  printf ("Unexpected %lu from getwc.\n", (unsigned long int) wc);
++	  return 1;
++	}
++      i++;
++    }
+   printf ("\nThe end-of-file indicator is set.\n");
+ 
+   /* Unget a wide character. */
+@@ -63,7 +77,10 @@ do_test (void)
+ 
+   /* Check the end-of-file indicator. */
+   if (feof (fp))
+-    printf ("The end-of-file indicator is still set.\n");
++    {
++      printf ("The end-of-file indicator is still set.\n");
++      return 1;
++    }
+   else
+     printf ("The end-of-file flag is cleared.\n");
+ 

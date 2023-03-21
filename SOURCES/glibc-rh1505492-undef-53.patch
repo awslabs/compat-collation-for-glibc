@@ -1,0 +1,29 @@
+commit 182d6096fe76b3d63b1151090cd07e60eca39302
+Author: Mike Frysinger <vapier@gentoo.org>
+Date:   Wed Jul 29 11:35:37 2015 -0400
+
+    mmap64: fix undef warnings
+    
+    The only target that defines this is m68k, so move the existing fallback
+    define up to avoid warnings on other systems.
+
+diff --git a/sysdeps/unix/sysv/linux/mmap64.c b/sysdeps/unix/sysv/linux/mmap64.c
+index 2c8304d860f19d58..fcaa6be1f41b3ffd 100644
+--- a/sysdeps/unix/sysv/linux/mmap64.c
++++ b/sysdeps/unix/sysv/linux/mmap64.c
+@@ -26,12 +26,12 @@
+ #include <kernel-features.h>
+ 
+ /* This is always 12, even on architectures where PAGE_SHIFT != 12.  */
++#ifndef MMAP2_PAGE_SHIFT
++# define MMAP2_PAGE_SHIFT 12
++#endif
+ #if MMAP2_PAGE_SHIFT == -1
+ static int page_shift;
+ #else
+-# ifndef MMAP2_PAGE_SHIFT
+-#  define MMAP2_PAGE_SHIFT 12
+-# endif
+ #define page_shift MMAP2_PAGE_SHIFT
+ #endif
+ 

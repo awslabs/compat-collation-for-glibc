@@ -1,0 +1,154 @@
+commit 1ba4f03035faabd9090f61ec5514e2abced5ca29
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Mar 8 16:46:07 2013 +0000
+
+    Remove __malloc_size_t.
+
+Adjusted here to keep the definition in the public <malloc.h> header
+file.
+
+diff --git a/malloc/mcheck.c b/malloc/mcheck.c
+index c5addc55afebd502..695de42e914e247c 100644
+--- a/malloc/mcheck.c
++++ b/malloc/mcheck.c
+@@ -29,11 +29,10 @@
+ 
+ /* Old hook values.  */
+ static void (*old_free_hook) (__ptr_t ptr, const __ptr_t);
+-static __ptr_t (*old_malloc_hook) (__malloc_size_t size, const __ptr_t);
+-static __ptr_t (*old_memalign_hook) (__malloc_size_t alignment,
+-				     __malloc_size_t size,
++static __ptr_t (*old_malloc_hook) (size_t size, const __ptr_t);
++static __ptr_t (*old_memalign_hook) (size_t alignment, size_t size,
+ 				     const __ptr_t);
+-static __ptr_t (*old_realloc_hook) (__ptr_t ptr, __malloc_size_t size,
++static __ptr_t (*old_realloc_hook) (__ptr_t ptr, size_t size,
+ 				    const __ptr_t);
+ 
+ /* Function to call when something awful happens.  */
+@@ -48,7 +47,7 @@ static void (*abortfunc) (enum mcheck_status);
+ 
+ struct hdr
+   {
+-    __malloc_size_t size;	/* Exact size requested by user.  */
++    size_t size;		/* Exact size requested by user.  */
+     unsigned long int magic;	/* Magic number to check header integrity.  */
+     struct hdr *prev;
+     struct hdr *next;
+@@ -69,12 +68,12 @@ static int pedantic;
+ # include <string.h>
+ # define flood memset
+ #else
+-static void flood (__ptr_t, int, __malloc_size_t);
++static void flood (__ptr_t, int, size_t);
+ static void
+ flood (ptr, val, size)
+      __ptr_t ptr;
+      int val;
+-     __malloc_size_t size;
++     size_t size;
+ {
+   char *cp = ptr;
+   while (size--)
+@@ -202,7 +201,7 @@ freehook (__ptr_t ptr, const __ptr_t caller)
+ }
+ 
+ static __ptr_t
+-mallochook (__malloc_size_t size, const __ptr_t caller)
++mallochook (size_t size, const __ptr_t caller)
+ {
+   struct hdr *hdr;
+ 
+@@ -235,11 +234,11 @@ mallochook (__malloc_size_t size, const __ptr_t caller)
+ }
+ 
+ static __ptr_t
+-memalignhook (__malloc_size_t alignment, __malloc_size_t size,
++memalignhook (size_t alignment, size_t size,
+ 	      const __ptr_t caller)
+ {
+   struct hdr *hdr;
+-  __malloc_size_t slop;
++  size_t slop;
+   char *block;
+ 
+   if (pedantic)
+@@ -274,7 +273,7 @@ memalignhook (__malloc_size_t alignment, __malloc_size_t size,
+ }
+ 
+ static __ptr_t
+-reallochook (__ptr_t ptr, __malloc_size_t size, const __ptr_t caller)
++reallochook (__ptr_t ptr, size_t size, const __ptr_t caller)
+ {
+   if (size == 0)
+     {
+@@ -283,7 +282,7 @@ reallochook (__ptr_t ptr, __malloc_size_t size, const __ptr_t caller)
+     }
+ 
+   struct hdr *hdr;
+-  __malloc_size_t osize;
++  size_t osize;
+ 
+   if (pedantic)
+     mcheck_check_all ();
+diff --git a/malloc/mtrace.c b/malloc/mtrace.c
+index 3f02c7182285d025..0a26ccc65d81bd2a 100644
+--- a/malloc/mtrace.c
++++ b/malloc/mtrace.c
+@@ -58,11 +58,10 @@ __ptr_t mallwatch;
+ 
+ /* Old hook values.  */
+ static void (*tr_old_free_hook) (__ptr_t ptr, const __ptr_t);
+-static __ptr_t (*tr_old_malloc_hook) (__malloc_size_t size, const __ptr_t);
+-static __ptr_t (*tr_old_realloc_hook) (__ptr_t ptr, __malloc_size_t size,
++static __ptr_t (*tr_old_malloc_hook) (size_t size, const __ptr_t);
++static __ptr_t (*tr_old_realloc_hook) (__ptr_t ptr, size_t size,
+ 				       const __ptr_t);
+-static __ptr_t (*tr_old_memalign_hook) (__malloc_size_t __alignment,
+-					__malloc_size_t __size,
++static __ptr_t (*tr_old_memalign_hook) (size_t __alignment, size_t __size,
+ 					const __ptr_t);
+ 
+ /* This function is called when the block being alloc'd, realloc'd, or
+@@ -160,10 +159,10 @@ tr_freehook (ptr, caller)
+   __libc_lock_unlock (lock);
+ }
+ 
+-static __ptr_t tr_mallochook (__malloc_size_t, const __ptr_t) __THROW;
++static __ptr_t tr_mallochook (size_t, const __ptr_t) __THROW;
+ static __ptr_t
+ tr_mallochook (size, caller)
+-     __malloc_size_t size;
++     size_t size;
+      const __ptr_t caller;
+ {
+   __ptr_t hdr;
+@@ -190,12 +189,12 @@ tr_mallochook (size, caller)
+   return hdr;
+ }
+ 
+-static __ptr_t tr_reallochook (__ptr_t, __malloc_size_t, const __ptr_t)
++static __ptr_t tr_reallochook (__ptr_t, size_t, const __ptr_t)
+      __THROW;
+ static __ptr_t
+ tr_reallochook (ptr, size, caller)
+      __ptr_t ptr;
+-     __malloc_size_t size;
++     size_t size;
+      const __ptr_t caller;
+ {
+   __ptr_t hdr;
+@@ -238,11 +237,11 @@ tr_reallochook (ptr, size, caller)
+   return hdr;
+ }
+ 
+-static __ptr_t tr_memalignhook (__malloc_size_t, __malloc_size_t,
++static __ptr_t tr_memalignhook (size_t, size_t,
+ 				const __ptr_t) __THROW;
+ static __ptr_t
+ tr_memalignhook (alignment, size, caller)
+-     __malloc_size_t alignment, size;
++     size_t alignment, size;
+      const __ptr_t caller;
+ {
+   __ptr_t hdr;

@@ -1,0 +1,57 @@
+commit afb466fcb034f594e083b5664fa60a0d4f54c41b
+Author: Will Newton <will.newton@linaro.org>
+Date:   Mon Mar 17 11:06:02 2014 +0000
+
+    Fix __STRICT_ANSI__ -Wundef warnings
+    
+    ChangeLog:
+    
+    2014-03-17  Will Newton  <will.newton@linaro.org>
+    
+            * argp/argp-fmtstream.h: Check whether
+            __STRICT_ANSI__ is defined with #ifdef rather
+            than #if.
+            * argp/argp.h: Likewise.
+
+diff --git a/argp/argp-fmtstream.h b/argp/argp-fmtstream.h
+index f4140b924c13a302..61c45bf86b6bf8d5 100644
+--- a/argp/argp-fmtstream.h
++++ b/argp/argp-fmtstream.h
+@@ -31,12 +31,14 @@
+ 
+ #ifndef __attribute__
+ /* This feature is available in gcc versions 2.5 and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__
++# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || \
++  defined __STRICT_ANSI__
+ #  define __attribute__(Spec) /* empty */
+ # endif
+ /* The __-protected variants of `format' and `printf' attributes
+    are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7) || __STRICT_ANSI__
++# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7) || \
++  defined __STRICT_ANSI__
+ #  define __format__ format
+ #  define __printf__ printf
+ # endif
+diff --git a/argp/argp.h b/argp/argp.h
+index 8fb7098061443ba8..37544fe44a102574 100644
+--- a/argp/argp.h
++++ b/argp/argp.h
+@@ -38,12 +38,14 @@
+ 
+ #ifndef __attribute__
+ /* This feature is available in gcc versions 2.5 and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__
++# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || \
++  defined __STRICT_ANSI__
+ #  define __attribute__(Spec) /* empty */
+ # endif
+ /* The __-protected variants of `format' and `printf' attributes
+    are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7) || __STRICT_ANSI__
++# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7) || \
++  defined __STRICT_ANSI__
+ #  define __format__ format
+ #  define __printf__ printf
+ # endif

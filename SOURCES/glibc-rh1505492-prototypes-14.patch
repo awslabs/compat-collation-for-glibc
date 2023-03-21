@@ -1,0 +1,408 @@
+commit a72ddc1424d5bfcab14d90f1149cbb9b492f0120
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Oct 20 11:51:03 2015 +0000
+
+    Convert 24 more function definitions to prototype style (array parameters).
+    
+    This automatically-generated patch converts 24 function definitions in
+    glibc from old-style K&R to prototype-style.  Following my other
+    recent such patches, this one deals with the case of functions with
+    array parameters.
+    
+    Tested for x86_64 and x86 (testsuite, and that installed stripped
+    shared libraries are unchanged by the patch).
+    
+            * crypt/cert.c (main): Convert to prototype-style function
+            definition.
+            * io/pipe.c (__pipe): Likewise.
+            * io/pipe2.c (__pipe2): Likewise.
+            * misc/futimesat.c (futimesat): Likewise.
+            * misc/utimes.c (__utimes): Likewise.
+            * posix/execve.c (__execve): Likewise.
+            * posix/execvp.c (execvp): Likewise.
+            * posix/execvpe.c (__execvpe): Likewise.
+            * posix/fexecve.c (fexecve): Likewise.
+            * socket/socketpair.c (socketpair): Likewise.
+            * stdlib/drand48-iter.c (__drand48_iterate): Likewise.
+            * stdlib/erand48.c (erand48): Likewise.
+            * stdlib/erand48_r.c (__erand48_r): Likewise.
+            * stdlib/jrand48.c (jrand48): Likewise.
+            * stdlib/jrand48_r.c (__jrand48_r): Likewise.
+            * stdlib/lcong48.c (lcong48): Likewise.
+            * stdlib/lcong48_r.c (__lcong48_r): Likewise.
+            * stdlib/nrand48.c (nrand48): Likewise.
+            * stdlib/nrand48_r.c (__nrand48_r): Likewise.
+            * stdlib/seed48.c (seed48): Likewise.
+            * stdlib/seed48_r.c (__seed48_r): Likewise.
+            * sysdeps/mach/hurd/execve.c (__execve): Likewise.
+            * sysdeps/mach/hurd/utimes.c (__utimes): Likewise.
+            * sysdeps/unix/sysv/linux/fexecve.c (fexecve): Likewise.
+
+diff --git a/crypt/cert.c b/crypt/cert.c
+index d651108860f0052a..80029e9078c1cdc0 100644
+--- a/crypt/cert.c
++++ b/crypt/cert.c
+@@ -30,9 +30,7 @@ good_bye (void)
+ }
+ 
+ int
+-main(argc, argv)
+-     int argc;
+-     char *argv[];
++main (int argc, char *argv[])
+ {
+ 	char key[64],plain[64],cipher[64],answer[64];
+ 	int i;
+diff --git a/io/pipe.c b/io/pipe.c
+index 1f1c03f0d5b44fe6..2223ac169c2b9d95 100644
+--- a/io/pipe.c
++++ b/io/pipe.c
+@@ -24,8 +24,7 @@
+    bytes written on PIPEDES[1] can be read from PIPEDES[0].
+    Returns 0 if successful, -1 if not.  */
+ int
+-__pipe (__pipedes)
+-     int __pipedes[2];
++__pipe (int __pipedes[2])
+ {
+   if (__pipedes == NULL)
+     {
+diff --git a/io/pipe2.c b/io/pipe2.c
+index 2478fc3c6128c981..9bfc8291330f899b 100644
+--- a/io/pipe2.c
++++ b/io/pipe2.c
+@@ -24,9 +24,7 @@
+    PIPEDES[1] can be read from PIPEDES[0].  Apply FLAGS to the new
+    file descriptors.  Returns 0 if successful, -1 if not.  */
+ int
+-__pipe2 (pipedes, flags)
+-     int pipedes[2];
+-     int flags;
++__pipe2 (int pipedes[2], int flags)
+ {
+   if (pipedes == NULL)
+     {
+diff --git a/misc/futimesat.c b/misc/futimesat.c
+index b33939e0a1cf4b88..b428852aeb9a2590 100644
+--- a/misc/futimesat.c
++++ b/misc/futimesat.c
+@@ -24,10 +24,7 @@
+ /* Change the access time of FILE relative to FD to TVP[0] and
+    the modification time of FILE to TVP[1].  */
+ int
+-futimesat (fd, file, tvp)
+-     int fd;
+-     const char *file;
+-     const struct timeval tvp[2];
++futimesat (int fd, const char *file, const struct timeval tvp[2])
+ {
+   if (fd < 0
+       && (file == NULL
+diff --git a/misc/utimes.c b/misc/utimes.c
+index 5cdfe6ca5e594e42..9c94f6be646bd955 100644
+--- a/misc/utimes.c
++++ b/misc/utimes.c
+@@ -22,9 +22,7 @@
+ /* Change the access time of FILE to TVP[0] and
+    the modification time of FILE to TVP[1].  */
+ int
+-__utimes (file, tvp)
+-     const char *file;
+-     const struct timeval tvp[2];
++__utimes (const char *file, const struct timeval tvp[2])
+ {
+   if (file == NULL)
+     {
+diff --git a/posix/execve.c b/posix/execve.c
+index 893cec2b19a39527..27b063fe7d31a59e 100644
+--- a/posix/execve.c
++++ b/posix/execve.c
+@@ -23,10 +23,7 @@
+ /* Replace the current process, executing PATH with arguments ARGV and
+    environment ENVP.  ARGV and ENVP are terminated by NULL pointers.  */
+ int
+-__execve (path, argv, envp)
+-     const char *path;
+-     char *const argv[];
+-     char *const envp[];
++__execve (const char *path, char *const argv[], char *const envp[])
+ {
+   if (path == NULL || argv == NULL || envp == NULL)
+     {
+diff --git a/posix/execvp.c b/posix/execvp.c
+index 5f2e155cd55db43e..9140b93d27896d26 100644
+--- a/posix/execvp.c
++++ b/posix/execvp.c
+@@ -22,9 +22,7 @@
+ /* Execute FILE, searching in the `PATH' environment variable if it contains
+    no slashes, with arguments ARGV and environment from `environ'.  */
+ int
+-execvp (file, argv)
+-     const char *file;
+-     char *const argv[];
++execvp (const char *file, char *const argv[])
+ {
+   return __execvpe (file, argv, __environ);
+ }
+diff --git a/posix/execvpe.c b/posix/execvpe.c
+index 48f777a9d57928fb..b607235c8bc27026 100644
+--- a/posix/execvpe.c
++++ b/posix/execvpe.c
+@@ -46,10 +46,7 @@ scripts_argv (const char *file, char *const argv[], int argc, char **new_argv)
+ /* Execute FILE, searching in the `PATH' environment variable if it contains
+    no slashes, with arguments ARGV and environment from ENVP.  */
+ int
+-__execvpe (file, argv, envp)
+-     const char *file;
+-     char *const argv[];
+-     char *const envp[];
++__execvpe (const char *file, char *const argv[], char *const envp[])
+ {
+   if (*file == '\0')
+     {
+diff --git a/posix/fexecve.c b/posix/fexecve.c
+index 6a22a194e34d0789..1ebbbc6fe942e716 100644
+--- a/posix/fexecve.c
++++ b/posix/fexecve.c
+@@ -23,10 +23,7 @@
+ /* Execute the file FD refers to, overlaying the running program image.
+    ARGV and ENVP are passed to the new program, as for `execve'.  */
+ int
+-fexecve (fd, argv, envp)
+-     int fd;
+-     char *const argv[];
+-     char *const envp[];
++fexecve (int fd, char *const argv[], char *const envp[])
+ {
+   if (fd < 0 || argv == NULL || envp == NULL)
+     {
+diff --git a/socket/socketpair.c b/socket/socketpair.c
+index 031674831f88cd61..4da27fb3b616d26f 100644
+--- a/socket/socketpair.c
++++ b/socket/socketpair.c
+@@ -23,11 +23,7 @@
+    descriptors for them in FDS[0] and FDS[1].  If PROTOCOL is zero,
+    one will be chosen automatically.  Returns 0 on success, -1 for errors.  */
+ int
+-socketpair (domain, type, protocol, fds)
+-     int domain;
+-     int type;
+-     int protocol;
+-     int fds[2];
++socketpair (int domain, int type, int protocol, int fds[2])
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/stdlib/drand48-iter.c b/stdlib/drand48-iter.c
+index 9270aab068170970..0cb988028f25a405 100644
+--- a/stdlib/drand48-iter.c
++++ b/stdlib/drand48-iter.c
+@@ -27,9 +27,7 @@ struct drand48_data __libc_drand48_data;
+ 
+ 
+ int
+-__drand48_iterate (xsubi, buffer)
+-     unsigned short int xsubi[3];
+-     struct drand48_data *buffer;
++__drand48_iterate (unsigned short int xsubi[3], struct drand48_data *buffer)
+ {
+   uint64_t X;
+   uint64_t result;
+diff --git a/stdlib/erand48.c b/stdlib/erand48.c
+index d2cf5af967b6663e..ff128ab72bb43e05 100644
+--- a/stdlib/erand48.c
++++ b/stdlib/erand48.c
+@@ -20,8 +20,7 @@
+ 
+ 
+ double
+-erand48 (xsubi)
+-     unsigned short int xsubi[3];
++erand48 (unsigned short int xsubi[3])
+ {
+   double result;
+ 
+diff --git a/stdlib/erand48_r.c b/stdlib/erand48_r.c
+index cdd02c9c963c89ed..9cf062da0ad1b89c 100644
+--- a/stdlib/erand48_r.c
++++ b/stdlib/erand48_r.c
+@@ -22,10 +22,8 @@
+ 
+ 
+ int
+-__erand48_r (xsubi, buffer, result)
+-     unsigned short int xsubi[3];
+-     struct drand48_data *buffer;
+-     double *result;
++__erand48_r (unsigned short int xsubi[3], struct drand48_data *buffer,
++	     double *result)
+ {
+   union ieee754_double temp;
+ 
+diff --git a/stdlib/jrand48.c b/stdlib/jrand48.c
+index af6bf6809155963c..a6d2f3ab0a1e0c9d 100644
+--- a/stdlib/jrand48.c
++++ b/stdlib/jrand48.c
+@@ -20,8 +20,7 @@
+ 
+ 
+ long int
+-jrand48 (xsubi)
+-     unsigned short int xsubi[3];
++jrand48 (unsigned short int xsubi[3])
+ {
+   long int result;
+ 
+diff --git a/stdlib/jrand48_r.c b/stdlib/jrand48_r.c
+index 78c57dbaa285f968..b0170e11d30fcf5e 100644
+--- a/stdlib/jrand48_r.c
++++ b/stdlib/jrand48_r.c
+@@ -19,10 +19,8 @@
+ #include <stdlib.h>
+ 
+ int
+-__jrand48_r (xsubi, buffer, result)
+-     unsigned short int xsubi[3];
+-     struct drand48_data *buffer;
+-     long int *result;
++__jrand48_r (unsigned short int xsubi[3], struct drand48_data *buffer,
++	     long int *result)
+ {
+   /* Compute next state.  */
+   if (__drand48_iterate (xsubi, buffer) < 0)
+diff --git a/stdlib/lcong48.c b/stdlib/lcong48.c
+index 31f403e01c10f104..b7943605041e99c0 100644
+--- a/stdlib/lcong48.c
++++ b/stdlib/lcong48.c
+@@ -20,8 +20,7 @@
+ 
+ 
+ void
+-lcong48 (param)
+-     unsigned short int param[7];
++lcong48 (unsigned short int param[7])
+ {
+   (void) __lcong48_r (param, &__libc_drand48_data);
+ }
+diff --git a/stdlib/lcong48_r.c b/stdlib/lcong48_r.c
+index 03ffcd7eb03742de..063baa3c8753a6f9 100644
+--- a/stdlib/lcong48_r.c
++++ b/stdlib/lcong48_r.c
+@@ -22,9 +22,7 @@
+ #include <limits.h>
+ 
+ int
+-__lcong48_r (param, buffer)
+-     unsigned short int param[7];
+-     struct drand48_data *buffer;
++__lcong48_r (unsigned short int param[7], struct drand48_data *buffer)
+ {
+   /* Store the given values.  */
+   memcpy (buffer->__x, &param[0], sizeof (buffer->__x));
+diff --git a/stdlib/nrand48.c b/stdlib/nrand48.c
+index 927e7d25534292a0..9f9f2f550faf3d88 100644
+--- a/stdlib/nrand48.c
++++ b/stdlib/nrand48.c
+@@ -20,8 +20,7 @@
+ 
+ 
+ long int
+-nrand48 (xsubi)
+-     unsigned short int xsubi[3];
++nrand48 (unsigned short int xsubi[3])
+ {
+   long int result;
+ 
+diff --git a/stdlib/nrand48_r.c b/stdlib/nrand48_r.c
+index 15a9b0c20589198a..f57e34cdcc44ff9f 100644
+--- a/stdlib/nrand48_r.c
++++ b/stdlib/nrand48_r.c
+@@ -19,10 +19,8 @@
+ #include <stdlib.h>
+ 
+ int
+-__nrand48_r (xsubi, buffer, result)
+-     unsigned short int xsubi[3];
+-     struct drand48_data *buffer;
+-     long int *result;
++__nrand48_r (unsigned short int xsubi[3], struct drand48_data *buffer,
++	     long int *result)
+ {
+   /* Compute next state.  */
+   if (__drand48_iterate (xsubi, buffer) < 0)
+diff --git a/stdlib/seed48.c b/stdlib/seed48.c
+index 9808213eaeff876d..941c870977062bb3 100644
+--- a/stdlib/seed48.c
++++ b/stdlib/seed48.c
+@@ -20,8 +20,7 @@
+ 
+ 
+ unsigned short int *
+-seed48 (seed16v)
+-     unsigned short int seed16v[3];
++seed48 (unsigned short int seed16v[3])
+ {
+   (void) __seed48_r (seed16v, &__libc_drand48_data);
+ 
+diff --git a/stdlib/seed48_r.c b/stdlib/seed48_r.c
+index b821d2349d8bb0c1..c8d9262123200c1b 100644
+--- a/stdlib/seed48_r.c
++++ b/stdlib/seed48_r.c
+@@ -21,9 +21,7 @@
+ #include <limits.h>
+ 
+ int
+-__seed48_r (seed16v, buffer)
+-     unsigned short int seed16v[3];
+-     struct drand48_data *buffer;
++__seed48_r (unsigned short int seed16v[3], struct drand48_data *buffer)
+ {
+   /* Save old value at a private place to be used as return value.  */
+   memcpy (buffer->__old_x, buffer->__x, sizeof (buffer->__x));
+diff --git a/sysdeps/mach/hurd/execve.c b/sysdeps/mach/hurd/execve.c
+index 716cea7bf8fd0eba..72e509b7870085d0 100644
+--- a/sysdeps/mach/hurd/execve.c
++++ b/sysdeps/mach/hurd/execve.c
+@@ -22,10 +22,7 @@
+ /* Replace the current process, executing FILE_NAME with arguments ARGV and
+    environment ENVP.  ARGV and ENVP are terminated by NULL pointers.  */
+ int
+-__execve (file_name, argv, envp)
+-     const char *file_name;
+-     char *const argv[];
+-     char *const envp[];
++__execve (const char *file_name, char *const argv[], char *const envp[])
+ {
+   error_t err;
+   file_t file = __file_name_lookup (file_name, O_EXEC, 0);
+diff --git a/sysdeps/mach/hurd/utimes.c b/sysdeps/mach/hurd/utimes.c
+index ae3d375b2dfb3c72..d915fae5bfee9e6e 100644
+--- a/sysdeps/mach/hurd/utimes.c
++++ b/sysdeps/mach/hurd/utimes.c
+@@ -24,9 +24,7 @@
+ /* Change the access time of FILE to TVP[0] and
+    the modification time of FILE to TVP[1].  */
+ int
+-__utimes (file, tvp)
+-     const char *file;
+-     const struct timeval tvp[2];
++__utimes (const char *file, const struct timeval tvp[2])
+ {
+   union tv
+   {
+diff --git a/sysdeps/unix/sysv/linux/fexecve.c b/sysdeps/unix/sysv/linux/fexecve.c
+index 032e680742507e70..df341cde0a3ea21b 100644
+--- a/sysdeps/unix/sysv/linux/fexecve.c
++++ b/sysdeps/unix/sysv/linux/fexecve.c
+@@ -25,10 +25,7 @@
+ /* Execute the file FD refers to, overlaying the running program image.
+    ARGV and ENVP are passed to the new program, as for `execve'.  */
+ int
+-fexecve (fd, argv, envp)
+-     int fd;
+-     char *const argv[];
+-     char *const envp[];
++fexecve (int fd, char *const argv[], char *const envp[])
+ {
+   if (fd < 0 || argv == NULL || envp == NULL)
+     {

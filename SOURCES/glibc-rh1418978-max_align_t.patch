@@ -1,0 +1,82 @@
+This patch adds a definition of max_align_t to the internal
+<sys/cdefs.h> header, for use in support/ functionality and elsewhere.
+
+The definition must support being compiled in C11 or C++11 mode and
+must check both __STDC_VERSION__ and __cplusplus versions.
+
+Upstream does not need this because all files are compiled in C11
+mode, making available the GCC definition in <stddef.h>
+
+Also change malloc/tst-malloc-thread-fail.c to use the new definition.
+
+Index: glibc-2.17-c758a686/include/sys/cdefs.h
+===================================================================
+--- glibc-2.17-c758a686.orig/include/sys/cdefs.h
++++ glibc-2.17-c758a686/include/sys/cdefs.h
+@@ -15,6 +15,18 @@ rtld_hidden_proto (__chk_fail)
+ 
+ 
+ # define __attribute_alloc_size(...) __attribute__ ((alloc_size (__VA_ARGS__)))
++
++/* This mirrors the C11/C++11 max_align_t type provided by GCC, but it
++   is also available in C99 mode.  The aligned attributes are required
++   because some ABIs have reduced alignment requirements for struct and
++   union members.  */
++#if __STDC_VERSION__ < 201112L && __cplusplus < 201103L
++typedef struct {
++  long long ll __attribute__ ((__aligned__ (__alignof__ (long long))));
++  long double ld __attribute__ ((__aligned__ (__alignof__ (long double))));
++} max_align_t;
++#endif /* __STDC_VERSION__ < 201112 && __cplusplus < 201103L */
++
+ #endif
+ 
+ #endif
+Index: glibc-2.17-c758a686/malloc/tst-malloc-thread-fail.c
+===================================================================
+--- glibc-2.17-c758a686.orig/malloc/tst-malloc-thread-fail.c
++++ glibc-2.17-c758a686/malloc/tst-malloc-thread-fail.c
+@@ -30,16 +30,6 @@
+ #include <sys/resource.h>
+ #include <sys/wait.h>
+ #include <unistd.h>
+-#include <stddef.h>
+-
+-/* This mirrors the C11 max_align_t type provided by GCC, but it is
+-   also available in C99 mode.  The aligned attributes are required
+-   because some ABIs have reduced alignment requirements for struct
+-   and union members.  */
+-typedef struct {
+-  long long ll __attribute__ ((__aligned__ (__alignof__ (long long))));
+-  long double ld __attribute__ ((__aligned__ (__alignof__ (long double))));
+-} libc_max_align_t;
+ 
+ /* Wrapper for calloc with an optimization barrier.  */
+ static void *
+@@ -93,7 +83,7 @@ allocate_1 (void)
+     {
+     case with_malloc:
+       return (struct allocate_result)
+-        {malloc (allocation_size), __alignof__ (libc_max_align_t)};
++        {malloc (allocation_size), _Alignof (max_align_t)};
+     case with_realloc:
+       {
+         void *p = realloc (NULL, 16);
+@@ -106,7 +96,7 @@ allocate_1 (void)
+             if (q == NULL)
+               free (p);
+           }
+-        return (struct allocate_result) {q, __alignof__ (libc_max_align_t)};
++        return (struct allocate_result) {q, _Alignof (max_align_t)};
+       }
+     case with_aligned_alloc:
+       {
+@@ -155,7 +145,7 @@ allocate_1 (void)
+                 printf ("error: non-zero byte at offset %zu\n", i);
+                 abort ();
+               }
+-        return (struct allocate_result) {p, __alignof__ (libc_max_align_t)};
++        return (struct allocate_result) {p, _Alignof (max_align_t)};
+       }
+     }
+   abort ();

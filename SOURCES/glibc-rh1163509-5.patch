@@ -1,0 +1,720 @@
+This patch removes the following remaining architecture specific
+pthread_once implementations:
+
+- alpha, hppa, sh: Not used in RHEL.
+
+- s390: Was first moved, then renamed upstream by the following commits:
+
+  commit 52ae23b4bfa09fa1f42e3f659aaa057d1176d06b
+  Author: Roland McGrath <roland@hack.frob.com>
+  Date:   Thu Jun 26 09:31:11 2014 -0700
+
+      Move remaining S390 code out of nptl/.
+
+  commit bc89c0fc70ba952f78fc27fc261ec209be0a6732
+  Author: Torvald Riegel <triegel@redhat.com>
+  Date:   Mon Dec 8 18:32:14 2014 +0100
+
+      Remove custom pthread_once implementation on s390.
+
+- powerpc: Was removed upstream by the following commit:
+
+  commit 75ffb047f6ee2a545da8cf69dba9a979ca6271ce
+  Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+  Date:   Sun Apr 13 18:13:42 2014 -0500
+
+      PowerPC: Sync pthread_once with default implementation
+
+diff --git a/nptl/sysdeps/unix/sysv/linux/powerpc/pthread_once.c b/nptl/sysdeps/unix/sysv/linux/powerpc/pthread_once.c
+deleted file mode 100644
+index 52ab53f0a912d107..0000000000000000
+--- a/nptl/sysdeps/unix/sysv/linux/powerpc/pthread_once.c
++++ /dev/null
+@@ -1,110 +0,0 @@
+-/* Copyright (C) 2003-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Paul Mackerras <paulus@au.ibm.com>, 2003.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include "pthreadP.h"
+-#include <lowlevellock.h>
+-
+-
+-unsigned long int __fork_generation attribute_hidden;
+-
+-
+-static void
+-clear_once_control (void *arg)
+-{
+-  pthread_once_t *once_control = (pthread_once_t *) arg;
+-
+-  __asm __volatile (__lll_rel_instr);
+-  *once_control = 0;
+-  lll_futex_wake (once_control, INT_MAX, LLL_PRIVATE);
+-}
+-
+-
+-int
+-__pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
+-{
+-  for (;;)
+-    {
+-      int oldval;
+-      int newval;
+-      int tmp;
+-
+-      /* Pseudo code:
+-	 newval = __fork_generation | 1;
+-	 oldval = *once_control;
+-	 if ((oldval & 2) == 0)
+-	   *once_control = newval;
+-	 Do this atomically with an acquire barrier.
+-      */
+-      newval = __fork_generation | 1;
+-      __asm __volatile ("1:	lwarx	%0,0,%3" MUTEX_HINT_ACQ "\n"
+-			"	andi.	%1,%0,2\n"
+-			"	bne	2f\n"
+-			"	stwcx.	%4,0,%3\n"
+-			"	bne	1b\n"
+-			"2:	" __lll_acq_instr
+-			: "=&r" (oldval), "=&r" (tmp), "=m" (*once_control)
+-			: "r" (once_control), "r" (newval), "m" (*once_control)
+-			: "cr0");
+-
+-      /* Check if the initializer has already been done.  */
+-      if ((oldval & 2) != 0)
+-	return 0;
+-
+-      /* Check if another thread already runs the initializer.	*/
+-      if ((oldval & 1) == 0)
+-	break;
+-
+-      /* Check whether the initializer execution was interrupted by a fork.  */
+-      if (oldval != newval)
+-	break;
+-
+-      /* Same generation, some other thread was faster. Wait.  */
+-      lll_futex_wait (once_control, oldval, LLL_PRIVATE);
+-    }
+-
+-
+-  /* This thread is the first here.  Do the initialization.
+-     Register a cleanup handler so that in case the thread gets
+-     interrupted the initialization can be restarted.  */
+-  pthread_cleanup_push (clear_once_control, once_control);
+-
+-  init_routine ();
+-
+-  pthread_cleanup_pop (0);
+-
+-
+-  /* Add one to *once_control to take the bottom 2 bits from 01 to 10.
+-     A release barrier is needed to ensure memory written by init_routine
+-     is seen in other threads before *once_control changes.  */
+-  int tmp;
+-  __asm __volatile (__lll_rel_instr "\n"
+-		    "1:	lwarx	%0,0,%2" MUTEX_HINT_REL "\n"
+-		    "	addi	%0,%0,1\n"
+-		    "	stwcx.	%0,0,%2\n"
+-		    "	bne-	1b"
+-		    : "=&b" (tmp), "=m" (*once_control)
+-		    : "r" (once_control), "m" (*once_control)
+-		    : "cr0");
+-
+-  /* Wake up all other threads.  */
+-  lll_futex_wake (once_control, INT_MAX, LLL_PRIVATE);
+-
+-  return 0;
+-}
+-weak_alias (__pthread_once, pthread_once)
+-hidden_def (__pthread_once)
+diff --git a/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c b/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c
+deleted file mode 100644
+index 4bce7fec13ea3bb2..0000000000000000
+--- a/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c
++++ /dev/null
+@@ -1,108 +0,0 @@
+-/* Copyright (C) 2003-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Martin Schwidefsky <schwidefsky@de.ibm.com>, 2003.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include "pthreadP.h"
+-#include <lowlevellock.h>
+-
+-
+-unsigned long int __fork_generation attribute_hidden;
+-
+-
+-static void
+-clear_once_control (void *arg)
+-{
+-  pthread_once_t *once_control = (pthread_once_t *) arg;
+-
+-  *once_control = 0;
+-  lll_futex_wake (once_control, INT_MAX, LLL_PRIVATE);
+-}
+-
+-
+-int
+-__pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
+-{
+-  while (1)
+-    {
+-      int oldval;
+-      int newval;
+-
+-      /* Pseudo code:
+-	   oldval = *once_control;
+-	   if ((oldval & 2) == 0)
+-	    {
+-	      newval = (oldval & 3) | __fork_generation | 1;
+-	      *once_control = newval;
+-	    }
+-	 Do this atomically.  */
+-      __asm __volatile ("   l	 %1,%0\n"
+-			"0: lhi	 %2,2\n"
+-			"   tml	 %1,2\n"
+-			"   jnz	 1f\n"
+-			"   nr	 %2,%1\n"
+-			"   ahi	 %2,1\n"
+-			"   o	 %2,%3\n"
+-			"   cs	 %1,%2,%0\n"
+-			"   jl	 0b\n"
+-			"1:"
+-			: "=Q" (*once_control), "=&d" (oldval), "=&d" (newval)
+-			: "m" (__fork_generation), "m" (*once_control)
+-			: "cc" );
+-      /* Check if the initialized has already been done.  */
+-      if ((oldval & 2) != 0)
+-	  break;
+-      /* Check if another thread already runs the initializer.	*/
+-      if ((oldval & 1) != 0)
+-	{
+-	  /* Check whether the initializer execution was interrupted
+-	     by a fork.	 */
+-	  if (((oldval ^ newval) & -4) == 0)
+-	    {
+-	      /* Same generation, some other thread was faster. Wait.  */
+-	      lll_futex_wait (once_control, newval, LLL_PRIVATE);
+-	      continue;
+-	    }
+-	}
+-
+-      /* This thread is the first here.  Do the initialization.
+-	 Register a cleanup handler so that in case the thread gets
+-	 interrupted the initialization can be restarted.  */
+-      pthread_cleanup_push (clear_once_control, once_control);
+-
+-      init_routine ();
+-
+-      pthread_cleanup_pop (0);
+-
+-
+-      /* Add one to *once_control.  */
+-      __asm __volatile ("   l	 %1,%0\n"
+-			"0: lr	 %2,%1\n"
+-			"   ahi	 %2,1\n"
+-			"   cs	 %1,%2,%0\n"
+-			"   jl	 0b\n"
+-			: "=Q" (*once_control), "=&d" (oldval), "=&d" (newval)
+-			: "m" (*once_control) : "cc" );
+-
+-      /* Wake up all other threads.  */
+-      lll_futex_wake (once_control, INT_MAX, LLL_PRIVATE);
+-      break;
+-    }
+-
+-  return 0;
+-}
+-weak_alias (__pthread_once, pthread_once)
+-hidden_def (__pthread_once)
+diff --git a/nptl/sysdeps/unix/sysv/linux/sh/pthread_once.S b/nptl/sysdeps/unix/sysv/linux/sh/pthread_once.S
+deleted file mode 100644
+index 62b92d8b103ded65..0000000000000000
+--- a/nptl/sysdeps/unix/sysv/linux/sh/pthread_once.S
++++ /dev/null
+@@ -1,257 +0,0 @@
+-/* Copyright (C) 2003-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <unwindbuf.h>
+-#include <sysdep.h>
+-#include <kernel-features.h>
+-#include <lowlevellock.h>
+-#include "lowlevel-atomic.h"
+-
+-
+-	.comm	__fork_generation, 4, 4
+-
+-	.text
+-	.globl	__pthread_once
+-	.type	__pthread_once,@function
+-	.align	5
+-	cfi_startproc
+-__pthread_once:
+-	mov.l	@r4, r0
+-	tst	#2, r0
+-	bt	1f
+-	rts
+-	 mov	#0, r0
+-
+-1:
+-	mov.l	r12, @-r15
+-	cfi_adjust_cfa_offset (4)
+-	cfi_rel_offset (r12, 0)
+-	mov.l	r9, @-r15
+-	cfi_adjust_cfa_offset (4)
+-	cfi_rel_offset (r9, 0)
+-	mov.l	r8, @-r15
+-	cfi_adjust_cfa_offset (4)
+-	cfi_rel_offset (r8, 0)
+-	sts.l	pr, @-r15
+-	cfi_adjust_cfa_offset (4)
+-	cfi_rel_offset (pr, 0)
+-	mov	r5, r8
+-	mov	r4, r9
+-
+-	/* Not yet initialized or initialization in progress.
+-	   Get the fork generation counter now.  */
+-6:
+-	mov.l	@r4, r1
+-	mova	.Lgot, r0
+-	mov.l	.Lgot, r12
+-	add	r0, r12
+-
+-5:
+-	mov	r1, r0
+-
+-	tst	#2, r0
+-	bf	4f
+-
+-	and	#3, r0
+-	mov.l	.Lfgen, r2
+-#ifdef PIC
+-	add	r12, r2
+-#endif
+-	mov.l	@r2, r3
+-	or	r3, r0	
+-	or	#1, r0
+-	mov	r0, r3
+-	mov	r1, r5
+-
+-	CMPXCHG (r5, @r4, r3, r2)
+-	bf	5b
+-
+-	/* Check whether another thread already runs the initializer.  */
+-	mov	r2, r0
+-	tst	#1, r0
+-	bt	3f	/* No -> do it.  */
+-
+-	/* Check whether the initializer execution was interrupted
+-	   by a fork.  */
+-	xor	r3, r0
+-	mov	#-4, r1	/* -4 = 0xfffffffc */
+-	tst	r1, r0
+-	bf	3f	/* Different for generation -> run initializer.  */
+-
+-	/* Somebody else got here first.  Wait.  */
+-#ifdef __ASSUME_PRIVATE_FUTEX
+-	mov	#(FUTEX_PRIVATE_FLAG|FUTEX_WAIT), r5
+-	extu.b	r5, r5
+-#else
+-	stc	gbr, r1
+-	mov.w	.Lpfoff, r2
+-	add	r2, r1
+-	mov.l	@r1, r5
+-# if FUTEX_WAIT != 0
+-	mov	#FUTEX_WAIT, r0
+-	or	r0, r5
+-# endif
+-#endif
+-	mov	r3, r6
+-	mov	#0, r7
+-	mov	#SYS_futex, r3
+-	extu.b	r3, r3
+-	trapa	#0x14
+-	SYSCALL_INST_PAD
+-	bra	6b
+-	 nop
+-
+-	.align	2
+-.Lgot:
+-	.long	_GLOBAL_OFFSET_TABLE_
+-#ifdef PIC
+-.Lfgen:	
+-	.long	__fork_generation@GOTOFF
+-#else
+-.Lfgen:	
+-	.long	__fork_generation
+-#endif
+-
+-3:
+-	/* Call the initializer function after setting up the
+-	   cancellation handler.  Note that it is not possible here
+-	   to use the unwind-based cleanup handling.  This would require
+-	   that the user-provided function and all the code it calls
+-	   is compiled with exceptions.  Unfortunately this cannot be
+-	   guaranteed.  */
+-	add	#-UNWINDBUFSIZE, r15
+-	cfi_adjust_cfa_offset (UNWINDBUFSIZE)
+-
+-	mov.l	.Lsigsetjmp, r1
+-	mov	#UWJMPBUF, r4
+-	add	r15, r4
+-	bsrf	r1
+-	 mov	#0, r5
+-.Lsigsetjmp0:
+-	tst	r0, r0
+-	bf	7f
+-
+-	mov.l	.Lcpush, r1
+-	bsrf	r1
+-	 mov	r15, r4
+-.Lcpush0:
+-
+-	/* Call the user-provided initialization function.  */
+-	jsr	@r8
+-	 nop
+-
+-	/* Pop the cleanup handler.  */
+-	mov.l	.Lcpop, r1
+-	bsrf	r1
+-	 mov	r15, r4
+-.Lcpop0:
+-
+-	add	#UNWINDBUFSIZE, r15
+-	cfi_adjust_cfa_offset (-UNWINDBUFSIZE)
+-
+-	/* Sucessful run of the initializer.  Signal that we are done.  */
+-	INC (@r9, r2)
+-	/* Wake up all other threads.  */
+-	mov	r9, r4
+-#ifdef __ASSUME_PRIVATE_FUTEX
+-	mov	#(FUTEX_PRIVATE_FLAG|FUTEX_WAKE), r5
+-	extu.b	r5, r5
+-#else
+-	stc	gbr, r1
+-	mov.w	.Lpfoff, r2
+-	add	r2, r1
+-	mov.l	@r1, r5
+-	mov	#FUTEX_WAKE, r0
+-	or	r0, r5
+-#endif
+-	mov	#-1, r6
+-	shlr	r6		/* r6 = 0x7fffffff */
+-	mov	#0, r7
+-	mov	#SYS_futex, r3
+-	extu.b	r3, r3
+-	trapa	#0x14
+-	SYSCALL_INST_PAD
+-
+-4:
+-	lds.l	@r15+, pr
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (pr)
+-	mov.l	@r15+, r8
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r8)
+-	mov.l	@r15+, r9
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r9)
+-	mov.l	@r15+, r12
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r12)
+-	rts
+-	 mov	#0, r0
+-
+-7:
+-	/* __sigsetjmp returned for the second time.  */
+-	cfi_adjust_cfa_offset (UNWINDBUFSIZE+16)
+-	cfi_offset (r12, -4)
+-	cfi_offset (r9, -8)
+-	cfi_offset (r8, -12)
+-	cfi_offset (pr, -16)
+-	mov	#0, r7
+-	mov.l	r7, @r9
+-	mov	r9, r4
+-#ifdef __ASSUME_PRIVATE_FUTEX
+-	mov	#(FUTEX_PRIVATE_FLAG|FUTEX_WAKE), r5
+-#else
+-	stc	gbr, r1
+-	mov.w	.Lpfoff, r2
+-	add	r2, r1
+-	mov.l	@r1, r5
+-	mov	#FUTEX_WAKE, r0
+-	or	r0, r5
+-#endif
+-	extu.b	r5, r5
+-	mov	#-1, r6
+-	shlr	r6		/* r6 = 0x7fffffff */
+-	mov	#SYS_futex, r3
+-	extu.b	r3, r3
+-	trapa	#0x14
+-	SYSCALL_INST_PAD
+-
+-	mov.l	.Lunext, r1
+-	bsrf	r1
+-	 mov	r15, r4
+-.Lunext0:
+-	/* NOTREACHED */
+-	sleep
+-	cfi_endproc
+-
+-#ifndef __ASSUME_PRIVATE_FUTEX
+-.Lpfoff:
+-	.word	PRIVATE_FUTEX - TLS_PRE_TCB_SIZE
+-#endif
+-	.align	2
+-.Lsigsetjmp:
+-	.long	__sigsetjmp@PLT-(.Lsigsetjmp0-.)
+-.Lcpush:
+-	.long	HIDDEN_JUMPTARGET(__pthread_register_cancel)-.Lcpush0
+-.Lcpop:
+-	.long	HIDDEN_JUMPTARGET(__pthread_unregister_cancel)-.Lcpop0
+-.Lunext:
+-	.long	HIDDEN_JUMPTARGET(__pthread_unwind_next)-.Lunext0
+-	.size	__pthread_once,.-__pthread_once
+-
+-hidden_def (__pthread_once)
+-strong_alias (__pthread_once, pthread_once)
+diff --git a/sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c
+deleted file mode 100644
+index c342e0a7a0965086..0000000000000000
+--- a/sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c
++++ /dev/null
+@@ -1,95 +0,0 @@
+-/* Copyright (C) 2003-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include "pthreadP.h"
+-#include <lowlevellock.h>
+-
+-
+-unsigned long int __fork_generation attribute_hidden;
+-
+-static void
+-clear_once_control (void *arg)
+-{
+-  pthread_once_t *once_control = (pthread_once_t *) arg;
+-
+-  *once_control = 0;
+-  lll_futex_wake (once_control, INT_MAX, LLL_PRIVATE);
+-}
+-
+-int
+-__pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
+-{
+-  for (;;)
+-    {
+-      int oldval;
+-      int newval;
+-      int tmp;
+-
+-      /* Pseudo code:
+-	 newval = __fork_generation | 1;
+-	 oldval = *once_control;
+-	 if ((oldval & 2) == 0)
+-	   *once_control = newval;
+-	 Do this atomically.
+-      */
+-      newval = __fork_generation | 1;
+-      __asm __volatile (
+-		"1:	ldl_l	%0, %2\n"
+-		"	and	%0, 2, %1\n"
+-		"	bne	%1, 2f\n"
+-		"	mov	%3, %1\n"
+-		"	stl_c	%1, %2\n"
+-		"	beq	%1, 1b\n"
+-		"2:	mb"
+-		: "=&r" (oldval), "=&r" (tmp), "=m" (*once_control)
+-		: "r" (newval), "m" (*once_control));
+-
+-      /* Check if the initializer has already been done.  */
+-      if ((oldval & 2) != 0)
+-	return 0;
+-
+-      /* Check if another thread already runs the initializer.	*/
+-      if ((oldval & 1) == 0)
+-	break;
+-
+-      /* Check whether the initializer execution was interrupted by a fork.  */
+-      if (oldval != newval)
+-	break;
+-
+-      /* Same generation, some other thread was faster. Wait.  */
+-      lll_futex_wait (once_control, oldval, LLL_PRIVATE);
+-    }
+-
+-  /* This thread is the first here.  Do the initialization.
+-     Register a cleanup handler so that in case the thread gets
+-     interrupted the initialization can be restarted.  */
+-  pthread_cleanup_push (clear_once_control, once_control);
+-
+-  init_routine ();
+-
+-  pthread_cleanup_pop (0);
+-
+-  /* Add one to *once_control to take the bottom 2 bits from 01 to 10.  */
+-  atomic_increment (once_control);
+-
+-  /* Wake up all other threads.  */
+-  lll_futex_wake (once_control, INT_MAX, LLL_PRIVATE);
+-
+-  return 0;
+-}
+-weak_alias (__pthread_once, pthread_once)
+-hidden_def (__pthread_once)
+diff --git a/sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c
+deleted file mode 100644
+index b920ebb22c10a569..0000000000000000
+--- a/sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c
++++ /dev/null
+@@ -1,93 +0,0 @@
+-/* Copyright (C) 2003-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Jakub Jelinek <jakub@redhat.com>, 2003.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include "pthreadP.h"
+-#include <lowlevellock.h>
+-
+-
+-unsigned long int __fork_generation attribute_hidden;
+-
+-
+-static void
+-clear_once_control (void *arg)
+-{
+-  pthread_once_t *once_control = (pthread_once_t *) arg;
+-
+-  *once_control = 0;
+-  lll_private_futex_wake (once_control, INT_MAX);
+-}
+-
+-
+-int
+-__pthread_once (once_control, init_routine)
+-     pthread_once_t *once_control;
+-     void (*init_routine) (void);
+-{
+-  while (1)
+-    {
+-      int oldval, val, newval;
+-
+-      val = *once_control;
+-      do
+-	{
+-	  /* Check if the initialized has already been done.  */
+-	  if ((val & 2) != 0)
+-	    return 0;
+-
+-	  oldval = val;
+-	  newval = (oldval & 3) | __fork_generation | 1;
+-	  val = atomic_compare_and_exchange_val_acq (once_control, newval,
+-						     oldval);
+-	}
+-      while (__builtin_expect (val != oldval, 0));
+-
+-      /* Check if another thread already runs the initializer.	*/
+-      if ((oldval & 1) != 0)
+-	{
+-	  /* Check whether the initializer execution was interrupted
+-	     by a fork.	 */
+-	  if (((oldval ^ newval) & -4) == 0)
+-	    {
+-	      /* Same generation, some other thread was faster. Wait.  */
+-	      lll_private_futex_wait (once_control, newval);
+-	      continue;
+-	    }
+-	}
+-
+-      /* This thread is the first here.  Do the initialization.
+-	 Register a cleanup handler so that in case the thread gets
+-	 interrupted the initialization can be restarted.  */
+-      pthread_cleanup_push (clear_once_control, once_control);
+-
+-      init_routine ();
+-
+-      pthread_cleanup_pop (0);
+-
+-
+-      /* Add one to *once_control.  */
+-      atomic_increment (once_control);
+-
+-      /* Wake up all other threads.  */
+-      lll_private_futex_wake (once_control, INT_MAX);
+-      break;
+-    }
+-
+-  return 0;
+-}
+-weak_alias (__pthread_once, pthread_once)
+-hidden_def (__pthread_once)

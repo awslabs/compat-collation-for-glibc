@@ -1,0 +1,30 @@
+commit 439e1ad6d04e24f76f92ff7f61153fbe489559b9
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Nov 25 23:31:21 2014 +0000
+
+    Fix warning in stdio-common/tst-printf-round.c.
+    
+    This patch fixes warnings of the form "tst-printf-round.c:202:17:
+    warning: passing argument 3 of 'test_hex_in_one_mode' discards 'const'
+    qualifier from pointer target type", by adding an extra const to that
+    argument (so that after array-to-pointer conversion it's const char
+    *const *).
+    
+    Tested for x86_64.
+    
+            * stdio-common/tst-printf-round.c (test_hex_in_one_mode): Make
+            third argument const.
+
+diff --git a/stdio-common/tst-printf-round.c b/stdio-common/tst-printf-round.c
+index 7cc19c5645dcc806..7f40a713636302b8 100644
+--- a/stdio-common/tst-printf-round.c
++++ b/stdio-common/tst-printf-round.c
+@@ -136,7 +136,7 @@ static const struct hex_test hex_tests[] =
+   };
+ 
+ static int
+-test_hex_in_one_mode (double d, const char *fmt, const char *expected[4],
++test_hex_in_one_mode (double d, const char *fmt, const char *const expected[4],
+ 		      const char *mode_name)
+ {
+   char buf[100];

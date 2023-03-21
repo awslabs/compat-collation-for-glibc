@@ -1,0 +1,24 @@
+commit 4d614fe5e0625f197805978730214e5236ef360c
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Thu Jul 3 19:17:00 2014 -0700
+
+    S390: Quash unused variable warning due to no-op THREAD_SET_POINTER_GUARD.
+
+Conflicts:
+	sysdeps/s390/nptl/tls.h
+
+Change applied to nptl/sysdeps/s390/tls.h instead.
+
+diff --git a/nptl/sysdeps/s390/tls.h b/nptl/sysdeps/s390/tls.h
+index 580196b7bfee3046..b3ba0ecc20ce0fcc 100644
+--- a/nptl/sysdeps/s390/tls.h
++++ b/nptl/sysdeps/s390/tls.h
+@@ -170,7 +170,7 @@ typedef struct
+    use stack_guard as pointer_guard.  */
+ #define THREAD_GET_POINTER_GUARD() \
+   THREAD_GETMEM (THREAD_SELF, header.stack_guard)
+-#define THREAD_SET_POINTER_GUARD(value)
++#define THREAD_SET_POINTER_GUARD(value)	((void) (value))
+ #define THREAD_COPY_POINTER_GUARD(descr)
+ 
+ /* Get and set the global scope generation counter in struct pthread.  */

@@ -1,0 +1,19 @@
+diff -Naurp a/stdio-common/printf_fp.c b/stdio-common/printf_fp.c
+--- a/stdio-common/printf_fp.c	2021-02-03 16:46:26.887807279 +0000
++++ b/stdio-common/printf_fp.c	2021-02-03 16:50:16.604469900 +0000
+@@ -151,6 +151,7 @@ static wchar_t *group_number (wchar_t *b
+ 			      wchar_t thousands_sep, int ngroups)
+      internal_function;
+ 
++#ifndef __NO_LONG_DOUBLE_MATH
+ static __always_inline int
+ isnanl_or_pseudo (long double in)
+ {
+@@ -172,6 +173,7 @@ isnanl_or_pseudo (long double in)
+   return __isnanl (in);
+ #endif
+ }
++#endif
+ 
+ 
+ int

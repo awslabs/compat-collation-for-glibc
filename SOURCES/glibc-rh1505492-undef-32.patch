@@ -1,0 +1,224 @@
+commit 99f8dc922033821edcc13f9f8360e9fda40dfcff
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 3 01:28:45 2014 +0530
+
+    Fix -Wundef warning on PAGE_COPY_THRESHOLD
+    
+    The PAGE_COPY_THRESHOLD macro is meant to be overridden by
+    architecture-specific pagecopy.h, but it is currently done only by
+    mach; all other architectures use the default.  Check to see if the
+    macro is defined in addition to whether it is set to a non-zero value.
+
+Conflicts:
+	sysdeps/generic/pagecopy.h
+
+Due to copyright header change.
+
+diff --git a/debug/memcpy_chk.c b/debug/memcpy_chk.c
+index bd43583ff4239c8a..4af85a8cb8f5c8de 100644
+--- a/debug/memcpy_chk.c
++++ b/debug/memcpy_chk.c
+@@ -20,7 +20,6 @@
+ 
+ #include <string.h>
+ #include <memcopy.h>
+-#include <pagecopy.h>
+ 
+ void *
+ __memcpy_chk (dstpp, srcpp, len, dstlen)
+diff --git a/debug/mempcpy_chk.c b/debug/mempcpy_chk.c
+index 8e26953764ff1b35..9a4f0e2fbcdde951 100644
+--- a/debug/mempcpy_chk.c
++++ b/debug/mempcpy_chk.c
+@@ -21,7 +21,6 @@
+ 
+ #include <string.h>
+ #include <memcopy.h>
+-#include <pagecopy.h>
+ 
+ void *
+ __mempcpy_chk (dstpp, srcpp, len, dstlen)
+diff --git a/string/memcpy.c b/string/memcpy.c
+index 3080fcb4de4cec83..fa1ec24eaca527c4 100644
+--- a/string/memcpy.c
++++ b/string/memcpy.c
+@@ -20,7 +20,6 @@
+ 
+ #include <string.h>
+ #include <memcopy.h>
+-#include <pagecopy.h>
+ 
+ #undef memcpy
+ 
+diff --git a/string/memmove.c b/string/memmove.c
+index c59e7a9c2a640f7d..51bff31c0530ba91 100644
+--- a/string/memmove.c
++++ b/string/memmove.c
+@@ -20,7 +20,6 @@
+ 
+ #include <string.h>
+ #include <memcopy.h>
+-#include <pagecopy.h>
+ 
+ /* All this is so that bcopy.c can #include
+    this file after defining some things.  */
+diff --git a/sysdeps/generic/memcopy.h b/sysdeps/generic/memcopy.h
+index 08892a4ea33f1ca7..d0ffcd33b007ba38 100644
+--- a/sysdeps/generic/memcopy.h
++++ b/sysdeps/generic/memcopy.h
+@@ -40,6 +40,7 @@
+ 
+ #include <sys/cdefs.h>
+ #include <endian.h>
++#include <pagecopy.h>
+ 
+ /* The macros defined in this file are:
+ 
+@@ -144,6 +145,47 @@ extern void _wordcopy_bwd_dest_aligned (long int, long int, size_t) __THROW;
+       (nbytes_left) = (nbytes) % OPSIZ;					      \
+     } while (0)
+ 
++/* The macro PAGE_COPY_FWD_MAYBE (dstp, srcp, nbytes_left, nbytes) is invoked
++   like WORD_COPY_FWD et al.  The pointers should be at least word aligned.
++   This will check if virtual copying by pages can and should be done and do it
++   if so.  The pointers will be aligned to PAGE_SIZE bytes.  The macro requires
++   that pagecopy.h defines at least PAGE_COPY_THRESHOLD to 0.  If
++   PAGE_COPY_THRESHOLD is non-zero, the header must also define PAGE_COPY_FWD
++   and PAGE_SIZE.
++*/
++#if PAGE_COPY_THRESHOLD
++
++# include <assert.h>
++
++# define PAGE_COPY_FWD_MAYBE(dstp, srcp, nbytes_left, nbytes)		      \
++  do									      \
++    {									      \
++      if ((nbytes) >= PAGE_COPY_THRESHOLD &&				      \
++	  PAGE_OFFSET ((dstp) - (srcp)) == 0) 				      \
++	{								      \
++	  /* The amount to copy is past the threshold for copying	      \
++	     pages virtually with kernel VM operations, and the		      \
++	     source and destination addresses have the same alignment.  */    \
++	  size_t nbytes_before = PAGE_OFFSET (-(dstp));			      \
++	  if (nbytes_before != 0)					      \
++	    {								      \
++	      /* First copy the words before the first page boundary.  */     \
++	      WORD_COPY_FWD (dstp, srcp, nbytes_left, nbytes_before);	      \
++	      assert (nbytes_left == 0);				      \
++	      nbytes -= nbytes_before;					      \
++	    }								      \
++	  PAGE_COPY_FWD (dstp, srcp, nbytes_left, nbytes);		      \
++	}								      \
++    } while (0)
++
++/* The page size is always a power of two, so we can avoid modulo division.  */
++# define PAGE_OFFSET(n)	((n) & (PAGE_SIZE - 1))
++
++#else
++
++# define PAGE_COPY_FWD_MAYBE(dstp, srcp, nbytes_left, nbytes) /* nada */
++
++#endif
+ 
+ /* Threshold value for when to enter the unrolled loops.  */
+ #define	OP_T_THRES	16
+diff --git a/sysdeps/generic/pagecopy.h b/sysdeps/generic/pagecopy.h
+index 89f392cb43c4dcbc..3c81de1b236486bf 100644
+--- a/sysdeps/generic/pagecopy.h
++++ b/sysdeps/generic/pagecopy.h
+@@ -1,5 +1,5 @@
+-/* Macros for copying by pages; used in memcpy, memmove.  Generic macros.
+-   Copyright (C) 1995, 1997 Free Software Foundation, Inc.
++/* Macros for copying by pages; used in memcpy, memmove.
++   Copyright (C) 1995-2014 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+ 
+    The GNU C Library is free software; you can redistribute it and/or
+@@ -16,19 +16,15 @@
+    License along with the GNU C Library; if not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
+-/* This file defines the macro:
++/* The macro PAGE_COPY_FWD_MAYBE defined in memcopy.h is used in memmove if the
++   PAGE_COPY_THRESHOLD macro is set to a non-zero value.  The default is 0,
++   that is copying by pages is not implemented.
+ 
+-   PAGE_COPY_FWD_MAYBE (dstp, srcp, nbytes_left, nbytes)
+-
+-   which is invoked like WORD_COPY_FWD et al.  The pointers should be at
+-   least word aligned.  This will check if virtual copying by pages can and
+-   should be done and do it if so.
+-
+-   System-specific pagecopy.h files should define these macros and then
+-   #include this file:
++   System-specific pagecopy.h files that want to support page copying should
++   define these macros:
+ 
+    PAGE_COPY_THRESHOLD
+-   -- Minimum size for which virtual copying by pages is worthwhile.
++   -- A non-zero minimum size for which virtual copying by pages is worthwhile.
+ 
+    PAGE_SIZE
+    -- Size of a page.
+@@ -38,37 +34,4 @@
+    The pointers will be aligned to PAGE_SIZE bytes.
+ */
+ 
+-
+-#if PAGE_COPY_THRESHOLD
+-
+-#include <assert.h>
+-
+-#define PAGE_COPY_FWD_MAYBE(dstp, srcp, nbytes_left, nbytes)		      \
+-  do									      \
+-    {									      \
+-      if ((nbytes) >= PAGE_COPY_THRESHOLD &&				      \
+-	  PAGE_OFFSET ((dstp) - (srcp)) == 0) 				      \
+-	{								      \
+-	  /* The amount to copy is past the threshold for copying	      \
+-	     pages virtually with kernel VM operations, and the		      \
+-	     source and destination addresses have the same alignment.  */    \
+-	  size_t nbytes_before = PAGE_OFFSET (-(dstp));			      \
+-	  if (nbytes_before != 0)					      \
+-	    {								      \
+-	      /* First copy the words before the first page boundary.  */     \
+-	      WORD_COPY_FWD (dstp, srcp, nbytes_left, nbytes_before);	      \
+-	      assert (nbytes_left == 0);				      \
+-	      nbytes -= nbytes_before;					      \
+-	    }								      \
+-	  PAGE_COPY_FWD (dstp, srcp, nbytes_left, nbytes);		      \
+-	}								      \
+-    } while (0)
+-
+-/* The page size is always a power of two, so we can avoid modulo division.  */
+-#define PAGE_OFFSET(n)	((n) & (PAGE_SIZE - 1))
+-
+-#else
+-
+-#define PAGE_COPY_FWD_MAYBE(dstp, srcp, nbytes_left, nbytes) /* nada */
+-
+-#endif
++#define PAGE_COPY_THRESHOLD 0
+diff --git a/sysdeps/mach/pagecopy.h b/sysdeps/mach/pagecopy.h
+index 5b212144b7b163fe..8cce76a6d76698b9 100644
+--- a/sysdeps/mach/pagecopy.h
++++ b/sysdeps/mach/pagecopy.h
+@@ -30,6 +30,3 @@
+ 				(vm_address_t) dstp) == KERN_SUCCESS	      \
+ 		     ? trunc_page (nbytes)				      \
+ 		     : 0)))
+-
+-/* Get the generic macro.  */
+-#include <sysdeps/generic/pagecopy.h>
+diff --git a/sysdeps/powerpc/memmove.c b/sysdeps/powerpc/memmove.c
+index 1617ecea95620133..50734e45458352c5 100644
+--- a/sysdeps/powerpc/memmove.c
++++ b/sysdeps/powerpc/memmove.c
+@@ -20,7 +20,6 @@
+ 
+ #include <string.h>
+ #include <memcopy.h>
+-#include <pagecopy.h>
+ 
+ /* All this is so that bcopy.c can #include
+    this file after defining some things.  */

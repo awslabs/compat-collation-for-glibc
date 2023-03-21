@@ -1,0 +1,52 @@
+commit 8e2f7c68111ba8fae795ee08b6822e21ab8cfa38
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Oct 21 15:14:13 2015 +0000
+
+    Use -Wold-style-definition.
+    
+    This patch makes glibc build with -Wold-style-definition to avoid
+    old-style function definitions creeping back in by accident.
+    
+    Tested for x86_64 and x86 (testsuite, and that installed shared
+    libraries are unchanged by the patch).  Also tested build for arm,
+    mips64 and powerpc32.  Hopefully there aren't any remaining
+    system-specific files with old-style definitions whose formatting
+    evaded my searches, but if there are, they will be easy to fix.
+    
+            * Makeconfig (+gccwarn-c): Add -Wold-style-definition.
+            * Makefile ($(objpfx)c++-types-check.out): Filter out
+            $(+gccwarn-c) instead of -Wstrict-prototypes.
+
+Conflicts:
+	Makefile
+
+Resolved conflict due to missing $(evaluate-test) in the tree (commit
+f0881698bf244bcb16c394d2d6258d975a11baef, Generate .test-result files
+for tests with special rules.).
+
+diff --git a/Makeconfig b/Makeconfig
+index 3c0d4abc5f5f30df..f8313c9774d47522 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -647,7 +647,7 @@ endif
+ ifeq ($(enable-werror),yes)
+ +gccwarn += -Werror
+ endif
+-+gccwarn-c = -Wstrict-prototypes
+++gccwarn-c = -Wstrict-prototypes -Wold-style-definition
+ 
+ # We do not depend on the address of constants in different files to be
+ # actually different, so allow the compiler to merge them all.
+diff --git a/Makefile b/Makefile
+index bebb0a865a150a3a..f4128c2627dd0bb9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -279,7 +279,7 @@ ifneq ($(CXX),no)
+ vpath c++-types.data $(+sysdep_dirs)
+ 
+ $(objpfx)c++-types-check.out: c++-types.data scripts/check-c++-types.sh
+-	scripts/check-c++-types.sh $< $(CXX) $(filter-out -std=gnu99 -Wstrict-prototypes,$(CFLAGS)) $(CPPFLAGS) > $@
++	scripts/check-c++-types.sh $< $(CXX) $(filter-out -std=gnu99 $(+gccwarn-c),$(CFLAGS)) $(CPPFLAGS) > $@
+ endif
+ 
+ $(objpfx)check-local-headers.out: scripts/check-local-headers.sh

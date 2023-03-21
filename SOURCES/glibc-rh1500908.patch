@@ -1,0 +1,28 @@
+Backport of:
+
+commit e9177fba13549a8e2a6232f46080e5c6d3e467b1
+Author: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date:   Wed Jun 21 13:47:07 2017 +0100
+
+    [AArch64] Use hidden __GI__dl_argv in rtld startup code
+    
+    We rely on the symbol being locally defined so using extern symbol
+    is not correct and the linker may complain about the relocations.
+
+Adjusted to the old INTDEF/INTUSE mechanism.
+
+diff --git a/ports/sysdeps/aarch64/dl-machine.h b/ports/sysdeps/aarch64/dl-machine.h
+index 0e76ca8f146905ef..40b0587ba42cd59e 100644
+--- a/ports/sysdeps/aarch64/dl-machine.h
++++ b/ports/sysdeps/aarch64/dl-machine.h
+@@ -169,8 +169,8 @@ _dl_start_user:							\n\
+ 	cmp	x0, #0						\n\
+ 	bne	1b						\n\
+ 	// Update _dl_argv					\n\
+-	adrp	x3, _dl_argv					\n\
+-	str	x2, [x3, #:lo12:_dl_argv]			\n\
++	adrp	x3, _dl_argv_internal				\n\
++	str	x2, [x3, #:lo12:_dl_argv_internal]		\n\
+ .L_done_stack_adjust:						\n\
+ 	// compute envp						\n\
+ 	add	x3, x2, x1, lsl #3				\n\

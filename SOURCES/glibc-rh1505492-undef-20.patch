@@ -1,0 +1,606 @@
+commit 13e402e77e70254dc5e940e1187880afcc829086
+Author: Steve Ellcey <sellcey@mips.com>
+Date:   Thu May 1 13:42:40 2014 -0700
+
+    2014-05-01  Steve Ellcey  <sellcey@mips.com>
+    
+            * iconvdata/ansi_x3.110.c (ONE_DIRECTION): Define.
+            * iconvdata/armscii-8.c (ONE_DIRECTION): Define.
+            * iconvdata/big5.c (ONE_DIRECTION): Define.
+            * iconvdata/big5hkscs.c (ONE_DIRECTION): Define.
+            * iconvdata/cp1255.c (ONE_DIRECTION): Define.
+            * iconvdata/cp1258.c (ONE_DIRECTION): Define.
+            * iconvdata/cp932.c (ONE_DIRECTION): Define.
+            * iconvdata/euc-cn.c (ONE_DIRECTION): Define.
+            * iconvdata/euc-jisx0213.c (ONE_DIRECTION): Define.
+            * iconvdata/euc-jp-ms.c (ONE_DIRECTION): Define.
+            * iconvdata/euc-jp.c (ONE_DIRECTION): Define.
+            * iconvdata/euc-kr.c (ONE_DIRECTION): Define.
+            * iconvdata/euc-tw.c (ONE_DIRECTION): Define.
+            * iconvdata/gb18030.c (ONE_DIRECTION): Define.
+            * iconvdata/gbbig5.c (ONE_DIRECTION): Define.
+            * iconvdata/gbgbk.c (ONE_DIRECTION): Define.
+            * iconvdata/gbk.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm1364.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm930.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm932.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm933.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm935.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm937.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm939.c (ONE_DIRECTION): Define.
+            * iconvdata/ibm943.c (ONE_DIRECTION): Define.
+            * iconvdata/iso-2022-cn-ext.c (ONE_DIRECTION): Define.
+            * iconvdata/iso-2022-cn.c (ONE_DIRECTION): Define.
+            * iconvdata/iso-2022-jp-3.c (ONE_DIRECTION): Define.
+            * iconvdata/iso-2022-jp.c (ONE_DIRECTION): Define.
+            * iconvdata/iso-2022-kr.c (ONE_DIRECTION): Define.
+            * iconvdata/iso646.c (ONE_DIRECTION): Define.
+            * iconvdata/iso8859-1.c (ONE_DIRECTION): Define.
+            * iconvdata/iso_11548-1.c (ONE_DIRECTION): Define.
+            * iconvdata/iso_6937-2.c (ONE_DIRECTION): Define.
+            * iconvdata/iso_6937.c (ONE_DIRECTION): Define.
+            * iconvdata/johab.c (ONE_DIRECTION): Define.
+            * iconvdata/shift_jisx0213.c (ONE_DIRECTION): Define.
+            * iconvdata/sjis.c (ONE_DIRECTION): Define.
+            * iconvdata/t.61.c (ONE_DIRECTION): Define.
+            * iconvdata/tcvn5712-1.c (ONE_DIRECTION): Define.
+            * iconvdata/tscii.c (ONE_DIRECTION): Define.
+            * iconvdata/uhc.c (ONE_DIRECTION): Define.
+            * iconvdata/unicode.c (ONE_DIRECTION): Define.
+            * iconvdata/utf-16.c (ONE_DIRECTION): Define.
+            * iconvdata/utf-32.c (ONE_DIRECTION): Define.
+            * iconvdata/utf-7.c (ONE_DIRECTION): Define.
+
+diff --git a/iconvdata/ansi_x3.110.c b/iconvdata/ansi_x3.110.c
+index e08aeba7cb33883d..a72914dc93fc3dec 100644
+--- a/iconvdata/ansi_x3.110.c
++++ b/iconvdata/ansi_x3.110.c
+@@ -390,6 +390,7 @@ static const char from_ucs4[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ /* First define the conversion function from ANSI_X3.110 to UCS4.  */
+ #define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+diff --git a/iconvdata/armscii-8.c b/iconvdata/armscii-8.c
+index 34f33f3b4cb10f91..767d5cb9e6a018b0 100644
+--- a/iconvdata/armscii-8.c
++++ b/iconvdata/armscii-8.c
+@@ -28,6 +28,7 @@
+ #define DEFINE_FINI		1
+ #define MIN_NEEDED_FROM		1
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ static const uint16_t map_from_armscii_8[0xfe - 0xa2 + 1] =
+diff --git a/iconvdata/big5.c b/iconvdata/big5.c
+index db2d6ec9baa636df..e8701785a7ff5c50 100644
+--- a/iconvdata/big5.c
++++ b/iconvdata/big5.c
+@@ -8383,6 +8383,7 @@ static const char from_ucs4_tab15[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from Big5 to UCS4.  */
+diff --git a/iconvdata/big5hkscs.c b/iconvdata/big5hkscs.c
+index 68716ceeab9efba1..afc812d520bdff96 100644
+--- a/iconvdata/big5hkscs.c
++++ b/iconvdata/big5hkscs.c
+@@ -17738,6 +17738,7 @@ static struct
+ #define TO_LOOP			to_big5hkscs
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/cp1255.c b/iconvdata/cp1255.c
+index c03478b2f8c03213..dfcc674c2cb14e62 100644
+--- a/iconvdata/cp1255.c
++++ b/iconvdata/cp1255.c
+@@ -30,6 +30,7 @@
+ #define TO_LOOP			to_cp1255
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	1
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/cp1258.c b/iconvdata/cp1258.c
+index 918b39db773e152f..bb2e210f540e6054 100644
+--- a/iconvdata/cp1258.c
++++ b/iconvdata/cp1258.c
+@@ -31,6 +31,7 @@
+ #define TO_LOOP			to_cp1258
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	1
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/cp932.c b/iconvdata/cp932.c
+index 82a78fa7f6946ff1..0d40be864740ce5b 100644
+--- a/iconvdata/cp932.c
++++ b/iconvdata/cp932.c
+@@ -4534,6 +4534,7 @@ static const char from_ucs4_extra[229][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ /* First define the conversion function from CP932 to UCS4.  */
+ #define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+diff --git a/iconvdata/euc-cn.c b/iconvdata/euc-cn.c
+index 7d5d9505c9ba36ab..499cffac0afc0e66 100644
+--- a/iconvdata/euc-cn.c
++++ b/iconvdata/euc-cn.c
+@@ -30,6 +30,7 @@
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from EUC-CN to UCS4.  */
+diff --git a/iconvdata/euc-jisx0213.c b/iconvdata/euc-jisx0213.c
+index 482ae813ecadd29a..b0ec5d38e0c269c9 100644
+--- a/iconvdata/euc-jisx0213.c
++++ b/iconvdata/euc-jisx0213.c
+@@ -43,6 +43,7 @@
+ #define TO_LOOP			to_euc_jisx0213
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	3
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/euc-jp-ms.c b/iconvdata/euc-jp-ms.c
+index 25dd59b6ee6a625d..c3f322bfa729847e 100644
+--- a/iconvdata/euc-jp-ms.c
++++ b/iconvdata/euc-jp-ms.c
+@@ -4641,6 +4641,7 @@ static const unsigned char from_ucs4_extra[229][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		3
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from EUC-JP-MS to UCS4.  */
+diff --git a/iconvdata/euc-jp.c b/iconvdata/euc-jp.c
+index 358ececf6cd1fc9c..352c7f3bd1f84422 100644
+--- a/iconvdata/euc-jp.c
++++ b/iconvdata/euc-jp.c
+@@ -33,6 +33,7 @@
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		3
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from EUC-JP to UCS4.  */
+diff --git a/iconvdata/euc-kr.c b/iconvdata/euc-kr.c
+index c5cb125a83afb59b..dfca5cd8046757a9 100644
+--- a/iconvdata/euc-kr.c
++++ b/iconvdata/euc-kr.c
+@@ -67,6 +67,7 @@ euckr_from_ucs4 (uint32_t ch, unsigned char *cp)
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from EUC-KR to UCS4.  */
+diff --git a/iconvdata/euc-tw.c b/iconvdata/euc-tw.c
+index 8175f6a0c7441629..4c9b336d2cc95482 100644
+--- a/iconvdata/euc-tw.c
++++ b/iconvdata/euc-tw.c
+@@ -32,6 +32,7 @@
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		4
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from EUC-TW to UCS4.  */
+diff --git a/iconvdata/gb18030.c b/iconvdata/gb18030.c
+index e7cac10216ba2fed..a4761ce6c574120e 100644
+--- a/iconvdata/gb18030.c
++++ b/iconvdata/gb18030.c
+@@ -24107,6 +24107,7 @@ static const unsigned char __ucs_to_gb18030_tab2[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		4
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from GB18030 to UCS4.  */
+diff --git a/iconvdata/gbbig5.c b/iconvdata/gbbig5.c
+index d8a9b9524695ba69..8bd6fe8639a70e5d 100644
+--- a/iconvdata/gbbig5.c
++++ b/iconvdata/gbbig5.c
+@@ -4784,6 +4784,7 @@ const char __from_big5_to_gb2312 [13973][2] =
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		1
+ #define MAX_NEEDED_TO		2
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from GB2312 to BIG5.  */
+diff --git a/iconvdata/gbgbk.c b/iconvdata/gbgbk.c
+index 6b6dfc2c362b35d1..29793e997c3624ee 100644
+--- a/iconvdata/gbgbk.c
++++ b/iconvdata/gbgbk.c
+@@ -32,6 +32,7 @@
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		1
+ #define MAX_NEEDED_TO		2
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from GBK to GB2312.  */
+diff --git a/iconvdata/gbk.c b/iconvdata/gbk.c
+index dcc33c7f5d59a5f5..e355c33f569ae1cf 100644
+--- a/iconvdata/gbk.c
++++ b/iconvdata/gbk.c
+@@ -13130,6 +13130,7 @@ static const char __gbk_from_ucs4_tab12[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from GBK to UCS4.  */
+diff --git a/iconvdata/ibm1364.c b/iconvdata/ibm1364.c
+index dc71cd728b764d1e..9086fda4df2bf117 100644
+--- a/iconvdata/ibm1364.c
++++ b/iconvdata/ibm1364.c
+@@ -55,6 +55,7 @@
+ #else
+ # define MAX_NEEDED_TO	4
+ #endif
++#define ONE_DIRECTION	0
+ #define PREPARE_LOOP \
+   int save_curcs;							      \
+   int *curcsp = &data->__statep->__count;
+diff --git a/iconvdata/ibm930.c b/iconvdata/ibm930.c
+index 51a67a03bf6c5ccb..636141114f506985 100644
+--- a/iconvdata/ibm930.c
++++ b/iconvdata/ibm930.c
+@@ -31,6 +31,7 @@
+ #define CHARSET_NAME	"IBM930//"
+ #define FROM_LOOP	from_ibm930
+ #define TO_LOOP		to_ibm930
++#define ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/ibm932.c b/iconvdata/ibm932.c
+index d88185c12630d9f2..6e242eea57b9063c 100644
+--- a/iconvdata/ibm932.c
++++ b/iconvdata/ibm932.c
+@@ -29,6 +29,7 @@
+ #define CHARSET_NAME	"IBM932//"
+ #define FROM_LOOP	from_ibm932
+ #define TO_LOOP		to_ibm932
++#define ONE_DIRECTION	0
+ 
+ /* Definitions of initialization and destructor function.  */
+ #define DEFINE_INIT	1
+diff --git a/iconvdata/ibm933.c b/iconvdata/ibm933.c
+index b5f99dfad2b31cb4..8b9e5780a36a454a 100644
+--- a/iconvdata/ibm933.c
++++ b/iconvdata/ibm933.c
+@@ -31,6 +31,7 @@
+ #define CHARSET_NAME	"IBM933//"
+ #define FROM_LOOP	from_ibm933
+ #define TO_LOOP		to_ibm933
++#define ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/ibm935.c b/iconvdata/ibm935.c
+index ddab8cf60913450c..4e2d99ab56d7f0d2 100644
+--- a/iconvdata/ibm935.c
++++ b/iconvdata/ibm935.c
+@@ -31,6 +31,7 @@
+ #define CHARSET_NAME	"IBM935//"
+ #define FROM_LOOP	from_ibm935
+ #define TO_LOOP		to_ibm935
++#define ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/ibm937.c b/iconvdata/ibm937.c
+index 2f07d92ce853abc1..1e468871b783e78d 100644
+--- a/iconvdata/ibm937.c
++++ b/iconvdata/ibm937.c
+@@ -31,6 +31,7 @@
+ #define CHARSET_NAME	"IBM937//"
+ #define FROM_LOOP	from_ibm937
+ #define TO_LOOP		to_ibm937
++#define	ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/ibm939.c b/iconvdata/ibm939.c
+index 65d547e381c63aa4..2060b0c329df0c86 100644
+--- a/iconvdata/ibm939.c
++++ b/iconvdata/ibm939.c
+@@ -31,6 +31,7 @@
+ #define CHARSET_NAME	"IBM939//"
+ #define FROM_LOOP	from_ibm939
+ #define TO_LOOP		to_ibm939
++#define ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/ibm943.c b/iconvdata/ibm943.c
+index e020d0972681d776..923a67148bab2d42 100644
+--- a/iconvdata/ibm943.c
++++ b/iconvdata/ibm943.c
+@@ -29,6 +29,7 @@
+ #define CHARSET_NAME	"IBM943//"
+ #define FROM_LOOP	from_ibm943
+ #define TO_LOOP		to_ibm943
++#define ONE_DIRECTION	0
+ 
+ /* Definitions of initialization and destructor function.  */
+ #define DEFINE_INIT	1
+diff --git a/iconvdata/iso-2022-cn-ext.c b/iconvdata/iso-2022-cn-ext.c
+index c5cea931282f498f..bde266811d967192 100644
+--- a/iconvdata/iso-2022-cn-ext.c
++++ b/iconvdata/iso-2022-cn-ext.c
+@@ -47,6 +47,7 @@
+ #define CHARSET_NAME		"ISO-2022-CN-EXT//"
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP		from_iso2022cn_ext_loop
+ #define TO_LOOP			to_iso2022cn_ext_loop
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+diff --git a/iconvdata/iso-2022-cn.c b/iconvdata/iso-2022-cn.c
+index b8d10062a44ee650..e3539fde7109eb94 100644
+--- a/iconvdata/iso-2022-cn.c
++++ b/iconvdata/iso-2022-cn.c
+@@ -44,6 +44,7 @@
+ #define DEFINE_FINI		1
+ #define FROM_LOOP		from_iso2022cn_loop
+ #define TO_LOOP			to_iso2022cn_loop
++#define ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	4
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/iso-2022-jp-3.c b/iconvdata/iso-2022-jp-3.c
+index 2958b6de847f5202..e4c149dba019b3ff 100644
+--- a/iconvdata/iso-2022-jp-3.c
++++ b/iconvdata/iso-2022-jp-3.c
+@@ -38,6 +38,7 @@
+ #define TO_LOOP			to_iso2022jp3_loop
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	4
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/iso-2022-jp.c b/iconvdata/iso-2022-jp.c
+index ce7743200a8579f5..409bb2e4b72510cd 100644
+--- a/iconvdata/iso-2022-jp.c
++++ b/iconvdata/iso-2022-jp.c
+@@ -48,6 +48,7 @@ struct gap
+ /* Definitions used in the body of the `gconv' function.  */
+ #define FROM_LOOP		from_iso2022jp_loop
+ #define TO_LOOP			to_iso2022jp_loop
++#define ONE_DIRECTION			0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	4
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/iso-2022-kr.c b/iconvdata/iso-2022-kr.c
+index ea9bd2194cbcd4c8..91cb64c5b93ef0ed 100644
+--- a/iconvdata/iso-2022-kr.c
++++ b/iconvdata/iso-2022-kr.c
+@@ -43,6 +43,7 @@
+ #define MAX_NEEDED_FROM		4
+ #define MIN_NEEDED_TO		4
+ #define MAX_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ #define PREPARE_LOOP \
+   int save_set;								      \
+   int *setp = &data->__statep->__count;					      \
+diff --git a/iconvdata/iso646.c b/iconvdata/iso646.c
+index c0002ee202be3a7f..37ebd304eccc14c5 100644
+--- a/iconvdata/iso646.c
++++ b/iconvdata/iso646.c
+@@ -43,6 +43,8 @@
+ #define DEFINE_FINI		0
+ #define MIN_NEEDED_FROM		1
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
++
+ #define FROM_DIRECTION		(dir == from_iso646)
+ #define PREPARE_LOOP \
+   enum direction dir = ((struct iso646_data *) step->__data)->dir;	      \
+diff --git a/iconvdata/iso8859-1.c b/iconvdata/iso8859-1.c
+index cdc1b0978c3dc818..dc3965bd81291eb7 100644
+--- a/iconvdata/iso8859-1.c
++++ b/iconvdata/iso8859-1.c
+@@ -28,6 +28,7 @@
+ #define DEFINE_FINI		1
+ #define MIN_NEEDED_FROM		1
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ /* First define the conversion function from ISO 8859-1 to UCS4.  */
+ #define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+diff --git a/iconvdata/iso_11548-1.c b/iconvdata/iso_11548-1.c
+index b1b9e996debf2489..fb71d4b7376ff3af 100644
+--- a/iconvdata/iso_11548-1.c
++++ b/iconvdata/iso_11548-1.c
+@@ -29,6 +29,7 @@
+ #define DEFINE_FINI		1
+ #define MIN_NEEDED_FROM		1
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ #define BRAILLE_UCS_BASE	0x2800
+ 
+diff --git a/iconvdata/iso_6937-2.c b/iconvdata/iso_6937-2.c
+index fb7833dd804e238b..bfcc361ee6fadf05 100644
+--- a/iconvdata/iso_6937-2.c
++++ b/iconvdata/iso_6937-2.c
+@@ -380,6 +380,7 @@ static const char from_ucs4[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from ISO 6937-2 to UCS4.  */
+diff --git a/iconvdata/iso_6937.c b/iconvdata/iso_6937.c
+index 3ecd9aca3f2e7914..b7eb3671055f6566 100644
+--- a/iconvdata/iso_6937.c
++++ b/iconvdata/iso_6937.c
+@@ -380,6 +380,7 @@ static const char from_ucs4[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from ISO 6937 to UCS4.  */
+diff --git a/iconvdata/johab.c b/iconvdata/johab.c
+index f5749aba7f4f516b..0dc67e4a6d934d65 100644
+--- a/iconvdata/johab.c
++++ b/iconvdata/johab.c
+@@ -150,6 +150,7 @@ johab_sym_hanja_to_ucs (uint_fast32_t idx, uint_fast32_t c1, uint_fast32_t c2)
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from JOHAB to UCS4.  */
+diff --git a/iconvdata/shift_jisx0213.c b/iconvdata/shift_jisx0213.c
+index 79b155156a699f05..0e38a905e5212955 100644
+--- a/iconvdata/shift_jisx0213.c
++++ b/iconvdata/shift_jisx0213.c
+@@ -43,6 +43,7 @@
+ #define TO_LOOP			to_shift_jisx0213
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/sjis.c b/iconvdata/sjis.c
+index ccb5dfc08febf3a3..7033aa4926a4405c 100644
+--- a/iconvdata/sjis.c
++++ b/iconvdata/sjis.c
+@@ -4320,6 +4320,7 @@ static const char from_ucs4_extra[0x100][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ /* First define the conversion function from SJIS to UCS4.  */
+ #define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+diff --git a/iconvdata/t.61.c b/iconvdata/t.61.c
+index db5952b074ded19c..c73adba7865755c9 100644
+--- a/iconvdata/t.61.c
++++ b/iconvdata/t.61.c
+@@ -373,6 +373,7 @@ static const char from_ucs4[][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ /* First define the conversion function from T.61 to UCS4.  */
+ #define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+diff --git a/iconvdata/tcvn5712-1.c b/iconvdata/tcvn5712-1.c
+index f6a0c4faa79a4628..9c1465b32942d45d 100644
+--- a/iconvdata/tcvn5712-1.c
++++ b/iconvdata/tcvn5712-1.c
+@@ -29,6 +29,7 @@
+ #define TO_LOOP			to_tcvn5712_1
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	1
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/tscii.c b/iconvdata/tscii.c
+index 8ff708137de2ddbe..60e6ad9073f562ad 100644
+--- a/iconvdata/tscii.c
++++ b/iconvdata/tscii.c
+@@ -38,6 +38,7 @@
+ #define TO_LOOP			to_tscii
+ #define DEFINE_INIT		1
+ #define DEFINE_FINI		1
++#define ONE_DIRECTION		0
+ #define FROM_LOOP_MIN_NEEDED_FROM	1
+ #define FROM_LOOP_MAX_NEEDED_FROM	2
+ #define FROM_LOOP_MIN_NEEDED_TO		4
+diff --git a/iconvdata/uhc.c b/iconvdata/uhc.c
+index da12ba614344c417..1bb548cdf43e3ca6 100644
+--- a/iconvdata/uhc.c
++++ b/iconvdata/uhc.c
+@@ -3044,6 +3044,7 @@ static const char uhc_hangul_from_ucs[11172][2] =
+ #define MIN_NEEDED_FROM		1
+ #define MAX_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ /* First define the conversion function from UHC to UCS4.  */
+ #define MIN_NEEDED_INPUT	MIN_NEEDED_FROM
+diff --git a/iconvdata/unicode.c b/iconvdata/unicode.c
+index 6a22f3b2465af526..73bda747097284d8 100644
+--- a/iconvdata/unicode.c
++++ b/iconvdata/unicode.c
+@@ -38,6 +38,7 @@
+ #define DEFINE_FINI		0
+ #define MIN_NEEDED_FROM		2
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ #define FROM_DIRECTION		(dir == from_unicode)
+ #define PREPARE_LOOP \
+   enum direction dir = ((struct unicode_data *) step->__data)->dir;	      \
+diff --git a/iconvdata/utf-16.c b/iconvdata/utf-16.c
+index e833d3c3ba4b2980..167e47767d045925 100644
+--- a/iconvdata/utf-16.c
++++ b/iconvdata/utf-16.c
+@@ -39,6 +39,7 @@
+ #define MIN_NEEDED_FROM		2
+ #define MAX_NEEDED_FROM		4
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ #define FROM_DIRECTION		(dir == from_utf16)
+ #define PREPARE_LOOP \
+   enum direction dir = ((struct utf16_data *) step->__data)->dir;	      \
+diff --git a/iconvdata/utf-32.c b/iconvdata/utf-32.c
+index 1173d6fc4988d300..d5e75a3f16bf5e92 100644
+--- a/iconvdata/utf-32.c
++++ b/iconvdata/utf-32.c
+@@ -37,6 +37,7 @@
+ #define DEFINE_FINI		0
+ #define MIN_NEEDED_FROM		4
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ #define FROM_DIRECTION		(dir == from_utf32)
+ #define PREPARE_LOOP \
+   enum direction dir = ((struct utf32_data *) step->__data)->dir;	      \
+diff --git a/iconvdata/utf-7.c b/iconvdata/utf-7.c
+index 3336b1ff39b2c44d..b14330eb90c1eff5 100644
+--- a/iconvdata/utf-7.c
++++ b/iconvdata/utf-7.c
+@@ -120,6 +120,7 @@ base64 (unsigned int i)
+ #define MAX_NEEDED_FROM		6
+ #define MIN_NEEDED_TO		4
+ #define MAX_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ #define PREPARE_LOOP \
+   mbstate_t saved_state;						      \
+   mbstate_t *statep = data->__statep;

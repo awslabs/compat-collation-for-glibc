@@ -1,0 +1,20 @@
+commit 9a80491d4931c9bc0f65887b7f67346f866cf1b9
+Author: Andreas Schwab <schwab@linux-m68k.org>
+Date:   Fri Feb 21 11:32:19 2014 +0100
+
+    Add GLIBC_2.17 to librt in Version.def
+    
+    This is needed because the version is used in SHLIB_COMPAT.
+
+diff --git a/Versions.def b/Versions.def
+index 725f5d827ba3ec94..05a94373c6ecfe61 100644
+--- a/Versions.def
++++ b/Versions.def
+@@ -121,6 +121,7 @@ librt {
+   GLIBC_2.3.4
+   GLIBC_2.4
+   GLIBC_2.7
++  GLIBC_2.17
+ }
+ libutil {
+   GLIBC_2.0

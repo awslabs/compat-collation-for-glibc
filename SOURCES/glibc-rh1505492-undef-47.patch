@@ -1,0 +1,33 @@
+commit 920238e061af76ac99dd94c40a80b0c6d23f35d4
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Fri Sep 12 16:37:31 2014 +0530
+
+    Fix typo in macro names in sysconf.c
+    
+    Spell _POSIX_DEVICE_SPECIFIC and _POSIX_DEVICE_SPECIFIC_R correctly.
+    Found when trying to make the getconf environment variables
+    typo-proof.
+    
+            * sysdeps/posix/sysconf.c (__sysconf): Spell
+            _POSIX_DEVICE_SPECIFIC and _POSIX_DEVICE_SPECIFIC_R correctly.
+
+diff --git a/sysdeps/posix/sysconf.c b/sysdeps/posix/sysconf.c
+index 6340b6250d57c295..e795b565367bdd1b 100644
+--- a/sysdeps/posix/sysconf.c
++++ b/sysdeps/posix/sysconf.c
+@@ -886,13 +886,13 @@ __sysconf (name)
+       return -1;
+ #endif
+     case _SC_DEVICE_SPECIFIC:
+-#if _POSIX_DEVICE_SPCIFIC > 0
++#if _POSIX_DEVICE_SPECIFIC > 0
+       return _POSIX_DEVICE_SPECIFIC;
+ #else
+       return -1;
+ #endif
+     case _SC_DEVICE_SPECIFIC_R:
+-#if _POSIX_DEVICE_SPCIFIC_R > 0
++#if _POSIX_DEVICE_SPECIFIC_R > 0
+       return _POSIX_DEVICE_SPECIFIC_R;
+ #else
+       return -1;

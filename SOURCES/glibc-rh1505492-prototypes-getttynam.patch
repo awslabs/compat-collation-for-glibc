@@ -1,0 +1,23 @@
+Introduce prototype-style function definition for getttynam.  Upstream,
+this was part of:
+
+commit abccad04b4172d552dbdae948c0e567ba266ad76
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Jun 17 20:21:19 2015 +0000
+
+    Fix ttyslot namespace (bug 18547).
+
+diff --git a/misc/getttyent.c b/misc/getttyent.c
+index 864f65f523de2522..018789a801b8b764 100644
+--- a/misc/getttyent.c
++++ b/misc/getttyent.c
+@@ -44,8 +44,7 @@ static char zapchar;
+ static FILE *tf;
+ 
+ struct ttyent *
+-getttynam(tty)
+-	const char *tty;
++getttynam (const char *tty)
+ {
+ 	struct ttyent *t;
+ 

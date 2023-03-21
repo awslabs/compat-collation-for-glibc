@@ -1,0 +1,35 @@
+commit bf438382bd8ffcc614b01e9a273a577b3ed54f9f
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Nov 13 21:37:53 2014 +0000
+
+    Use prototype definition for __strtol.
+    
+    This patch fixes those warnings by using a prototype definition for
+    __strtol.
+    
+    Tested for x86_64 that stripped installed shared libraries are
+    unchanged by this patch.
+    
+            * stdlib/strtol.c (__strtol): Use prototype definition.
+
+Conflicts:
+	stdlib/strtol.c
+
+Adjusted for missing backport of the fix for swbz#17594.
+
+diff --git a/stdlib/strtol.c b/stdlib/strtol.c
+index 44e2af472ddc4144..67d758c57973b5d5 100644
+--- a/stdlib/strtol.c
++++ b/stdlib/strtol.c
+@@ -101,10 +101,7 @@ libc_hidden_def (INTERNAL (strtol))
+ 
+ 
+ INT
+-strtol (nptr, endptr, base)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     int base;
++strtol (const STRING_TYPE *nptr, STRING_TYPE **endptr, int base)
+ {
+   return INTERNAL (__strtol_l) (nptr, endptr, base, 0, _NL_CURRENT_LOCALE);
+ }

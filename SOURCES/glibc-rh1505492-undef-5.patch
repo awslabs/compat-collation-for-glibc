@@ -1,0 +1,169 @@
+commit bdfe308a166b433a841d5c9ae256560c18bce640
+Author: Ondřej Bílka <neleai@seznam.cz>
+Date:   Mon Feb 10 12:25:04 2014 +0100
+
+    Remove THREAD_STATS.
+    
+    A THREAD_STATS macro duplicates gathering information that could be
+    obtained by systemtap probes instead.
+
+Conflicts:
+	malloc/arena.c
+	malloc/malloc.c
+
+Textual conflicts due to independent malloc backports.
+
+diff --git a/malloc/arena.c b/malloc/arena.c
+index f5e97fadc17ad92d..fe4ec8de614454c9 100644
+--- a/malloc/arena.c
++++ b/malloc/arena.c
+@@ -40,14 +40,6 @@
+    mmap threshold, so that requests with a size just below that
+    threshold can be fulfilled without creating too many heaps.  */
+ 
+-
+-#ifndef THREAD_STATS
+-#define THREAD_STATS 0
+-#endif
+-
+-/* If THREAD_STATS is non-zero, some statistics on mutex locking are
+-   computed.  */
+-
+ /***************************************************************************/
+ 
+ #define top(ar_ptr) ((ar_ptr)->top)
+@@ -101,13 +93,6 @@ static mstate free_list;
+    acquired.  */
+ static mutex_t list_lock = MUTEX_INITIALIZER;
+ 
+-#if THREAD_STATS
+-static int stat_n_heaps;
+-#define THREAD_STAT(x) x
+-#else
+-#define THREAD_STAT(x) do ; while(0)
+-#endif
+-
+ /* Mapped memory in non-main arenas (reliable only for NO_THREADS). */
+ static unsigned long arena_mem;
+ 
+@@ -583,7 +568,6 @@ new_heap(size_t size, size_t top_pad)
+   h = (heap_info *)p2;
+   h->size = size;
+   h->mprotect_size = size;
+-  THREAD_STAT(stat_n_heaps++);
+   LIBC_PROBE (memory_heap_new, 2, h, h->size);
+   return h;
+ }
+@@ -811,8 +795,6 @@ _int_new_arena(size_t size)
+ 
+   (void) mutex_lock (&a->mutex);
+ 
+-  THREAD_STAT(++(a->stat_lock_loop));
+-
+   return a;
+ }
+ 
+@@ -844,7 +826,6 @@ get_free_list (void)
+ 	  LIBC_PROBE (memory_arena_reuse_free_list, 1, result);
+ 	  (void)mutex_lock(&result->mutex);
+ 	  tsd_setspecific(arena_key, (void *)result);
+-	  THREAD_STAT(++(result->stat_lock_loop));
+ 	}
+     }
+ 
+@@ -941,7 +922,6 @@ reused_arena (mstate avoid_arena)
+   }
+   LIBC_PROBE (memory_arena_reuse, 2, result, avoid_arena);
+   tsd_setspecific(arena_key, (void *)result);
+-  THREAD_STAT(++(result->stat_lock_loop));
+   next_to_use = result->next;
+ 
+   return result;
+diff --git a/malloc/malloc.c b/malloc/malloc.c
+index fc86b344ee3b3a7c..9d3b24ee0c137a1b 100644
+--- a/malloc/malloc.c
++++ b/malloc/malloc.c
+@@ -1712,11 +1712,6 @@ struct malloc_state {
+   /* Flags (formerly in max_fast).  */
+   int flags;
+ 
+-#if THREAD_STATS
+-  /* Statistics for locking.  Only used if THREAD_STATS is defined.  */
+-  long stat_lock_direct, stat_lock_loop, stat_lock_wait;
+-#endif
+-
+   /* Fastbins */
+   mfastbinptr      fastbinsY[NFASTBINS];
+ 
+@@ -3015,17 +3010,7 @@ __libc_realloc(void* oldmem, size_t bytes)
+     return newmem;
+   }
+ 
+-#if THREAD_STATS
+-  if(!mutex_trylock(&ar_ptr->mutex))
+-    ++(ar_ptr->stat_lock_direct);
+-  else {
+-    (void)mutex_lock(&ar_ptr->mutex);
+-    ++(ar_ptr->stat_lock_wait);
+-  }
+-#else
+   (void)mutex_lock(&ar_ptr->mutex);
+-#endif
+-
+ 
+   newp = _int_realloc(ar_ptr, oldp, oldsize, nb);
+ 
+@@ -3941,16 +3926,7 @@ _int_free(mstate av, mchunkptr p, int have_lock)
+ 
+   else if (!chunk_is_mmapped(p)) {
+     if (! have_lock) {
+-#if THREAD_STATS
+-      if(!mutex_trylock(&av->mutex))
+-	++(av->stat_lock_direct);
+-      else {
+-	(void)mutex_lock(&av->mutex);
+-	++(av->stat_lock_wait);
+-      }
+-#else
+       (void)mutex_lock(&av->mutex);
+-#endif
+       locked = 1;
+     }
+ 
+@@ -4713,9 +4689,6 @@ __malloc_stats (void)
+   int i;
+   mstate ar_ptr;
+   unsigned int in_use_b = mp_.mmapped_mem, system_b = in_use_b;
+-#if THREAD_STATS
+-  long stat_lock_direct = 0, stat_lock_loop = 0, stat_lock_wait = 0;
+-#endif
+ 
+   if(__malloc_initialized < 0)
+     ptmalloc_init ();
+@@ -4737,11 +4710,6 @@ __malloc_stats (void)
+ #endif
+     system_b += mi.arena;
+     in_use_b += mi.uordblks;
+-#if THREAD_STATS
+-    stat_lock_direct += ar_ptr->stat_lock_direct;
+-    stat_lock_loop += ar_ptr->stat_lock_loop;
+-    stat_lock_wait += ar_ptr->stat_lock_wait;
+-#endif
+     (void)mutex_unlock(&ar_ptr->mutex);
+     ar_ptr = ar_ptr->next;
+     if(ar_ptr == &main_arena) break;
+@@ -4752,14 +4720,6 @@ __malloc_stats (void)
+   fprintf(stderr, "max mmap regions = %10u\n", (unsigned int)mp_.max_n_mmaps);
+   fprintf(stderr, "max mmap bytes   = %10lu\n",
+ 	  (unsigned long)mp_.max_mmapped_mem);
+-#if THREAD_STATS
+-  fprintf(stderr, "heaps created    = %10d\n",  stat_n_heaps);
+-  fprintf(stderr, "locked directly  = %10ld\n", stat_lock_direct);
+-  fprintf(stderr, "locked in loop   = %10ld\n", stat_lock_loop);
+-  fprintf(stderr, "locked waiting   = %10ld\n", stat_lock_wait);
+-  fprintf(stderr, "locked total     = %10ld\n",
+-	  stat_lock_direct + stat_lock_loop + stat_lock_wait);
+-#endif
+   ((_IO_FILE *) stderr)->_flags2 |= old_flags2;
+   _IO_funlockfile (stderr);
+ }

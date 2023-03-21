@@ -1,0 +1,25 @@
+From 17f487b7afa7cd6c316040f3e6c86dc96b2eec30 Mon Sep 17 00:00:00 2001
+From: DJ Delorie <dj@delorie.com>
+Date: Fri, 17 Mar 2017 15:31:38 -0400
+Subject: [PATCH] Further harden glibc malloc metadata against 1-byte
+ overflows.
+
+Additional check for chunk_size == next->prev->chunk_size in unlink()
+
+2017-03-17  Chris Evans  <scarybeasts@gmail.com>
+
+	* malloc/malloc.c (unlink): Add consistency check between size and
+	next->prev->size, to further harden against 1-byte overflows.
+
+diff -rup a/malloc/malloc.c b/malloc/malloc.c
+--- a/malloc/malloc.c	2017-08-01 18:11:00.000000000 -0400
++++ b/malloc/malloc.c	2017-08-01 18:13:07.907438098 -0400
+@@ -1429,6 +1429,8 @@ typedef struct malloc_chunk* mbinptr;
+ 
+ /* Take a chunk off a bin list */
+ #define unlink(AV, P, BK, FD) {					       \
++   if (__builtin_expect (chunksize(P) != next_chunk(P)->prev_size, 0))      \
++     malloc_printerr (check_action, "corrupted size vs. prev_size", P, AV);  \
+   FD = P->fd;                                                          \
+   BK = P->bk;                                                          \
+   if (__builtin_expect (FD->bk != P || BK->fd != P, 0)) {	       \

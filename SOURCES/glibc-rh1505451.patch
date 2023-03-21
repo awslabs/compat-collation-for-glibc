@@ -1,0 +1,21 @@
+commit 12c3bb770dd3ea11215baf23b385dbf297a2a85c
+Author: Torvald Riegel <triegel@redhat.com>
+Date:   Fri Jan 15 22:40:50 2016 +0100
+
+    Fix pthread_barrier_init typo.
+    
+    Applies Paul Eggert's fix for BZ 18868.
+
+Index: b/nptl/pthread_barrier_init.c
+===================================================================
+--- a/nptl/pthread_barrier_init.c
++++ b/nptl/pthread_barrier_init.c
+@@ -39,7 +39,7 @@ pthread_barrier_init (pthread_barrier_t
+ 
+   const struct pthread_barrierattr *iattr
+     = (attr != NULL
+-       ? iattr = (struct pthread_barrierattr *) attr
++       ? (struct pthread_barrierattr *) attr
+        : &default_barrierattr);
+ 
+   if (iattr->pshared != PTHREAD_PROCESS_PRIVATE

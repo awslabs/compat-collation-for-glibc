@@ -1,0 +1,32 @@
+commit bd3b0fbae33a9a4cc5e2daf049443d5cf03d4251
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Mon Nov 5 12:47:30 2018 +0100
+
+    libanl: properly cleanup if first helper thread creation failed (bug 22927)
+
+2018-11-05  Andreas Schwab  <schwab@suse.de>
+
+	[BZ #22927]
+	* resolv/gai_misc.c (__gai_enqueue_request): Don't crash if
+	creating the first helper thread failed.
+
+[Note from DJ - hard to test; must force second calloc() call in
+getaddrinfo_a() to return NULL/ENOMEM]
+
+diff -rup a/resolv/gai_misc.c b/resolv/gai_misc.c
+--- a/resolv/gai_misc.c	2012-12-24 22:02:13.000000000 -0500
++++ b/resolv/gai_misc.c	2019-01-22 16:19:30.514199534 -0500
+@@ -264,8 +264,11 @@ __gai_enqueue_request (struct gaicb *gai
+ 	      /* We cannot create a thread in the moment and there is
+ 		 also no thread running.  This is a problem.  `errno' is
+ 		 set to EAGAIN if this is only a temporary problem.  */
+-	      assert (lastp->next == newp);
+-	      lastp->next = NULL;
++	      assert (requests == newp || lastp->next == newp);
++	      if (lastp != NULL)
++		lastp->next = NULL;
++	      else
++		requests = NULL;
+ 	      requests_tail = lastp;
+ 
+ 	      newp->next = freelist;

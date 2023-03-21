@@ -1,0 +1,19 @@
+commit 8f2f08d04f969f27dad47ee2d9dcbe567f2873bc
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Thu May 1 13:33:13 2014 -0700
+
+    Fix -Wundef warnings for _IO_JUMPS_OFFSET.
+
+diff --git a/libio/libioP.h b/libio/libioP.h
+index c170b872028c7a5f..b60244ac5fc3d908 100644
+--- a/libio/libioP.h
++++ b/libio/libioP.h
+@@ -100,6 +100,8 @@ extern "C" {
+ #if (!defined _IO_USE_OLD_IO_FILE \
+      && (!defined _G_IO_NO_BACKWARD_COMPAT || _G_IO_NO_BACKWARD_COMPAT == 0))
+ # define _IO_JUMPS_OFFSET 1
++#else
++# define _IO_JUMPS_OFFSET 0
+ #endif
+ 
+ #define _IO_JUMPS(THIS) (THIS)->vtable

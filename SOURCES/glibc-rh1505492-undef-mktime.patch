@@ -1,0 +1,30 @@
+Fix -Wundef warnings.  Part of this upstream commit:
+
+commit dd0ba018122e88937a5f14b6594b9a40693b2e58
+Author: Paul Eggert <eggert@cs.ucla.edu>
+Date:   Sat Jun 28 06:15:54 2014 +0530
+
+    Sync up mktime with gnulib
+
+diff --git a/time/mktime.c b/time/mktime.c
+index e1fbf9ea197d3c8b..bc914d80593b91f2 100644
+--- a/time/mktime.c
++++ b/time/mktime.c
+@@ -38,7 +38,7 @@
+ 
+ #include <string.h>		/* For the real memcpy prototype.  */
+ 
+-#if DEBUG
++#if defined DEBUG && DEBUG
+ # include <stdio.h>
+ # include <stdlib.h>
+ /* Make it work even if the system's libc has its own mktime routine.  */
+@@ -600,7 +600,7 @@ libc_hidden_def (mktime)
+ libc_hidden_weak (timelocal)
+ #endif
+ 
+-#if DEBUG
++#if defined DEBUG && DEBUG
+ 
+ static int
+ not_equal_tm (const struct tm *a, const struct tm *b)

@@ -1,0 +1,25 @@
+Introduce prototype-style function definition for bzero.  This happened
+upstream as part of:
+
+commit ddcf6798d35beca3c4eec80ea448b57fd45558f4
+Author: Wilco Dijkstra <wdijkstr@arm.com>
+Date:   Fri Feb 27 14:41:46 2015 +0000
+
+    Rather than using a C implementation of memset, directly call memset, which
+    typically has a much faster optimized implementation.
+
+diff --git a/string/bzero.c b/string/bzero.c
+index b7a88ec9253bdf0c..c3276e7752935801 100644
+--- a/string/bzero.c
++++ b/string/bzero.c
+@@ -23,9 +23,7 @@
+ 
+ /* Set N bytes of S to 0.  */
+ void
+-__bzero (s, len)
+-     void *s;
+-     size_t len;
++__bzero (void *s, size_t len)
+ {
+   long int dstp = (long int) s;
+   const op_t zero = 0;

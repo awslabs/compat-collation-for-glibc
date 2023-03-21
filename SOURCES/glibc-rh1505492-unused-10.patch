@@ -1,0 +1,67 @@
+commit 8915eacef88eb25ac94e6bb37b473adb326e9d1b
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Nov 26 20:54:16 2014 +0000
+
+    Avoid warnings for unused results in nscd/connections.c.
+    
+    This patch avoids warnings for unused results of setuid and setgid in
+    nscd/connections.c using an ignore_value macro along the lines
+    suggested by Paul in
+    <https://sourceware.org/ml/libc-alpha/2014-11/msg00733.html>.
+    
+    Tested for x86_64.
+    
+            * include/libc-internal.h (ignore_value): New macro.
+            * nscd/connections.c (restart): Wrap calls to setuid and setgid
+            with ignore_value.
+
+diff --git a/include/libc-internal.h b/include/libc-internal.h
+index 78f82da58a2c334b..2ced1c17d3dff93d 100644
+--- a/include/libc-internal.h
++++ b/include/libc-internal.h
+@@ -70,4 +70,10 @@ extern void __init_misc (int, char **, char **);
+ #define PTR_ALIGN_UP(base, size) \
+   ((__typeof__ (base)) ALIGN_UP ((uintptr_t) (base), (size)))
+ 
++/* Ignore the value of an expression when a cast to void does not
++   suffice (in particular, for a call to a function declared with
++   attribute warn_unused_result).  */
++#define ignore_value(x) \
++  ({ __typeof__ (x) __ignored_value = (x); (void) __ignored_value; })
++
+ #endif /* _LIBC_INTERNAL  */
+diff --git a/nscd/connections.c b/nscd/connections.c
+index 53813cf58876eae7..54b70e88d894523a 100644
+--- a/nscd/connections.c
++++ b/nscd/connections.c
+@@ -1486,7 +1486,7 @@ cannot change to old UID: %s; disabling paranoia mode"),
+ cannot change to old GID: %s; disabling paranoia mode"),
+ 		   strerror (errno));
+ 
+-	  setuid (server_uid);
++	  ignore_value (setuid (server_uid));
+ 	  paranoia = 0;
+ 	  return;
+ 	}
+@@ -1501,8 +1501,8 @@ cannot change to old working directory: %s; disabling paranoia mode"),
+ 
+       if (server_user != NULL)
+ 	{
+-	  setuid (server_uid);
+-	  setgid (server_gid);
++	  ignore_value (setuid (server_uid));
++	  ignore_value (setgid (server_gid));
+ 	}
+       paranoia = 0;
+       return;
+@@ -1546,8 +1546,8 @@ cannot change to old working directory: %s; disabling paranoia mode"),
+ 
+   if (server_user != NULL)
+     {
+-      setuid (server_uid);
+-      setgid (server_gid);
++      ignore_value (setuid (server_uid));
++      ignore_value (setgid (server_gid));
+     }
+   if (chdir ("/") != 0)
+     dbg_log (_("cannot change current working directory to \"/\": %s"),

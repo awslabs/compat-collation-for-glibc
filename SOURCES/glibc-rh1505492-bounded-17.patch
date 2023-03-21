@@ -1,0 +1,1220 @@
+commit 2d67d91ac08aa2f793d220ad8712541fefa0ba79
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Mar 6 00:10:21 2013 +0000
+
+    Remove powerpc64 bounded-pointers code.
+
+Conflicts:
+	sysdeps/generic/bp-sym.h
+	  (Copyright header change; file deleted manually.)
+	sysdeps/powerpc/powerpc64/bp-asm.h
+	sysdeps/powerpc/powerpc64/memset.S
+	sysdeps/powerpc/powerpc64/power4/memset.S
+	sysdeps/powerpc/powerpc64/power6/memset.S
+	sysdeps/powerpc/powerpc64/power7/memchr.S
+	sysdeps/powerpc/powerpc64/power7/memcmp.S
+	sysdeps/powerpc/powerpc64/power7/memrchr.S
+	sysdeps/powerpc/powerpc64/power7/memset.S
+	sysdeps/powerpc/powerpc64/power7/strnlen.S
+	sysdeps/powerpc/powerpc64/setjmp-common.S
+	sysdeps/powerpc/powerpc64/stpcpy.S
+	sysdeps/powerpc/powerpc64/strcmp.S
+	sysdeps/powerpc/powerpc64/strcpy.S
+	sysdeps/powerpc/powerpc64/strlen.S
+	  (Resolved textual conflicts due to previous backports.)
+
+diff --git a/sysdeps/generic/bp-sym.h b/sysdeps/generic/bp-sym.h
+deleted file mode 100644
+index f581e5fc59dfedd9..0000000000000000
+--- a/sysdeps/generic/bp-sym.h
++++ /dev/null
+@@ -1,25 +0,0 @@
+-/* Bounded-pointer symbol modifier.
+-   Copyright (C) 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#define BP_SYM(name) _BP_SYM (name)
+-#if __BOUNDED_POINTERS__
+-# define _BP_SYM(name) __BP_##name
+-#else
+-# define _BP_SYM(name) name
+-#endif
+diff --git a/sysdeps/powerpc/powerpc64/__longjmp-common.S b/sysdeps/powerpc/powerpc64/__longjmp-common.S
+index 95caaa77c322562a..da65c6f1bbdb6dc3 100644
+--- a/sysdeps/powerpc/powerpc64/__longjmp-common.S
++++ b/sysdeps/powerpc/powerpc64/__longjmp-common.S
+@@ -24,8 +24,6 @@
+ #else
+ # include <jmpbuf-offsets.h>
+ #endif
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #ifndef __NO_VMX__
+ 	.section	".toc","aw"
+@@ -45,9 +43,8 @@
+ #endif
+ 
+ 	.machine	"altivec"
+-ENTRY (BP_SYM (__longjmp))
++ENTRY (__longjmp)
+ 	CALL_MCOUNT 2
+-	CHECK_BOUNDS_BOTH_WIDE_LIT (r3, r8, r9, JB_SIZE)
+ #ifndef __NO_VMX__
+ 	ld    r5,.LC__dl_hwcap@toc(r2)
+ # ifdef SHARED
+@@ -178,4 +175,4 @@ L(no_vmx):
+ 	lfd fp31,((JB_FPRS+17)*8)(r3)
+ 	mr r3,r4
+ 	blr
+-END (BP_SYM (__longjmp))
++END (__longjmp)
+diff --git a/sysdeps/powerpc/powerpc64/a2/memcpy.S b/sysdeps/powerpc/powerpc64/a2/memcpy.S
+index 4ffe19a0e6b04d2f..f640feb45ce306c6 100644
+--- a/sysdeps/powerpc/powerpc64/a2/memcpy.S
++++ b/sysdeps/powerpc/powerpc64/a2/memcpy.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #define PREFETCH_AHEAD 4        /* no cache lines SRC prefetching ahead  */
+ #define ZERO_AHEAD 2            /* no cache lines DST zeroing ahead  */
+@@ -32,7 +30,7 @@
+ 
+ 
+ 	.machine  a2
+-EALIGN (BP_SYM (memcpy), 5, 0)
++EALIGN (memcpy, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+ 	dcbt    0,r4            /* Prefetch ONE SRC cacheline  */
+@@ -522,5 +520,5 @@ L(endloop2_128):
+ 	b       L(lessthancacheline)
+ 
+ 
+-END_GEN_TB (BP_SYM (memcpy),TB_TOCLESS)
++END_GEN_TB (memcpy,TB_TOCLESS)
+ libc_hidden_builtin_def (memcpy)
+diff --git a/sysdeps/powerpc/powerpc64/bp-asm.h b/sysdeps/powerpc/powerpc64/bp-asm.h
+deleted file mode 100644
+index f1ec72204b685801..0000000000000000
+--- a/sysdeps/powerpc/powerpc64/bp-asm.h
++++ /dev/null
+@@ -1,113 +0,0 @@
+-/* Bounded-pointer definitions for PowerPC64 assembler.
+-   Copyright (C) 2000, 2002 Free Software Foundation, Inc.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-
+-   This file is part of the GNU C Library.  Its master source is NOT part of
+-   the C library, however.  The master source lives in the GNU MP Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library; see the file COPYING.LIB.  If
+-   not, see <http://www.gnu.org/licenses/>.  */
+-
+-#if __BOUNDED_POINTERS__
+-
+-/* Byte offsets of BP components.  */
+-# define oVALUE	0
+-# define oLOW	4
+-# define oHIGH	8
+-
+-/* Don't check bounds, just convert the BP register to its simple
+-   pointer value.  */
+-
+-# define DISCARD_BOUNDS(rBP)			\
+-	ld	rBP, oVALUE(rBP)
+-
+-/* Check low bound, with the side effect that the BP register is converted
+-   its simple pointer value.  Move the high bound into a register for
+-   later use.  */
+-
+-# define CHECK_BOUNDS_LOW(rBP, rLOW, rHIGH)	\
+-	ld	rHIGH, oHIGH(rBP);		\
+-	ld	rLOW, oLOW(rBP);		\
+-	ld	rBP, oVALUE(rBP);		\
+-	tdllt	rBP, rLOW
+-
+-/* Check the high bound, which is in a register, using the given
+-   conditional trap instruction.  */
+-
+-# define CHECK_BOUNDS_HIGH(rVALUE, rHIGH, TWLcc) \
+-	TWLcc	rVALUE, rHIGH
+-
+-/* Check the high bound, which is stored at the return-value's high
+-   bound slot, using the given conditional trap instruction.  */
+-
+-# define CHECK_BOUNDS_HIGH_RTN(rVALUE, rHIGH, TWLcc)	\
+-	ld	rHIGH, oHIGH(rRTN);			\
+-	TWLcc	rVALUE, rHIGH
+-
+-/* Check both bounds, with the side effect that the BP register is
+-   converted to its simple pointer value.  */
+-
+-# define CHECK_BOUNDS_BOTH(rBP, rLOW, rHIGH)	\
+-	CHECK_BOUNDS_LOW(rBP, rLOW, rHIGH);	\
+-	tdlge	rBP, rHIGH
+-
+-/* Check bounds on a memory region of given length, with the side
+-   effect that the BP register is converted to its simple pointer
+-   value.  */
+-
+-# define CHECK_BOUNDS_BOTH_WIDE(rBP, rLOW, rHIGH, rLENGTH)	\
+-	CHECK_BOUNDS_LOW (rBP, rLOW, rHIGH);			\
+-	sub	rHIGH, rHIGH, rLENGTH;				\
+-	tdlgt	rBP, rHIGH
+-
+-# define CHECK_BOUNDS_BOTH_WIDE_LIT(rBP, rLOW, rHIGH, LENGTH)	\
+-	CHECK_BOUNDS_LOW (rBP, rLOW, rHIGH);			\
+-	subi	rHIGH, rHIGH, LENGTH;				\
+-	tdlgt	rBP, rHIGH
+-
+-/* Store a pointer value register into the return-value's pointer
+-   value slot.  */
+-
+-# define STORE_RETURN_VALUE(rVALUE)		\
+-	std	rVALUE, oVALUE(rRTN)
+-
+-/* Store a low and high bounds into the return-value's pointer bounds
+-   slots.  */
+-
+-# define STORE_RETURN_BOUNDS(rLOW, rHIGH)	\
+-	std	rLOW, oLOW(rRTN);		\
+-	std	rHIGH, oHIGH(rRTN)
+-
+-/* Stuff zero value/low/high into the BP addressed by rRTN.  */
+-
+-# define RETURN_NULL_BOUNDED_POINTER		\
+-	li	r4, 0;				\
+-	STORE_RETURN_VALUE (r4);		\
+-	STORE_RETURN_BOUNDS (r4, r4)
+-
+-#else
+-
+-# define DISCARD_BOUNDS(rBP)
+-# define CHECK_BOUNDS_LOW(rBP, rLOW, rHIGH)
+-# define CHECK_BOUNDS_HIGH(rVALUE, rHIGH, TWLcc)
+-# define CHECK_BOUNDS_HIGH_RTN(rVALUE, rHIGH, TWLcc)
+-# define CHECK_BOUNDS_BOTH(rBP, rLOW, rHIGH)
+-# define CHECK_BOUNDS_BOTH_WIDE(rBP, rLOW, rHIGH, rLENGTH)
+-# define CHECK_BOUNDS_BOTH_WIDE_LIT(rBP, rLOW, rHIGH, LENGTH)
+-# define STORE_RETURN_VALUE(rVALUE)
+-# define STORE_RETURN_BOUNDS(rLOW, rHIGH)
+-
+-# define RETURN_NULL_BOUNDED_POINTER li rRTN, 0
+-
+-#endif
+diff --git a/sysdeps/powerpc/powerpc64/cell/memcpy.S b/sysdeps/powerpc/powerpc64/cell/memcpy.S
+index 5c2019498af23df0..ad2b506f1e5fba74 100644
+--- a/sysdeps/powerpc/powerpc64/cell/memcpy.S
++++ b/sysdeps/powerpc/powerpc64/cell/memcpy.S
+@@ -17,8 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #define PREFETCH_AHEAD 6	/* no cache lines SRC prefetching ahead  */
+ #define ZERO_AHEAD 4		/* no cache lines DST zeroing ahead  */
+@@ -41,7 +39,7 @@
+ 
+ .align  7
+ 
+-EALIGN (BP_SYM (memcpy), 5, 0)
++EALIGN (memcpy, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+ 	dcbt	0,r4		/* Prefetch ONE SRC cacheline  */
+@@ -240,5 +238,5 @@ EALIGN (BP_SYM (memcpy), 5, 0)
+ 	stb	r0,0(r6)
+ 1:	blr
+ 
+-END_GEN_TB (BP_SYM (memcpy),TB_TOCLESS)
++END_GEN_TB (memcpy,TB_TOCLESS)
+ libc_hidden_builtin_def (memcpy)
+diff --git a/sysdeps/powerpc/powerpc64/memcpy.S b/sysdeps/powerpc/powerpc64/memcpy.S
+index 680560e3513be8e0..7652fe380d62d45c 100644
+--- a/sysdeps/powerpc/powerpc64/memcpy.S
++++ b/sysdeps/powerpc/powerpc64/memcpy.S
+@@ -17,8 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* __ptr_t [r3] memcpy (__ptr_t dst [r3], __ptr_t src [r4], size_t len [r5]);
+    Returns 'dst'.
+@@ -35,7 +33,7 @@
+    posible when both source and destination are doubleword aligned.
+    Each case has a optimized unrolled loop.   */
+ 
+-EALIGN (BP_SYM (memcpy), 5, 0)
++EALIGN (memcpy, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+     cmpldi cr1,5,31
+@@ -391,5 +389,5 @@ EALIGN (BP_SYM (memcpy), 5, 0)
+     ld 31,-8(1)
+     ld 3,-16(1)
+     blr
+-END_GEN_TB (BP_SYM (memcpy),TB_TOCLESS)
++END_GEN_TB (memcpy,TB_TOCLESS)
+ libc_hidden_builtin_def (memcpy)
+diff --git a/sysdeps/powerpc/powerpc64/memset.S b/sysdeps/powerpc/powerpc64/memset.S
+index caba3564a136c9b1..9177dfc71800487f 100644
+--- a/sysdeps/powerpc/powerpc64/memset.S
++++ b/sysdeps/powerpc/powerpc64/memset.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ 	.section	".toc","aw"
+ .LC0:
+@@ -34,22 +32,15 @@
+    cache line (256 bits). There is a special case for setting cache lines
+    to 0, to take advantage of the dcbz instruction.  */
+ 
+-EALIGN (BP_SYM (memset), 5, 0)
++EALIGN (memset, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+ #define rTMP	r0
+ #define rRTN	r3	/* Initial value of 1st argument.  */
+-#if __BOUNDED_POINTERS__
+-# define rMEMP0	r4	/* Original value of 1st arg.  */
+-# define rCHR	r5	/* Char to set in each byte.  */
+-# define rLEN	r6	/* Length of region to set.  */
+-# define rMEMP	r10	/* Address at which we are storing.  */
+-#else
+-# define rMEMP0	r3	/* Original value of 1st arg.  */
+-# define rCHR	r4	/* Char to set in each byte.  */
+-# define rLEN	r5	/* Length of region to set.  */
+-# define rMEMP	r6	/* Address at which we are storing.  */
+-#endif
++#define rMEMP0	r3	/* Original value of 1st arg.  */
++#define rCHR	r4	/* Char to set in each byte.  */
++#define rLEN	r5	/* Length of region to set.  */
++#define rMEMP	r6	/* Address at which we are storing.  */
+ #define rALIGN	r7	/* Number of bytes we are setting now (when aligning). */
+ #define rMEMP2	r8
+ 
+@@ -57,14 +48,6 @@ EALIGN (BP_SYM (memset), 5, 0)
+ #define rCLS	r8	/* Cache line size obtained from static.  */
+ #define rCLM	r9	/* Cache line size mask to check for cache alignment.  */
+ L(_memset):
+-#if __BOUNDED_POINTERS__
+-	cmpldi	cr1, rRTN, 0
+-	CHECK_BOUNDS_BOTH_WIDE (rMEMP0, rTMP, rTMP2, rLEN)
+-	beq	cr1, L(b0)
+-	STORE_RETURN_VALUE (rMEMP0)
+-	STORE_RETURN_BOUNDS (rTMP, rTMP2)
+-L(b0):
+-#endif
+ /* Take care of case for size <= 4.  */
+ 	cmpldi	cr1, rLEN, 8
+ 	andi.	rALIGN, rMEMP0, 7
+@@ -262,27 +245,18 @@ L(medium_27f):
+ L(medium_28t):
+ 	std	rCHR, -8(rMEMP)
+ 	blr
+-END_GEN_TB (BP_SYM (memset),TB_TOCLESS)
++END_GEN_TB (memset,TB_TOCLESS)
+ libc_hidden_builtin_def (memset)
+ 
+ #ifndef NO_BZERO_IMPL
+ /* Copied from bzero.S to prevent the linker from inserting a stub
+    between bzero and memset.  */
+-ENTRY (BP_SYM (__bzero))
++ENTRY (__bzero)
+ 	CALL_MCOUNT 3
+-#if __BOUNDED_POINTERS__
+-	mr	r6,r4
+-	li	r5,0
+-	mr	r4,r3
+-	/* Tell memset that we don't want a return value.  */
+-	li	r3,0
+-	b	L(_memset)
+-#else
+ 	mr	r5,r4
+ 	li	r4,0
+ 	b	L(_memset)
+-#endif
+-END_GEN_TB (BP_SYM (__bzero),TB_TOCLESS)
++END_GEN_TB (__bzero,TB_TOCLESS)
+ 
+-weak_alias (BP_SYM (__bzero), BP_SYM (bzero))
++weak_alias (__bzero, bzero)
+ #endif
+diff --git a/sysdeps/powerpc/powerpc64/power4/memset.S b/sysdeps/powerpc/powerpc64/power4/memset.S
+index 55e4013f1c7062c6..cfb731ddf49b64f4 100644
+--- a/sysdeps/powerpc/powerpc64/power4/memset.S
++++ b/sysdeps/powerpc/powerpc64/power4/memset.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* __ptr_t [r3] memset (__ptr_t s [r3], int c [r4], size_t n [r5]));
+    Returns 's'.
+@@ -29,22 +27,15 @@
+    to 0, to take advantage of the dcbz instruction.  */
+ 
+ 	.machine power4
+-EALIGN (BP_SYM (memset), 5, 0)
++EALIGN (memset, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+ #define rTMP	r0
+ #define rRTN	r3	/* Initial value of 1st argument.  */
+-#if __BOUNDED_POINTERS__
+-# define rMEMP0	r4	/* Original value of 1st arg.  */
+-# define rCHR	r5	/* Char to set in each byte.  */
+-# define rLEN	r6	/* Length of region to set.  */
+-# define rMEMP	r10	/* Address at which we are storing.  */
+-#else
+-# define rMEMP0	r3	/* Original value of 1st arg.  */
+-# define rCHR	r4	/* Char to set in each byte.  */
+-# define rLEN	r5	/* Length of region to set.  */
+-# define rMEMP	r6	/* Address at which we are storing.  */
+-#endif
++#define rMEMP0	r3	/* Original value of 1st arg.  */
++#define rCHR	r4	/* Char to set in each byte.  */
++#define rLEN	r5	/* Length of region to set.  */
++#define rMEMP	r6	/* Address at which we are storing.  */
+ #define rALIGN	r7	/* Number of bytes we are setting now (when aligning). */
+ #define rMEMP2	r8
+ 
+@@ -52,14 +43,6 @@ EALIGN (BP_SYM (memset), 5, 0)
+ #define rCLS	r8	/* Cache line size obtained from static.  */
+ #define rCLM	r9	/* Cache line size mask to check for cache alignment.  */
+ L(_memset):
+-#if __BOUNDED_POINTERS__
+-	cmpldi	cr1, rRTN, 0
+-	CHECK_BOUNDS_BOTH_WIDE (rMEMP0, rTMP, rTMP2, rLEN)
+-	beq	cr1, L(b0)
+-	STORE_RETURN_VALUE (rMEMP0)
+-	STORE_RETURN_BOUNDS (rTMP, rTMP2)
+-L(b0):
+-#endif
+ /* Take care of case for size <= 4.  */
+ 	cmpldi	cr1, rLEN, 8
+ 	andi.	rALIGN, rMEMP0, 7
+@@ -250,27 +233,18 @@ L(medium_27f):
+ L(medium_28t):
+ 	std	rCHR, -8(rMEMP)
+ 	blr
+-END_GEN_TB (BP_SYM (memset),TB_TOCLESS)
++END_GEN_TB (memset,TB_TOCLESS)
+ libc_hidden_builtin_def (memset)
+ 
+ #ifndef NO_BZERO_IMPL
+ /* Copied from bzero.S to prevent the linker from inserting a stub
+    between bzero and memset.  */
+-ENTRY (BP_SYM (__bzero))
++ENTRY (__bzero)
+ 	CALL_MCOUNT 3
+-#if __BOUNDED_POINTERS__
+-	mr	r6,r4
+-	li	r5,0
+-	mr	r4,r3
+-	/* Tell memset that we don't want a return value.  */
+-	li	r3,0
+-	b	L(_memset)
+-#else
+ 	mr	r5,r4
+ 	li	r4,0
+ 	b	L(_memset)
+-#endif
+-END_GEN_TB (BP_SYM (__bzero),TB_TOCLESS)
++END_GEN_TB (__bzero,TB_TOCLESS)
+ 
+-weak_alias (BP_SYM (__bzero), BP_SYM (bzero))
++weak_alias (__bzero, bzero)
+ #endif
+diff --git a/sysdeps/powerpc/powerpc64/power4/strncmp.S b/sysdeps/powerpc/powerpc64/power4/strncmp.S
+index 2ce93040765b2321..412b92e585000f44 100644
+--- a/sysdeps/powerpc/powerpc64/power4/strncmp.S
++++ b/sysdeps/powerpc/powerpc64/power4/strncmp.S
+@@ -17,14 +17,12 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* See strlen.s for comments on how the end-of-string testing works.  */
+ 
+ /* int [r3] strncmp (const char *s1 [r3], const char *s2 [r4], size_t size [r5])  */
+ 
+-EALIGN (BP_SYM(strncmp), 4, 0)
++EALIGN (strncmp, 4, 0)
+ 	CALL_MCOUNT 3
+ 
+ #define rTMP2	r0
+@@ -32,9 +30,6 @@ EALIGN (BP_SYM(strncmp), 4, 0)
+ #define rSTR1	r3	/* first string arg */
+ #define rSTR2	r4	/* second string arg */
+ #define rN	r5	/* max string length */
+-/* Note:  The Bounded pointer support in this code is broken.  This code
+-   was inherited from PPC32 and that support was never completed.
+-   Current PPC gcc does not support -fbounds-check or -fbounded-pointers.  */
+ #define rWORD1	r6	/* current word in s1 */
+ #define rWORD2	r7	/* current word in s2 */
+ #define rWORD3  r10
+@@ -222,5 +217,5 @@ L(u4):	sub	rRTN, rWORD1, rWORD2
+ L(ux):
+ 	li	rRTN, 0
+ 	blr
+-END (BP_SYM (strncmp))
++END (strncmp)
+ libc_hidden_builtin_def (strncmp)
+diff --git a/sysdeps/powerpc/powerpc64/power6/memset.S b/sysdeps/powerpc/powerpc64/power6/memset.S
+index d2a8d3403f6058ce..b28d285232bbd595 100644
+--- a/sysdeps/powerpc/powerpc64/power6/memset.S
++++ b/sysdeps/powerpc/powerpc64/power6/memset.S
+@@ -18,8 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* __ptr_t [r3] memset (__ptr_t s [r3], int c [r4], size_t n [r5]));
+    Returns 's'.
+@@ -29,34 +27,19 @@
+    to 0, to take advantage of the dcbz instruction.  */
+ 
+ 	.machine power6
+-EALIGN (BP_SYM (memset), 7, 0)
++EALIGN (memset, 7, 0)
+ 	CALL_MCOUNT 3
+ 
+ #define rTMP	r0
+ #define rRTN	r3	/* Initial value of 1st argument.  */
+-#if __BOUNDED_POINTERS__
+-# define rMEMP0	r4	/* Original value of 1st arg.  */
+-# define rCHR	r5	/* Char to set in each byte.  */
+-# define rLEN	r6	/* Length of region to set.  */
+-# define rMEMP	r10	/* Address at which we are storing.  */
+-#else
+-# define rMEMP0	r3	/* Original value of 1st arg.  */
+-# define rCHR	r4	/* Char to set in each byte.  */
+-# define rLEN	r5	/* Length of region to set.  */
+-# define rMEMP	r6	/* Address at which we are storing.  */
+-#endif
++#define rMEMP0	r3	/* Original value of 1st arg.  */
++#define rCHR	r4	/* Char to set in each byte.  */
++#define rLEN	r5	/* Length of region to set.  */
++#define rMEMP	r6	/* Address at which we are storing.  */
+ #define rALIGN	r7	/* Number of bytes we are setting now (when aligning). */
+ #define rMEMP2	r8
+ #define rMEMP3	r9	/* Alt mem pointer.  */
+ L(_memset):
+-#if __BOUNDED_POINTERS__
+-	cmpldi	cr1, rRTN, 0
+-	CHECK_BOUNDS_BOTH_WIDE (rMEMP0, rTMP, rTMP2, rLEN)
+-	beq	cr1, L(b0)
+-	STORE_RETURN_VALUE (rMEMP0)
+-	STORE_RETURN_BOUNDS (rTMP, rTMP2)
+-L(b0):
+-#endif
+ /* Take care of case for size <= 4.  */
+ 	cmpldi	cr1, rLEN, 8
+ 	andi.	rALIGN, rMEMP0, 7
+@@ -394,27 +377,18 @@ L(medium_27f):
+ L(medium_28t):
+ 	std	rCHR, -8(rMEMP)
+ 	blr
+-END_GEN_TB (BP_SYM (memset),TB_TOCLESS)
++END_GEN_TB (memset,TB_TOCLESS)
+ libc_hidden_builtin_def (memset)
+ 
+ #ifndef NO_BZERO_IMPL
+ /* Copied from bzero.S to prevent the linker from inserting a stub
+    between bzero and memset.  */
+-ENTRY (BP_SYM (__bzero))
++ENTRY (__bzero)
+ 	CALL_MCOUNT 3
+-#if __BOUNDED_POINTERS__
+-	mr	r6,r4
+-	li	r5,0
+-	mr	r4,r3
+-	/* Tell memset that we don't want a return value.  */
+-	li	r3,0
+-	b	L(_memset)
+-#else
+ 	mr	r5,r4
+ 	li	r4,0
+ 	b	L(_memset)
+-#endif
+-END_GEN_TB (BP_SYM (__bzero),TB_TOCLESS)
++END_GEN_TB (__bzero,TB_TOCLESS)
+ 
+-weak_alias (BP_SYM (__bzero), BP_SYM (bzero))
++weak_alias (__bzero, bzero)
+ #endif
+diff --git a/sysdeps/powerpc/powerpc64/power7/mempcpy.S b/sysdeps/powerpc/powerpc64/power7/mempcpy.S
+index ca524b584f1bcf92..17db88f65a87a198 100644
+--- a/sysdeps/powerpc/powerpc64/power7/mempcpy.S
++++ b/sysdeps/powerpc/powerpc64/power7/mempcpy.S
+@@ -18,15 +18,13 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ 
+ /* __ptr_t [r3] __mempcpy (__ptr_t dst [r3], __ptr_t src [r4], size_t len [r5]);
+     Returns 'dst' + 'len'.  */
+ 
+ 	.machine  power7
+-EALIGN (BP_SYM (__mempcpy), 5, 0)
++EALIGN (__mempcpy, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+ 	cmpldi	cr1,5,31
+@@ -465,7 +463,7 @@ L(end_unaligned_loop):
+ 	add	3,3,5
+ 	blr
+ 
+-END_GEN_TB (BP_SYM (__mempcpy),TB_TOCLESS)
+-libc_hidden_def (BP_SYM (__mempcpy))
+-weak_alias (BP_SYM (__mempcpy), BP_SYM (mempcpy))
++END_GEN_TB (__mempcpy,TB_TOCLESS)
++libc_hidden_def (__mempcpy)
++weak_alias (__mempcpy, mempcpy)
+ libc_hidden_builtin_def (mempcpy)
+diff --git a/sysdeps/powerpc/powerpc64/power7/memset.S b/sysdeps/powerpc/powerpc64/power7/memset.S
+index 0f7d03e19dd5d2b8..73c129a4c1f64dcd 100644
+--- a/sysdeps/powerpc/powerpc64/power7/memset.S
++++ b/sysdeps/powerpc/powerpc64/power7/memset.S
+@@ -18,14 +18,12 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* __ptr_t [r3] memset (__ptr_t s [r3], int c [r4], size_t n [r5]));
+    Returns 's'.  */
+ 
+ 	.machine power7
+-EALIGN (BP_SYM (memset), 5, 0)
++EALIGN (memset, 5, 0)
+ 	CALL_MCOUNT 3
+ 
+ L(_memset):
+@@ -382,18 +380,18 @@ L(small):
+ 	stw	4,4(10)
+ 	blr
+ 
+-END_GEN_TB (BP_SYM (memset),TB_TOCLESS)
++END_GEN_TB (memset,TB_TOCLESS)
+ libc_hidden_builtin_def (memset)
+ 
+ #ifndef NO_BZERO_IMPL
+ /* Copied from bzero.S to prevent the linker from inserting a stub
+    between bzero and memset.  */
+-ENTRY (BP_SYM (__bzero))
++ENTRY (__bzero)
+ 	CALL_MCOUNT 3
+ 	mr	r5,r4
+ 	li	r4,0
+ 	b	L(_memset)
+-END_GEN_TB (BP_SYM (__bzero),TB_TOCLESS)
++END_GEN_TB (__bzero,TB_TOCLESS)
+ 
+-weak_alias (BP_SYM (__bzero), BP_SYM (bzero))
++weak_alias (__bzero, bzero)
+ #endif
+diff --git a/sysdeps/powerpc/powerpc64/power7/rawmemchr.S b/sysdeps/powerpc/powerpc64/power7/rawmemchr.S
+index 2eaaf2fc13004acc..17d79a10240dcd26 100644
+--- a/sysdeps/powerpc/powerpc64/power7/rawmemchr.S
++++ b/sysdeps/powerpc/powerpc64/power7/rawmemchr.S
+@@ -18,12 +18,10 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* int [r3] rawmemchr (void *s [r3], int c [r4])  */
+ 	.machine  power7
+-ENTRY (BP_SYM(__rawmemchr))
++ENTRY (__rawmemchr)
+ 	CALL_MCOUNT 2
+ 	dcbt	0,r3
+ 	clrrdi	r8,r3,3	      /* Align the address to doubleword boundary.  */
+@@ -108,6 +106,6 @@ L(done):
+ 	srdi	r0,r0,3	      /* Convert leading zeros to bytes.  */
+ 	add	r3,r8,r0      /* Return address of the matching char.  */
+ 	blr
+-END (BP_SYM (__rawmemchr))
++END (__rawmemchr)
+ weak_alias (__rawmemchr,rawmemchr)
+ libc_hidden_builtin_def (__rawmemchr)
+diff --git a/sysdeps/powerpc/powerpc64/power7/strcasecmp.S b/sysdeps/powerpc/powerpc64/power7/strcasecmp.S
+index 47e2fefe59c59900..65c343e52493440c 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strcasecmp.S
++++ b/sysdeps/powerpc/powerpc64/power7/strcasecmp.S
+@@ -17,8 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ #include <locale-defines.h>
+ 
+ /* int [r3] strcasecmp (const char *s1 [r3], const char *s2 [r4] )
+@@ -33,7 +31,7 @@
+ # define STRCMP   strcasecmp
+ #endif
+ 
+-ENTRY (BP_SYM (__STRCMP))
++ENTRY (__STRCMP)
+ 	CALL_MCOUNT 2
+ 
+ #define rRTN	r3	/* Return value */
+@@ -118,7 +116,7 @@ L(done):
+ 	subf	r0, rLWR2, rLWR1
+ 	extsw	rRTN, r0
+ 	blr
+-END (BP_SYM (__STRCMP))
++END (__STRCMP)
+ 
+-weak_alias (BP_SYM (__STRCMP), BP_SYM (STRCMP))
++weak_alias (__STRCMP, STRCMP)
+ libc_hidden_builtin_def (__STRCMP)
+diff --git a/sysdeps/powerpc/powerpc64/power7/strchr.S b/sysdeps/powerpc/powerpc64/power7/strchr.S
+index f840dfc8384b65db..ebba8ecad0045a75 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strchr.S
++++ b/sysdeps/powerpc/powerpc64/power7/strchr.S
+@@ -18,12 +18,10 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* int [r3] strchr (char *s [r3], int c [r4])  */
+ 	.machine  power7
+-ENTRY (BP_SYM(strchr))
++ENTRY (strchr)
+ 	CALL_MCOUNT 2
+ 	dcbt	0,r3
+ 	clrrdi	r8,r3,3	      /* Align the address to doubleword boundary.  */
+@@ -223,6 +221,6 @@ L(done_null):
+ 	srdi	r0,r0,3	      /* Convert leading zeros to bytes.  */
+ 	add	r3,r8,r0      /* Return address of the matching null byte.  */
+ 	blr
+-END (BP_SYM (strchr))
+-weak_alias (BP_SYM (strchr), BP_SYM (index))
++END (strchr)
++weak_alias (strchr, index)
+ libc_hidden_builtin_def (strchr)
+diff --git a/sysdeps/powerpc/powerpc64/power7/strchrnul.S b/sysdeps/powerpc/powerpc64/power7/strchrnul.S
+index 388d4e91a70dbf7a..8d34dc7d8d8450ae 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strchrnul.S
++++ b/sysdeps/powerpc/powerpc64/power7/strchrnul.S
+@@ -18,12 +18,10 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* int [r3] strchrnul (char *s [r3], int c [r4])  */
+ 	.machine  power7
+-ENTRY (BP_SYM(__strchrnul))
++ENTRY (__strchrnul)
+ 	CALL_MCOUNT 2
+ 	dcbt	0,r3
+ 	clrrdi	r8,r3,3	      /* Align the address to doubleword boundary.  */
+@@ -125,6 +123,6 @@ L(done):
+ 	srdi	r0,r0,3	      /* Convert leading zeros to bytes.  */
+ 	add	r3,r8,r0      /* Return address of matching c/null byte.  */
+ 	blr
+-END (BP_SYM (__strchrnul))
++END (__strchrnul)
+ weak_alias (__strchrnul,strchrnul)
+ libc_hidden_builtin_def (__strchrnul)
+diff --git a/sysdeps/powerpc/powerpc64/power7/strlen.S b/sysdeps/powerpc/powerpc64/power7/strlen.S
+index 39bca5ae288bc098..88b9d921ccbaf403 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strlen.S
++++ b/sysdeps/powerpc/powerpc64/power7/strlen.S
+@@ -18,12 +18,10 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* int [r3] strlen (char *s [r3])  */
+ 	.machine  power7
+-ENTRY (BP_SYM (strlen))
++ENTRY (strlen)
+ 	CALL_MCOUNT 1
+ 	dcbt	0,r3
+ 	clrrdi	r4,r3,3	      /* Align the address to doubleword boundary.  */
+@@ -101,5 +99,5 @@ L(done):
+ 	srdi	r0,r0,3	      /* Convert leading/trailing zeros to bytes.  */
+ 	add	r3,r5,r0      /* Compute final length.  */
+ 	blr
+-END (BP_SYM (strlen))
++END (strlen)
+ libc_hidden_builtin_def (strlen)
+diff --git a/sysdeps/powerpc/powerpc64/power7/strncmp.S b/sysdeps/powerpc/powerpc64/power7/strncmp.S
+index d356bffab448a80e..349f5c6e4182f364 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strncmp.S
++++ b/sysdeps/powerpc/powerpc64/power7/strncmp.S
+@@ -17,8 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* See strlen.s for comments on how the end-of-string testing works.  */
+ 
+@@ -26,7 +24,7 @@
+ 		     const char *s2 [r4],
+ 		     size_t size [r5])  */
+ 
+-EALIGN (BP_SYM(strncmp),5,0)
++EALIGN (strncmp,5,0)
+ 	CALL_MCOUNT 3
+ 
+ #define rTMP2	r0
+@@ -34,9 +32,6 @@ EALIGN (BP_SYM(strncmp),5,0)
+ #define rSTR1	r3	/* first string arg */
+ #define rSTR2	r4	/* second string arg */
+ #define rN	r5	/* max string length */
+-/* Note:  The Bounded pointer support in this code is broken.  This code
+-   was inherited from PPC32 and that support was never completed.
+-   Current PPC gcc does not support -fbounds-check or -fbounded-pointers.  */
+ #define rWORD1	r6	/* current word in s1 */
+ #define rWORD2	r7	/* current word in s2 */
+ #define rWORD3  r10
+@@ -224,5 +219,5 @@ L(u4):	sub	rRTN,rWORD1,rWORD2
+ L(ux):
+ 	li	rRTN,0
+ 	blr
+-END (BP_SYM (strncmp))
++END (strncmp)
+ libc_hidden_builtin_def (strncmp)
+diff --git a/sysdeps/powerpc/powerpc64/power7/strnlen.S b/sysdeps/powerpc/powerpc64/power7/strnlen.S
+index 0a440258fa67fccb..a68a839a032db21e 100644
+--- a/sysdeps/powerpc/powerpc64/power7/strnlen.S
++++ b/sysdeps/powerpc/powerpc64/power7/strnlen.S
+@@ -18,12 +18,10 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* int [r3] strnlen (char *s [r3], int size [r4])  */
+ 	.machine  power7
+-ENTRY (BP_SYM (__strnlen))
++ENTRY (__strnlen)
+ 	CALL_MCOUNT 2
+ 	dcbt	0,r3
+ 	clrrdi	r8,r3,3
+@@ -174,6 +172,6 @@ L(loop_small):
+ 	mr	r3,r4
+ 	blr
+ 
+-END (BP_SYM (__strnlen))
+-weak_alias (BP_SYM (__strnlen), BP_SYM(strnlen))
++END (__strnlen)
++weak_alias (__strnlen, strnlen)
+ libc_hidden_builtin_def (strnlen)
+diff --git a/sysdeps/powerpc/powerpc64/setjmp-common.S b/sysdeps/powerpc/powerpc64/setjmp-common.S
+index e8c6e0adfdc88f93..5b1fdcdedd6963c1 100644
+--- a/sysdeps/powerpc/powerpc64/setjmp-common.S
++++ b/sysdeps/powerpc/powerpc64/setjmp-common.S
+@@ -23,8 +23,6 @@
+ #else
+ #include <jmpbuf-offsets.h>
+ #endif
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #ifndef __NO_VMX__
+ 	.section	".toc","aw"
+@@ -73,7 +71,6 @@ libc_hidden_def (_setjmp)
+ ENTRY (__sigsetjmp)
+ 	CALL_MCOUNT 2
+ JUMPTARGET(GLUE(__sigsetjmp,_ent)):
+-	CHECK_BOUNDS_BOTH_WIDE_LIT (r3, r8, r9, JB_SIZE)
+ #ifdef PTR_MANGLE
+ 	mr   r5, r1
+ 	PTR_MANGLE (r5, r6)
+diff --git a/sysdeps/powerpc/powerpc64/start.S b/sysdeps/powerpc/powerpc64/start.S
+index aadaf0fae862b017..d69896f7ebb43bb9 100644
+--- a/sysdeps/powerpc/powerpc64/start.S
++++ b/sysdeps/powerpc/powerpc64/start.S
+@@ -35,7 +35,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include "bp-sym.h"
+ 
+ /* We do not want .eh_frame info for crt1.o since crt1.o is linked
+    before crtbegin.o, the file defining __EH_FRAME_BEGIN__.  */
+@@ -54,7 +53,7 @@
+ L(start_addresses):
+ 	.quad	0 /* was _SDA_BASE_  but not in 64-bit ABI*/
+ /*     function descriptors so don't need JUMPTARGET */
+-	.quad	BP_SYM(main)
++	.quad	main
+ 	.quad 	__libc_csu_init
+ 	.quad 	__libc_csu_fini
+ 
+@@ -79,7 +78,7 @@ ENTRY(_start)
+ 	ld	r8,.L01(r2)
+ 
+  /* and continue in libc-start, in glibc.  */
+-	b	JUMPTARGET(BP_SYM(__libc_start_main))
++	b	JUMPTARGET(__libc_start_main)
+ /* The linker needs this nop to recognize that it's OK to call via a
+    TOC adjusting stub.  */
+ 	nop
+diff --git a/sysdeps/powerpc/powerpc64/strchr.S b/sysdeps/powerpc/powerpc64/strchr.S
+index 0df4c3d8a303167c..72858903342d35ec 100644
+--- a/sysdeps/powerpc/powerpc64/strchr.S
++++ b/sysdeps/powerpc/powerpc64/strchr.S
+@@ -17,32 +17,19 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* See strlen.s for comments on how this works.  */
+ 
+ /* char * [r3] strchr (const char *s [r3] , int c [r4] )  */
+ 
+-ENTRY (BP_SYM (strchr))
++ENTRY (strchr)
+ 	CALL_MCOUNT 2
+ 
+ #define rTMP1	r0
+ #define rRTN	r3	/* outgoing result */
+-/* Note:  The Bounded pointer support in this code is broken.  This code
+-   was inherited from PPC32 and that support was never completed.
+-   Currently PPC gcc does not support -fbounds-check or -fbounded-pointers.
+-   These artifacts are left in the code as a reminder in case we need
+-   bounded pointer support in the future.  */
+-#if __BOUNDED_POINTERS__
+-# define rSTR	r4
+-# define rCHR	r5	/* byte we're looking for, spread over the whole word */
+-# define rWORD	r8	/* the current word */
+-#else
+-# define rSTR	r8	/* current word pointer */
+-# define rCHR	r4	/* byte we're looking for, spread over the whole word */
+-# define rWORD	r5	/* the current word */
+-#endif
++#define rSTR	r8	/* current word pointer */
++#define rCHR	r4	/* byte we're looking for, spread over the whole word */
++#define rWORD	r5	/* the current word */
+ #define rCLZB	rCHR	/* leading zero byte count */
+ #define rFEFE	r6	/* constant 0xfefefefefefefeff (-0x0101010101010101) */
+ #define r7F7F	r7	/* constant 0x7f7f7f7f7f7f7f7f */
+@@ -53,9 +40,6 @@ ENTRY (BP_SYM (strchr))
+ #define rTMP4	rIGN
+ #define rTMP5	rMASK
+ 
+-	CHECK_BOUNDS_LOW (rSTR, rTMP1, rTMP2)
+-	STORE_RETURN_BOUNDS (rTMP1, rTMP2)
+-
+ 	dcbt	0,rRTN
+ 	insrdi	rCHR, rCHR, 8, 48
+ 	li	rMASK, -1
+@@ -107,7 +91,6 @@ L(loopentry):
+    zero byte, in which case we return a match.  */
+ 	and.	rTMP5, rTMP1, rTMP2
+ 	li	rRTN, 0
+-	STORE_RETURN_VALUE (rSTR)
+ 	beqlr
+ /* At this point:
+    rTMP5 bytes are 0x80 for each match of c, 0 otherwise.
+@@ -142,8 +125,6 @@ L(loopentry):
+ #endif
+ 	srdi	rCLZB, rCLZB, 3
+ 	add	rRTN, rSTR, rCLZB
+-	CHECK_BOUNDS_HIGH_RTN (rSTR, rTMP2, tdlge)
+-	STORE_RETURN_VALUE (rSTR)
+ 	blr
+ 
+ L(foundit):
+@@ -163,10 +144,8 @@ L(foundit):
+ 	srdi	rCLZB, rCLZB, 3
+ #endif
+ 	add	rRTN, rSTR, rCLZB
+-	CHECK_BOUNDS_HIGH_RTN (rSTR, rTMP2, tdlge)
+-	STORE_RETURN_VALUE (rSTR)
+ 	blr
+-END (BP_SYM (strchr))
++END (strchr)
+ 
+-weak_alias (BP_SYM (strchr), BP_SYM (index))
++weak_alias (strchr, index)
+ libc_hidden_builtin_def (strchr)
+diff --git a/sysdeps/powerpc/powerpc64/strcmp.S b/sysdeps/powerpc/powerpc64/strcmp.S
+index c00774d5fb432ce8..6cfe53630b034622 100644
+--- a/sysdeps/powerpc/powerpc64/strcmp.S
++++ b/sysdeps/powerpc/powerpc64/strcmp.S
+@@ -17,29 +17,18 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* See strlen.s for comments on how the end-of-string testing works.  */
+ 
+ /* int [r3] strcmp (const char *s1 [r3], const char *s2 [r4])  */
+ 
+-EALIGN (BP_SYM(strcmp), 4, 0)
++EALIGN (strcmp, 4, 0)
+ 	CALL_MCOUNT 2
+ 
+ #define rTMP2	r0
+ #define rRTN	r3
+ #define rSTR1	r3	/* first string arg */
+ #define rSTR2	r4	/* second string arg */
+-/* Note:  The Bounded pointer support in this code is broken.  This code
+-   was inherited from PPC32 and that support was never completed.
+-   Current PPC gcc does not support -fbounds-check or -fbounded-pointers.
+-   These artifacts are left in the code as a reminder in case we need
+-   bounded pointer support in the future.  */
+-#if __BOUNDED_POINTERS__
+-# define rHIGH1	r11
+-# define rHIGH2 r12
+-#endif
+ #define rWORD1	r5	/* current word in s1 */
+ #define rWORD2	r6	/* current word in s2 */
+ #define rFEFE	r7	/* constant 0xfefefefefefefeff (-0x0101010101010101) */
+@@ -48,9 +37,6 @@ EALIGN (BP_SYM(strcmp), 4, 0)
+ #define rBITDIF	r10	/* bits that differ in s1 & s2 words */
+ #define rTMP	r11
+ 
+-	CHECK_BOUNDS_LOW (rSTR1, rTMP, rHIGH1)
+-	CHECK_BOUNDS_LOW (rSTR2, rTMP, rHIGH2)
+-
+ 	dcbt	0,rSTR1
+ 	or	rTMP, rSTR2, rSTR1
+ 	dcbt	0,rSTR2
+@@ -146,7 +132,6 @@ L(endstring):
+ 	blr
+ L(equal):
+ 	li	rRTN, 0
+-	/* GKM FIXME: check high bounds.  */
+ 	blr
+ 
+ L(different):
+@@ -184,11 +169,9 @@ L(u1):	cmpwi	cr1, rWORD1, 0
+ 	cmpd	rWORD1, rWORD2
+ 	bne+	cr1, L(u0)
+ L(u3):	sub	rRTN, rWORD1, rWORD2
+-	/* GKM FIXME: check high bounds.  */
+ 	blr
+ L(u4):	lbz	rWORD1, -1(rSTR1)
+ 	sub	rRTN, rWORD1, rWORD2
+-	/* GKM FIXME: check high bounds.  */
+ 	blr
+-END (BP_SYM (strcmp))
++END (strcmp)
+ libc_hidden_builtin_def (strcmp)
+diff --git a/sysdeps/powerpc/powerpc64/strlen.S b/sysdeps/powerpc/powerpc64/strlen.S
+index 47032aa1b6d457f1..ab1e60cff1a2ec47 100644
+--- a/sysdeps/powerpc/powerpc64/strlen.S
++++ b/sysdeps/powerpc/powerpc64/strlen.S
+@@ -17,8 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* The algorithm here uses the following techniques:
+ 
+@@ -82,7 +80,7 @@
+ 
+ /* int [r3] strlen (char *s [r3])  */
+ 
+-ENTRY (BP_SYM (strlen))
++ENTRY (strlen)
+ 	CALL_MCOUNT 1
+ 
+ #define rTMP4	r0
+@@ -99,13 +97,6 @@ ENTRY (BP_SYM (strlen))
+ #define rTMP2	r11
+ #define rTMP3	r12
+ 
+-/* Note:  The Bounded pointer support in this code is broken.  This code
+-   was inherited from PPC32 and that support was never completed.
+-   Current PPC gcc does not support -fbounds-check or -fbounded-pointers.
+-   These artifacts are left in the code as a reminder in case we need
+-   bounded pointer support in the future.  */
+-	CHECK_BOUNDS_LOW (rRTN, rTMP1, rTMP2)
+-
+ 	dcbt	0,rRTN
+ 	clrrdi	rSTR, rRTN, 3
+ 	lis	r7F7F, 0x7f7f
+@@ -180,7 +171,6 @@ L(done0):
+ 	subf	rTMP1, rRTN, rSTR
+ 	srdi	rTMP3, rTMP3, 3
+ 	add	rRTN, rTMP1, rTMP3
+-	/* GKM FIXME: check high bound.  */
+ 	blr
+ #else
+ 
+@@ -205,5 +195,5 @@ L(done1):
+ 	blr
+ #endif
+ 
+-END (BP_SYM (strlen))
++END (strlen)
+ libc_hidden_builtin_def (strlen)
+diff --git a/sysdeps/powerpc/powerpc64/strncmp.S b/sysdeps/powerpc/powerpc64/strncmp.S
+index 18c73f4f64f6d98f..89a7d6f3ea6c138c 100644
+--- a/sysdeps/powerpc/powerpc64/strncmp.S
++++ b/sysdeps/powerpc/powerpc64/strncmp.S
+@@ -17,14 +17,12 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ /* See strlen.s for comments on how the end-of-string testing works.  */
+ 
+ /* int [r3] strncmp (const char *s1 [r3], const char *s2 [r4], size_t size [r5])  */
+ 
+-EALIGN (BP_SYM(strncmp), 4, 0)
++EALIGN (strncmp, 4, 0)
+ 	CALL_MCOUNT 3
+ 
+ #define rTMP2	r0
+@@ -32,9 +30,6 @@ EALIGN (BP_SYM(strncmp), 4, 0)
+ #define rSTR1	r3	/* first string arg */
+ #define rSTR2	r4	/* second string arg */
+ #define rN	r5	/* max string length */
+-/* Note:  The Bounded pointer support in this code is broken.  This code
+-   was inherited from PPC32 and that support was never completed.
+-   Current PPC gcc does not support -fbounds-check or -fbounded-pointers.  */
+ #define rWORD1	r6	/* current word in s1 */
+ #define rWORD2	r7	/* current word in s2 */
+ #define rFEFE	r8	/* constant 0xfefefefefefefeff (-0x0101010101010101) */
+@@ -207,5 +202,5 @@ L(u1):
+ L(u2):	lbzu	rWORD1, -1(rSTR1)	
+ L(u3):	sub	rRTN, rWORD1, rWORD2
+ 	blr
+-END (BP_SYM (strncmp))
++END (strncmp)
+ libc_hidden_builtin_def (strncmp)
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/brk.S b/sysdeps/unix/sysv/linux/powerpc/powerpc64/brk.S
+index 3ea61af161584a58..562f74702b7dfbd8 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/brk.S
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/brk.S
+@@ -19,17 +19,14 @@
+ #include <sysdep.h>
+ #define _ERRNO_H	1
+ #include <bits/errno.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ 	.comm	__curbrk,8,8
+ 	.section	".toc","aw"
+ .LC__curbrk:
+ 	.tc __curbrk[TC],__curbrk
+ 	.section ".text"
+-ENTRY (BP_SYM (__brk))
++ENTRY (__brk)
+ 	CALL_MCOUNT 1
+-	DISCARD_BOUNDS (r3)	/* the bounds are meaningless, so toss 'em.  */
+ 
+ 	std	r3,-8(r1)
+ 	DO_CALL(SYS_ify(brk))
+@@ -41,6 +38,6 @@ ENTRY (BP_SYM (__brk))
+ 	blelr+
+ 	li      r3,ENOMEM
+ 	TAIL_CALL_SYSCALL_ERROR
+-END (BP_SYM (__brk))
++END (__brk)
+ 
+-weak_alias (BP_SYM (__brk), BP_SYM (brk))
++weak_alias (__brk, brk)
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S b/sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S
+index e3fa5f55b92834b9..87c0797058558288 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/clone.S
+@@ -19,8 +19,6 @@
+ #include <sysdep.h>
+ #define _ERRNO_H	1
+ #include <bits/errno.h>
+-#include <bp-sym.h>
+-#include <bp-asm.h>
+ 
+ #define CLONE_VM	0x00000100
+ #define CLONE_THREAD	0x00010000
+@@ -33,11 +31,8 @@
+                   int flags [r5], void *arg [r6], void *parent_tid [r7],
+                   void *tls [r8], void *child_tid [r9]); */
+ 
+-ENTRY (BP_SYM (__clone))
++ENTRY (__clone)
+ 	CALL_MCOUNT 7
+-	/* GKM FIXME: add bounds checks, where sensible.  */
+-	DISCARD_BOUNDS (r4)
+-	DISCARD_BOUNDS (r6)
+ 
+ 	/* Check for child_stack == NULL || fn == NULL.  */
+ 	cmpdi	cr0,r4,0
+@@ -142,6 +137,6 @@ L(parent):
+ 	cfi_restore(r31)
+ 	PSEUDO_RET
+ 
+-END (BP_SYM (__clone))
++END (__clone)
+ 
+-weak_alias (BP_SYM (__clone), BP_SYM (clone))
++weak_alias (__clone, clone)

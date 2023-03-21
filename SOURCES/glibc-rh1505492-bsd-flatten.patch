@@ -1,0 +1,173 @@
+commit ef7344f09c5ce00eb519ed14598b2a8e39c68387
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sun Dec 22 14:49:48 2013 +0000
+
+    Flatten sysdeps/unix/bsd/bsd4.4 into sysdeps/unix/bsd.
+    
+    As discussed in
+    <https://sourceware.org/ml/libc-alpha/2012-04/msg00840.html> and
+    <https://sourceware.org/ml/libc-alpha/2012-04/msg00989.html>, it seems
+    appropriate to flatten sysdeps/unix/bsd/bsd4.4 into sysdeps/unix/bsd.
+    
+    The bulk of the patch is just moving files.  The only other changes
+    are: update paths in sysdeps/mach/hurd/Implies and
+    sysdeps/unix/sysv/linux/wait3.c; merge the two syscalls.list files,
+    with the removal of syscalls that were in
+    sysdeps/unix/bsd/syscalls.list but overridden in the bsd4.4 directory
+    by .c files there.
+    
+    Tested x86_64.  The installed shared libraries are identical before
+    and after the patch except for libc.so where the move of wait3.c
+    (included by sysdeps/unix/sysv/linux/wait3.c) affects debug info, but
+    the disassembly is unchanged.
+    
+            * sysdeps/mach/hurd/Implies: Change unix/bsd/bsd4.4 to unix/bsd.
+            * sysdeps/unix/bsd/syscalls.list (chflags): Add entry from
+            sysdeps/unix/bsd/bsd4.4/syscalls.list.
+            (fchflags): Likewise.
+            (revoke): Likewise.
+            (setlogin): Likewise.
+            (sigaltstack): Likewise.
+            (wait4): Likewise.
+            (sigblock): Remove.
+            (sigsetmask): Likewise.
+            (wait3): Likewise.
+            (waitpid): Likewise.
+            * sysdeps/unix/bsd/bsd4.4/syscalls.list: Remove file.
+            * sysdeps/unix/sysv/linux/wait3.c: Update directory of included
+            file.
+            * sysdeps/unix/bsd/bsd4.4/Makefile: Move to ...
+            * sysdeps/unix/bsd/Makefile: ... here.
+            * sysdeps/unix/bsd/bsd4.4/Versions: Move to ...
+            * sysdeps/unix/bsd/Versions: ... here.
+            * sysdeps/unix/bsd/bsd4.4/bits/sockaddr.h: Move to ...
+            * sysdeps/unix/bsd/bits/sockaddr.h: ... here.
+            * sysdeps/unix/bsd/bsd4.4/cmsg_nxthdr.c: Move to ...
+            * sysdeps/unix/bsd/cmsg_nxthdr.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/sigblock.c: Move to ...
+            * sysdeps/unix/bsd/sigblock.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/sigsetmask.c: Move to ...
+            * sysdeps/unix/bsd/sigsetmask.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/sigvec.c: Move to ...
+            * sysdeps/unix/bsd/sigvec.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/tcdrain.c: Move to ...
+            * sysdeps/unix/bsd/tcdrain.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/tcgetattr.c: Move to ...
+            * sysdeps/unix/bsd/tcgetattr.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/tcsetattr.c: Move to ...
+            * sysdeps/unix/bsd/tcsetattr.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/wait.c: Move to ...
+            * sysdeps/unix/bsd/wait.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/wait3.c: Move to ...
+            * sysdeps/unix/bsd/wait3.c: ... here.
+            * sysdeps/unix/bsd/bsd4.4/waitpid.c: Move to ...
+            * sysdeps/unix/bsd/waitpid.c: ... here.
+
+diff --git a/sysdeps/mach/hurd/Implies b/sysdeps/mach/hurd/Implies
+index b6063463ce34f3b7..d2d5234c1fdf1522 100644
+--- a/sysdeps/mach/hurd/Implies
++++ b/sysdeps/mach/hurd/Implies
+@@ -2,4 +2,4 @@
+ # Hurd-based GNU systems.
+ gnu
+ # The Hurd provides a rough superset of the functionality of 4.4 BSD.
+-unix/bsd/bsd4.4
++unix/bsd
+diff --git a/sysdeps/unix/bsd/bsd4.4/Makefile b/sysdeps/unix/bsd/Makefile
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/Makefile
+rename to sysdeps/unix/bsd/Makefile
+diff --git a/sysdeps/unix/bsd/bsd4.4/Versions b/sysdeps/unix/bsd/Versions
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/Versions
+rename to sysdeps/unix/bsd/Versions
+diff --git a/sysdeps/unix/bsd/bsd4.4/bits/sockaddr.h b/sysdeps/unix/bsd/bits/sockaddr.h
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/bits/sockaddr.h
+rename to sysdeps/unix/bsd/bits/sockaddr.h
+diff --git a/sysdeps/unix/bsd/bsd4.4/syscalls.list b/sysdeps/unix/bsd/bsd4.4/syscalls.list
+deleted file mode 100644
+index a4d354685424ac61..0000000000000000
+--- a/sysdeps/unix/bsd/bsd4.4/syscalls.list
++++ /dev/null
+@@ -1,8 +0,0 @@
+-# File name	Caller	Syscall name	# args	Strong name	Weak names
+-
+-chflags		-	chflags		2	chflags
+-fchflags	-	fchflags	2	fchflags
+-revoke		-	revoke		1	revoke
+-setlogin	-	setlogin	2	setlogin
+-sigaltstack	-	sigaltstack	2	__sigaltstack	sigaltstack
+-wait4		-	wait4		4	__wait4		wait4
+diff --git a/sysdeps/unix/bsd/bsd4.4/cmsg_nxthdr.c b/sysdeps/unix/bsd/cmsg_nxthdr.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/cmsg_nxthdr.c
+rename to sysdeps/unix/bsd/cmsg_nxthdr.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/sigblock.c b/sysdeps/unix/bsd/sigblock.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/sigblock.c
+rename to sysdeps/unix/bsd/sigblock.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/sigsetmask.c b/sysdeps/unix/bsd/sigsetmask.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/sigsetmask.c
+rename to sysdeps/unix/bsd/sigsetmask.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/sigvec.c b/sysdeps/unix/bsd/sigvec.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/sigvec.c
+rename to sysdeps/unix/bsd/sigvec.c
+diff --git a/sysdeps/unix/bsd/syscalls.list b/sysdeps/unix/bsd/syscalls.list
+index e84819dc1f19d148..9f48a144d475f342 100644
+--- a/sysdeps/unix/bsd/syscalls.list
++++ b/sysdeps/unix/bsd/syscalls.list
+@@ -1,14 +1,16 @@
+ # File name	Caller	Syscall name	# args	Strong name	Weak names
+ 
++chflags		-	chflags		2	chflags
++fchflags	-	fchflags	2	fchflags
+ flock		-	flock		2	__flock		flock
+ getdents	-	getdirentries	4	__getdirentries	getdirentries
+ getdtsz		-	getdtablesize	0	__getdtablesize	getdtablesize
+ getpagesize	-	getpagesize	0	__getpagesize	getpagesize
+ killpg		-	killpg		2	killpg
+-sigblock	-	sigblock	1	__sigblock	sigblock
++revoke		-	revoke		1	revoke
++setlogin	-	setlogin	2	setlogin
++sigaltstack	-	sigaltstack	2	__sigaltstack	sigaltstack
+ sigpause	-	sigpause	1	__sigpause	sigpause
+-sigsetmask	-	sigsetmask	1	__sigsetmask	sigsetmask
+ sigstack	-	sigstack	2	sigstack
+ sigvec		-	sigvec		3	__sigvec	sigvec
+-wait3		-	wait3		3	__wait3		wait3
+-waitpid		-	waitpid		3	__waitpid	waitpid
++wait4		-	wait4		4	__wait4		wait4
+diff --git a/sysdeps/unix/bsd/bsd4.4/tcdrain.c b/sysdeps/unix/bsd/tcdrain.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/tcdrain.c
+rename to sysdeps/unix/bsd/tcdrain.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/tcgetattr.c b/sysdeps/unix/bsd/tcgetattr.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/tcgetattr.c
+rename to sysdeps/unix/bsd/tcgetattr.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/tcsetattr.c b/sysdeps/unix/bsd/tcsetattr.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/tcsetattr.c
+rename to sysdeps/unix/bsd/tcsetattr.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/wait.c b/sysdeps/unix/bsd/wait.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/wait.c
+rename to sysdeps/unix/bsd/wait.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/wait3.c b/sysdeps/unix/bsd/wait3.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/wait3.c
+rename to sysdeps/unix/bsd/wait3.c
+diff --git a/sysdeps/unix/bsd/bsd4.4/waitpid.c b/sysdeps/unix/bsd/waitpid.c
+similarity index 100%
+rename from sysdeps/unix/bsd/bsd4.4/waitpid.c
+rename to sysdeps/unix/bsd/waitpid.c
+diff --git a/sysdeps/unix/sysv/linux/wait3.c b/sysdeps/unix/sysv/linux/wait3.c
+index 0b3bdee771782b7b..2ff027f0e1d83eb2 100644
+--- a/sysdeps/unix/sysv/linux/wait3.c
++++ b/sysdeps/unix/sysv/linux/wait3.c
+@@ -1 +1 @@
+-#include <sysdeps/unix/bsd/bsd4.4/wait3.c>
++#include <sysdeps/unix/bsd/wait3.c>

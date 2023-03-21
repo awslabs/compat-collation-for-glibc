@@ -23,7 +23,15 @@ In summary, if a PostgreSQL database resides on an CentOS7 system with glibc ver
 
 ## Getting started
 
-The code in this repository is organized such that each base glibc version (the version who's collation you want to preserve) has its own branch. Once you have cloned the repository, switch to appropriate branch based on your desired base glibc verion and follow the branch specific README.md.
+This branch `2.17-326.el7` is for glibc version 2.17-326 included with RHEL/CentOS 7.9.
+
+* SOURCES folder contains original sources which are used by rpmbuild for building the collation compatibility library rpm.
+* SPEC folder has the glibc.spec
+* devel folder has extracted source code (rpmbuild -bp ...)
+
+### Tags
+
+* 2.17-326.el7-BASELINE - original source from glibc-2.17-326.el7_9.src.rpm
 
 ## Help & feedback
 

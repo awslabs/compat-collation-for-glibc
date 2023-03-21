@@ -1,0 +1,128 @@
+From 42e0828f582dcc4ff92d65039910ffe5fa9d881b Mon Sep 17 00:00:00 2001
+From: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date: Thu, 27 Jul 2017 10:53:58 +0200
+Subject: [PATCH 02/10] S390: Use new s390_libc_ifunc_expr macro in s390
+ 8bit-generic.c.
+
+upstream-commit 51213e2b8d89164527131f3bf6c5946b811c5e3e
+
+This patch adds s390_libc_ifunc_expr macro which uses the __ifunc base macro
+(upstream it is in include/libc-symbols.h; this backport implements it
+in s390-header) and lets the user define a generic expression to
+choose the correct ifunc variant.  Furthermore as the base macro is used,
+the ifunc resolver functions are now also using inhibit_stack_protector.
+S390 needs its own version due to the hwcap argument of the ifunc resolver.
+
+This new macro is now used in iconv code in 8bit-generic.c instead of using
+gcc attribute ifunc directly.
+
+ChangeLog:
+
+	* sysdeps/s390/multiarch/ifunc-resolve.h
+	(s390_libc_ifunc_expr_init, s390_libc_ifunc_expr, __ifunc,
+	__ifunc_resolver): New Define.
+	* sysdeps/s390/multiarch/8bit-generic.c
+	(__to_generic, __from_generic): Use s390_libc_ifunc_expr to
+	define ifunc resolvers.
+---
+ sysdeps/s390/multiarch/8bit-generic.c  | 41 ++++++++++------------------------
+ sysdeps/s390/multiarch/ifunc-resolve.h | 20 +++++++++++++++++
+ 2 files changed, 32 insertions(+), 29 deletions(-)
+
+diff --git a/sysdeps/s390/multiarch/8bit-generic.c b/sysdeps/s390/multiarch/8bit-generic.c
+index 93565e1..9232240 100644
+--- a/sysdeps/s390/multiarch/8bit-generic.c
++++ b/sysdeps/s390/multiarch/8bit-generic.c
+@@ -40,8 +40,7 @@
+    to translate between multiple generic characters and "1 byte UCS4"
+    characters at once. The vector instructions are used to convert between
+    the "1 byte UCS4" and UCS4.  */
+-# include <unistd.h>
+-# include <dl-procinfo.h>
++# include <ifunc-resolve.h>
+ 
+ # undef FROM_LOOP
+ # undef TO_LOOP
+@@ -372,33 +371,17 @@
+ 
+ 
+ /* Generate ifunc'ed loop function.  */
+-__typeof(__from_generic_c)
+-__attribute__ ((ifunc ("__from_generic_resolver")))
+-__from_generic;
++s390_libc_ifunc_expr (__from_generic_c, __from_generic,
++		      (sizeof (from_ucs4) / sizeof (from_ucs4[0]) <= 256
++		       && hwcap & HWCAP_S390_VX)
++		      ? __from_generic_vx
++		      : __from_generic_c);
+ 
+-static void *
+-__from_generic_resolver (unsigned long int dl_hwcap)
+-{
+-  if (sizeof (from_ucs4) / sizeof (from_ucs4[0]) <= 256
+-      && dl_hwcap & HWCAP_S390_VX)
+-    return &__from_generic_vx;
+-  else
+-    return &__from_generic_c;
+-}
+-
+-__typeof(__to_generic_c)
+-__attribute__ ((ifunc ("__to_generic_resolver")))
+-__to_generic;
+-
+-static void *
+-__to_generic_resolver (unsigned long int dl_hwcap)
+-{
+-  if (sizeof (from_ucs4) / sizeof (from_ucs4[0]) <= 256
+-      && dl_hwcap & HWCAP_S390_VX)
+-    return &__to_generic_vx;
+-  else
+-    return &__to_generic_c;
+-}
++s390_libc_ifunc_expr (__to_generic_c, __to_generic,
++		      (sizeof (from_ucs4) / sizeof (from_ucs4[0]) <= 256
++		       && hwcap & HWCAP_S390_VX)
++		      ? __to_generic_vx
++		      : __to_generic_c);
+ 
+ strong_alias (__to_generic_c_single, __to_generic_single)
+ 
+@@ -410,6 +393,6 @@ strong_alias (__to_generic_c_single, __to_generic_single)
+ 
+ #else
+ /* Generate this module without ifunc if build environment lacks vector
+-   support. Instead the common 8bit-generic.c is used.  */
++   support.  Instead the common 8bit-generic.c is used.  */
+ # include "iconvdata/8bit-generic.c"
+ #endif /* !defined HAVE_S390_VX_ASM_SUPPORT */
+diff --git a/sysdeps/s390/multiarch/ifunc-resolve.h b/sysdeps/s390/multiarch/ifunc-resolve.h
+index e9fd90e..883365b 100644
+--- a/sysdeps/s390/multiarch/ifunc-resolve.h
++++ b/sysdeps/s390/multiarch/ifunc-resolve.h
+@@ -92,3 +92,23 @@
+       return &RESOLVERFUNC##_c;						\
+   }									\
+  __asm__ (".type " #FUNC ", %gnu_indirect_function");
++
++/* Helper / base  macros for indirect function symbols
++   (See include/libc-symbols in upstream glibc).  */
++#define __ifunc_resolver(type_name, name, expr, arg, init, classifier)	\
++  classifier void *name##_ifunc (arg)					\
++  {									\
++    init ();								\
++    __typeof (type_name) *res = expr;					\
++    return res;								\
++  }
++
++#define __ifunc(type_name, name, expr, arg, init)			\
++  extern __typeof (type_name) name __attribute__			\
++			      ((ifunc (#name "_ifunc")));		\
++  __ifunc_resolver (type_name, name, expr, arg, init, static)
++
++#define s390_libc_ifunc_expr_init()
++#define s390_libc_ifunc_expr(TYPE_FUNC, FUNC, EXPR)		\
++  __ifunc (TYPE_FUNC, FUNC, EXPR, unsigned long int hwcap,	\
++	   s390_libc_ifunc_expr_init);
+-- 
+1.8.3.1
+

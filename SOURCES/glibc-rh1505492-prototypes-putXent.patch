@@ -1,0 +1,39 @@
+Introduce prototype-style definitions for putgrent, putpwent.  Upstream,
+this was done as part of this commit (not backported here):
+
+commit 676599b36a92f3c201c5682ee7a5caddd9f370a4
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Oct 2 11:34:13 2015 +0200
+
+    Harden putpwent, putgrent, putspent, putspent against injection [BZ #18724]
+
+diff --git a/grp/putgrent.c b/grp/putgrent.c
+index 176a7a15d8bb6ec2..1d69136c30c81bcd 100644
+--- a/grp/putgrent.c
++++ b/grp/putgrent.c
+@@ -27,9 +27,7 @@
+ /* Write an entry to the given stream.
+    This must know the format of the group file.  */
+ int
+-putgrent (gr, stream)
+-     const struct group *gr;
+-     FILE *stream;
++putgrent (const struct group *gr, FILE *stream)
+ {
+   int retval;
+ 
+diff --git a/pwd/putpwent.c b/pwd/putpwent.c
+index e9470ed1012a1789..9a9f04dcf4b596ee 100644
+--- a/pwd/putpwent.c
++++ b/pwd/putpwent.c
+@@ -24,9 +24,7 @@
+ /* Write an entry to the given stream.
+    This must know the format of the password file.  */
+ int
+-putpwent (p, stream)
+-     const struct passwd *p;
+-     FILE *stream;
++putpwent (const struct passwd *p, FILE *stream)
+ {
+   if (p == NULL || stream == NULL)
+     {

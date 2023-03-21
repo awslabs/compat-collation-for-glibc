@@ -1,0 +1,406 @@
+commit 9637d8a253493be471d9a71640e91349f7a8a050
+Author: H.J. Lu <hjl.tools@gmail.com>
+Date:   Wed Jul 29 11:57:54 2015 -0700
+
+    Extend local PLT reference check
+
+    On x86, linker in binutils 2.26 and newer consolidates R_*_JUMP_SLOT with
+    R_*_GLOB_DAT relocation against the same symbol.  This patch extends
+    local PLT reference check to support alternate relocations.
+
+        [BZ #18078]
+        * scripts/check-localplt.awk: Support alternate relocations.
+        * scripts/localplt.awk: Also check relocations in DT_RELA/DT_REL
+        sections.
+        * sysdeps/unix/sysv/linux/i386/localplt.data: Mark free and
+        malloc entries with + REL R_386_GLOB_DAT.
+        * sysdeps/x86_64/localplt.data: New file.
+
+
+commit da53d6dbc28d2a90d6e14dd661e68611c3b741cf
+Author: Carlos O'Donell <carlos@redhat.com>
+Date:   Thu Nov 6 15:48:44 2014 -0500
+
+    Run check-localpltk/textrel/execstack over ld.so.
+
+    For maximum paranoia we run ld.so through the normal set
+    of tests for all of the shared libraries. This includes
+    running ld.so through check-localplt, check-textrel, and
+    check-execstack. While none of these should trigger any
+    failures given the way ld.so is built, it might possibly
+    fail if a developer does something wrong. This paranoia
+    was triggered by a discussion over the use of __strcpy
+    vs. strcpy [1] and if the symbol could leak and use the
+    libc.so version.
+
+    The check-localplt test fails right away because localplt.data
+    needs updating for all arches. By default we add 6 new symbols:
+    __tls_get_addr, __libc_memalign, malloc, calloc, realloc and
+    free. Other machines like i386, power, and s390 require some
+    different symbol sets e.g. ___tls_get_addr vs. __tls_get_addr
+    for i386.
+
+commit d3d9c95aefded7716d037e241f9d23a1cccab45a
+Author: H.J. Lu <hjl.tools@gmail.com>
+Date:   Wed Oct 14 05:59:50 2015 -0700
+
+    Support PLT and GOT references in local PIC check
+
+commit a0af371c25ac1f215cf0db64e54cbb9a1b51f78c
+Author: Alan Modra <amodra@gmail.com>
+Date:   Fri Feb 20 15:23:28 2015 +1030
+
+    Fix localplt test breakage with new readelf
+
+    Since 2014-11-24 binutils git commit bb4d2ac2, readelf has appended
+    the symbol version to symbols shown in reloc dumps.
+
+        [BZ #16512]
+        * scripts/localplt.awk: Strip off symbol version.
+        * NEWS: Mention bug fix.
+
+diff -Nrup a/elf/Makefile b/elf/Makefile
+--- a/elf/Makefile	2017-10-22 09:16:02.451399056 -0400
++++ b/elf/Makefile	2017-10-22 09:16:39.217285466 -0400
+@@ -915,7 +915,7 @@ $(objpfx)tst-pie1: $(objpfx)tst-piemod1.
+ ifeq (yes,$(build-shared))
+ tests: $(objpfx)check-textrel.out $(objpfx)check-execstack.out
+ 
+-all-built-dso := $(common-objpfx)libc.so \
++all-built-dso := $(common-objpfx)elf/ld.so $(common-objpfx)libc.so \
+ 		 $(filter-out $(common-objpfx)linkobj/libc.so, \
+ 			      $(sort $(wildcard $(addprefix $(common-objpfx), \
+ 							    */lib*.so \
+@@ -974,6 +974,7 @@ tests: $(objpfx)check-localplt.out
+ 
+ localplt-built-dso := $(addprefix $(common-objpfx),\
+ 				  libc.so \
++                                  elf/ld.so \
+ 				  math/libm.so \
+ 				  rt/librt.so \
+ 				  dlfcn/libdl.so \
+diff -Nrup a/ports/sysdeps/unix/sysv/linux/aarch64/nptl/localplt.data b/ports/sysdeps/unix/sysv/linux/aarch64/nptl/localplt.data
+--- a/ports/sysdeps/unix/sysv/linux/aarch64/nptl/localplt.data	2017-10-22 09:16:01.379402341 -0400
++++ b/ports/sysdeps/unix/sysv/linux/aarch64/nptl/localplt.data	2017-10-22 09:16:39.217285466 -0400
+@@ -12,3 +12,15 @@ libm.so: matherr
+ libm.so: __signbit
+ libm.so: __signbitf
+ libm.so: __signbitl
++# The dynamic loader needs __tls_get_addr for TLS.
++ld.so: __tls_get_addr
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign + RELA R_X86_64_GLOB_DAT
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc
++ld.so: calloc
++ld.so: realloc
++ld.so: free
+diff -Nrup a/scripts/check-localplt.awk b/scripts/check-localplt.awk
+--- a/scripts/check-localplt.awk	2012-12-24 22:02:13.000000000 -0500
++++ b/scripts/check-localplt.awk	2017-10-22 09:16:39.218285463 -0400
+@@ -3,9 +3,16 @@
+ # Each line is either a comment starting with # or it looks like:
+ #	libfoo.so: function
+ # or
++#      libfoo.so: function + {RELA|REL} RELOC
++# or
+ #	libfoo.so: function ?
+ # The latter means that a PLT entry for function is optional in libfoo.so.
+ # The former means one is required.
++# The first entry means that one is required.
++# The second entry means that one is required and relocation may also be
++# {RELA|REL} RELOC.
++# The third entry means that a PLT entry for function is optional in
++# libfoo.so.
+ # The second file argument is - and this (stdin) receives the output
+ # of the check-localplt program.
+ 
+@@ -14,7 +21,10 @@ BEGIN { result = 0 }
+ FILENAME != "-" && /^#/ { next }
+ 
+ FILENAME != "-" {
+-  if (NF != 2 && !(NF == 3 && $3 == "?")) {
++  if (NF == 5 && $3 == "+" && ($4 == "RELA" || $4 == "REL")) {
++    accept_type[$1 " " $2] = $4;
++    accept_reloc[$1 " " $2] = $5;
++  } else if (NF != 2 && !(NF == 3 && $3 == "?")) {
+     printf "%s:%d: bad data line: %s\n", FILENAME, FNR, $0 > "/dev/stderr";
+     result = 2;
+   } else {
+@@ -23,7 +33,7 @@ FILENAME != "-" {
+   next;
+ }
+ 
+-NF != 2 {
++NF != 2 && !(NF == 4 && ($3 == "RELA" || $3 == "REL")) {
+   print "Unexpected output from check-localplt:", $0 > "/dev/stderr";
+   result = 2;
+   next
+@@ -31,7 +41,23 @@ NF != 2 {
+ 
+ {
+   key = $1 " " $2
+-  if (key in accept) {
++  if ($3 == "RELA" || $3 == "REL") {
++    # Entries like:
++    # libc.so: free + RELA R_X86_64_GLOB_DAT
++    # may be ignored.
++    if (key in accept_type && accept_type[key] == $3 && accept_reloc[key] == $4) {
++      # Match
++      # libc.so: free + RELA R_X86_64_GLOB_DAT
++      delete accept_type[key]
++    }
++  } else if (NF == 2 && key in accept_reloc) {
++    # Match
++    # libc.so: free
++    # against
++    # libc.so: free + RELA R_X86_64_GLOB_DAT
++    if (key in accept_type)
++      delete accept_type[key]
++  } else if (key in accept) {
+     delete accept[key]
+   } else {
+     print "Extra PLT reference:", $0;
+@@ -49,5 +75,11 @@ END {
+     }
+   }
+ 
++  for (key in accept_type) {
++    # It's mandatory.
++    print "Missing required PLT or " accept_reloc[key] " reference:", key;
++    result = 1;
++  }
++
+   exit(result);
+ }
+diff -Nrup a/scripts/localplt.awk b/scripts/localplt.awk
+--- a/scripts/localplt.awk	2012-12-24 22:02:13.000000000 -0500
++++ b/scripts/localplt.awk	2017-10-22 09:16:39.218285463 -0400
+@@ -7,12 +7,14 @@
+ BEGIN { result = 0 }
+ 
+ FILENAME != lastfile {
+-  if (lastfile && jmprel_offset == 0) {
++  if (lastfile && jmprel_offset == 0 && rela_offset == 0 && rel_offset == 0) {
+     print FILENAME ": *** failed to find expected output (readelf -WSdr)";
+     result = 2;
+   }
+   lastfile = FILENAME;
+   jmprel_offset = 0;
++  rela_offset = 0;
++  rel_offset = 0;
+   delete section_offset_by_address;
+ }
+ 
+@@ -32,9 +34,39 @@ $1 == "Offset" && $2 == "Info" { in_relo
+ NF == 0 { in_relocs = 0 }
+ 
+ in_relocs && relocs_offset == jmprel_offset && NF >= 5 {
+-  symval = strtonum("0x" $4);
+-  if (symval != 0)
+-    print whatfile, $5
++  # Relocations against GNU_IFUNC symbols are not shown as an hexadecimal
++  # value, but rather as the resolver symbol followed by ().
++  if ($4 ~ /\(\)/) {
++    print whatfile, gensub(/@.*/, "", "g", $5)
++  } else {
++    symval = strtonum("0x" $4);
++    if (symval != 0)
++      print whatfile, gensub(/@.*/, "", "g", $5)
++  }
++}
++
++in_relocs && relocs_offset == rela_offset && NF >= 5 {
++  # Relocations against GNU_IFUNC symbols are not shown as an hexadecimal
++  # value, but rather as the resolver symbol followed by ().
++  if ($4 ~ /\(\)/) {
++    print whatfile, gensub(/@.*/, "", "g", $5), "RELA", $3
++  } else {
++    symval = strtonum("0x" $4);
++    if (symval != 0)
++      print whatfile, gensub(/@.*/, "", "g", $5), "RELA", $3
++  }
++}
++
++in_relocs && relocs_offset == rel_offset && NF >= 5 {
++  # Relocations against GNU_IFUNC symbols are not shown as an hexadecimal
++  # value, but rather as the resolver symbol followed by ().
++  if ($4 ~ /\(\)/) {
++    print whatfile, gensub(/@.*/, "", "g", $5), "REL", $3
++  } else {
++    symval = strtonum("0x" $4);
++    if (symval != 0)
++      print whatfile, gensub(/@.*/, "", "g", $5), "REL", $3
++  }
+ }
+ 
+ in_relocs { next }
+@@ -56,4 +88,25 @@ $2 == "(JMPREL)" {
+   next
+ }
+ 
++$2 == "(RELA)" {
++  rela_addr = strtonum($3);
++  if (rela_addr in section_offset_by_address) {
++    rela_offset = section_offset_by_address[rela_addr];
++  } else {
++    print FILENAME ": *** DT_RELA does not match any section's address";
++    result = 2;
++  }
++  next
++}
++
++$2 == "(REL)" {
++  rel_addr = strtonum($3);
++  if (rel_addr in section_offset_by_address) {
++    rel_offset = section_offset_by_address[rel_addr];
++  } else {
++    print FILENAME ": *** DT_REL does not match any section's address";
++    result = 2;
++  }
++  next
++}
+ END { exit(result) }
+diff -Nrup a/sysdeps/generic/localplt.data b/sysdeps/generic/localplt.data
+--- a/sysdeps/generic/localplt.data	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/generic/localplt.data	2017-10-22 09:18:03.383023954 -0400
+@@ -7,3 +7,9 @@ libc.so: malloc
+ libc.so: memalign
+ libc.so: realloc
+ libm.so: matherr
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc
++ld.so: calloc
++ld.so: realloc
++ld.so: free
+diff -Nrup a/sysdeps/unix/sysv/linux/i386/nptl/localplt.data b/sysdeps/unix/sysv/linux/i386/nptl/localplt.data
+--- a/sysdeps/unix/sysv/linux/i386/nptl/localplt.data	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/i386/nptl/localplt.data	2017-10-22 09:16:39.218285463 -0400
+@@ -1,7 +1,21 @@
+-libc.so: _Unwind_Find_FDE
+-libc.so: calloc
+-libc.so: free
+-libc.so: malloc
+-libc.so: memalign
+-libc.so: realloc
+-libm.so: matherr
++# Linker in binutils 2.26 and newer consolidates R_X86_64_JUMP_SLOT
++# relocation with R_386_GLOB_DAT relocation against the same symbol.
++libc.so: _Unwind_Find_FDE + REL R_386_GLOB_DAT
++libc.so: calloc + REL R_386_GLOB_DAT
++libc.so: free + REL R_386_GLOB_DAT
++libc.so: malloc + REL R_386_GLOB_DAT
++libc.so: memalign + REL R_386_GLOB_DAT
++libc.so: realloc + REL R_386_GLOB_DAT
++libm.so: matherr + REL R_386_GLOB_DAT
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign + REL R_386_GLOB_DAT
++# The dynamic loader needs __tls_get_addr for TLS.
++ld.so: ___tls_get_addr + REL R_386_GLOB_DAT
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc + REL R_386_GLOB_DAT
++ld.so: calloc + REL R_386_GLOB_DAT
++ld.so: realloc + REL R_386_GLOB_DAT
++ld.so: free + REL R_386_GLOB_DAT
+diff -Nrup a/sysdeps/unix/sysv/linux/powerpc/powerpc32/fpu/nptl/localplt.data b/sysdeps/unix/sysv/linux/powerpc/powerpc32/fpu/nptl/localplt.data
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/fpu/nptl/localplt.data	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/fpu/nptl/localplt.data	2017-10-22 09:16:39.218285463 -0400
+@@ -5,3 +5,13 @@ libc.so: malloc
+ libc.so: memalign
+ libc.so: realloc
+ libm.so: matherr
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc
++ld.so: calloc
++ld.so: realloc
++ld.so: free
+diff -Nrup a/sysdeps/unix/sysv/linux/powerpc/powerpc64/nptl/localplt.data b/sysdeps/unix/sysv/linux/powerpc/powerpc64/nptl/localplt.data
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/nptl/localplt.data	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/nptl/localplt.data	2017-10-22 09:16:39.218285463 -0400
+@@ -4,3 +4,13 @@ libc.so: malloc
+ libc.so: memalign
+ libc.so: realloc
+ libm.so: matherr
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc
++ld.so: calloc
++ld.so: realloc
++ld.so: free
+diff -Nrup a/sysdeps/unix/sysv/linux/s390/s390-32/nptl/localplt.data b/sysdeps/unix/sysv/linux/s390/s390-32/nptl/localplt.data
+--- a/sysdeps/unix/sysv/linux/s390/s390-32/nptl/localplt.data	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/s390/s390-32/nptl/localplt.data	2017-10-22 09:16:39.219285460 -0400
+@@ -5,3 +5,13 @@ libc.so: malloc
+ libc.so: memalign
+ libc.so: realloc
+ libm.so: matherr
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc
++ld.so: calloc
++ld.so: realloc
++ld.so: free
+diff -Nrup a/sysdeps/unix/sysv/linux/s390/s390-64/nptl/localplt.data b/sysdeps/unix/sysv/linux/s390/s390-64/nptl/localplt.data
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/nptl/localplt.data	2012-12-24 22:02:13.000000000 -0500
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/nptl/localplt.data	2017-10-22 09:16:39.219285460 -0400
+@@ -5,3 +5,13 @@ libc.so: malloc
+ libc.so: memalign
+ libc.so: realloc
+ libm.so: matherr
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc
++ld.so: calloc
++ld.so: realloc
++ld.so: free
+diff -Nrup a/sysdeps/x86_64/nptl/localplt.data b/sysdeps/x86_64/nptl/localplt.data
+--- a/sysdeps/x86_64/nptl/localplt.data	1969-12-31 19:00:00.000000000 -0500
++++ b/sysdeps/x86_64/nptl/localplt.data	2017-10-22 09:16:39.219285460 -0400
+@@ -0,0 +1,23 @@
++# See scripts/check-localplt.awk for how this file is processed.
++# PLT use is required for the malloc family and for matherr because
++# users can define their own functions and have library internals call them.
++# Linker in binutils 2.26 and newer consolidates R_X86_64_JUMP_SLOT
++# relocation with R_X86_64_GLOB_DAT relocation against the same symbol.
++libc.so: calloc + RELA R_X86_64_GLOB_DAT
++libc.so: free + RELA R_X86_64_GLOB_DAT
++libc.so: malloc + RELA R_X86_64_GLOB_DAT
++libc.so: memalign + RELA R_X86_64_GLOB_DAT
++libc.so: realloc + RELA R_X86_64_GLOB_DAT
++libm.so: matherr + RELA R_X86_64_GLOB_DAT
++# The dynamic loader uses __libc_memalign internally to allocate aligned
++# TLS storage. The other malloc family of functions are expected to allow
++# user symbol interposition.
++ld.so: __libc_memalign + RELA R_X86_64_GLOB_DAT
++# The dynamic loader needs __tls_get_addr for TLS.
++ld.so: __tls_get_addr + RELA R_X86_64_GLOB_DAT
++# The main malloc is interposed into the dynamic linker, for
++# allocations after the initial link (when dlopen is used).
++ld.so: malloc + RELA R_X86_64_GLOB_DAT
++ld.so: calloc + RELA R_X86_64_GLOB_DAT
++ld.so: realloc + RELA R_X86_64_GLOB_DAT
++ld.so: free + RELA R_X86_64_GLOB_DAT

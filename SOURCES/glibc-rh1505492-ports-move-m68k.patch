@@ -1,0 +1,1589 @@
+Recreation of this upstream commit:
+
+commit 73588a7223bec40d652fd4c75f1cb4772c5d2612
+Author: Andreas Schwab <schwab@linux-m68k.org>
+Date:   Mon Feb 10 20:05:01 2014 +0100
+
+    Move m68k from ports to libc
+
+The following git commands were used:
+
+git mv ports/sysdeps/m68k sysdeps/
+git mv ports/sysdeps/unix/sysv/linux/m68k sysdeps/unix/sysv/linux/
+
+diff --git a/ports/sysdeps/m68k/Implies b/sysdeps/m68k/Implies
+similarity index 100%
+rename from ports/sysdeps/m68k/Implies
+rename to sysdeps/m68k/Implies
+diff --git a/ports/sysdeps/m68k/Makefile b/sysdeps/m68k/Makefile
+similarity index 100%
+rename from ports/sysdeps/m68k/Makefile
+rename to sysdeps/m68k/Makefile
+diff --git a/ports/sysdeps/m68k/Versions b/sysdeps/m68k/Versions
+similarity index 100%
+rename from ports/sysdeps/m68k/Versions
+rename to sysdeps/m68k/Versions
+diff --git a/ports/sysdeps/m68k/__longjmp.c b/sysdeps/m68k/__longjmp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/__longjmp.c
+rename to sysdeps/m68k/__longjmp.c
+diff --git a/ports/sysdeps/m68k/abort-instr.h b/sysdeps/m68k/abort-instr.h
+similarity index 100%
+rename from ports/sysdeps/m68k/abort-instr.h
+rename to sysdeps/m68k/abort-instr.h
+diff --git a/ports/sysdeps/m68k/asm-syntax.h b/sysdeps/m68k/asm-syntax.h
+similarity index 100%
+rename from ports/sysdeps/m68k/asm-syntax.h
+rename to sysdeps/m68k/asm-syntax.h
+diff --git a/ports/sysdeps/m68k/bits/byteswap.h b/sysdeps/m68k/bits/byteswap.h
+similarity index 100%
+rename from ports/sysdeps/m68k/bits/byteswap.h
+rename to sysdeps/m68k/bits/byteswap.h
+diff --git a/ports/sysdeps/m68k/bits/endian.h b/sysdeps/m68k/bits/endian.h
+similarity index 100%
+rename from ports/sysdeps/m68k/bits/endian.h
+rename to sysdeps/m68k/bits/endian.h
+diff --git a/ports/sysdeps/m68k/bits/link.h b/sysdeps/m68k/bits/link.h
+similarity index 100%
+rename from ports/sysdeps/m68k/bits/link.h
+rename to sysdeps/m68k/bits/link.h
+diff --git a/ports/sysdeps/m68k/bits/setjmp.h b/sysdeps/m68k/bits/setjmp.h
+similarity index 100%
+rename from ports/sysdeps/m68k/bits/setjmp.h
+rename to sysdeps/m68k/bits/setjmp.h
+diff --git a/ports/sysdeps/m68k/bsd-_setjmp.c b/sysdeps/m68k/bsd-_setjmp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/bsd-_setjmp.c
+rename to sysdeps/m68k/bsd-_setjmp.c
+diff --git a/ports/sysdeps/m68k/bsd-setjmp.c b/sysdeps/m68k/bsd-setjmp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/bsd-setjmp.c
+rename to sysdeps/m68k/bsd-setjmp.c
+diff --git a/ports/sysdeps/m68k/coldfire/bits/atomic.h b/sysdeps/m68k/coldfire/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/bits/atomic.h
+rename to sysdeps/m68k/coldfire/bits/atomic.h
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/bits/mathinline.h b/sysdeps/m68k/coldfire/fpu/bits/mathinline.h
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/bits/mathinline.h
+rename to sysdeps/m68k/coldfire/fpu/bits/mathinline.h
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/e_sqrt.c b/sysdeps/m68k/coldfire/fpu/e_sqrt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/e_sqrt.c
+rename to sysdeps/m68k/coldfire/fpu/e_sqrt.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/e_sqrtf.c b/sysdeps/m68k/coldfire/fpu/e_sqrtf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/e_sqrtf.c
+rename to sysdeps/m68k/coldfire/fpu/e_sqrtf.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/fraiseexcpt.c b/sysdeps/m68k/coldfire/fpu/fraiseexcpt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/fraiseexcpt.c
+rename to sysdeps/m68k/coldfire/fpu/fraiseexcpt.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/libm-test-ulps b/sysdeps/m68k/coldfire/fpu/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/libm-test-ulps
+rename to sysdeps/m68k/coldfire/fpu/libm-test-ulps
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/s_fabs.c b/sysdeps/m68k/coldfire/fpu/s_fabs.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/s_fabs.c
+rename to sysdeps/m68k/coldfire/fpu/s_fabs.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/s_fabsf.c b/sysdeps/m68k/coldfire/fpu/s_fabsf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/s_fabsf.c
+rename to sysdeps/m68k/coldfire/fpu/s_fabsf.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/s_lrint.c b/sysdeps/m68k/coldfire/fpu/s_lrint.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/s_lrint.c
+rename to sysdeps/m68k/coldfire/fpu/s_lrint.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/s_lrintf.c b/sysdeps/m68k/coldfire/fpu/s_lrintf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/s_lrintf.c
+rename to sysdeps/m68k/coldfire/fpu/s_lrintf.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/s_rint.c b/sysdeps/m68k/coldfire/fpu/s_rint.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/s_rint.c
+rename to sysdeps/m68k/coldfire/fpu/s_rint.c
+diff --git a/ports/sysdeps/m68k/coldfire/fpu/s_rintf.c b/sysdeps/m68k/coldfire/fpu/s_rintf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/fpu/s_rintf.c
+rename to sysdeps/m68k/coldfire/fpu/s_rintf.c
+diff --git a/ports/sysdeps/m68k/coldfire/shlib-versions b/sysdeps/m68k/coldfire/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/shlib-versions
+rename to sysdeps/m68k/coldfire/shlib-versions
+diff --git a/ports/sysdeps/m68k/coldfire/sysdep.h b/sysdeps/m68k/coldfire/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/m68k/coldfire/sysdep.h
+rename to sysdeps/m68k/coldfire/sysdep.h
+diff --git a/ports/sysdeps/m68k/crti.S b/sysdeps/m68k/crti.S
+similarity index 100%
+rename from ports/sysdeps/m68k/crti.S
+rename to sysdeps/m68k/crti.S
+diff --git a/ports/sysdeps/m68k/crtn.S b/sysdeps/m68k/crtn.S
+similarity index 100%
+rename from ports/sysdeps/m68k/crtn.S
+rename to sysdeps/m68k/crtn.S
+diff --git a/ports/sysdeps/m68k/dl-machine.h b/sysdeps/m68k/dl-machine.h
+similarity index 100%
+rename from ports/sysdeps/m68k/dl-machine.h
+rename to sysdeps/m68k/dl-machine.h
+diff --git a/ports/sysdeps/m68k/dl-tls.h b/sysdeps/m68k/dl-tls.h
+similarity index 100%
+rename from ports/sysdeps/m68k/dl-tls.h
+rename to sysdeps/m68k/dl-tls.h
+diff --git a/ports/sysdeps/m68k/dl-trampoline.S b/sysdeps/m68k/dl-trampoline.S
+similarity index 100%
+rename from ports/sysdeps/m68k/dl-trampoline.S
+rename to sysdeps/m68k/dl-trampoline.S
+diff --git a/ports/sysdeps/m68k/ffs.c b/sysdeps/m68k/ffs.c
+similarity index 100%
+rename from ports/sysdeps/m68k/ffs.c
+rename to sysdeps/m68k/ffs.c
+diff --git a/ports/sysdeps/m68k/fpu/bits/fenv.h b/sysdeps/m68k/fpu/bits/fenv.h
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/bits/fenv.h
+rename to sysdeps/m68k/fpu/bits/fenv.h
+diff --git a/ports/sysdeps/m68k/fpu/fclrexcpt.c b/sysdeps/m68k/fpu/fclrexcpt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fclrexcpt.c
+rename to sysdeps/m68k/fpu/fclrexcpt.c
+diff --git a/ports/sysdeps/m68k/fpu/fedisblxcpt.c b/sysdeps/m68k/fpu/fedisblxcpt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fedisblxcpt.c
+rename to sysdeps/m68k/fpu/fedisblxcpt.c
+diff --git a/ports/sysdeps/m68k/fpu/feenablxcpt.c b/sysdeps/m68k/fpu/feenablxcpt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/feenablxcpt.c
+rename to sysdeps/m68k/fpu/feenablxcpt.c
+diff --git a/ports/sysdeps/m68k/fpu/fegetenv.c b/sysdeps/m68k/fpu/fegetenv.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fegetenv.c
+rename to sysdeps/m68k/fpu/fegetenv.c
+diff --git a/ports/sysdeps/m68k/fpu/fegetexcept.c b/sysdeps/m68k/fpu/fegetexcept.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fegetexcept.c
+rename to sysdeps/m68k/fpu/fegetexcept.c
+diff --git a/ports/sysdeps/m68k/fpu/fegetround.c b/sysdeps/m68k/fpu/fegetround.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fegetround.c
+rename to sysdeps/m68k/fpu/fegetround.c
+diff --git a/ports/sysdeps/m68k/fpu/feholdexcpt.c b/sysdeps/m68k/fpu/feholdexcpt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/feholdexcpt.c
+rename to sysdeps/m68k/fpu/feholdexcpt.c
+diff --git a/ports/sysdeps/m68k/fpu/fesetenv.c b/sysdeps/m68k/fpu/fesetenv.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fesetenv.c
+rename to sysdeps/m68k/fpu/fesetenv.c
+diff --git a/ports/sysdeps/m68k/fpu/fesetround.c b/sysdeps/m68k/fpu/fesetround.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fesetround.c
+rename to sysdeps/m68k/fpu/fesetround.c
+diff --git a/ports/sysdeps/m68k/fpu/feupdateenv.c b/sysdeps/m68k/fpu/feupdateenv.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/feupdateenv.c
+rename to sysdeps/m68k/fpu/feupdateenv.c
+diff --git a/ports/sysdeps/m68k/fpu/fgetexcptflg.c b/sysdeps/m68k/fpu/fgetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fgetexcptflg.c
+rename to sysdeps/m68k/fpu/fgetexcptflg.c
+diff --git a/ports/sysdeps/m68k/fpu/fsetexcptflg.c b/sysdeps/m68k/fpu/fsetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/fsetexcptflg.c
+rename to sysdeps/m68k/fpu/fsetexcptflg.c
+diff --git a/ports/sysdeps/m68k/fpu/ftestexcept.c b/sysdeps/m68k/fpu/ftestexcept.c
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu/ftestexcept.c
+rename to sysdeps/m68k/fpu/ftestexcept.c
+diff --git a/ports/sysdeps/m68k/fpu_control.h b/sysdeps/m68k/fpu_control.h
+similarity index 100%
+rename from ports/sysdeps/m68k/fpu_control.h
+rename to sysdeps/m68k/fpu_control.h
+diff --git a/ports/sysdeps/m68k/gccframe.h b/sysdeps/m68k/gccframe.h
+similarity index 100%
+rename from ports/sysdeps/m68k/gccframe.h
+rename to sysdeps/m68k/gccframe.h
+diff --git a/ports/sysdeps/m68k/jmpbuf-unwind.h b/sysdeps/m68k/jmpbuf-unwind.h
+similarity index 100%
+rename from ports/sysdeps/m68k/jmpbuf-unwind.h
+rename to sysdeps/m68k/jmpbuf-unwind.h
+diff --git a/ports/sysdeps/m68k/ldsodefs.h b/sysdeps/m68k/ldsodefs.h
+similarity index 100%
+rename from ports/sysdeps/m68k/ldsodefs.h
+rename to sysdeps/m68k/ldsodefs.h
+diff --git a/ports/sysdeps/m68k/libc-tls.c b/sysdeps/m68k/libc-tls.c
+similarity index 100%
+rename from ports/sysdeps/m68k/libc-tls.c
+rename to sysdeps/m68k/libc-tls.c
+diff --git a/ports/sysdeps/m68k/m680x0/Implies b/sysdeps/m68k/m680x0/Implies
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/Implies
+rename to sysdeps/m68k/m680x0/Implies
+diff --git a/ports/sysdeps/m68k/m680x0/Makefile b/sysdeps/m68k/m680x0/Makefile
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/Makefile
+rename to sysdeps/m68k/m680x0/Makefile
+diff --git a/ports/sysdeps/m68k/m680x0/add_n.S b/sysdeps/m68k/m680x0/add_n.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/add_n.S
+rename to sysdeps/m68k/m680x0/add_n.S
+diff --git a/ports/sysdeps/m68k/m680x0/bits/huge_vall.h b/sysdeps/m68k/m680x0/bits/huge_vall.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/bits/huge_vall.h
+rename to sysdeps/m68k/m680x0/bits/huge_vall.h
+diff --git a/ports/sysdeps/m68k/m680x0/bits/mathdef.h b/sysdeps/m68k/m680x0/bits/mathdef.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/bits/mathdef.h
+rename to sysdeps/m68k/m680x0/bits/mathdef.h
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/bits/mathinline.h b/sysdeps/m68k/m680x0/fpu/bits/mathinline.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/bits/mathinline.h
+rename to sysdeps/m68k/m680x0/fpu/bits/mathinline.h
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/branred.c b/sysdeps/m68k/m680x0/fpu/branred.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/branred.c
+rename to sysdeps/m68k/m680x0/fpu/branred.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/doasin.c b/sysdeps/m68k/m680x0/fpu/doasin.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/doasin.c
+rename to sysdeps/m68k/m680x0/fpu/doasin.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/dosincos.c b/sysdeps/m68k/m680x0/fpu/dosincos.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/dosincos.c
+rename to sysdeps/m68k/m680x0/fpu/dosincos.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_acos.c b/sysdeps/m68k/m680x0/fpu/e_acos.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_acos.c
+rename to sysdeps/m68k/m680x0/fpu/e_acos.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_acosf.c b/sysdeps/m68k/m680x0/fpu/e_acosf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_acosf.c
+rename to sysdeps/m68k/m680x0/fpu/e_acosf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_acosl.c b/sysdeps/m68k/m680x0/fpu/e_acosl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_acosl.c
+rename to sysdeps/m68k/m680x0/fpu/e_acosl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_asin.c b/sysdeps/m68k/m680x0/fpu/e_asin.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_asin.c
+rename to sysdeps/m68k/m680x0/fpu/e_asin.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_asinf.c b/sysdeps/m68k/m680x0/fpu/e_asinf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_asinf.c
+rename to sysdeps/m68k/m680x0/fpu/e_asinf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_asinl.c b/sysdeps/m68k/m680x0/fpu/e_asinl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_asinl.c
+rename to sysdeps/m68k/m680x0/fpu/e_asinl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_atan2.c b/sysdeps/m68k/m680x0/fpu/e_atan2.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_atan2.c
+rename to sysdeps/m68k/m680x0/fpu/e_atan2.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_atan2f.c b/sysdeps/m68k/m680x0/fpu/e_atan2f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_atan2f.c
+rename to sysdeps/m68k/m680x0/fpu/e_atan2f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_atan2l.c b/sysdeps/m68k/m680x0/fpu/e_atan2l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_atan2l.c
+rename to sysdeps/m68k/m680x0/fpu/e_atan2l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_atanh.c b/sysdeps/m68k/m680x0/fpu/e_atanh.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_atanh.c
+rename to sysdeps/m68k/m680x0/fpu/e_atanh.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_atanhf.c b/sysdeps/m68k/m680x0/fpu/e_atanhf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_atanhf.c
+rename to sysdeps/m68k/m680x0/fpu/e_atanhf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_atanhl.c b/sysdeps/m68k/m680x0/fpu/e_atanhl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_atanhl.c
+rename to sysdeps/m68k/m680x0/fpu/e_atanhl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_cosh.c b/sysdeps/m68k/m680x0/fpu/e_cosh.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_cosh.c
+rename to sysdeps/m68k/m680x0/fpu/e_cosh.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_coshf.c b/sysdeps/m68k/m680x0/fpu/e_coshf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_coshf.c
+rename to sysdeps/m68k/m680x0/fpu/e_coshf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_coshl.c b/sysdeps/m68k/m680x0/fpu/e_coshl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_coshl.c
+rename to sysdeps/m68k/m680x0/fpu/e_coshl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp.c b/sysdeps/m68k/m680x0/fpu/e_exp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp10.c b/sysdeps/m68k/m680x0/fpu/e_exp10.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp10.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp10.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp10f.c b/sysdeps/m68k/m680x0/fpu/e_exp10f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp10f.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp10f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp10l.c b/sysdeps/m68k/m680x0/fpu/e_exp10l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp10l.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp10l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp2.c b/sysdeps/m68k/m680x0/fpu/e_exp2.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp2.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp2.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp2f.c b/sysdeps/m68k/m680x0/fpu/e_exp2f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp2f.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp2f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_exp2l.c b/sysdeps/m68k/m680x0/fpu/e_exp2l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_exp2l.c
+rename to sysdeps/m68k/m680x0/fpu/e_exp2l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_expf.c b/sysdeps/m68k/m680x0/fpu/e_expf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_expf.c
+rename to sysdeps/m68k/m680x0/fpu/e_expf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_expl.c b/sysdeps/m68k/m680x0/fpu/e_expl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_expl.c
+rename to sysdeps/m68k/m680x0/fpu/e_expl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_fmod.c b/sysdeps/m68k/m680x0/fpu/e_fmod.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_fmod.c
+rename to sysdeps/m68k/m680x0/fpu/e_fmod.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_fmodf.c b/sysdeps/m68k/m680x0/fpu/e_fmodf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_fmodf.c
+rename to sysdeps/m68k/m680x0/fpu/e_fmodf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_fmodl.c b/sysdeps/m68k/m680x0/fpu/e_fmodl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_fmodl.c
+rename to sysdeps/m68k/m680x0/fpu/e_fmodl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_ilogb.c b/sysdeps/m68k/m680x0/fpu/e_ilogb.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_ilogb.c
+rename to sysdeps/m68k/m680x0/fpu/e_ilogb.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_ilogbf.c b/sysdeps/m68k/m680x0/fpu/e_ilogbf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_ilogbf.c
+rename to sysdeps/m68k/m680x0/fpu/e_ilogbf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_ilogbl.c b/sysdeps/m68k/m680x0/fpu/e_ilogbl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_ilogbl.c
+rename to sysdeps/m68k/m680x0/fpu/e_ilogbl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log.c b/sysdeps/m68k/m680x0/fpu/e_log.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log.c
+rename to sysdeps/m68k/m680x0/fpu/e_log.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log10.c b/sysdeps/m68k/m680x0/fpu/e_log10.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log10.c
+rename to sysdeps/m68k/m680x0/fpu/e_log10.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log10f.c b/sysdeps/m68k/m680x0/fpu/e_log10f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log10f.c
+rename to sysdeps/m68k/m680x0/fpu/e_log10f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log10l.c b/sysdeps/m68k/m680x0/fpu/e_log10l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log10l.c
+rename to sysdeps/m68k/m680x0/fpu/e_log10l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log2.c b/sysdeps/m68k/m680x0/fpu/e_log2.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log2.c
+rename to sysdeps/m68k/m680x0/fpu/e_log2.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log2f.c b/sysdeps/m68k/m680x0/fpu/e_log2f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log2f.c
+rename to sysdeps/m68k/m680x0/fpu/e_log2f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_log2l.c b/sysdeps/m68k/m680x0/fpu/e_log2l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_log2l.c
+rename to sysdeps/m68k/m680x0/fpu/e_log2l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_logf.c b/sysdeps/m68k/m680x0/fpu/e_logf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_logf.c
+rename to sysdeps/m68k/m680x0/fpu/e_logf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_logl.c b/sysdeps/m68k/m680x0/fpu/e_logl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_logl.c
+rename to sysdeps/m68k/m680x0/fpu/e_logl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_pow.c b/sysdeps/m68k/m680x0/fpu/e_pow.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_pow.c
+rename to sysdeps/m68k/m680x0/fpu/e_pow.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_powf.c b/sysdeps/m68k/m680x0/fpu/e_powf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_powf.c
+rename to sysdeps/m68k/m680x0/fpu/e_powf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_powl.c b/sysdeps/m68k/m680x0/fpu/e_powl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_powl.c
+rename to sysdeps/m68k/m680x0/fpu/e_powl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_rem_pio2.c b/sysdeps/m68k/m680x0/fpu/e_rem_pio2.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_rem_pio2.c
+rename to sysdeps/m68k/m680x0/fpu/e_rem_pio2.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_rem_pio2f.c b/sysdeps/m68k/m680x0/fpu/e_rem_pio2f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_rem_pio2f.c
+rename to sysdeps/m68k/m680x0/fpu/e_rem_pio2f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_rem_pio2l.c b/sysdeps/m68k/m680x0/fpu/e_rem_pio2l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_rem_pio2l.c
+rename to sysdeps/m68k/m680x0/fpu/e_rem_pio2l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_remainder.c b/sysdeps/m68k/m680x0/fpu/e_remainder.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_remainder.c
+rename to sysdeps/m68k/m680x0/fpu/e_remainder.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_remainderf.c b/sysdeps/m68k/m680x0/fpu/e_remainderf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_remainderf.c
+rename to sysdeps/m68k/m680x0/fpu/e_remainderf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_remainderl.c b/sysdeps/m68k/m680x0/fpu/e_remainderl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_remainderl.c
+rename to sysdeps/m68k/m680x0/fpu/e_remainderl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_scalb.c b/sysdeps/m68k/m680x0/fpu/e_scalb.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_scalb.c
+rename to sysdeps/m68k/m680x0/fpu/e_scalb.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_scalbf.c b/sysdeps/m68k/m680x0/fpu/e_scalbf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_scalbf.c
+rename to sysdeps/m68k/m680x0/fpu/e_scalbf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_scalbl.c b/sysdeps/m68k/m680x0/fpu/e_scalbl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_scalbl.c
+rename to sysdeps/m68k/m680x0/fpu/e_scalbl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_sinh.c b/sysdeps/m68k/m680x0/fpu/e_sinh.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_sinh.c
+rename to sysdeps/m68k/m680x0/fpu/e_sinh.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_sinhf.c b/sysdeps/m68k/m680x0/fpu/e_sinhf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_sinhf.c
+rename to sysdeps/m68k/m680x0/fpu/e_sinhf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_sinhl.c b/sysdeps/m68k/m680x0/fpu/e_sinhl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_sinhl.c
+rename to sysdeps/m68k/m680x0/fpu/e_sinhl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_sqrt.c b/sysdeps/m68k/m680x0/fpu/e_sqrt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_sqrt.c
+rename to sysdeps/m68k/m680x0/fpu/e_sqrt.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_sqrtf.c b/sysdeps/m68k/m680x0/fpu/e_sqrtf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_sqrtf.c
+rename to sysdeps/m68k/m680x0/fpu/e_sqrtf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/e_sqrtl.c b/sysdeps/m68k/m680x0/fpu/e_sqrtl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/e_sqrtl.c
+rename to sysdeps/m68k/m680x0/fpu/e_sqrtl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/fraiseexcpt.c b/sysdeps/m68k/m680x0/fpu/fraiseexcpt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/fraiseexcpt.c
+rename to sysdeps/m68k/m680x0/fpu/fraiseexcpt.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/halfulp.c b/sysdeps/m68k/m680x0/fpu/halfulp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/halfulp.c
+rename to sysdeps/m68k/m680x0/fpu/halfulp.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_cosl.c b/sysdeps/m68k/m680x0/fpu/k_cosl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_cosl.c
+rename to sysdeps/m68k/m680x0/fpu/k_cosl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_rem_pio2.c b/sysdeps/m68k/m680x0/fpu/k_rem_pio2.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_rem_pio2.c
+rename to sysdeps/m68k/m680x0/fpu/k_rem_pio2.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_rem_pio2f.c b/sysdeps/m68k/m680x0/fpu/k_rem_pio2f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_rem_pio2f.c
+rename to sysdeps/m68k/m680x0/fpu/k_rem_pio2f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_rem_pio2l.c b/sysdeps/m68k/m680x0/fpu/k_rem_pio2l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_rem_pio2l.c
+rename to sysdeps/m68k/m680x0/fpu/k_rem_pio2l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_sinl.c b/sysdeps/m68k/m680x0/fpu/k_sinl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_sinl.c
+rename to sysdeps/m68k/m680x0/fpu/k_sinl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_tanf.c b/sysdeps/m68k/m680x0/fpu/k_tanf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_tanf.c
+rename to sysdeps/m68k/m680x0/fpu/k_tanf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/k_tanl.c b/sysdeps/m68k/m680x0/fpu/k_tanl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/k_tanl.c
+rename to sysdeps/m68k/m680x0/fpu/k_tanl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/libm-test-ulps b/sysdeps/m68k/m680x0/fpu/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/libm-test-ulps
+rename to sysdeps/m68k/m680x0/fpu/libm-test-ulps
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/math_private.h b/sysdeps/m68k/m680x0/fpu/math_private.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/math_private.h
+rename to sysdeps/m68k/m680x0/fpu/math_private.h
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mathimpl.h b/sysdeps/m68k/m680x0/fpu/mathimpl.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mathimpl.h
+rename to sysdeps/m68k/m680x0/fpu/mathimpl.h
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mpa.c b/sysdeps/m68k/m680x0/fpu/mpa.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mpa.c
+rename to sysdeps/m68k/m680x0/fpu/mpa.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mpatan.c b/sysdeps/m68k/m680x0/fpu/mpatan.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mpatan.c
+rename to sysdeps/m68k/m680x0/fpu/mpatan.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mpatan2.c b/sysdeps/m68k/m680x0/fpu/mpatan2.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mpatan2.c
+rename to sysdeps/m68k/m680x0/fpu/mpatan2.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mpexp.c b/sysdeps/m68k/m680x0/fpu/mpexp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mpexp.c
+rename to sysdeps/m68k/m680x0/fpu/mpexp.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mplog.c b/sysdeps/m68k/m680x0/fpu/mplog.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mplog.c
+rename to sysdeps/m68k/m680x0/fpu/mplog.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mpsqrt.c b/sysdeps/m68k/m680x0/fpu/mpsqrt.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mpsqrt.c
+rename to sysdeps/m68k/m680x0/fpu/mpsqrt.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/mptan.c b/sysdeps/m68k/m680x0/fpu/mptan.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/mptan.c
+rename to sysdeps/m68k/m680x0/fpu/mptan.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_atan.c b/sysdeps/m68k/m680x0/fpu/s_atan.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_atan.c
+rename to sysdeps/m68k/m680x0/fpu/s_atan.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_atanf.c b/sysdeps/m68k/m680x0/fpu/s_atanf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_atanf.c
+rename to sysdeps/m68k/m680x0/fpu/s_atanf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_atanl.c b/sysdeps/m68k/m680x0/fpu/s_atanl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_atanl.c
+rename to sysdeps/m68k/m680x0/fpu/s_atanl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_ccosh.c b/sysdeps/m68k/m680x0/fpu/s_ccosh.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_ccosh.c
+rename to sysdeps/m68k/m680x0/fpu/s_ccosh.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_ccoshf.c b/sysdeps/m68k/m680x0/fpu/s_ccoshf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_ccoshf.c
+rename to sysdeps/m68k/m680x0/fpu/s_ccoshf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_ccoshl.c b/sysdeps/m68k/m680x0/fpu/s_ccoshl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_ccoshl.c
+rename to sysdeps/m68k/m680x0/fpu/s_ccoshl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_ceil.c b/sysdeps/m68k/m680x0/fpu/s_ceil.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_ceil.c
+rename to sysdeps/m68k/m680x0/fpu/s_ceil.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_ceilf.c b/sysdeps/m68k/m680x0/fpu/s_ceilf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_ceilf.c
+rename to sysdeps/m68k/m680x0/fpu/s_ceilf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_ceill.c b/sysdeps/m68k/m680x0/fpu/s_ceill.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_ceill.c
+rename to sysdeps/m68k/m680x0/fpu/s_ceill.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_cexp.c b/sysdeps/m68k/m680x0/fpu/s_cexp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_cexp.c
+rename to sysdeps/m68k/m680x0/fpu/s_cexp.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_cexpf.c b/sysdeps/m68k/m680x0/fpu/s_cexpf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_cexpf.c
+rename to sysdeps/m68k/m680x0/fpu/s_cexpf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_cexpl.c b/sysdeps/m68k/m680x0/fpu/s_cexpl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_cexpl.c
+rename to sysdeps/m68k/m680x0/fpu/s_cexpl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_cos.c b/sysdeps/m68k/m680x0/fpu/s_cos.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_cos.c
+rename to sysdeps/m68k/m680x0/fpu/s_cos.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_cosf.c b/sysdeps/m68k/m680x0/fpu/s_cosf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_cosf.c
+rename to sysdeps/m68k/m680x0/fpu/s_cosf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_cosl.c b/sysdeps/m68k/m680x0/fpu/s_cosl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_cosl.c
+rename to sysdeps/m68k/m680x0/fpu/s_cosl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_csin.c b/sysdeps/m68k/m680x0/fpu/s_csin.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_csin.c
+rename to sysdeps/m68k/m680x0/fpu/s_csin.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_csinf.c b/sysdeps/m68k/m680x0/fpu/s_csinf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_csinf.c
+rename to sysdeps/m68k/m680x0/fpu/s_csinf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_csinh.c b/sysdeps/m68k/m680x0/fpu/s_csinh.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_csinh.c
+rename to sysdeps/m68k/m680x0/fpu/s_csinh.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_csinhf.c b/sysdeps/m68k/m680x0/fpu/s_csinhf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_csinhf.c
+rename to sysdeps/m68k/m680x0/fpu/s_csinhf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_csinhl.c b/sysdeps/m68k/m680x0/fpu/s_csinhl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_csinhl.c
+rename to sysdeps/m68k/m680x0/fpu/s_csinhl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_csinl.c b/sysdeps/m68k/m680x0/fpu/s_csinl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_csinl.c
+rename to sysdeps/m68k/m680x0/fpu/s_csinl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_expm1.c b/sysdeps/m68k/m680x0/fpu/s_expm1.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_expm1.c
+rename to sysdeps/m68k/m680x0/fpu/s_expm1.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_expm1f.c b/sysdeps/m68k/m680x0/fpu/s_expm1f.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_expm1f.c
+rename to sysdeps/m68k/m680x0/fpu/s_expm1f.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_expm1l.c b/sysdeps/m68k/m680x0/fpu/s_expm1l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_expm1l.c
+rename to sysdeps/m68k/m680x0/fpu/s_expm1l.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_fabs.c b/sysdeps/m68k/m680x0/fpu/s_fabs.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_fabs.c
+rename to sysdeps/m68k/m680x0/fpu/s_fabs.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_fabsf.c b/sysdeps/m68k/m680x0/fpu/s_fabsf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_fabsf.c
+rename to sysdeps/m68k/m680x0/fpu/s_fabsf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_fabsl.c b/sysdeps/m68k/m680x0/fpu/s_fabsl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_fabsl.c
+rename to sysdeps/m68k/m680x0/fpu/s_fabsl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_finite.c b/sysdeps/m68k/m680x0/fpu/s_finite.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_finite.c
+rename to sysdeps/m68k/m680x0/fpu/s_finite.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_finitef.c b/sysdeps/m68k/m680x0/fpu/s_finitef.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_finitef.c
+rename to sysdeps/m68k/m680x0/fpu/s_finitef.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_finitel.c b/sysdeps/m68k/m680x0/fpu/s_finitel.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_finitel.c
+rename to sysdeps/m68k/m680x0/fpu/s_finitel.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_floor.c b/sysdeps/m68k/m680x0/fpu/s_floor.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_floor.c
+rename to sysdeps/m68k/m680x0/fpu/s_floor.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_floorf.c b/sysdeps/m68k/m680x0/fpu/s_floorf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_floorf.c
+rename to sysdeps/m68k/m680x0/fpu/s_floorf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_floorl.c b/sysdeps/m68k/m680x0/fpu/s_floorl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_floorl.c
+rename to sysdeps/m68k/m680x0/fpu/s_floorl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_fpclassifyl.c b/sysdeps/m68k/m680x0/fpu/s_fpclassifyl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_fpclassifyl.c
+rename to sysdeps/m68k/m680x0/fpu/s_fpclassifyl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_frexp.c b/sysdeps/m68k/m680x0/fpu/s_frexp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_frexp.c
+rename to sysdeps/m68k/m680x0/fpu/s_frexp.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_frexpf.c b/sysdeps/m68k/m680x0/fpu/s_frexpf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_frexpf.c
+rename to sysdeps/m68k/m680x0/fpu/s_frexpf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_frexpl.c b/sysdeps/m68k/m680x0/fpu/s_frexpl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_frexpl.c
+rename to sysdeps/m68k/m680x0/fpu/s_frexpl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_isinf.c b/sysdeps/m68k/m680x0/fpu/s_isinf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_isinf.c
+rename to sysdeps/m68k/m680x0/fpu/s_isinf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_isinff.c b/sysdeps/m68k/m680x0/fpu/s_isinff.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_isinff.c
+rename to sysdeps/m68k/m680x0/fpu/s_isinff.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_isinfl.c b/sysdeps/m68k/m680x0/fpu/s_isinfl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_isinfl.c
+rename to sysdeps/m68k/m680x0/fpu/s_isinfl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_isnan.c b/sysdeps/m68k/m680x0/fpu/s_isnan.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_isnan.c
+rename to sysdeps/m68k/m680x0/fpu/s_isnan.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_isnanf.c b/sysdeps/m68k/m680x0/fpu/s_isnanf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_isnanf.c
+rename to sysdeps/m68k/m680x0/fpu/s_isnanf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_isnanl.c b/sysdeps/m68k/m680x0/fpu/s_isnanl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_isnanl.c
+rename to sysdeps/m68k/m680x0/fpu/s_isnanl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_llrint.c b/sysdeps/m68k/m680x0/fpu/s_llrint.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_llrint.c
+rename to sysdeps/m68k/m680x0/fpu/s_llrint.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_llrintf.c b/sysdeps/m68k/m680x0/fpu/s_llrintf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_llrintf.c
+rename to sysdeps/m68k/m680x0/fpu/s_llrintf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_llrintl.c b/sysdeps/m68k/m680x0/fpu/s_llrintl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_llrintl.c
+rename to sysdeps/m68k/m680x0/fpu/s_llrintl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_log1p.c b/sysdeps/m68k/m680x0/fpu/s_log1p.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_log1p.c
+rename to sysdeps/m68k/m680x0/fpu/s_log1p.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_log1pf.c b/sysdeps/m68k/m680x0/fpu/s_log1pf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_log1pf.c
+rename to sysdeps/m68k/m680x0/fpu/s_log1pf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_log1pl.c b/sysdeps/m68k/m680x0/fpu/s_log1pl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_log1pl.c
+rename to sysdeps/m68k/m680x0/fpu/s_log1pl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_logbl.c b/sysdeps/m68k/m680x0/fpu/s_logbl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_logbl.c
+rename to sysdeps/m68k/m680x0/fpu/s_logbl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_lrint.c b/sysdeps/m68k/m680x0/fpu/s_lrint.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_lrint.c
+rename to sysdeps/m68k/m680x0/fpu/s_lrint.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_lrintf.c b/sysdeps/m68k/m680x0/fpu/s_lrintf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_lrintf.c
+rename to sysdeps/m68k/m680x0/fpu/s_lrintf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_lrintl.c b/sysdeps/m68k/m680x0/fpu/s_lrintl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_lrintl.c
+rename to sysdeps/m68k/m680x0/fpu/s_lrintl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_modf.c b/sysdeps/m68k/m680x0/fpu/s_modf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_modf.c
+rename to sysdeps/m68k/m680x0/fpu/s_modf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_modff.c b/sysdeps/m68k/m680x0/fpu/s_modff.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_modff.c
+rename to sysdeps/m68k/m680x0/fpu/s_modff.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_modfl.c b/sysdeps/m68k/m680x0/fpu/s_modfl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_modfl.c
+rename to sysdeps/m68k/m680x0/fpu/s_modfl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_nearbyint.c b/sysdeps/m68k/m680x0/fpu/s_nearbyint.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_nearbyint.c
+rename to sysdeps/m68k/m680x0/fpu/s_nearbyint.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_nearbyintf.c b/sysdeps/m68k/m680x0/fpu/s_nearbyintf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_nearbyintf.c
+rename to sysdeps/m68k/m680x0/fpu/s_nearbyintf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_nearbyintl.c b/sysdeps/m68k/m680x0/fpu/s_nearbyintl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_nearbyintl.c
+rename to sysdeps/m68k/m680x0/fpu/s_nearbyintl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_nextafterl.c b/sysdeps/m68k/m680x0/fpu/s_nextafterl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_nextafterl.c
+rename to sysdeps/m68k/m680x0/fpu/s_nextafterl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_remquo.c b/sysdeps/m68k/m680x0/fpu/s_remquo.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_remquo.c
+rename to sysdeps/m68k/m680x0/fpu/s_remquo.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_remquof.c b/sysdeps/m68k/m680x0/fpu/s_remquof.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_remquof.c
+rename to sysdeps/m68k/m680x0/fpu/s_remquof.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_remquol.c b/sysdeps/m68k/m680x0/fpu/s_remquol.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_remquol.c
+rename to sysdeps/m68k/m680x0/fpu/s_remquol.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_rint.c b/sysdeps/m68k/m680x0/fpu/s_rint.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_rint.c
+rename to sysdeps/m68k/m680x0/fpu/s_rint.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_rintf.c b/sysdeps/m68k/m680x0/fpu/s_rintf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_rintf.c
+rename to sysdeps/m68k/m680x0/fpu/s_rintf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_rintl.c b/sysdeps/m68k/m680x0/fpu/s_rintl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_rintl.c
+rename to sysdeps/m68k/m680x0/fpu/s_rintl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_scalbln.c b/sysdeps/m68k/m680x0/fpu/s_scalbln.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_scalbln.c
+rename to sysdeps/m68k/m680x0/fpu/s_scalbln.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_scalblnf.c b/sysdeps/m68k/m680x0/fpu/s_scalblnf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_scalblnf.c
+rename to sysdeps/m68k/m680x0/fpu/s_scalblnf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_scalblnl.c b/sysdeps/m68k/m680x0/fpu/s_scalblnl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_scalblnl.c
+rename to sysdeps/m68k/m680x0/fpu/s_scalblnl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_scalbn.c b/sysdeps/m68k/m680x0/fpu/s_scalbn.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_scalbn.c
+rename to sysdeps/m68k/m680x0/fpu/s_scalbn.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_scalbnf.c b/sysdeps/m68k/m680x0/fpu/s_scalbnf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_scalbnf.c
+rename to sysdeps/m68k/m680x0/fpu/s_scalbnf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_scalbnl.c b/sysdeps/m68k/m680x0/fpu/s_scalbnl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_scalbnl.c
+rename to sysdeps/m68k/m680x0/fpu/s_scalbnl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_significand.c b/sysdeps/m68k/m680x0/fpu/s_significand.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_significand.c
+rename to sysdeps/m68k/m680x0/fpu/s_significand.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_significandf.c b/sysdeps/m68k/m680x0/fpu/s_significandf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_significandf.c
+rename to sysdeps/m68k/m680x0/fpu/s_significandf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_significandl.c b/sysdeps/m68k/m680x0/fpu/s_significandl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_significandl.c
+rename to sysdeps/m68k/m680x0/fpu/s_significandl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_sin.c b/sysdeps/m68k/m680x0/fpu/s_sin.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_sin.c
+rename to sysdeps/m68k/m680x0/fpu/s_sin.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_sincos.c b/sysdeps/m68k/m680x0/fpu/s_sincos.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_sincos.c
+rename to sysdeps/m68k/m680x0/fpu/s_sincos.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_sincosf.c b/sysdeps/m68k/m680x0/fpu/s_sincosf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_sincosf.c
+rename to sysdeps/m68k/m680x0/fpu/s_sincosf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_sincosl.c b/sysdeps/m68k/m680x0/fpu/s_sincosl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_sincosl.c
+rename to sysdeps/m68k/m680x0/fpu/s_sincosl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_sinf.c b/sysdeps/m68k/m680x0/fpu/s_sinf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_sinf.c
+rename to sysdeps/m68k/m680x0/fpu/s_sinf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_sinl.c b/sysdeps/m68k/m680x0/fpu/s_sinl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_sinl.c
+rename to sysdeps/m68k/m680x0/fpu/s_sinl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_tan.c b/sysdeps/m68k/m680x0/fpu/s_tan.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_tan.c
+rename to sysdeps/m68k/m680x0/fpu/s_tan.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_tanf.c b/sysdeps/m68k/m680x0/fpu/s_tanf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_tanf.c
+rename to sysdeps/m68k/m680x0/fpu/s_tanf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_tanh.c b/sysdeps/m68k/m680x0/fpu/s_tanh.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_tanh.c
+rename to sysdeps/m68k/m680x0/fpu/s_tanh.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_tanhf.c b/sysdeps/m68k/m680x0/fpu/s_tanhf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_tanhf.c
+rename to sysdeps/m68k/m680x0/fpu/s_tanhf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_tanhl.c b/sysdeps/m68k/m680x0/fpu/s_tanhl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_tanhl.c
+rename to sysdeps/m68k/m680x0/fpu/s_tanhl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_tanl.c b/sysdeps/m68k/m680x0/fpu/s_tanl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_tanl.c
+rename to sysdeps/m68k/m680x0/fpu/s_tanl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_trunc.c b/sysdeps/m68k/m680x0/fpu/s_trunc.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_trunc.c
+rename to sysdeps/m68k/m680x0/fpu/s_trunc.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_truncf.c b/sysdeps/m68k/m680x0/fpu/s_truncf.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_truncf.c
+rename to sysdeps/m68k/m680x0/fpu/s_truncf.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/s_truncl.c b/sysdeps/m68k/m680x0/fpu/s_truncl.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/s_truncl.c
+rename to sysdeps/m68k/m680x0/fpu/s_truncl.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/sincos32.c b/sysdeps/m68k/m680x0/fpu/sincos32.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/sincos32.c
+rename to sysdeps/m68k/m680x0/fpu/sincos32.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/sincostab.c b/sysdeps/m68k/m680x0/fpu/sincostab.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/sincostab.c
+rename to sysdeps/m68k/m680x0/fpu/sincostab.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/slowexp.c b/sysdeps/m68k/m680x0/fpu/slowexp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/slowexp.c
+rename to sysdeps/m68k/m680x0/fpu/slowexp.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/slowpow.c b/sysdeps/m68k/m680x0/fpu/slowpow.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/slowpow.c
+rename to sysdeps/m68k/m680x0/fpu/slowpow.c
+diff --git a/ports/sysdeps/m68k/m680x0/fpu/t_exp.c b/sysdeps/m68k/m680x0/fpu/t_exp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/fpu/t_exp.c
+rename to sysdeps/m68k/m680x0/fpu/t_exp.c
+diff --git a/ports/sysdeps/m68k/m680x0/lshift.S b/sysdeps/m68k/m680x0/lshift.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/lshift.S
+rename to sysdeps/m68k/m680x0/lshift.S
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/Makefile b/sysdeps/m68k/m680x0/m68020/Makefile
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/Makefile
+rename to sysdeps/m68k/m680x0/m68020/Makefile
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/addmul_1.S b/sysdeps/m68k/m680x0/m68020/addmul_1.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/addmul_1.S
+rename to sysdeps/m68k/m680x0/m68020/addmul_1.S
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/bits/atomic.h b/sysdeps/m68k/m680x0/m68020/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/bits/atomic.h
+rename to sysdeps/m68k/m680x0/m68020/bits/atomic.h
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/bits/string.h b/sysdeps/m68k/m680x0/m68020/bits/string.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/bits/string.h
+rename to sysdeps/m68k/m680x0/m68020/bits/string.h
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/mul_1.S b/sysdeps/m68k/m680x0/m68020/mul_1.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/mul_1.S
+rename to sysdeps/m68k/m680x0/m68020/mul_1.S
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/submul_1.S b/sysdeps/m68k/m680x0/m68020/submul_1.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/submul_1.S
+rename to sysdeps/m68k/m680x0/m68020/submul_1.S
+diff --git a/ports/sysdeps/m68k/m680x0/m68020/wordcopy.S b/sysdeps/m68k/m680x0/m68020/wordcopy.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/m68020/wordcopy.S
+rename to sysdeps/m68k/m680x0/m68020/wordcopy.S
+diff --git a/ports/sysdeps/m68k/m680x0/printf_fphex.c b/sysdeps/m68k/m680x0/printf_fphex.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/printf_fphex.c
+rename to sysdeps/m68k/m680x0/printf_fphex.c
+diff --git a/ports/sysdeps/m68k/m680x0/rshift.S b/sysdeps/m68k/m680x0/rshift.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/rshift.S
+rename to sysdeps/m68k/m680x0/rshift.S
+diff --git a/ports/sysdeps/m68k/m680x0/strtold_l.c b/sysdeps/m68k/m680x0/strtold_l.c
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/strtold_l.c
+rename to sysdeps/m68k/m680x0/strtold_l.c
+diff --git a/ports/sysdeps/m68k/m680x0/sub_n.S b/sysdeps/m68k/m680x0/sub_n.S
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/sub_n.S
+rename to sysdeps/m68k/m680x0/sub_n.S
+diff --git a/ports/sysdeps/m68k/m680x0/sysdep.h b/sysdeps/m68k/m680x0/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/m68k/m680x0/sysdep.h
+rename to sysdeps/m68k/m680x0/sysdep.h
+diff --git a/ports/sysdeps/m68k/memchr.S b/sysdeps/m68k/memchr.S
+similarity index 100%
+rename from ports/sysdeps/m68k/memchr.S
+rename to sysdeps/m68k/memchr.S
+diff --git a/ports/sysdeps/m68k/memcopy.h b/sysdeps/m68k/memcopy.h
+similarity index 100%
+rename from ports/sysdeps/m68k/memcopy.h
+rename to sysdeps/m68k/memcopy.h
+diff --git a/ports/sysdeps/m68k/memusage.h b/sysdeps/m68k/memusage.h
+similarity index 100%
+rename from ports/sysdeps/m68k/memusage.h
+rename to sysdeps/m68k/memusage.h
+diff --git a/ports/sysdeps/m68k/nptl/Makefile b/sysdeps/m68k/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/m68k/nptl/Makefile
+rename to sysdeps/m68k/nptl/Makefile
+diff --git a/ports/sysdeps/m68k/nptl/pthread_spin_lock.c b/sysdeps/m68k/nptl/pthread_spin_lock.c
+similarity index 100%
+rename from ports/sysdeps/m68k/nptl/pthread_spin_lock.c
+rename to sysdeps/m68k/nptl/pthread_spin_lock.c
+diff --git a/ports/sysdeps/m68k/nptl/pthreaddef.h b/sysdeps/m68k/nptl/pthreaddef.h
+similarity index 100%
+rename from ports/sysdeps/m68k/nptl/pthreaddef.h
+rename to sysdeps/m68k/nptl/pthreaddef.h
+diff --git a/ports/sysdeps/m68k/nptl/tcb-offsets.sym b/sysdeps/m68k/nptl/tcb-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/m68k/nptl/tcb-offsets.sym
+rename to sysdeps/m68k/nptl/tcb-offsets.sym
+diff --git a/ports/sysdeps/m68k/nptl/tls.h b/sysdeps/m68k/nptl/tls.h
+similarity index 100%
+rename from ports/sysdeps/m68k/nptl/tls.h
+rename to sysdeps/m68k/nptl/tls.h
+diff --git a/ports/sysdeps/m68k/preconfigure b/sysdeps/m68k/preconfigure
+similarity index 100%
+rename from ports/sysdeps/m68k/preconfigure
+rename to sysdeps/m68k/preconfigure
+diff --git a/ports/sysdeps/m68k/rawmemchr.S b/sysdeps/m68k/rawmemchr.S
+similarity index 100%
+rename from ports/sysdeps/m68k/rawmemchr.S
+rename to sysdeps/m68k/rawmemchr.S
+diff --git a/ports/sysdeps/m68k/setjmp.c b/sysdeps/m68k/setjmp.c
+similarity index 100%
+rename from ports/sysdeps/m68k/setjmp.c
+rename to sysdeps/m68k/setjmp.c
+diff --git a/ports/sysdeps/m68k/shlib-versions b/sysdeps/m68k/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/m68k/shlib-versions
+rename to sysdeps/m68k/shlib-versions
+diff --git a/ports/sysdeps/m68k/sotruss-lib.c b/sysdeps/m68k/sotruss-lib.c
+similarity index 100%
+rename from ports/sysdeps/m68k/sotruss-lib.c
+rename to sysdeps/m68k/sotruss-lib.c
+diff --git a/ports/sysdeps/m68k/stackinfo.h b/sysdeps/m68k/stackinfo.h
+similarity index 100%
+rename from ports/sysdeps/m68k/stackinfo.h
+rename to sysdeps/m68k/stackinfo.h
+diff --git a/ports/sysdeps/m68k/start.S b/sysdeps/m68k/start.S
+similarity index 100%
+rename from ports/sysdeps/m68k/start.S
+rename to sysdeps/m68k/start.S
+diff --git a/ports/sysdeps/m68k/strchr.S b/sysdeps/m68k/strchr.S
+similarity index 100%
+rename from ports/sysdeps/m68k/strchr.S
+rename to sysdeps/m68k/strchr.S
+diff --git a/ports/sysdeps/m68k/strchrnul.S b/sysdeps/m68k/strchrnul.S
+similarity index 100%
+rename from ports/sysdeps/m68k/strchrnul.S
+rename to sysdeps/m68k/strchrnul.S
+diff --git a/ports/sysdeps/m68k/sys/ucontext.h b/sysdeps/m68k/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/m68k/sys/ucontext.h
+rename to sysdeps/m68k/sys/ucontext.h
+diff --git a/ports/sysdeps/m68k/sysdep.h b/sysdeps/m68k/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/m68k/sysdep.h
+rename to sysdeps/m68k/sysdep.h
+diff --git a/ports/sysdeps/m68k/tls-macros.h b/sysdeps/m68k/tls-macros.h
+similarity index 100%
+rename from ports/sysdeps/m68k/tls-macros.h
+rename to sysdeps/m68k/tls-macros.h
+diff --git a/ports/sysdeps/m68k/tst-audit.h b/sysdeps/m68k/tst-audit.h
+similarity index 100%
+rename from ports/sysdeps/m68k/tst-audit.h
+rename to sysdeps/m68k/tst-audit.h
+diff --git a/ports/sysdeps/m68k/wcpcpy.c b/sysdeps/m68k/wcpcpy.c
+similarity index 100%
+rename from ports/sysdeps/m68k/wcpcpy.c
+rename to sysdeps/m68k/wcpcpy.c
+diff --git a/ports/sysdeps/m68k/wcpcpy_chk.c b/sysdeps/m68k/wcpcpy_chk.c
+similarity index 100%
+rename from ports/sysdeps/m68k/wcpcpy_chk.c
+rename to sysdeps/m68k/wcpcpy_chk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/Makefile b/sysdeps/unix/sysv/linux/m68k/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/Makefile
+rename to sysdeps/unix/sysv/linux/m68k/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/Versions b/sysdeps/unix/sysv/linux/m68k/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/Versions
+rename to sysdeps/unix/sysv/linux/m68k/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/____longjmp_chk.c b/sysdeps/unix/sysv/linux/m68k/____longjmp_chk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/____longjmp_chk.c
+rename to sysdeps/unix/sysv/linux/m68k/____longjmp_chk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/alphasort64.c b/sysdeps/unix/sysv/linux/m68k/alphasort64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/alphasort64.c
+rename to sysdeps/unix/sysv/linux/m68k/alphasort64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/bits/a.out.h b/sysdeps/unix/sysv/linux/m68k/bits/a.out.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/bits/a.out.h
+rename to sysdeps/unix/sysv/linux/m68k/bits/a.out.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/bits/fcntl.h b/sysdeps/unix/sysv/linux/m68k/bits/fcntl.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/bits/fcntl.h
+rename to sysdeps/unix/sysv/linux/m68k/bits/fcntl.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/bits/m68k-vdso.h b/sysdeps/unix/sysv/linux/m68k/bits/m68k-vdso.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/bits/m68k-vdso.h
+rename to sysdeps/unix/sysv/linux/m68k/bits/m68k-vdso.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/bits/mman.h b/sysdeps/unix/sysv/linux/m68k/bits/mman.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/bits/mman.h
+rename to sysdeps/unix/sysv/linux/m68k/bits/mman.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/bits/poll.h b/sysdeps/unix/sysv/linux/m68k/bits/poll.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/bits/poll.h
+rename to sysdeps/unix/sysv/linux/m68k/bits/poll.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/bits/stat.h b/sysdeps/unix/sysv/linux/m68k/bits/stat.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/bits/stat.h
+rename to sysdeps/unix/sysv/linux/m68k/bits/stat.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/brk.c b/sysdeps/unix/sysv/linux/m68k/brk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/brk.c
+rename to sysdeps/unix/sysv/linux/m68k/brk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/clone.S b/sysdeps/unix/sysv/linux/m68k/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/clone.S
+rename to sysdeps/unix/sysv/linux/m68k/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/bits/atomic.h b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/bits/atomic.h
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/bits/atomic.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/ld.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libc.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libm.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/librt.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/coldfire/sysdep.h b/sysdeps/unix/sysv/linux/m68k/coldfire/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/coldfire/sysdep.h
+rename to sysdeps/unix/sysv/linux/m68k/coldfire/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/configure b/sysdeps/unix/sysv/linux/m68k/configure
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/configure
+rename to sysdeps/unix/sysv/linux/m68k/configure
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/configure.in b/sysdeps/unix/sysv/linux/m68k/configure.in
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/configure.in
+rename to sysdeps/unix/sysv/linux/m68k/configure.in
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/dl-librecon.h b/sysdeps/unix/sysv/linux/m68k/dl-librecon.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/dl-librecon.h
+rename to sysdeps/unix/sysv/linux/m68k/dl-librecon.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/fchown.c b/sysdeps/unix/sysv/linux/m68k/fchown.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/fchown.c
+rename to sysdeps/unix/sysv/linux/m68k/fchown.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/fchownat.c b/sysdeps/unix/sysv/linux/m68k/fchownat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/fchownat.c
+rename to sysdeps/unix/sysv/linux/m68k/fchownat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/fcntl.c b/sysdeps/unix/sysv/linux/m68k/fcntl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/fcntl.c
+rename to sysdeps/unix/sysv/linux/m68k/fcntl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/fxstat.c b/sysdeps/unix/sysv/linux/m68k/fxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/fxstat.c
+rename to sysdeps/unix/sysv/linux/m68k/fxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/fxstatat.c b/sysdeps/unix/sysv/linux/m68k/fxstatat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/fxstatat.c
+rename to sysdeps/unix/sysv/linux/m68k/fxstatat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getdents64.c b/sysdeps/unix/sysv/linux/m68k/getdents64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getdents64.c
+rename to sysdeps/unix/sysv/linux/m68k/getdents64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getegid.c b/sysdeps/unix/sysv/linux/m68k/getegid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getegid.c
+rename to sysdeps/unix/sysv/linux/m68k/getegid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/geteuid.c b/sysdeps/unix/sysv/linux/m68k/geteuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/geteuid.c
+rename to sysdeps/unix/sysv/linux/m68k/geteuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getgid.c b/sysdeps/unix/sysv/linux/m68k/getgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getgid.c
+rename to sysdeps/unix/sysv/linux/m68k/getgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getgroups.c b/sysdeps/unix/sysv/linux/m68k/getgroups.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getgroups.c
+rename to sysdeps/unix/sysv/linux/m68k/getgroups.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getmsg.c b/sysdeps/unix/sysv/linux/m68k/getmsg.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getmsg.c
+rename to sysdeps/unix/sysv/linux/m68k/getmsg.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getpagesize.c b/sysdeps/unix/sysv/linux/m68k/getpagesize.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getpagesize.c
+rename to sysdeps/unix/sysv/linux/m68k/getpagesize.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getresgid.c b/sysdeps/unix/sysv/linux/m68k/getresgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getresgid.c
+rename to sysdeps/unix/sysv/linux/m68k/getresgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getresuid.c b/sysdeps/unix/sysv/linux/m68k/getresuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getresuid.c
+rename to sysdeps/unix/sysv/linux/m68k/getresuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getrlimit64.c b/sysdeps/unix/sysv/linux/m68k/getrlimit64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getrlimit64.c
+rename to sysdeps/unix/sysv/linux/m68k/getrlimit64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getsysstats.c b/sysdeps/unix/sysv/linux/m68k/getsysstats.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getsysstats.c
+rename to sysdeps/unix/sysv/linux/m68k/getsysstats.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getuid.c b/sysdeps/unix/sysv/linux/m68k/getuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/getuid.c
+rename to sysdeps/unix/sysv/linux/m68k/getuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/glob64.c b/sysdeps/unix/sysv/linux/m68k/glob64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/glob64.c
+rename to sysdeps/unix/sysv/linux/m68k/glob64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/init-first.c b/sysdeps/unix/sysv/linux/m68k/init-first.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/init-first.c
+rename to sysdeps/unix/sysv/linux/m68k/init-first.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/kernel-features.h b/sysdeps/unix/sysv/linux/m68k/kernel-features.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/kernel-features.h
+rename to sysdeps/unix/sysv/linux/m68k/kernel-features.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/lchown.c b/sysdeps/unix/sysv/linux/m68k/lchown.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/lchown.c
+rename to sysdeps/unix/sysv/linux/m68k/lchown.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/ldconfig.h b/sysdeps/unix/sysv/linux/m68k/ldconfig.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/ldconfig.h
+rename to sysdeps/unix/sysv/linux/m68k/ldconfig.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/libc-m68k-vdso.c b/sysdeps/unix/sysv/linux/m68k/libc-m68k-vdso.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/libc-m68k-vdso.c
+rename to sysdeps/unix/sysv/linux/m68k/libc-m68k-vdso.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/lockf64.c b/sysdeps/unix/sysv/linux/m68k/lockf64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/lockf64.c
+rename to sysdeps/unix/sysv/linux/m68k/lockf64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/lxstat.c b/sysdeps/unix/sysv/linux/m68k/lxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/lxstat.c
+rename to sysdeps/unix/sysv/linux/m68k/lxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/Makefile b/sysdeps/unix/sysv/linux/m68k/m680x0/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/Makefile
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/getcontext.S b/sysdeps/unix/sysv/linux/m68k/m680x0/getcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/getcontext.S
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/getcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/makecontext.S b/sysdeps/unix/sysv/linux/m68k/m680x0/makecontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/makecontext.S
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/makecontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/ld.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libc.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libm.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/librt.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/setcontext.S b/sysdeps/unix/sysv/linux/m68k/m680x0/setcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/setcontext.S
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/setcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/swapcontext.S b/sysdeps/unix/sysv/linux/m68k/m680x0/swapcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/swapcontext.S
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/swapcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/syscalls.list b/sysdeps/unix/sysv/linux/m68k/m680x0/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/syscalls.list
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/sysdep.h b/sysdeps/unix/sysv/linux/m68k/m680x0/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/sysdep.h
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m680x0/ucontext_i.sym b/sysdeps/unix/sysv/linux/m68k/m680x0/ucontext_i.sym
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m680x0/ucontext_i.sym
+rename to sysdeps/unix/sysv/linux/m68k/m680x0/ucontext_i.sym
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m68k-helpers.S b/sysdeps/unix/sysv/linux/m68k/m68k-helpers.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m68k-helpers.S
+rename to sysdeps/unix/sysv/linux/m68k/m68k-helpers.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/m68k-vdso.c b/sysdeps/unix/sysv/linux/m68k/m68k-vdso.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/m68k-vdso.c
+rename to sysdeps/unix/sysv/linux/m68k/m68k-vdso.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/mmap.S b/sysdeps/unix/sysv/linux/m68k/mmap.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/mmap.S
+rename to sysdeps/unix/sysv/linux/m68k/mmap.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/mremap.S b/sysdeps/unix/sysv/linux/m68k/mremap.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/mremap.S
+rename to sysdeps/unix/sysv/linux/m68k/mremap.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/msgctl.c b/sysdeps/unix/sysv/linux/m68k/msgctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/msgctl.c
+rename to sysdeps/unix/sysv/linux/m68k/msgctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/bits/pthreadtypes.h b/sysdeps/unix/sysv/linux/m68k/nptl/bits/pthreadtypes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/bits/pthreadtypes.h
+rename to sysdeps/unix/sysv/linux/m68k/nptl/bits/pthreadtypes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/bits/semaphore.h b/sysdeps/unix/sysv/linux/m68k/nptl/bits/semaphore.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/bits/semaphore.h
+rename to sysdeps/unix/sysv/linux/m68k/nptl/bits/semaphore.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/c++-types.data b/sysdeps/unix/sysv/linux/m68k/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/m68k/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/clone.S b/sysdeps/unix/sysv/linux/m68k/nptl/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/clone.S
+rename to sysdeps/unix/sysv/linux/m68k/nptl/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/createthread.c b/sysdeps/unix/sysv/linux/m68k/nptl/createthread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/createthread.c
+rename to sysdeps/unix/sysv/linux/m68k/nptl/createthread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/fork.c b/sysdeps/unix/sysv/linux/m68k/nptl/fork.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/fork.c
+rename to sysdeps/unix/sysv/linux/m68k/nptl/fork.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/localplt.data b/sysdeps/unix/sysv/linux/m68k/nptl/localplt.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/localplt.data
+rename to sysdeps/unix/sysv/linux/m68k/nptl/localplt.data
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/lowlevellock.h b/sysdeps/unix/sysv/linux/m68k/nptl/lowlevellock.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/lowlevellock.h
+rename to sysdeps/unix/sysv/linux/m68k/nptl/lowlevellock.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/pt-vfork.S b/sysdeps/unix/sysv/linux/m68k/nptl/pt-vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/pt-vfork.S
+rename to sysdeps/unix/sysv/linux/m68k/nptl/pt-vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/m68k/nptl/pthread_once.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/pthread_once.c
+rename to sysdeps/unix/sysv/linux/m68k/nptl/pthread_once.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/sysdep-cancel.h b/sysdeps/unix/sysv/linux/m68k/nptl/sysdep-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/sysdep-cancel.h
+rename to sysdeps/unix/sysv/linux/m68k/nptl/sysdep-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/nptl/vfork.S b/sysdeps/unix/sysv/linux/m68k/nptl/vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/nptl/vfork.S
+rename to sysdeps/unix/sysv/linux/m68k/nptl/vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/oldgetrlimit64.c b/sysdeps/unix/sysv/linux/m68k/oldgetrlimit64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/oldgetrlimit64.c
+rename to sysdeps/unix/sysv/linux/m68k/oldgetrlimit64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/putmsg.c b/sysdeps/unix/sysv/linux/m68k/putmsg.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/putmsg.c
+rename to sysdeps/unix/sysv/linux/m68k/putmsg.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/readdir64.c b/sysdeps/unix/sysv/linux/m68k/readdir64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/readdir64.c
+rename to sysdeps/unix/sysv/linux/m68k/readdir64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/readdir64_r.c b/sysdeps/unix/sysv/linux/m68k/readdir64_r.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/readdir64_r.c
+rename to sysdeps/unix/sysv/linux/m68k/readdir64_r.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/register-dump.h b/sysdeps/unix/sysv/linux/m68k/register-dump.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/register-dump.h
+rename to sysdeps/unix/sysv/linux/m68k/register-dump.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/scandir64.c b/sysdeps/unix/sysv/linux/m68k/scandir64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/scandir64.c
+rename to sysdeps/unix/sysv/linux/m68k/scandir64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/semctl.c b/sysdeps/unix/sysv/linux/m68k/semctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/semctl.c
+rename to sysdeps/unix/sysv/linux/m68k/semctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/semtimedop.S b/sysdeps/unix/sysv/linux/m68k/semtimedop.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/semtimedop.S
+rename to sysdeps/unix/sysv/linux/m68k/semtimedop.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setegid.c b/sysdeps/unix/sysv/linux/m68k/setegid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setegid.c
+rename to sysdeps/unix/sysv/linux/m68k/setegid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/seteuid.c b/sysdeps/unix/sysv/linux/m68k/seteuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/seteuid.c
+rename to sysdeps/unix/sysv/linux/m68k/seteuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setfsgid.c b/sysdeps/unix/sysv/linux/m68k/setfsgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setfsgid.c
+rename to sysdeps/unix/sysv/linux/m68k/setfsgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setfsuid.c b/sysdeps/unix/sysv/linux/m68k/setfsuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setfsuid.c
+rename to sysdeps/unix/sysv/linux/m68k/setfsuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setgid.c b/sysdeps/unix/sysv/linux/m68k/setgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setgid.c
+rename to sysdeps/unix/sysv/linux/m68k/setgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setgroups.c b/sysdeps/unix/sysv/linux/m68k/setgroups.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setgroups.c
+rename to sysdeps/unix/sysv/linux/m68k/setgroups.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setregid.c b/sysdeps/unix/sysv/linux/m68k/setregid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setregid.c
+rename to sysdeps/unix/sysv/linux/m68k/setregid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setresgid.c b/sysdeps/unix/sysv/linux/m68k/setresgid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setresgid.c
+rename to sysdeps/unix/sysv/linux/m68k/setresgid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setresuid.c b/sysdeps/unix/sysv/linux/m68k/setresuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setresuid.c
+rename to sysdeps/unix/sysv/linux/m68k/setresuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setreuid.c b/sysdeps/unix/sysv/linux/m68k/setreuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setreuid.c
+rename to sysdeps/unix/sysv/linux/m68k/setreuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setrlimit.c b/sysdeps/unix/sysv/linux/m68k/setrlimit.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setrlimit.c
+rename to sysdeps/unix/sysv/linux/m68k/setrlimit.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/setuid.c b/sysdeps/unix/sysv/linux/m68k/setuid.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/setuid.c
+rename to sysdeps/unix/sysv/linux/m68k/setuid.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/shmctl.c b/sysdeps/unix/sysv/linux/m68k/shmctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/shmctl.c
+rename to sysdeps/unix/sysv/linux/m68k/shmctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sigcontextinfo.h b/sysdeps/unix/sysv/linux/m68k/sigcontextinfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sigcontextinfo.h
+rename to sysdeps/unix/sysv/linux/m68k/sigcontextinfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/socket.S b/sysdeps/unix/sysv/linux/m68k/socket.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/socket.S
+rename to sysdeps/unix/sysv/linux/m68k/socket.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sys/procfs.h b/sysdeps/unix/sysv/linux/m68k/sys/procfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sys/procfs.h
+rename to sysdeps/unix/sysv/linux/m68k/sys/procfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sys/reg.h b/sysdeps/unix/sysv/linux/m68k/sys/reg.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sys/reg.h
+rename to sysdeps/unix/sysv/linux/m68k/sys/reg.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sys/ucontext.h b/sysdeps/unix/sysv/linux/m68k/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sys/ucontext.h
+rename to sysdeps/unix/sysv/linux/m68k/sys/ucontext.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sys/user.h b/sysdeps/unix/sysv/linux/m68k/sys/user.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sys/user.h
+rename to sysdeps/unix/sysv/linux/m68k/sys/user.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/syscall.S b/sysdeps/unix/sysv/linux/m68k/syscall.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/syscall.S
+rename to sysdeps/unix/sysv/linux/m68k/syscall.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/syscalls.list b/sysdeps/unix/sysv/linux/m68k/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/syscalls.list
+rename to sysdeps/unix/sysv/linux/m68k/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sysdep.S b/sysdeps/unix/sysv/linux/m68k/sysdep.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sysdep.S
+rename to sysdeps/unix/sysv/linux/m68k/sysdep.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/sysdep.h b/sysdeps/unix/sysv/linux/m68k/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/sysdep.h
+rename to sysdeps/unix/sysv/linux/m68k/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/versionsort64.c b/sysdeps/unix/sysv/linux/m68k/versionsort64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/versionsort64.c
+rename to sysdeps/unix/sysv/linux/m68k/versionsort64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/vfork.S b/sysdeps/unix/sysv/linux/m68k/vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/vfork.S
+rename to sysdeps/unix/sysv/linux/m68k/vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/xstat.c b/sysdeps/unix/sysv/linux/m68k/xstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/m68k/xstat.c
+rename to sysdeps/unix/sysv/linux/m68k/xstat.c

@@ -1,0 +1,251 @@
+Downstream-only patch to introduce the
+/etc/sysconfig/strcasecmp-nonascii configuration file, which switches
+to an implementation of strcasecmp, strcasecmp_l, strncasecmp,
+strncasecmp_l that always performs case-conversion as per tolower.
+
+The original glibc 2.17 version of these functions only ignored
+case within the ASCII range due to upstream bug 15736, but it is
+too late to change this regression (compared to Red Hat Enterprise
+Linux 6) in Red Hat Enterprise Linux 7.
+
+This patch only covers i686 and x86_64.  s390x is not affected.
+ppc64le would require additional changes.
+
+diff --git a/sysdeps/i386/i686/multiarch/init-arch.h b/sysdeps/i386/i686/multiarch/init-arch.h
+index cd2d0befee728b50..60d0eed17d004871 100644
+--- a/sysdeps/i386/i686/multiarch/init-arch.h
++++ b/sysdeps/i386/i686/multiarch/init-arch.h
+@@ -1 +1,21 @@
+ #include <sysdeps/x86_64/multiarch/init-arch.h>
++
++#ifdef __ASSEMBLER__
++/* Performan an access system call to check whether the configuration
++  file exists.  If it does, load SYMBOL into %eax and jump to LABEL.  */
++# define CHECK_STRCASECMP_CONFIG_FILE(symbol, label) \
++	pushl	%ebx; \
++	cfi_adjust_cfa_offset (4); \
++	cfi_rel_offset (%ebx, 0); \
++	LOAD_PIC_REG (dx); \
++	movl	$__NR_access, %eax; \
++	lea	__sysconfig_strcasecmp_nonascii@GOTOFF(%edx), %ebx; \
++	xor	%ecx, %ecx; \
++	int	$0x80; \
++	test	%eax, %eax; \
++	lea	symbol@GOTOFF(%edx), %eax; \
++	popl	%ebx; \
++	cfi_adjust_cfa_offset (-4); \
++	cfi_restore (%ebx); \
++	jz	label
++#endif
+diff --git a/sysdeps/i386/i686/multiarch/strcasecmp-c.c b/sysdeps/i386/i686/multiarch/strcasecmp-c.c
+index 753c6ec84ab9f8ea..b50c527525a347d0 100644
+--- a/sysdeps/i386/i686/multiarch/strcasecmp-c.c
++++ b/sysdeps/i386/i686/multiarch/strcasecmp-c.c
+@@ -10,3 +10,8 @@ strong_alias (__strcasecmp_nonascii, __strcasecmp_ia32)
+ /* The needs of strcasecmp in libc are minimal, no need to go through
+    the IFUNC.  */
+ strong_alias (__strcasecmp_nonascii, __GI___strcasecmp)
++
++/* Used by the assembler IFUNC selectors.  Presence of this file
++   indicates that the C implementation shall be used.  */
++const char __sysconfig_strcasecmp_nonascii[] attribute_hidden =
++  "/etc/sysconfig/strcasecmp-nonascii";
+diff --git a/sysdeps/i386/i686/multiarch/strcasecmp.S b/sysdeps/i386/i686/multiarch/strcasecmp.S
+index 7efef3b1b0545b5d..9c21a2d5d8b713a1 100644
+--- a/sysdeps/i386/i686/multiarch/strcasecmp.S
++++ b/sysdeps/i386/i686/multiarch/strcasecmp.S
+@@ -23,6 +23,7 @@
+ 	.text
+ ENTRY(__strcasecmp)
+ 	.type	__strcasecmp, @gnu_indirect_function
++	CHECK_STRCASECMP_CONFIG_FILE (__strcasecmp_nonascii, 2f)
+ 	LOAD_GOT_AND_RTLD_GLOBAL_RO
+ 	LOAD_FUNC_GOT_EAX (__strcasecmp_ia32)
+ 	HAS_CPU_FEATURE (SSSE3)
+diff --git a/sysdeps/i386/i686/multiarch/strcasecmp_l.S b/sysdeps/i386/i686/multiarch/strcasecmp_l.S
+index 711c09b0dc1fa62e..512e9bd66ed66b23 100644
+--- a/sysdeps/i386/i686/multiarch/strcasecmp_l.S
++++ b/sysdeps/i386/i686/multiarch/strcasecmp_l.S
+@@ -1,6 +1,7 @@
+ /* Multiple versions of strcasecmp_l
+    All versions must be listed in ifunc-impl-list.c.  */
+ #define STRCMP __strcasecmp_l
++#define STRCMP_NONASCII __strcasecmp_l_nonascii
+ #define USE_AS_STRCASECMP_L
+ #include "strcmp.S"
+ 
+diff --git a/sysdeps/i386/i686/multiarch/strcmp.S b/sysdeps/i386/i686/multiarch/strcmp.S
+index 19967e8db0990c2c..7fc791a18089da6f 100644
+--- a/sysdeps/i386/i686/multiarch/strcmp.S
++++ b/sysdeps/i386/i686/multiarch/strcmp.S
+@@ -54,6 +54,9 @@
+ 	.text
+ ENTRY(STRCMP)
+ 	.type	STRCMP, @gnu_indirect_function
++#if defined (USE_AS_STRCASECMP_L) || defined (USE_AS_STRNCASECMP_L)
++	CHECK_STRCASECMP_CONFIG_FILE (STRCMP_NONASCII, 2f)
++#endif
+ 	LOAD_GOT_AND_RTLD_GLOBAL_RO
+ 	LOAD_FUNC_GOT_EAX (__STRCMP_IA32)
+ 	HAS_CPU_FEATURE (SSSE3)
+diff --git a/sysdeps/i386/i686/multiarch/strncase.S b/sysdeps/i386/i686/multiarch/strncase.S
+index 952c7c60994f3023..36495559de590179 100644
+--- a/sysdeps/i386/i686/multiarch/strncase.S
++++ b/sysdeps/i386/i686/multiarch/strncase.S
+@@ -23,6 +23,7 @@
+ 	.text
+ ENTRY(__strncasecmp)
+ 	.type	__strncasecmp, @gnu_indirect_function
++	CHECK_STRCASECMP_CONFIG_FILE (__strncasecmp_nonascii, 2f)
+ 	LOAD_GOT_AND_RTLD_GLOBAL_RO
+ 	LOAD_FUNC_GOT_EAX (__strncasecmp_ia32)
+ 	HAS_CPU_FEATURE (SSSE3)
+diff --git a/sysdeps/i386/i686/multiarch/strncase_l.S b/sysdeps/i386/i686/multiarch/strncase_l.S
+index 8a74ee8574c720ae..b77951b26b98b8c8 100644
+--- a/sysdeps/i386/i686/multiarch/strncase_l.S
++++ b/sysdeps/i386/i686/multiarch/strncase_l.S
+@@ -1,6 +1,7 @@
+ /* Multiple versions of strncasecmp_l
+    All versions must be listed in ifunc-impl-list.c.  */
+ #define STRCMP __strncasecmp_l
++#define STRCMP_NONASCII __strncasecmp_l_nonascii
+ #define USE_AS_STRNCASECMP_L
+ #include "strcmp.S"
+ 
+diff --git a/sysdeps/x86_64/Makefile b/sysdeps/x86_64/Makefile
+index c6766bb2b443a28a..d75ec12e6f1237c9 100644
+--- a/sysdeps/x86_64/Makefile
++++ b/sysdeps/x86_64/Makefile
+@@ -14,7 +14,8 @@ tests += tst-mallocalign1
+ endif
+ 
+ ifeq ($(subdir),string)
+-sysdep_routines += cacheinfo strcasecmp_l-nonascii strncase_l-nonascii
++sysdep_routines += cacheinfo strcasecmp_l-nonascii strncase_l-nonascii \
++  strcasecmp-nonascii strncase-nonascii
+ gen-as-const-headers += locale-defines.sym
+ endif
+ 
+diff --git a/sysdeps/x86_64/multiarch/strcasecmp_l.S b/sysdeps/x86_64/multiarch/strcasecmp_l.S
+index 49f5b9fd952d3cdc..0feefe1ac81cefac 100644
+--- a/sysdeps/x86_64/multiarch/strcasecmp_l.S
++++ b/sysdeps/x86_64/multiarch/strcasecmp_l.S
+@@ -1,6 +1,7 @@
+ /* Multiple versions of strcasecmp and strcasecmp_l
+    All versions must be listed in ifunc-impl-list.c.  */
+ #define STRCMP __strcasecmp_l
++#define STRCMP_NONASCII __strcasecmp_l_nonascii
+ #define USE_AS_STRCASECMP_L
+ #include "strcmp.S"
+ 
+diff --git a/sysdeps/x86_64/multiarch/strcmp.S b/sysdeps/x86_64/multiarch/strcmp.S
+index 48b4db8c430a514f..ede41c8f61e8b472 100644
+--- a/sysdeps/x86_64/multiarch/strcmp.S
++++ b/sysdeps/x86_64/multiarch/strcmp.S
+@@ -76,6 +76,17 @@
+ # endif
+ #endif
+ 
++/* Performan an access system call to check whether the configuration
++  file exists.  If it does, load SYMBOL into %rax and jump to LABEL.  */
++#define CHECK_STRCASECMP_CONFIG_FILE(symbol, label) \
++	movl	$__NR_access, %eax; \
++	leaq	__sysconfig_strcasecmp_nonascii(%rip), %rdi; \
++	xor	%esi, %esi; \
++	syscall ; \
++	test	%eax, %eax; \
++	leaq 	symbol(%rip), %rax; \
++	jz	label
++
+ /* Define multiple versions only for the definition in libc.  Don't
+    define multiple versions for strncmp in static library since we
+    need strncmp before the initialization happened.  */
+@@ -83,6 +94,9 @@
+ 	.text
+ ENTRY(STRCMP)
+ 	.type	STRCMP, @gnu_indirect_function
++# if defined (USE_AS_STRCASECMP_L) || defined (USE_AS_STRNCASECMP_L)
++	CHECK_STRCASECMP_CONFIG_FILE(STRCMP_NONASCII, 2f)
++# endif
+ 	LOAD_RTLD_GLOBAL_RO_RDX
+ 	leaq	STRCMP_SSE42(%rip), %rax
+ 	HAS_CPU_FEATURE (SSE4_2)
+@@ -97,6 +111,7 @@ END(STRCMP)
+ # ifdef USE_AS_STRCASECMP_L
+ ENTRY(__strcasecmp)
+ 	.type	__strcasecmp, @gnu_indirect_function
++	CHECK_STRCASECMP_CONFIG_FILE(__strcasecmp_nonascii, 2f)
+ 	LOAD_RTLD_GLOBAL_RO_RDX
+ #  ifdef HAVE_AVX_SUPPORT
+ 	leaq	__strcasecmp_avx(%rip), %rax
+@@ -117,6 +132,7 @@ weak_alias (__strcasecmp, strcasecmp)
+ # ifdef USE_AS_STRNCASECMP_L
+ ENTRY(__strncasecmp)
+ 	.type	__strncasecmp, @gnu_indirect_function
++	CHECK_STRCASECMP_CONFIG_FILE(__strncasecmp_nonascii, 2f)
+ 	LOAD_RTLD_GLOBAL_RO_RDX
+ #  ifdef HAVE_AVX_SUPPORT
+ 	leaq	__strncasecmp_avx(%rip), %rax
+diff --git a/sysdeps/x86_64/multiarch/strncase_l.S b/sysdeps/x86_64/multiarch/strncase_l.S
+index 9c0149788e9c11b5..259ce6b5ef57e178 100644
+--- a/sysdeps/x86_64/multiarch/strncase_l.S
++++ b/sysdeps/x86_64/multiarch/strncase_l.S
+@@ -1,6 +1,7 @@
+ /* Multiple versions of strncasecmp and strncasecmp_l
+    All versions must be listed in ifunc-impl-list.c.  */
+ #define STRCMP __strncasecmp_l
++#define STRCMP_NONASCII __strncasecmp_l_nonascii
+ #define USE_AS_STRNCASECMP_L
+ #include "strcmp.S"
+ 
+diff --git a/sysdeps/x86_64/strcasecmp-nonascii.c b/sysdeps/x86_64/strcasecmp-nonascii.c
+new file mode 100644
+index 0000000000000000..7e81a7bdb6f52c47
+--- /dev/null
++++ b/sysdeps/x86_64/strcasecmp-nonascii.c
+@@ -0,0 +1,13 @@
++#if IS_IN (libc)
++# include <string.h>
++
++extern int __strcasecmp_nonascii (const char *__s1, const char *__s2);
++
++# define __strcasecmp __strcasecmp_nonascii
++# include <string/strcasecmp.c>
++
++/* Used by the assembler IFUNC selectors.  Presence of this file
++   indicates that the C implementation shall be used.  */
++const char __sysconfig_strcasecmp_nonascii[] attribute_hidden =
++  "/etc/sysconfig/strcasecmp-nonascii";
++#endif
+diff --git a/sysdeps/x86_64/strcasecmp_l-nonascii.c b/sysdeps/x86_64/strcasecmp_l-nonascii.c
+index 30e8969603ea7817..4abd55ae2a54f94a 100644
+--- a/sysdeps/x86_64/strcasecmp_l-nonascii.c
++++ b/sysdeps/x86_64/strcasecmp_l-nonascii.c
+@@ -1,8 +1,10 @@
+-#include <string.h>
++#if IS_IN (libc)
++# include <string.h>
+ 
+ extern int __strcasecmp_l_nonascii (const char *__s1, const char *__s2,
+ 				    __locale_t __loc);
+ 
+-#define __strcasecmp_l __strcasecmp_l_nonascii
+-#define USE_IN_EXTENDED_LOCALE_MODEL    1
+-#include <string/strcasecmp.c>
++# define __strcasecmp_l __strcasecmp_l_nonascii
++# define USE_IN_EXTENDED_LOCALE_MODEL    1
++# include <string/strcasecmp.c>
++#endif
+diff --git a/sysdeps/x86_64/strncase-nonascii.c b/sysdeps/x86_64/strncase-nonascii.c
+new file mode 100644
+index 0000000000000000..4db45017c189b87a
+--- /dev/null
++++ b/sysdeps/x86_64/strncase-nonascii.c
+@@ -0,0 +1,7 @@
++#include <string.h>
++
++extern int __strncasecmp_nonascii (const char *__s1, const char *__s2,
++                                   size_t __n);
++
++#define __strncasecmp __strncasecmp_nonascii
++#include <string/strncase.c>

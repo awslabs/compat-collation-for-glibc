@@ -1,0 +1,19 @@
+commit d69b7f5ac02989ce3d8577eed86da3e0c8af6c1c
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 10 10:32:29 2014 +0530
+
+    Add comment about SIZE initialization in xdr.c
+
+diff --git a/sunrpc/xdr.c b/sunrpc/xdr.c
+index b3e713cbc9c3e012..d0afd34466f73def 100644
+--- a/sunrpc/xdr.c
++++ b/sunrpc/xdr.c
+@@ -738,6 +738,8 @@ xdr_string (xdrs, cpp, maxsize)
+      u_int maxsize;
+ {
+   char *sp = *cpp;	/* sp is the actual string pointer */
++  /* Initialize to silence the compiler.  It is not really needed because SIZE
++     never actually gets used without being initialized.  */
+   u_int size = 0;
+   u_int nodesize;
+ 

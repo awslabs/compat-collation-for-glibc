@@ -1,0 +1,49 @@
+commit 8e31cafb268938729a1314806a924d73fb1991c5
+Author: Torvald Riegel <triegel@redhat.com>
+Date:   Wed Dec 21 13:37:19 2016 +0100
+
+    Clear list of acquired robust mutexes in the child process after forking.
+    
+    Robust mutexes acquired at the time of a call to fork() do not remain
+    acquired by the forked child process.  We have to clear the list of
+    acquired robust mutexes before registering this list with the kernel;
+    otherwise, if some of the robust mutexes are process-shared, the parent
+    process can alter the child's robust mutex list, which can lead to
+    deadlocks or even modification of memory that may not be occupied by a
+    mutex anymore.
+    
+            [BZ #19402]
+            * sysdeps/nptl/fork.c (__libc_fork): Clear list of acquired robust
+            mutexes.
+
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/fork.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/fork.c
++++ glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/fork.c
+@@ -161,12 +161,20 @@ __libc_fork (void)
+ #endif
+ 
+ #ifdef __NR_set_robust_list
+-      /* Initialize the robust mutex list which has been reset during
+-	 the fork.  We do not check for errors since if it fails here
+-	 it failed at process start as well and noone could have used
+-	 robust mutexes.  We also do not have to set
+-	 self->robust_head.futex_offset since we inherit the correct
+-	 value from the parent.  */
++      /* Initialize the robust mutex list setting in the kernel which has
++	 been reset during the fork.  We do not check for errors because if
++	 it fails here, it must have failed at process startup as well and
++	 nobody could have used robust mutexes.
++	 Before we do that, we have to clear the list of robust mutexes
++	 because we do not inherit ownership of mutexes from the parent.
++	 We do not have to set self->robust_head.futex_offset since we do
++	 inherit the correct value from the parent.  We do not need to clear
++	 the pending operation because it must have been zero when fork was
++	 called.  */
++# ifdef __PTHREAD_MUTEX_HAVE_PREV
++      self->robust_prev = &self->robust_head;
++# endif
++      self->robust_head.list = &self->robust_head;
+ # ifdef SHARED
+       if (__builtin_expect (__libc_pthread_functions_init, 0))
+ 	PTHFCT_CALL (ptr_set_robust, (self));

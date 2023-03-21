@@ -1,0 +1,226 @@
+Backport of this upstream patch:
+
+commit 031e519c95c069abe4e4c7c59e2b4b67efccdee5
+Author: H.J. Lu <hjl.tools@gmail.com>
+Date:   Thu Jul 6 04:43:06 2017 -0700
+
+    x86-64: Align the stack in __tls_get_addr [BZ #21609]
+    
+    This change forces realignment of the stack pointer in __tls_get_addr, so
+    that binaries compiled by GCCs older than GCC 4.9:
+    
+    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58066
+    
+    continue to work even if vector instructions are used in glibc which
+    require the ABI stack realignment.
+    
+    __tls_get_addr_slow is added to handle the slow paths in the default
+    implementation of__tls_get_addr in elf/dl-tls.c.  The new __tls_get_addr
+    calls __tls_get_addr_slow after realigning the stack.  Internal calls
+    within ld.so go directly to the default implementation of __tls_get_addr
+    because they do not need stack realignment.
+    
+            [BZ #21609]
+            * sysdeps/x86_64/Makefile (sysdep-dl-routines): Add tls_get_addr.
+            (gen-as-const-headers): Add rtld-offsets.sym.
+            * sysdeps/x86_64/dl-tls.c: New file.
+            * sysdeps/x86_64/rtld-offsets.sym: Likwise.
+            * sysdeps/x86_64/tls_get_addr.S: Likewise.
+            * sysdeps/x86_64/dl-tls.h: Add multiple inclusion guards.
+            * sysdeps/x86_64/tlsdesc.sym (TI_MODULE_OFFSET): New.
+            (TI_OFFSET_OFFSET): Likwise.
+
+Adjusted for drift in sysdeps/x86_64/Makefile and lack of
+TLS_DTV_UNALLOCATED consolidation (upstream commit
+aca1daef298b43bd7b1987b31f5aabcf6c2f6021).
+
+diff --git a/sysdeps/x86_64/Makefile b/sysdeps/x86_64/Makefile
+index 6c03a89fb3ea3063..c6766bb2b443a28a 100644
+--- a/sysdeps/x86_64/Makefile
++++ b/sysdeps/x86_64/Makefile
+@@ -19,7 +19,7 @@ gen-as-const-headers += locale-defines.sym
+ endif
+ 
+ ifeq ($(subdir),elf)
+-sysdep-dl-routines += tlsdesc dl-tlsdesc
++sysdep-dl-routines += tlsdesc dl-tlsdesc tls_get_addr
+ 
+ tests += ifuncmain8
+ modules-names += ifuncmod8
+@@ -69,5 +69,5 @@ endif
+ endif
+ 
+ ifeq ($(subdir),csu)
+-gen-as-const-headers += tlsdesc.sym
++gen-as-const-headers += tlsdesc.sym rtld-offsets.sym
+ endif
+diff --git a/sysdeps/x86_64/dl-tls.c b/sysdeps/x86_64/dl-tls.c
+new file mode 100644
+index 0000000000000000..3584805c8ecca59a
+--- /dev/null
++++ b/sysdeps/x86_64/dl-tls.c
+@@ -0,0 +1,53 @@
++/* Thread-local storage handling in the ELF dynamic linker.  x86-64 version.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifdef SHARED
++/* Work around GCC PR58066, due to which __tls_get_addr may be called
++   with an unaligned stack.  The compat implementation is in
++   tls_get_addr-compat.S.  */
++
++# include <dl-tls.h>
++
++/* Define __tls_get_addr within elf/dl-tls.c under a different
++   name.  */
++extern __typeof__ (__tls_get_addr) ___tls_get_addr;
++
++# define __tls_get_addr ___tls_get_addr
++# include <elf/dl-tls.c>
++# undef __tls_get_addr
++
++hidden_ver (___tls_get_addr, __tls_get_addr)
++
++/* Only handle slow paths for __tls_get_addr.  */
++attribute_hidden
++void *
++__tls_get_addr_slow (GET_ADDR_ARGS)
++{
++  dtv_t *dtv = THREAD_DTV ();
++
++  if (__glibc_unlikely (dtv[0].counter != GL(dl_tls_generation)))
++    return update_get_addr (GET_ADDR_PARAM);
++
++  return tls_get_addr_tail (GET_ADDR_PARAM, dtv, NULL);
++}
++#else
++
++/* No compatibility symbol needed.  */
++# include <elf/dl-tls.c>
++
++#endif
+diff --git a/sysdeps/x86_64/dl-tls.h b/sysdeps/x86_64/dl-tls.h
+index 56162ee64a4aae7d..0b4a6b3b634a83f4 100644
+--- a/sysdeps/x86_64/dl-tls.h
++++ b/sysdeps/x86_64/dl-tls.h
+@@ -16,6 +16,10 @@
+    License along with the GNU C Library; if not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
++#ifndef _X86_64_DL_TLS_H
++#define _X86_64_DL_TLS_H
++
++#include <stdint.h>
+ 
+ /* Type used for the representation of TLS information in the GOT.  */
+ typedef struct dl_tls_index
+@@ -29,3 +33,5 @@ extern void *__tls_get_addr (tls_index *ti);
+ 
+ /* Value used for dtv entries for which the allocation is delayed.  */
+ #define TLS_DTV_UNALLOCATED	((void *) -1l)
++
++#endif /* _X86_64_DL_TLS_H */
+diff --git a/sysdeps/x86_64/rtld-offsets.sym b/sysdeps/x86_64/rtld-offsets.sym
+new file mode 100644
+index 0000000000000000..fd41b51521ac80bd
+--- /dev/null
++++ b/sysdeps/x86_64/rtld-offsets.sym
+@@ -0,0 +1,6 @@
++#define SHARED
++#include <ldsodefs.h>
++
++--
++
++GL_TLS_GENERATION_OFFSET        offsetof (struct rtld_global, _dl_tls_generation)
+diff --git a/sysdeps/x86_64/tls_get_addr.S b/sysdeps/x86_64/tls_get_addr.S
+new file mode 100644
+index 0000000000000000..9d38fb3be54fbcb5
+--- /dev/null
++++ b/sysdeps/x86_64/tls_get_addr.S
+@@ -0,0 +1,61 @@
++/* Stack-aligning implementation of __tls_get_addr.  x86-64 version.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifdef SHARED
++
++# include <sysdep.h>
++# include "tlsdesc.h"
++# include "rtld-offsets.h"
++
++/* See __tls_get_addr and __tls_get_addr_slow in dl-tls.c.  This function
++   call __tls_get_addr_slow on both slow paths.  It realigns the stack
++   before the call to work around GCC PR58066.  */
++
++ENTRY (__tls_get_addr)
++	mov 	%fs:DTV_OFFSET, %RDX_LP
++	mov	GL_TLS_GENERATION_OFFSET+_rtld_local(%rip), %RAX_LP
++	/* GL(dl_tls_generation) == dtv[0].counter */
++	cmp	%RAX_LP, (%rdx)
++	jne	1f
++	mov	TI_MODULE_OFFSET(%rdi), %RAX_LP
++	/* dtv[ti->ti_module] */
++# ifdef __LP64__
++	salq	$4, %rax
++	movq	(%rdx,%rax), %rax
++# else
++	movl	(%rdx,%rax, 8), %eax
++# endif
++	cmp	$-1, %RAX_LP
++	je	1f
++	add	TI_OFFSET_OFFSET(%rdi), %RAX_LP
++	ret
++1:
++	/* On the slow path, align the stack.  */
++	pushq	%rbp
++	cfi_def_cfa_offset (16)
++	cfi_offset (%rbp, -16)
++	mov	%RSP_LP, %RBP_LP
++	cfi_def_cfa_register (%rbp)
++	and	$-16, %RSP_LP
++	call	__tls_get_addr_slow
++	mov	%RBP_LP, %RSP_LP
++	popq	%rbp
++	cfi_def_cfa (%rsp, 8)
++	ret
++END (__tls_get_addr)
++#endif /* SHARED */
+diff --git a/sysdeps/x86_64/tlsdesc.sym b/sysdeps/x86_64/tlsdesc.sym
+index 33854975d04184b2..fc897ab4b522b1a9 100644
+--- a/sysdeps/x86_64/tlsdesc.sym
++++ b/sysdeps/x86_64/tlsdesc.sym
+@@ -15,3 +15,6 @@ TLSDESC_ARG			offsetof(struct tlsdesc, arg)
+ TLSDESC_GEN_COUNT		offsetof(struct tlsdesc_dynamic_arg, gen_count)
+ TLSDESC_MODID			offsetof(struct tlsdesc_dynamic_arg, tlsinfo.ti_module)
+ TLSDESC_MODOFF			offsetof(struct tlsdesc_dynamic_arg, tlsinfo.ti_offset)
++
++TI_MODULE_OFFSET 		offsetof(tls_index, ti_module)
++TI_OFFSET_OFFSET 		offsetof(tls_index, ti_offset)

@@ -1,0 +1,43 @@
+commit 1c36e1e6a5b9b6f9ad1c67f5d43383afb4d80339
+Author: Dmitry V. Levin <ldv@altlinux.org>
+Date:   Wed Dec 20 11:27:51 2017 +0000
+
+    elf: remove redundant code from is_dst
+    
+    is_dst is called either by _dl_dst_count or by _dl_dst_substitute.
+    _dl_dst_count is called by DL_DST_COUNT only.
+    DL_DST_COUNT is called either by expand_dst with is_path == 0
+    or by expand_dynamic_string_token.
+    _dl_dst_substitute is called either from expand_dst with is_path == 0
+    or from expand_dynamic_string_token.
+    The latter function is called either from _dl_map_object with is_path == 0
+    or from fillin_rpath with is_path == 1 and name containing no ':'.
+    
+    In any case (is_path && name[i] == ':') is always false and all code
+    depending on it can be safely removed.
+    
+    * elf/dl-load.c (is_dst): Remove checks that is_path is set and name
+    contains ':', and all code depending on these checks.
+
+Index: glibc-2.17-c758a686/elf/dl-load.c
+===================================================================
+--- glibc-2.17-c758a686.orig/elf/dl-load.c
++++ glibc-2.17-c758a686/elf/dl-load.c
+@@ -258,14 +258,12 @@ is_dst (const char *start, const char *n
+       /* Skip over closing curly brace and adjust for the --name.  */
+       len += 2;
+     }
+-  else if (name[len] != '\0' && name[len] != '/'
+-	   && (!is_path || name[len] != ':'))
++  else if (name[len] != '\0' && name[len] != '/')
+     return 0;
+ 
+   if (__builtin_expect (secure, 0)
+-      && ((name[len] != '\0' && name[len] != '/'
+-	   && (!is_path || name[len] != ':'))
+-	  || (name != start + 1 && (!is_path || name[-2] != ':'))))
++      && ((name[len] != '\0' && name[len] != '/')
++	  || (name != start + 1)))
+     return 0;
+ 
+   return len;

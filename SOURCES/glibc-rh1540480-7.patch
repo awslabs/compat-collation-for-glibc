@@ -1,0 +1,52 @@
+commit dbba87d531ad3ea372eba6cb56436a231ca7fb32
+Author: Dmitry V. Levin <ldv@altlinux.org>
+Date:   Wed Dec 27 22:12:51 2017 +0000
+
+    elf: check for rpath emptiness before making a copy of it
+
+    * elf/dl-load.c (decompose_rpath): Check for rpath emptiness before
+    making a copy of it.
+
+Index: glibc-2.17-c758a686/elf/dl-load.c
+===================================================================
+--- glibc-2.17-c758a686.orig/elf/dl-load.c
++++ glibc-2.17-c758a686/elf/dl-load.c
+@@ -550,7 +550,6 @@ decompose_rpath (struct r_search_path_st
+ {
+   /* Make a copy we can work with.  */
+   const char *where = l->l_name;
+-  char *copy;
+   char *cp;
+   struct r_search_path_elem **result;
+   size_t nelems;
+@@ -589,22 +588,21 @@ decompose_rpath (struct r_search_path_st
+       while (*inhp != '\0');
+     }
+ 
++  /* Ignore empty rpaths.  */
++  if (*rpath == '\0')
++    {
++      sps->dirs = (struct r_search_path_elem **) -1;
++      return false;
++    }
++
+   /* Make a writable copy.  */
+-  copy = local_strdup (rpath);
++  char *copy = local_strdup (rpath);
+   if (copy == NULL)
+     {
+       errstring = N_("cannot create RUNPATH/RPATH copy");
+       goto signal_error;
+     }
+ 
+-  /* Ignore empty rpaths.  */
+-  if (*copy == 0)
+-    {
+-      free (copy);
+-      sps->dirs = (struct r_search_path_elem **) -1;
+-      return false;
+-    }
+-
+   /* Count the number of necessary elements in the result array.  */
+   nelems = 0;
+   for (cp = copy; *cp != '\0'; ++cp)

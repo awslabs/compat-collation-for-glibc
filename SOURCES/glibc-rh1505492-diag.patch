@@ -1,0 +1,190 @@
+commit 2084e7ca4d344c39eb39e53848b51b5d84444414
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Dec 10 00:41:19 2014 +0000
+
+    Add macros for diagnostic control, use for scanf %a tests.
+    
+    In <https://sourceware.org/ml/libc-alpha/2014-11/msg00326.html>,
+    Roland requested internal macros for use of "#pragma GCC diagnostic".
+    
+    This patch adds such macros and uses them to disable -Wformat warnings
+    for some code testing GNU scanf %as where GCC expects C99 scanf %a
+    (several other stdio tests currently use -Wno-format to disable
+    warnings).  Limitations in GCC's diagnostic pragmas require separate
+    macros before and after the code generating the warnings, rather than
+    a single macro taking that code as an argument.
+    
+    The macros are named DIAG_*_NEEDS_COMMENT to emphasise to reviewers
+    the need for a comment accompanying any use of them (such comments may
+    however just appear once for several uses of the macros for the same
+    issue in the same file).  I put a GCC version in the arguments to
+    DIAG_IGNORE_NEEDS_COMMENT, as that seems something useful to grep for
+    when obsoleting support for an old GCC version and needing to decide
+    if warning-disabling code is still relevant.
+    
+    These macros should be usable for replacing existing -Wno-* use in
+    makefiles (as also suggested by Roland), though I have no plans to
+    work on that (only on use of the macros in cases where warnings are
+    currently present that need disabling to use -Werror).
+    
+    Tested for x86_64.
+    
+            * include/libc-internal.h (DIAG_PUSH_NEEDS_COMMENT): New macro.
+            (DIAG_POP_NEEDS_COMMENT): Likewise.
+            (_DIAG_STR1): Likewise.
+            (_DIAG_STR): Likewise.
+            (DIAG_IGNORE_NEEDS_COMMENT): Likewise.
+            * stdio-common/bug21.c: Include <libc-internal.h>.
+            (do_test): Disable -Wformat around call to sscanf.
+            * stdio-common/scanf14.c: Include <libc-internal.h>.
+            (main): Disable -Wformat around some calls to scanf functions.
+
+diff --git a/include/libc-internal.h b/include/libc-internal.h
+index 2ced1c17d3dff93d..bca59a46144b736f 100644
+--- a/include/libc-internal.h
++++ b/include/libc-internal.h
+@@ -76,4 +76,35 @@ extern void __init_misc (int, char **, char **);
+ #define ignore_value(x) \
+   ({ __typeof__ (x) __ignored_value = (x); (void) __ignored_value; })
+ 
++/* The macros to control diagnostics are structured like this, rather
++   than a single macro that both pushes and pops diagnostic state and
++   takes the affected code as an argument, because the GCC pragmas
++   work by disabling the diagnostic for a range of source locations
++   and do not work when all the pragmas and the affected code are in a
++   single macro expansion.  */
++
++/* Push diagnostic state.  */
++#define DIAG_PUSH_NEEDS_COMMENT _Pragma ("GCC diagnostic push")
++
++/* Pop diagnostic state.  */
++#define DIAG_POP_NEEDS_COMMENT _Pragma ("GCC diagnostic pop")
++
++#define _DIAG_STR1(s) #s
++#define _DIAG_STR(s) _DIAG_STR1(s)
++
++/* Ignore the diagnostic OPTION.  VERSION is the most recent GCC
++   version for which the diagnostic has been confirmed to appear in
++   the absence of the pragma (in the form MAJOR.MINOR for GCC 4.x,
++   just MAJOR for GCC 5 and later).  Uses of this pragma should be
++   reviewed when the GCC version given is no longer supported for
++   building glibc; the version number should always be on the same
++   source line as the macro name, so such uses can be found with grep.
++   Uses should come with a comment giving more details of the
++   diagnostic, and an architecture on which it is seen if possibly
++   optimization-related and not in architecture-specific code.  This
++   macro should only be used if the diagnostic seems hard to fix (for
++   example, optimization-related false positives).  */
++#define DIAG_IGNORE_NEEDS_COMMENT(version, option)	\
++  _Pragma (_DIAG_STR (GCC diagnostic ignored option))
++
+ #endif /* _LIBC_INTERNAL  */
+diff --git a/stdio-common/bug21.c b/stdio-common/bug21.c
+index d22b9c1a9717a197..ca27272ba191321e 100644
+--- a/stdio-common/bug21.c
++++ b/stdio-common/bug21.c
+@@ -1,4 +1,5 @@
+ #include <stdio.h>
++#include <libc-internal.h>
+ 
+ static int
+ do_test (void)
+@@ -6,7 +7,15 @@ do_test (void)
+   static const char buf[] = " ";
+   char *str;
+ 
++  /* GCC in C99 mode treats %a as the C99 format expecting float *,
++     but glibc with _GNU_SOURCE treats %as as the GNU allocation
++     extension, so resulting in "warning: format '%a' expects argument
++     of type 'float *', but argument 3 has type 'char **'".  This
++     applies to the other %as, %aS and %a[] formats below as well.  */
++  DIAG_PUSH_NEEDS_COMMENT;
++  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wformat");
+   int r = sscanf (buf, "%as", &str);
++  DIAG_POP_NEEDS_COMMENT;
+   printf ("%d %p\n", r, str);
+ 
+   return r != -1 || str != NULL;
+diff --git a/stdio-common/scanf14.c b/stdio-common/scanf14.c
+index 6ca5c7c5679632a3..cffccb0b19d2927b 100644
+--- a/stdio-common/scanf14.c
++++ b/stdio-common/scanf14.c
+@@ -2,6 +2,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <wchar.h>
++#include <libc-internal.h>
+ 
+ #define FAIL() \
+   do {							\
+@@ -23,6 +24,13 @@ main (void)
+     FAIL ();
+   else if (f != 0.25 || memcmp (c, "s x", 3) != 0)
+     FAIL ();
++  /* GCC in C99 mode treats %a as the C99 format expecting float *,
++     but glibc with _GNU_SOURCE treats %as as the GNU allocation
++     extension, so resulting in "warning: format '%a' expects argument
++     of type 'float *', but argument 3 has type 'char **'".  This
++     applies to the other %as, %aS and %a[] formats below as well.  */
++  DIAG_PUSH_NEEDS_COMMENT;
++  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wformat");
+   if (sscanf (" 1.25s x", "%as%2c", &sp, c) != 2)
+     FAIL ();
+   else
+@@ -32,10 +40,14 @@ main (void)
+       memset (sp, 'x', sizeof "1.25s");
+       free (sp);
+     }
++  DIAG_POP_NEEDS_COMMENT;
+   if (sscanf (" 2.25s x", "%las%2c", &d, c) != 2)
+     FAIL ();
+   else if (d != 2.25 || memcmp (c, " x", 2) != 0)
+     FAIL ();
++  /* See explanation above.  */
++  DIAG_PUSH_NEEDS_COMMENT;
++  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wformat");
+   if (sscanf (" 3.25S x", "%4aS%3c", &lsp, c) != 2)
+     FAIL ();
+   else
+@@ -54,6 +66,7 @@ main (void)
+       memset (sp, 'x', sizeof "4.25");
+       free (sp);
+     }
++  DIAG_POP_NEEDS_COMMENT;
+   if (sscanf ("5.25[0-9.] x", "%la[0-9.]%2c", &d, c) != 2)
+     FAIL ();
+   else if (d != 5.25 || memcmp (c, " x", 2) != 0)
+@@ -82,6 +95,9 @@ main (void)
+ 	FAIL ();
+       if (fseek (fp, 0, SEEK_SET) != 0)
+ 	FAIL ();
++      /* See explanation above.  */
++      DIAG_PUSH_NEEDS_COMMENT;
++      DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wformat");
+       if (fscanf (fp, "%as%2c", &sp, c) != 2)
+ 	FAIL ();
+       else
+@@ -91,11 +107,15 @@ main (void)
+ 	  memset (sp, 'x', sizeof "1.25s");
+ 	  free (sp);
+ 	}
++      DIAG_POP_NEEDS_COMMENT;
+ 
+       if (freopen (fname, "r", stdin) == NULL)
+ 	FAIL ();
+       else
+ 	{
++	  /* See explanation above.  */
++	  DIAG_PUSH_NEEDS_COMMENT;
++	  DIAG_IGNORE_NEEDS_COMMENT (4.9, "-Wformat");
+ 	  if (scanf ("%as%2c", &sp, c) != 2)
+ 	    FAIL ();
+ 	  else
+@@ -105,6 +125,7 @@ main (void)
+ 	      memset (sp, 'x', sizeof "1.25s");
+ 	      free (sp);
+ 	    }
++	  DIAG_POP_NEEDS_COMMENT;
+ 	}
+ 
+       fclose (fp);

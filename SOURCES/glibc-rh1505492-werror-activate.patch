@@ -1,0 +1,231 @@
+commit a4ecc9eb9b15bc51a1dc4726c06d35eaea74e162
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Dec 10 01:14:48 2014 +0000
+
+    Use -Werror by default, add --disable-werror.
+    
+    As discussed starting at
+    <https://sourceware.org/ml/libc-alpha/2014-11/msg00323.html>, this
+    patch makes the glibc build use -Werror by default to avoid
+    accidentally adding new warnings to the build.  The configure option
+    --disable-werror can be used to disable this.
+    
+    -Wno-error=undef is temporarily used because the build isn't clean
+    regarding -Wundef warnings.  The idea is that once the remaining
+    -Wundef warnings have been cleaned up (in at least one configuration),
+    -Wno-error=undef will be removed.
+    
+    I get a clean build and test on x86_64 (GCC 4.9 branch) with this
+    patch.  The expectation is that this may well break the build for some
+    other configurations, and people seeing such breakage should make
+    appropriate fixes to fix or suppress the warnings for their
+    configurations.  In some cases that may involve using pragmas as the
+    right fix (I think that will be right for the -Wno-inline issue for
+    MIPS I referred to in
+    <https://sourceware.org/ml/libc-alpha/2012-11/msg00798.html>, for
+    example), in some cases -Wno-error in sysdeps makefiles (__restore_rt
+    in MIPS sigaction, for example), in some cases substantive fixes for
+    the warnings.
+    
+    Note that if, with a view to listing all the warnings then fixing them
+    all, you just look for "warning:" in output from building and testing
+    with --disable-werror, you'll see lots of warnings from the linker
+    about functions such as tmpnam.  Those warnings can be ignored - only
+    compiler warnings are relevant to -Werror, not linker warnings.
+    
+            * configure.ac (--disable-werror): New configure option.
+            (enable_werror): New AC_SUBST.
+            * configure: Regenerated.
+            * config.make.in (enable-werror): New variable.
+            * Makeconfig [$(enable-werror) = yes] (+gccwarn): Add -Werror
+            -Wno-error=undef.
+            (+gccwarn-c): Do not use -Werror=implicit-function-declaration.
+            * manual/install.texi (Configuring and compiling): Document
+            --disable-werror.
+            * INSTALL: Regenerated.
+            * debug/Makefile (CFLAGS-tst-chk1.c): Add -Wno-error.
+            (CFLAGS-tst-chk2.c): Likewise.
+            (CFLAGS-tst-chk3.c): Likewise.
+            (CFLAGS-tst-chk4.cc): Likewise.
+            (CFLAGS-tst-chk5.cc): Likewise.
+            (CFLAGS-tst-chk6.cc): Likewise.
+            (CFLAGS-tst-lfschk1.c): Likewise.
+            (CFLAGS-tst-lfschk2.c): Likewise.
+            (CFLAGS-tst-lfschk3.c): Likewise.
+            (CFLAGS-tst-lfschk4.cc): Likewise.
+            (CFLAGS-tst-lfschk5.cc): Likewise.
+            (CFLAGS-tst-lfschk6.cc): Likewise.
+
+Conflicts:
+	INSTALL
+	manual/install.texi
+	  (Textual conflicts due to elision backport;
+          glibc-rh841653-0.patch and others)
+	configure.ac
+	  (Change applied to configure.in instead.) 
+
+diff --git a/INSTALL b/INSTALL
+index 264e57bc5f0316f7..82b29f5d8746f929 100644
+--- a/INSTALL
++++ b/INSTALL
+@@ -143,6 +143,13 @@ will be used, and CFLAGS sets optimization options for the compiler.
+ `--enable-lock-elision=yes'
+      Enable lock elision for pthread mutexes by default.
+ 
++`--disable-werror'
++     By default, the GNU C Library is built with `-Werror'.  If you wish
++     to build without this option (for example, if building with a newer
++     version of GCC than this version of the GNU C Library was tested
++     with, so new warnings cause the build with `-Werror' to fail), you
++     can configure with `--disable-werror'.
++
+ `--build=BUILD-SYSTEM'
+ `--host=HOST-SYSTEM'
+      These options are for cross-compiling.  If you specify both
+diff --git a/Makeconfig b/Makeconfig
+index 02f1cc1255c5ac07..6f61e4835c0a7770 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -644,7 +644,10 @@ else
+ +gccwarn := -Wall -Wwrite-strings -Winline
+ endif
+ +gccwarn += -Wundef
+-+gccwarn-c = -Wstrict-prototypes -Werror=implicit-function-declaration
++ifeq ($(enable-werror),yes)
+++gccwarn += -Werror -Wno-error=undef
++endif
+++gccwarn-c = -Wstrict-prototypes
+ 
+ # We do not depend on the address of constants in different files to be
+ # actually different, so allow the compiler to merge them all.
+diff --git a/config.make.in b/config.make.in
+index d5490f61cd3faeba..3c65c9f03ab65a74 100644
+--- a/config.make.in
++++ b/config.make.in
+@@ -49,6 +49,7 @@ sysheaders = @sysheaders@
+ sysincludes = @SYSINCLUDES@
+ c++-sysincludes = @CXX_SYSINCLUDES@
+ all-warnings = @all_warnings@
++enable-werror = @enable_werror@
+ 
+ have-z-combreloc = @libc_cv_z_combreloc@
+ have-z-execstack = @libc_cv_z_execstack@
+diff --git a/configure b/configure
+index b185b400dfbc21de..769f0fa149d0ef9c 100755
+--- a/configure
++++ b/configure
+@@ -660,6 +660,7 @@ build_pt_chown
+ build_nscd
+ link_obsolete_rpc
+ libc_cv_nss_crypt
++enable_werror
+ all_warnings
+ force_install
+ bindnow
+@@ -758,6 +759,7 @@ enable_static_nss
+ enable_force_install
+ enable_kernel
+ enable_all_warnings
++enable_werror
+ enable_multi_arch
+ enable_nss_crypt
+ enable_obsolete_rpc
+@@ -1419,6 +1421,7 @@ Optional Features:
+   --enable-kernel=VERSION compile for compatibility with kernel not older than
+                           VERSION
+   --enable-all-warnings   enable all useful warnings gcc can issue
++  --disable-werror        do not build with -Werror
+   --enable-multi-arch     enable single DSO with optimizations for multiple
+                           architectures
+   --enable-nss-crypt      enable libcrypt to use nss
+@@ -3803,6 +3806,15 @@ fi
+ 
+ 
+ 
++# Check whether --enable-werror was given.
++if test "${enable_werror+set}" = set; then :
++  enableval=$enable_werror; enable_werror=$enableval
++else
++  enable_werror=yes
++fi
++
++
++
+ # Check whether --enable-multi-arch was given.
+ if test "${enable_multi_arch+set}" = set; then :
+   enableval=$enable_multi_arch; multi_arch=$enableval
+diff --git a/configure.in b/configure.in
+index f8c36ba306e01f59..9feb463ddfed2a27 100644
+--- a/configure.in
++++ b/configure.in
+@@ -234,6 +234,13 @@ AC_ARG_ENABLE([all-warnings],
+ 	      [])
+ AC_SUBST(all_warnings)
+ 
++AC_ARG_ENABLE([werror],
++	      AC_HELP_STRING([--disable-werror],
++			     [do not build with -Werror]),
++	      [enable_werror=$enableval],
++	      [enable_werror=yes])
++AC_SUBST(enable_werror)
++
+ AC_ARG_ENABLE([multi-arch],
+ 	      AC_HELP_STRING([--enable-multi-arch],
+ 			     [enable single DSO with optimizations for multiple architectures]),
+diff --git a/debug/Makefile b/debug/Makefile
+index e4efd9bcc687e562..6588b6327ae01205 100644
+--- a/debug/Makefile
++++ b/debug/Makefile
+@@ -89,19 +89,21 @@ CFLAGS-tst-longjmp_chk2.c = -fexceptions -fasynchronous-unwind-tables
+ CPPFLAGS-tst-longjmp_chk2.c = -D_FORTIFY_SOURCE=1
+ 
+ # We know these tests have problems with format strings, this is what
+-# we are testing.  Disable that warning.
+-CFLAGS-tst-chk1.c = -Wno-format
+-CFLAGS-tst-chk2.c = -Wno-format
+-CFLAGS-tst-chk3.c = -Wno-format
+-CFLAGS-tst-chk4.cc = -Wno-format
+-CFLAGS-tst-chk5.cc = -Wno-format
+-CFLAGS-tst-chk6.cc = -Wno-format
+-CFLAGS-tst-lfschk1.c = -Wno-format
+-CFLAGS-tst-lfschk2.c = -Wno-format
+-CFLAGS-tst-lfschk3.c = -Wno-format
+-CFLAGS-tst-lfschk4.cc = -Wno-format
+-CFLAGS-tst-lfschk5.cc = -Wno-format
+-CFLAGS-tst-lfschk6.cc = -Wno-format
++# we are testing.  Disable that warning.  They also generate warnings
++# from warning attributes, which cannot be disabled via pragmas, so
++# require -Wno-error to be used.
++CFLAGS-tst-chk1.c = -Wno-format -Wno-error
++CFLAGS-tst-chk2.c = -Wno-format -Wno-error
++CFLAGS-tst-chk3.c = -Wno-format -Wno-error
++CFLAGS-tst-chk4.cc = -Wno-format -Wno-error
++CFLAGS-tst-chk5.cc = -Wno-format -Wno-error
++CFLAGS-tst-chk6.cc = -Wno-format -Wno-error
++CFLAGS-tst-lfschk1.c = -Wno-format -Wno-error
++CFLAGS-tst-lfschk2.c = -Wno-format -Wno-error
++CFLAGS-tst-lfschk3.c = -Wno-format -Wno-error
++CFLAGS-tst-lfschk4.cc = -Wno-format -Wno-error
++CFLAGS-tst-lfschk5.cc = -Wno-format -Wno-error
++CFLAGS-tst-lfschk6.cc = -Wno-format -Wno-error
+ LDLIBS-tst-chk4 = -lstdc++
+ LDLIBS-tst-chk5 = -lstdc++
+ LDLIBS-tst-chk6 = -lstdc++
+diff --git a/manual/install.texi b/manual/install.texi
+index 7fe6e005c3fdd5fb..3799cee621ddc4f9 100644
+--- a/manual/install.texi
++++ b/manual/install.texi
+@@ -177,6 +177,13 @@ you understand and accept those risks.
+ @item --enable-lock-elision=yes
+ Enable lock elision for pthread mutexes by default.
+ 
++@item --disable-werror
++By default, @theglibc{} is built with @option{-Werror}.  If you wish
++to build without this option (for example, if building with a newer
++version of GCC than this version of @theglibc{} was tested with, so
++new warnings cause the build with @option{-Werror} to fail), you can
++configure with @option{--disable-werror}.
++
+ @item --build=@var{build-system}
+ @itemx --host=@var{host-system}
+ These options are for cross-compiling.  If you specify both options and

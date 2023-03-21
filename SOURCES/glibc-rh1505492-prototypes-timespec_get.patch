@@ -1,0 +1,24 @@
+Introduce prototype-style function definition for timespec_get.
+Upstream, this was part of this commit:
+
+commit f534255e4d276ee7b20b45637d16a00b122e5df3
+Author: Adhemerval Zanella <adhemerval.zanella@linaro.com>
+Date:   Fri Apr 17 10:58:31 2015 -0300
+
+    Consolidate vDSO macros and usage
+
+diff --git a/sysdeps/unix/sysv/linux/timespec_get.c b/sysdeps/unix/sysv/linux/timespec_get.c
+index b037abee20c7d30c..8c5c8eae0cc0e579 100644
+--- a/sysdeps/unix/sysv/linux/timespec_get.c
++++ b/sysdeps/unix/sysv/linux/timespec_get.c
+@@ -34,9 +34,7 @@
+ 
+ /* Set TS to calendar time based in time base BASE.  */
+ int
+-timespec_get (ts, base)
+-     struct timespec *ts;
+-     int base;
++timespec_get (struct timespec *ts, int base)
+ {
+   switch (base)
+     {

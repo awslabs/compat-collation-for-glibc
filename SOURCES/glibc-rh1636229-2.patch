@@ -1,0 +1,196 @@
+commit a3fe6a20bf81ef6a97a761dac9050517e7fd7a1f
+Author: DJ Delorie <dj@redhat.com>
+Date:   Thu Aug 17 17:58:25 2017 -0400
+
+    Update nss tests to new skeleton
+    
+    * bug17079.c: Update to new test harness.
+    * test-digits-dots.c: Likewise.
+    * test-netdb.c: Likewise.
+    * tst-field.c: Likewise.
+    * tst-nss-getpwent.c: Likewise.
+    * tst-nss-static.c: Likewise.
+    * tst-nss-test1.c: Likewise.
+    * tst-nss-test2.c: Likewise.
+    * tst-nss-test3.c: Likewise.
+    * tst-nss-test4.c: Likewise.
+    * tst-nss-test5.c: Likewise.
+
+Partial port of this patch - tst-field.c changes not ported.
+
+diff --git a/nss/bug17079.c b/nss/bug17079.c
+index 4171c7db55..09d33f018c 100644
+--- a/nss/bug17079.c
++++ b/nss/bug17079.c
+@@ -23,6 +23,8 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#include <support/support.h>
++
+ /* Check if two passwd structs contain the same data.  */
+ static bool
+ equal (const struct passwd *a, const struct passwd *b)
+@@ -52,13 +54,13 @@ init_test_items (void)
+       if (pwd == NULL)
+         break;
+       struct passwd *target = test_items + test_count;
+-      target->pw_name = strdup (pwd->pw_name);
+-      target->pw_passwd = strdup (pwd->pw_passwd);
++      target->pw_name = xstrdup (pwd->pw_name);
++      target->pw_passwd = xstrdup (pwd->pw_passwd);
+       target->pw_uid = pwd->pw_uid;
+       target->pw_gid = pwd->pw_gid;
+-      target->pw_gecos = strdup (pwd->pw_gecos);
+-      target->pw_dir = strdup (pwd->pw_dir);
+-      target->pw_shell = strdup (pwd->pw_shell);
++      target->pw_gecos = xstrdup (pwd->pw_gecos);
++      target->pw_dir = xstrdup (pwd->pw_dir);
++      target->pw_shell = xstrdup (pwd->pw_shell);
+     }
+   while (++test_count < MAX_TEST_ITEMS);
+   endpwent ();
+@@ -108,13 +110,7 @@ static void
+ test_one (const struct passwd *item, size_t buffer_size,
+            char pad, size_t padding_size)
+ {
+-  char *buffer = malloc (buffer_size + padding_size);
+-  if (buffer == NULL)
+-    {
+-      puts ("error: malloc failure");
+-      errors = true;
+-      return;
+-    }
++  char *buffer = xmalloc (buffer_size + padding_size);
+ 
+   struct passwd pwd;
+   struct passwd *result;
+@@ -240,5 +236,4 @@ do_test (void)
+     return 0;
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>
+diff --git a/nss/test-digits-dots.c b/nss/test-digits-dots.c
+index 2685161e65..5b898a932d 100644
+--- a/nss/test-digits-dots.c
++++ b/nss/test-digits-dots.c
+@@ -21,6 +21,8 @@
+ #include <netdb.h>
+ #include <errno.h>
+ 
++#include <support/support.h>
++
+ static int
+ do_test (void)
+ {
+@@ -34,5 +36,4 @@ do_test (void)
+   return err == ERANGE && h_err == NETDB_INTERNAL ? EXIT_SUCCESS : EXIT_FAILURE;
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>
+diff --git a/nss/tst-nss-static.c b/nss/tst-nss-static.c
+index 98cf073deb..6c3dc07622 100644
+--- a/nss/tst-nss-static.c
++++ b/nss/tst-nss-static.c
+@@ -1,7 +1,8 @@
+ /* glibc test for static NSS.  */
+ #include <stdio.h>
+ 
+-#define TEST_FUNCTION do_test ()
++#include <support/support.h>
++
+ static int
+ do_test (void)
+ {
+@@ -12,4 +13,4 @@ do_test (void)
+ }
+ 
+ 
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>
+diff --git a/nss/tst-nss-test2.c b/nss/tst-nss-test2.c
+index 11c2edf118..ac45d58c4b 100644
+--- a/nss/tst-nss-test2.c
++++ b/nss/tst-nss-test2.c
+@@ -22,6 +22,8 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#include <support/support.h>
++
+ #include "nss_test.h"
+ 
+ /* The data in these tables is arbitrary, but the merged data based on
+@@ -132,5 +134,4 @@ do_test (void)
+   return retval;
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>
+diff --git a/nss/tst-nss-test3.c b/nss/tst-nss-test3.c
+index 308708f387..5098aae67b 100644
+--- a/nss/tst-nss-test3.c
++++ b/nss/tst-nss-test3.c
+@@ -20,7 +20,8 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <sys/signal.h>
++
++#include <support/support.h>
+ 
+ #include "nss_test.h"
+ 
+@@ -146,5 +147,4 @@ do_test (void)
+     }
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>
+diff --git a/nss/tst-nss-test4.c b/nss/tst-nss-test4.c
+index 731e0ed10a..6e0ac84acc 100644
+--- a/nss/tst-nss-test4.c
++++ b/nss/tst-nss-test4.c
+@@ -20,7 +20,8 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <sys/signal.h>
++
++#include <support/support.h>
+ 
+ #include "nss_test.h"
+ 
+@@ -133,5 +134,4 @@ do_test (void)
+     }
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>
+diff --git a/nss/tst-nss-test5.c b/nss/tst-nss-test5.c
+index fef41f08df..8f02cb7779 100644
+--- a/nss/tst-nss-test5.c
++++ b/nss/tst-nss-test5.c
+@@ -22,6 +22,8 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#include <support/support.h>
++
+ #include "nss_test.h"
+ 
+ /* The specific values and names used here are arbitrary, other than
+@@ -104,5 +106,4 @@ do_test (void)
+     }
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>

@@ -1,0 +1,318 @@
+The commit included in this patch only incidentally fixes the problem
+reported in bug 1427734: In each of the IBM9xx character sets referenced in
+this patch, the removal of the "break" statement means that the subsequent
+increment of "inptr" is executed instead of being skipped. This allows
+conversion to progress instead of hanging.
+
+commit 692de4b3960dc90bdcfb871513ee4d81d314cf69
+Author: Martin Sebor <msebor@redhat.com>
+Date:   Fri Jan 15 11:25:13 2016 -0700
+
+    Have iconv accept redundant escape sequences in IBM900, IBM903, IBM905,
+    IBM907, and IBM909.
+    
+    Patch for bug #17197 changes the encoder to avoid generating redundant
+    shift sequences.  However, those sequences may already be present in
+    data encododed by prior versions of the encoder.  This change modifies
+    the decoder to also avoid rejecting redundant shift sequences.
+    
+            [BZ #19432]
+            * iconvdata/Makefile: Add bug-iconv11.
+            * iconvdata/bug-iconv11.c: New test.
+            * iconvdata/ibm930.c: Do not reject redundant shift sequences.
+            * iconvdata/ibm933.c: Same.
+            * iconvdata/ibm935.c: Same.
+            * iconvdata/ibm937.c: Same.
+            * iconvdata/ibm939.c: Same.
+
+# Conflicts:
+#	iconvdata/Makefile
+
+diff --git a/iconvdata/Makefile b/iconvdata/Makefile
+index 0ec67554ca4c29ea..c4e6c510d7abc055 100644
+--- a/iconvdata/Makefile
++++ b/iconvdata/Makefile
+@@ -68,7 +68,7 @@ include ../Makeconfig
+ ifeq (yes,$(build-shared))
+ tests = bug-iconv1 bug-iconv2 tst-loading tst-e2big tst-iconv4 bug-iconv4 \
+ 	tst-iconv6 bug-iconv5 bug-iconv6 tst-iconv7 bug-iconv8 bug-iconv9 \
+-	bug-iconv10 bug-iconv12
++	bug-iconv10 bug-iconv11 bug-iconv12
+ ifeq ($(have-thread-library),yes)
+ tests += bug-iconv3
+ endif
+diff --git a/iconvdata/bug-iconv11.c b/iconvdata/bug-iconv11.c
+new file mode 100644
+index 0000000000000000..6cdc07d79883454d
+--- /dev/null
++++ b/iconvdata/bug-iconv11.c
+@@ -0,0 +1,114 @@
++/* bug 19432: iconv rejects redundant escape sequences in IBM903,
++              IBM905, IBM907, and IBM909
++
++   Copyright (C) 2016 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <iconv.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <errno.h>
++
++// The longest test input sequence.
++#define MAXINBYTES    8
++#define MAXOUTBYTES   (MAXINBYTES * MB_LEN_MAX)
++
++/* Verify that a conversion of the INPUT sequence consisting of
++   INBYTESLEFT bytes in the encoding specified by the codeset
++   named by FROM_SET is successful.
++   Return 0 on success, non-zero on iconv() failure.  */
++
++static int
++test_ibm93x (const char *from_set, const char *input, size_t inbytesleft)
++{
++  const char to_set[] = "UTF-8";
++  iconv_t cd = iconv_open (to_set, from_set);
++  if (cd == (iconv_t) -1)
++    {
++      printf ("iconv_open(\"%s\", \"%s\"): %s\n",
++              from_set, to_set, strerror (errno));
++      return 1;
++    }
++
++  char output [MAXOUTBYTES];
++  size_t outbytesleft = sizeof output;
++
++  char *inbuf = (char*)input;
++  char *outbuf = output;
++
++  printf ("iconv(cd, %p, %zu, %p, %zu)\n",
++          inbuf, inbytesleft, outbuf, outbytesleft);
++
++  errno = 0;
++  size_t ret = iconv (cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
++  printf ("  ==> %td: %s\n"
++          "  inbuf%+td, inbytesleft=%zu, outbuf%+td, outbytesleft=%zu\n",
++          ret, strerror (errno),
++          inbuf - input, inbytesleft, outbuf - output, outbytesleft);
++
++  // Return 0 on success, non-zero on iconv() failure.
++  return ret == (size_t)-1 || errno;
++}
++
++static int
++do_test (void)
++{
++  // State-dependent encodings to exercise.
++  static const char* const to_code[] = {
++    "IBM930", "IBM933", "IBM935", "IBM937", "IBM939"
++  };
++
++  static const size_t ncodesets = sizeof to_code / sizeof *to_code;
++
++  static const struct {
++    char txt[MAXINBYTES];
++    size_t len;
++  } input[] = {
++#define DATA(s) { s, sizeof s - 1 }
++    /* <SI>: denotes the shift-in 1-byte escape sequence, changing
++             the encoder from a sigle-byte encoding to multibyte
++       <SO>: denotes the shift-out 1-byte escape sequence, switching
++             the encoder from a multibyte to a single-byte state  */
++
++    DATA ("\x0e"),               // <SI> (not redundant)
++    DATA ("\x0f"),               // <S0> (redundant with initial state)
++    DATA ("\x0e\x0e"),           // <SI><SI>
++    DATA ("\x0e\x0f\x0f"),       // <SI><SO><SO>
++    DATA ("\x0f\x0f"),           // <SO><SO>
++    DATA ("\x0f\x0e\x0e"),       // <SO><SI><SI>
++    DATA ("\x0e\x0f\xc7\x0f"),   // <SI><SO><G><SO>
++    DATA ("\xc7\x0f")            // <G><SO> (redundant with initial state)
++  };
++
++  static const size_t ninputs = sizeof input / sizeof *input;
++
++  int ret = 0;
++
++  size_t i, j;
++
++  /* Iterate over the IBM93x codesets above and exercise each with
++     the input sequences above.  */
++  for (i = 0; i != ncodesets; ++i)
++    for (j = 0; j != ninputs; ++j)
++      ret += test_ibm93x (to_code [i], input [i].txt, input [i].len);
++
++  return ret;
++}
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+diff --git a/iconvdata/ibm930.c b/iconvdata/ibm930.c
+index 636141114f506985..88413ccfbabfdc35 100644
+--- a/iconvdata/ibm930.c
++++ b/iconvdata/ibm930.c
+@@ -105,24 +105,14 @@ enum
+ 									      \
+     if (__builtin_expect (ch, 0) == SO)					      \
+       {									      \
+-	/* Shift OUT, change to DBCS converter.  */			      \
+-	if (curcs == db)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift OUT, change to DBCS converter (redundant escape okay).  */   \
+ 	curcs = db;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+       }									      \
+     else if (__builtin_expect (ch, 0) == SI)				      \
+       {									      \
+-	/* Shift IN, change to SBCS converter */			      \
+-	if (curcs == sb)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift IN, change to SBCS converter (redundant escape okay).  */    \
+ 	curcs = sb;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+diff --git a/iconvdata/ibm933.c b/iconvdata/ibm933.c
+index 8b9e5780a36a454a..335d385551fee86e 100644
+--- a/iconvdata/ibm933.c
++++ b/iconvdata/ibm933.c
+@@ -104,24 +104,14 @@ enum
+ 									      \
+     if (__builtin_expect (ch, 0) == SO)					      \
+       {									      \
+-	/* Shift OUT, change to DBCS converter.  */			      \
+-	if (curcs == db)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift OUT, change to DBCS converter (redundant escape okay).  */   \
+ 	curcs = db;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+       }									      \
+     else if (__builtin_expect (ch, 0) == SI)				      \
+       {									      \
+-	/* Shift IN, change to SBCS converter.  */			      \
+-	if (curcs == sb)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift IN, change to SBCS converter (redundant escape okay).  */    \
+ 	curcs = sb;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+diff --git a/iconvdata/ibm935.c b/iconvdata/ibm935.c
+index 4e2d99ab56d7f0d2..520d28a4e9a690fc 100644
+--- a/iconvdata/ibm935.c
++++ b/iconvdata/ibm935.c
+@@ -104,24 +104,14 @@ enum
+ 									      \
+     if (__builtin_expect(ch, 0) == SO)					      \
+       {									      \
+-	/* Shift OUT, change to DBCS converter.  */			      \
+-	if (curcs == db)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift OUT, change to DBCS converter (redundant escape okay).  */   \
+ 	curcs = db;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+       }									      \
+     else if (__builtin_expect (ch, 0) == SI)				      \
+       {									      \
+-	/* Shift IN, change to SBCS converter.  */			      \
+-	if (curcs == sb)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift IN, change to SBCS converter (redundant escape okay).  */    \
+ 	curcs = sb;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+diff --git a/iconvdata/ibm937.c b/iconvdata/ibm937.c
+index 1e468871b783e78d..64563bb8bf0441ff 100644
+--- a/iconvdata/ibm937.c
++++ b/iconvdata/ibm937.c
+@@ -104,24 +104,14 @@ enum
+ 									      \
+     if (__builtin_expect (ch, 0) == SO)					      \
+       {									      \
+-	/* Shift OUT, change to DBCS converter.  */			      \
+-	if (curcs == db)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift OUT, change to DBCS converter (redundant escape okay).  */   \
+ 	curcs = db;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+       }									      \
+     else if (__builtin_expect (ch, 0) == SI)				      \
+       {									      \
+-	/* Shift IN, change to SBCS converter.  */			      \
+-	if (curcs == sb)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift IN, change to SBCS converter (redundant escape okay).  */    \
+ 	curcs = sb;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+diff --git a/iconvdata/ibm939.c b/iconvdata/ibm939.c
+index 2060b0c329df0c86..4f73e2e55c94972d 100644
+--- a/iconvdata/ibm939.c
++++ b/iconvdata/ibm939.c
+@@ -104,24 +104,14 @@ enum
+ 									      \
+     if (__builtin_expect (ch, 0) == SO)					      \
+       {									      \
+-	/* Shift OUT, change to DBCS converter.  */			      \
+-	if (curcs == db)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift OUT, change to DBCS converter (redundant escape okay).  */   \
+ 	curcs = db;							      \
+ 	++inptr;							      \
+ 	continue;							      \
+       }									      \
+     else if (__builtin_expect (ch, 0) == SI)				      \
+       {									      \
+-	/* Shift IN, change to SBCS converter.  */			      \
+-	if (curcs == sb)						      \
+-	  {								      \
+-	    result = __GCONV_ILLEGAL_INPUT;				      \
+-	    break;							      \
+-	  }								      \
++	/* Shift IN, change to SBCS converter (redundant escape okay).  */    \
+ 	curcs = sb;							      \
+ 	++inptr;							      \
+ 	continue;							      \

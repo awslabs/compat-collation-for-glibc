@@ -1,0 +1,31 @@
+This is a partial recreation of this upstream commit, restricted to
+the __malloc_info function:
+
+commit 4bf5f2224baa1590f92f7a26930928fe9f7e4b57
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Tue Sep 6 12:49:54 2016 +0200
+
+    malloc: Automated part of conversion to __libc_lock
+
+diff --git a/malloc/malloc.c b/malloc/malloc.c
+index 18e00315c6edba4d..d2a5e251da4f1191 100644
+--- a/malloc/malloc.c
++++ b/malloc/malloc.c
+@@ -5049,7 +5049,7 @@ __malloc_info (int options, FILE *fp)
+       } sizes[NFASTBINS + NBINS - 1];
+ #define nsizes (sizeof (sizes) / sizeof (sizes[0]))
+ 
+-      mutex_lock (&ar_ptr->mutex);
++      __libc_lock_lock (ar_ptr->mutex);
+ 
+       for (size_t i = 0; i < NFASTBINS; ++i)
+ 	{
+@@ -5108,7 +5108,7 @@ __malloc_info (int options, FILE *fp)
+ 	  avail += sizes[NFASTBINS - 1 + i].total;
+ 	}
+ 
+-      mutex_unlock (&ar_ptr->mutex);
++      __libc_lock_unlock (ar_ptr->mutex);
+ 
+       total_nfastblocks += nfastblocks;
+       total_fastavail += fastavail;

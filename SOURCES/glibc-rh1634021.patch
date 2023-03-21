@@ -1,0 +1,19 @@
+commit 8ec3f656d6edf6f16216105131fc8b0542216a5b
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Mon Nov 11 12:24:42 2013 +0100
+
+    Fix off-by-one in nscd getservbyport call
+
+diff --git a/nscd/nscd_getserv_r.c b/nscd/nscd_getserv_r.c
+index c9c890c..7728258 100644
+--- a/nscd/nscd_getserv_r.c
++++ b/nscd/nscd_getserv_r.c
+@@ -54,7 +54,7 @@ __nscd_getservbyport_r (int port, const char *proto,
+   portstr[sizeof (portstr) - 1] = '\0';
+   char *cp = _itoa_word (port, portstr + sizeof (portstr) - 1, 10, 0);
+ 
+-  return nscd_getserv_r (cp, portstr + sizeof (portstr) - cp, proto,
++  return nscd_getserv_r (cp, portstr + sizeof (portstr) - 1 - cp, proto,
+ 			 GETSERVBYPORT, result_buf, buf, buflen, result);
+ }
+ 

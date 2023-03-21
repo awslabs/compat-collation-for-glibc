@@ -1,0 +1,19 @@
+commit e9ff8efb5cb0fd944f4a5c8f03b14dee508cf7e8
+Author: Ryan Cumming <etaoins@gmail.com>
+Date:   Mon Nov 24 15:14:31 2014 +0100
+
+    Define CLOCK_TAI on Linux (bug 17608)
+
+diff --git a/sysdeps/unix/sysv/linux/bits/time.h b/sysdeps/unix/sysv/linux/bits/time.h
+index 7805ce7e012256ea..561587ed3c620628 100644
+--- a/sysdeps/unix/sysv/linux/bits/time.h
++++ b/sysdeps/unix/sysv/linux/bits/time.h
+@@ -77,6 +77,8 @@ extern long int __sysconf (int);
+ #   define CLOCK_REALTIME_ALARM		8
+ /* Like CLOCK_BOOTTIME but also wakes suspended system.  */
+ #   define CLOCK_BOOTTIME_ALARM		9
++/* Like CLOCK_REALTIME but in International Atomic Time.  */
++#   define CLOCK_TAI			11
+ 
+ /* Flag to indicate time is absolute.  */
+ #   define TIMER_ABSTIME		1

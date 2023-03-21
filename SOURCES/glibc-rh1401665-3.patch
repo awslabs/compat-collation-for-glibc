@@ -1,0 +1,406 @@
+commit 8f9450a0b7a9e78267e8ae1ab1000ebca08e473e
+Author: Torvald Riegel <triegel@redhat.com>
+Date:   Sat Dec 24 00:40:46 2016 +0100
+
+    Add compiler barriers around modifications of the robust mutex list.
+    
+    Any changes to the per-thread list of robust mutexes currently acquired as
+    well as the pending-operations entry are not simply sequential code but
+    basically concurrent with any actions taken by the kernel when it tries
+    to clean up after a crash.  This is not quite like multi-thread concurrency
+    but more like signal-handler concurrency.
+    This patch fixes latent bugs by adding compiler barriers where necessary so
+    that it is ensured that the kernel crash handling sees consistent data.
+    
+    This is meant to be easy to backport, so we do not use C11-style signal
+    fences yet.
+    
+            * nptl/descr.h (ENQUEUE_MUTEX_BOTH, DEQUEUE_MUTEX): Add compiler
+            barriers and comments.
+            * nptl/pthread_mutex_lock.c (__pthread_mutex_lock_full): Likewise.
+            * nptl/pthread_mutex_timedlock.c (pthread_mutex_timedlock): Likewise.
+            * nptl/pthread_mutex_unlock.c (__pthread_mutex_unlock_full): Likewise.
+
+Index: glibc-2.17-c758a686/nptl/descr.h
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/descr.h
++++ glibc-2.17-c758a686/nptl/descr.h
+@@ -180,7 +180,16 @@ struct pthread
+      but the pointer to the next/previous element of the list points
+      in the middle of the object, the __next element.  Whenever
+      casting to __pthread_list_t we need to adjust the pointer
+-     first.  */
++     first.
++     These operations are effectively concurrent code in that the thread
++     can get killed at any point in time and the kernel takes over.  Thus,
++     the __next elements are a kind of concurrent list and we need to
++     enforce using compiler barriers that the individual operations happen
++     in such a way that the kernel always sees a consistent list.  The
++     backward links (ie, the __prev elements) are not used by the kernel.
++     FIXME We should use relaxed MO atomic operations here and signal fences
++     because this kind of concurrency is similar to synchronizing with a
++     signal handler.  */
+ # define QUEUE_PTR_ADJUST (offsetof (__pthread_list_t, __next))
+ 
+ # define ENQUEUE_MUTEX_BOTH(mutex, val)					      \
+@@ -192,6 +201,8 @@ struct pthread
+     mutex->__data.__list.__next = THREAD_GETMEM (THREAD_SELF,		      \
+ 						 robust_head.list);	      \
+     mutex->__data.__list.__prev = (void *) &THREAD_SELF->robust_head;	      \
++    /* Ensure that the new list entry is ready before we insert it.  */	      \
++    __asm ("" ::: "memory");						      \
+     THREAD_SETMEM (THREAD_SELF, robust_head.list,			      \
+ 		   (void *) (((uintptr_t) &mutex->__data.__list.__next)	      \
+ 			     | val));					      \
+@@ -206,6 +217,9 @@ struct pthread
+       ((char *) (((uintptr_t) mutex->__data.__list.__prev) & ~1ul)	      \
+        - QUEUE_PTR_ADJUST);						      \
+     prev->__next = mutex->__data.__list.__next;				      \
++    /* Ensure that we remove the entry from the list before we change the     \
++       __next pointer of the entry, which is read by the kernel.  */	      \
++    __asm ("" ::: "memory");						      \
+     mutex->__data.__list.__prev = NULL;					      \
+     mutex->__data.__list.__next = NULL;					      \
+   } while (0)
+@@ -220,6 +234,8 @@ struct pthread
+   do {									      \
+     mutex->__data.__list.__next						      \
+       = THREAD_GETMEM (THREAD_SELF, robust_list.__next);		      \
++    /* Ensure that the new list entry is ready before we insert it.  */	      \
++    __asm ("" ::: "memory");						      \
+     THREAD_SETMEM (THREAD_SELF, robust_list.__next,			      \
+ 		   (void *) (((uintptr_t) &mutex->__data.__list) | val));     \
+   } while (0)
+@@ -240,6 +256,9 @@ struct pthread
+ 	  }								      \
+ 									      \
+ 	runp->__next = next->__next;					      \
++	/* Ensure that we remove the entry from the list before we change the \
++	   __next pointer of the entry, which is read by the kernel.  */      \
++	    __asm ("" ::: "memory");					      \
+ 	mutex->__data.__list.__next = NULL;				      \
+       }									      \
+   } while (0)
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_lock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+@@ -181,6 +181,9 @@ __pthread_mutex_lock_full (pthread_mutex
+     case PTHREAD_MUTEX_ROBUST_ADAPTIVE_NP:
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 		     &mutex->__data.__list.__next);
++      /* We need to set op_pending before starting the operation.  Also
++	 see comments at ENQUEUE_MUTEX.  */
++      __asm ("" ::: "memory");
+ 
+       oldval = mutex->__data.__lock;
+       /* This is set to FUTEX_WAITERS iff we might have shared the
+@@ -228,7 +231,12 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	      /* But it is inconsistent unless marked otherwise.  */
+ 	      mutex->__data.__owner = PTHREAD_MUTEX_INCONSISTENT;
+ 
++	      /* We must not enqueue the mutex before we have acquired it.
++		 Also see comments at ENQUEUE_MUTEX.  */
++	      __asm ("" ::: "memory");
+ 	      ENQUEUE_MUTEX (mutex);
++	      /* We need to clear op_pending after we enqueue the mutex.  */
++	      __asm ("" ::: "memory");
+ 	      THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 
+ 	      /* Note that we deliberately exit here.  If we fall
+@@ -250,6 +258,8 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	      int kind = PTHREAD_MUTEX_TYPE (mutex);
+ 	      if (kind == PTHREAD_MUTEX_ROBUST_ERRORCHECK_NP)
+ 		{
++		  /* We do not need to ensure ordering wrt another memory
++		     access.  Also see comments at ENQUEUE_MUTEX. */
+ 		  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 				 NULL);
+ 		  return EDEADLK;
+@@ -257,6 +267,8 @@ __pthread_mutex_lock_full (pthread_mutex
+ 
+ 	      if (kind == PTHREAD_MUTEX_ROBUST_RECURSIVE_NP)
+ 		{
++		  /* We do not need to ensure ordering wrt another memory
++		     access.  */
+ 		  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 				 NULL);
+ 
+@@ -309,12 +321,19 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	  mutex->__data.__count = 0;
+ 	  int private = PTHREAD_ROBUST_MUTEX_PSHARED (mutex);
+ 	  lll_unlock (mutex->__data.__lock, private);
++	  /* FIXME This violates the mutex destruction requirements.  See
++	     __pthread_mutex_unlock_full.  */
+ 	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 	  return ENOTRECOVERABLE;
+ 	}
+ 
+       mutex->__data.__count = 1;
++      /* We must not enqueue the mutex before we have acquired it.
++	 Also see comments at ENQUEUE_MUTEX.  */
++      __asm ("" ::: "memory");
+       ENQUEUE_MUTEX (mutex);
++      /* We need to clear op_pending after we enqueue the mutex.  */
++      __asm ("" ::: "memory");
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+       break;
+ 
+@@ -331,10 +350,15 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	int robust = mutex->__data.__kind & PTHREAD_MUTEX_ROBUST_NORMAL_NP;
+ 
+ 	if (robust)
+-	  /* Note: robust PI futexes are signaled by setting bit 0.  */
+-	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+-			 (void *) (((uintptr_t) &mutex->__data.__list.__next)
+-				   | 1));
++	  {
++	    /* Note: robust PI futexes are signaled by setting bit 0.  */
++	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
++			   (void *) (((uintptr_t) &mutex->__data.__list.__next)
++				     | 1));
++	    /* We need to set op_pending before starting the operation.  Also
++	       see comments at ENQUEUE_MUTEX.  */
++	    __asm ("" ::: "memory");
++	  }
+ 
+ 	oldval = mutex->__data.__lock;
+ 
+@@ -343,12 +367,16 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	  {
+ 	    if (kind == PTHREAD_MUTEX_ERRORCHECK_NP)
+ 	      {
++		/* We do not need to ensure ordering wrt another memory
++		   access.  */
+ 		THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 		return EDEADLK;
+ 	      }
+ 
+ 	    if (kind == PTHREAD_MUTEX_RECURSIVE_NP)
+ 	      {
++		/* We do not need to ensure ordering wrt another memory
++		   access.  */
+ 		THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 
+ 		/* Just bump the counter.  */
+@@ -411,7 +439,12 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	    /* But it is inconsistent unless marked otherwise.  */
+ 	    mutex->__data.__owner = PTHREAD_MUTEX_INCONSISTENT;
+ 
++	    /* We must not enqueue the mutex before we have acquired it.
++	       Also see comments at ENQUEUE_MUTEX.  */
++	    __asm ("" ::: "memory");
+ 	    ENQUEUE_MUTEX_PI (mutex);
++	    /* We need to clear op_pending after we enqueue the mutex.  */
++	    __asm ("" ::: "memory");
+ 	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 
+ 	    /* Note that we deliberately exit here.  If we fall
+@@ -439,6 +472,8 @@ __pthread_mutex_lock_full (pthread_mutex
+ 						  PTHREAD_ROBUST_MUTEX_PSHARED (mutex)),
+ 			      0, 0);
+ 
++	    /* To the kernel, this will be visible after the kernel has
++	       acquired the mutex in the syscall.  */
+ 	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 	    return ENOTRECOVERABLE;
+ 	  }
+@@ -446,7 +481,12 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	mutex->__data.__count = 1;
+ 	if (robust)
+ 	  {
++	    /* We must not enqueue the mutex before we have acquired it.
++	       Also see comments at ENQUEUE_MUTEX.  */
++	    __asm ("" ::: "memory");
+ 	    ENQUEUE_MUTEX_PI (mutex);
++	    /* We need to clear op_pending after we enqueue the mutex.  */
++	    __asm ("" ::: "memory");
+ 	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 	  }
+       }
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_timedlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+@@ -140,6 +140,9 @@ pthread_mutex_timedlock (pthread_mutex_t
+     case PTHREAD_MUTEX_ROBUST_ADAPTIVE_NP:
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 		     &mutex->__data.__list.__next);
++      /* We need to set op_pending before starting the operation.  Also
++	 see comments at ENQUEUE_MUTEX.  */
++      __asm ("" ::: "memory");
+ 
+       oldval = mutex->__data.__lock;
+       /* This is set to FUTEX_WAITERS iff we might have shared the
+@@ -177,7 +180,12 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	      /* But it is inconsistent unless marked otherwise.  */
+ 	      mutex->__data.__owner = PTHREAD_MUTEX_INCONSISTENT;
+ 
++	      /* We must not enqueue the mutex before we have acquired it.
++		 Also see comments at ENQUEUE_MUTEX.  */
++	      __asm ("" ::: "memory");
+ 	      ENQUEUE_MUTEX (mutex);
++	      /* We need to clear op_pending after we enqueue the mutex.  */
++	      __asm ("" ::: "memory");
+ 	      THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 
+ 	      /* Note that we deliberately exit here.  If we fall
+@@ -193,6 +201,8 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	      int kind = PTHREAD_MUTEX_TYPE (mutex);
+ 	      if (kind == PTHREAD_MUTEX_ROBUST_ERRORCHECK_NP)
+ 		{
++		  /* We do not need to ensure ordering wrt another memory
++		     access.  Also see comments at ENQUEUE_MUTEX. */
+ 		  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 				 NULL);
+ 		  return EDEADLK;
+@@ -200,6 +210,8 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 
+ 	      if (kind == PTHREAD_MUTEX_ROBUST_RECURSIVE_NP)
+ 		{
++		  /* We do not need to ensure ordering wrt another memory
++		     access.  */
+ 		  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 				 NULL);
+ 
+@@ -294,12 +306,19 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	  mutex->__data.__count = 0;
+ 	  int private = PTHREAD_ROBUST_MUTEX_PSHARED (mutex);
+ 	  lll_unlock (mutex->__data.__lock, private);
++	  /* FIXME This violates the mutex destruction requirements.  See
++	     __pthread_mutex_unlock_full.  */
+ 	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 	  return ENOTRECOVERABLE;
+ 	}
+ 
+       mutex->__data.__count = 1;
++      /* We must not enqueue the mutex before we have acquired it.
++	 Also see comments at ENQUEUE_MUTEX.  */
++      __asm ("" ::: "memory");
+       ENQUEUE_MUTEX (mutex);
++      /* We need to clear op_pending after we enqueue the mutex.  */
++      __asm ("" ::: "memory");
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+       break;
+ 
+@@ -316,10 +335,15 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	int robust = mutex->__data.__kind & PTHREAD_MUTEX_ROBUST_NORMAL_NP;
+ 
+ 	if (robust)
+-	  /* Note: robust PI futexes are signaled by setting bit 0.  */
+-	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+-			 (void *) (((uintptr_t) &mutex->__data.__list.__next)
+-				   | 1));
++	  {
++	    /* Note: robust PI futexes are signaled by setting bit 0.  */
++	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
++			   (void *) (((uintptr_t) &mutex->__data.__list.__next)
++				     | 1));
++	    /* We need to set op_pending before starting the operation.  Also
++	       see comments at ENQUEUE_MUTEX.  */
++	    __asm ("" ::: "memory");
++	  }
+ 
+ 	oldval = mutex->__data.__lock;
+ 
+@@ -328,12 +352,16 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	  {
+ 	    if (kind == PTHREAD_MUTEX_ERRORCHECK_NP)
+ 	      {
++		/* We do not need to ensure ordering wrt another memory
++		   access.  */
+ 		THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 		return EDEADLK;
+ 	      }
+ 
+ 	    if (kind == PTHREAD_MUTEX_RECURSIVE_NP)
+ 	      {
++		/* We do not need to ensure ordering wrt another memory
++		   access.  */
+ 		THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 
+ 		/* Just bump the counter.  */
+@@ -420,7 +448,12 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	    /* But it is inconsistent unless marked otherwise.  */
+ 	    mutex->__data.__owner = PTHREAD_MUTEX_INCONSISTENT;
+ 
++	    /* We must not enqueue the mutex before we have acquired it.
++	       Also see comments at ENQUEUE_MUTEX.  */
++	    __asm ("" ::: "memory");
+ 	    ENQUEUE_MUTEX_PI (mutex);
++	    /* We need to clear op_pending after we enqueue the mutex.  */
++	    __asm ("" ::: "memory");
+ 	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 
+ 	    /* Note that we deliberately exit here.  If we fall
+@@ -443,6 +476,8 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 						  PTHREAD_ROBUST_MUTEX_PSHARED (mutex)),
+ 			      0, 0);
+ 
++	    /* To the kernel, this will be visible after the kernel has
++	       acquired the mutex in the syscall.  */
+ 	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 	    return ENOTRECOVERABLE;
+ 	  }
+@@ -450,7 +485,12 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	mutex->__data.__count = 1;
+ 	if (robust)
+ 	  {
++	    /* We must not enqueue the mutex before we have acquired it.
++	       Also see comments at ENQUEUE_MUTEX.  */
++	    __asm ("" ::: "memory");
+ 	    ENQUEUE_MUTEX_PI (mutex);
++	    /* We need to clear op_pending after we enqueue the mutex.  */
++	    __asm ("" ::: "memory");
+ 	    THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+ 	  }
+ 	}
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_unlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_unlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_unlock.c
+@@ -143,6 +143,9 @@ __pthread_mutex_unlock_full (pthread_mut
+       /* Remove mutex from the list.  */
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 		     &mutex->__data.__list.__next);
++      /* We must set op_pending before we dequeue the mutex.  Also see
++	 comments at ENQUEUE_MUTEX.  */
++      __asm ("" ::: "memory");
+       DEQUEUE_MUTEX (mutex);
+ 
+       mutex->__data.__owner = newowner;
+@@ -159,6 +162,14 @@ __pthread_mutex_unlock_full (pthread_mut
+ 			     & FUTEX_WAITERS) != 0))
+ 	lll_futex_wake (&mutex->__data.__lock, 1, private);
+ 
++      /* We must clear op_pending after we release the mutex.
++	 FIXME However, this violates the mutex destruction requirements
++	 because another thread could acquire the mutex, destroy it, and
++	 reuse the memory for something else; then, if this thread crashes,
++	 and the memory happens to have a value equal to the TID, the kernel
++	 will believe it is still related to the mutex (which has been
++	 destroyed already) and will modify some other random object.  */
++      __asm ("" ::: "memory");
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+       break;
+ 
+@@ -223,6 +234,9 @@ __pthread_mutex_unlock_full (pthread_mut
+ 	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending,
+ 			 (void *) (((uintptr_t) &mutex->__data.__list.__next)
+ 				   | 1));
++	  /* We must set op_pending before we dequeue the mutex.  Also see
++	     comments at ENQUEUE_MUTEX.  */
++	  __asm ("" ::: "memory");
+ 	  DEQUEUE_MUTEX (mutex);
+ 	}
+ 
+@@ -247,6 +261,9 @@ __pthread_mutex_unlock_full (pthread_mut
+ 			    __lll_private_flag (FUTEX_UNLOCK_PI, private));
+ 	}
+ 
++      /* This happens after the kernel releases the mutex but violates the
++	 mutex destruction requirements; see comments in the code handling
++	 PTHREAD_MUTEX_ROBUST_NORMAL_NP.  */
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+       break;
+ 

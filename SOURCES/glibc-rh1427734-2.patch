@@ -1,0 +1,34 @@
+commit ab9f6255ab4e7aa353ec1b61b4f332bf00cea4d0
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date:   Wed Jan 20 08:32:37 2016 +0100
+
+    S390: Fix build error in iconvdata/bug-iconv11.c.
+    
+    This fixes the following build error on S390 31bit while building the test
+    iconvdata/bug-iconv11.c with gcc 5.3:
+    bug-iconv11.c: In function ‘test_ibm93x’:
+    bug-iconv11.c:59:11: error: format ‘%td’ expects argument of type ‘ptrdiff_t’, but argument 2 has type ‘size_t {aka long unsigned int}’ [-Werror=format=]
+       printf ("  ==> %td: %s\n"
+               ^
+    cc1: all warnings being treated as errors
+    
+    This patch uses %zu format specifier for argument size_t ret instead of %td.
+    
+    ChangeLog:
+    
+            * iconvdata/bug-iconv11.c (test_ibm93x):
+            Use %zu printf format specifier for size_t argument.
+
+diff --git a/iconvdata/bug-iconv11.c b/iconvdata/bug-iconv11.c
+index 6cdc07d79883454d..5b9d9a36af0b4bcf 100644
+--- a/iconvdata/bug-iconv11.c
++++ b/iconvdata/bug-iconv11.c
+@@ -56,7 +56,7 @@ test_ibm93x (const char *from_set, const char *input, size_t inbytesleft)
+ 
+   errno = 0;
+   size_t ret = iconv (cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+-  printf ("  ==> %td: %s\n"
++  printf ("  ==> %zu: %s\n"
+           "  inbuf%+td, inbytesleft=%zu, outbuf%+td, outbytesleft=%zu\n",
+           ret, strerror (errno),
+           inbuf - input, inbytesleft, outbuf - output, outbytesleft);

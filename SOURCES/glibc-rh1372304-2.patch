@@ -1,0 +1,46 @@
+The commit included in glibc-rh1372304-1.patch removes custom TIMEOUT
+definitions from the tests it changes. Some of those tests are expected to
+run for longer than the current default TIMEOUT (2 sec) set in
+test-skeleton.c and so can time-out and fail when run. This commit avoids
+the spurious failures by increasing the default TIMEOUT to 20 sec. Upstream,
+this commit preceded the one included in glibc-rh1372304-1.patch.
+
+commit a28605b22946c708f0a5c4f06307e1a17650ced8
+Author: Mike Frysinger <vapier@gentoo.org>
+Date:   Tue Jan 19 09:18:00 2016 -0500
+
+    test-skeleton: increase default TIMEOUT to 20 seconds
+    
+    The vast majority of timeouts I've seen w/glibc tests are due to:
+     - slow system (e.g. <1 GHz cpu)
+     - loaded system (e.g. lots of parallelism)
+    Even then, I've seen timeouts on system I don't generally consider
+    slow, or even loaded, and considering TIMEOUT is set to <=10 in ~60
+    tests (and <=20 in ~75 tests), it seems I'm not alone.  I've just
+    gotten in the habit of doing `export TIMEOUTFACTOR=10` on all my
+    setups.
+    
+    In the edge case where there is a bug in the test and the timeout is
+    hit, I think we all agree that's either a problem with the test or a
+    real bug in the library somewhere.  In either case, the incident rate
+    should be low, so catering to that seems like the wrong trade-off.
+    
+    Other developers too usually set large timeout factors.  Increase the
+    default to 20 seconds to match reality.
+
+Index: b/test-skeleton.c
+===================================================================
+--- a/test-skeleton.c
++++ b/test-skeleton.c
+@@ -368,8 +368,9 @@ main (int argc, char *argv[])
+ 
+   /* Set timeout.  */
+ #ifndef TIMEOUT
+-  /* Default timeout is two seconds.  */
+-# define TIMEOUT 2
++  /* Default timeout is twenty seconds.  Tests should normally complete faster
++     than this, but if they don't, that's abnormal (a bug) anyways.  */
++# define TIMEOUT 20
+ #endif
+   signal (SIGALRM, signal_handler);
+   alarm (TIMEOUT * timeoutfactor);

@@ -1,0 +1,24 @@
+commit dae6c43c33ed2d29d6d7089958ad707759a48517
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Thu May 17 13:04:46 2018 +0200
+
+    Remove unneeded setting of errno after malloc failure
+    
+    The errno value has alread been set by malloc.
+
+diff --git a/resolv/res_send.c b/resolv/res_send.c
+index 01e4da4188b63d39..478d542419566574 100644
+--- a/resolv/res_send.c
++++ b/resolv/res_send.c
+@@ -472,10 +472,7 @@ __res_context_send (struct resolv_context *ctx,
+ 					sizeof (struct sockaddr_in6)
+ 					- sizeof (struct sockaddr_in));
+ 			else
+-			  {
+-			    __set_errno (ENOMEM);
+-			    return -1;
+-			  }
++				return -1;
+ 		}
+ 		EXT(statp).nscount = statp->nscount;
+ 	}

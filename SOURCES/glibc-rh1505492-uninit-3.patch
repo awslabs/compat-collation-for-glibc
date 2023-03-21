@@ -1,0 +1,57 @@
+commit b1eda10e17bf2056ca79a534d92fe0b0b06bd410
+Author: Paul Eggert <eggert@cs.ucla.edu>
+Date:   Tue Nov 25 14:12:48 2014 -0800
+
+    fnmatch: work around GCC compiler warning bug with uninit var
+    
+    * posix/fnmatch_loop.c (FCT): Use a scalar not a one-item array.
+    This works around a bug with x86-64 GCC 4.9.2 and earlier
+    where 'gcc -O2 -Wmaybe-uninitialized' incorrectly complains
+    "../locale/weightwc.h:93:7: warning: '*((void *)&str+4)' may be
+    used uninitialized in this function [-Wmaybe-uninitialized]".
+
+diff --git a/posix/fnmatch_loop.c b/posix/fnmatch_loop.c
+index e289f451cc23c1ee..2bd788f3942c6e7d 100644
+--- a/posix/fnmatch_loop.c
++++ b/posix/fnmatch_loop.c
+@@ -342,7 +342,12 @@ FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+ #ifdef _LIBC
+ 		else if (c == L('[') && *p == L('='))
+ 		  {
+-		    UCHAR str[1];
++		    /* It's important that STR be a scalar variable rather
++		       than a one-element array, because GCC (at least 4.9.2
++		       -O2 on x86-64) can be confused by the array and
++		       diagnose a "used initialized" in a dead branch in the
++		       findidx function.  */
++		    UCHAR str;
+ 		    uint32_t nrules =
+ 		      _NL_CURRENT_WORD (LC_COLLATE, _NL_COLLATE_NRULES);
+ 		    const CHAR *startp = p;
+@@ -354,7 +359,7 @@ FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+ 			c = L('[');
+ 			goto normal_bracket;
+ 		      }
+-		    str[0] = c;
++		    str = c;
+ 
+ 		    c = *++p;
+ 		    if (c != L('=') || p[1] != L(']'))
+@@ -367,7 +372,7 @@ FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+ 
+ 		    if (nrules == 0)
+ 		      {
+-			if ((UCHAR) *n == str[0])
++			if ((UCHAR) *n == str)
+ 			  goto matched;
+ 		      }
+ 		    else
+@@ -382,7 +387,7 @@ FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+ # endif
+ 			const int32_t *indirect;
+ 			int32_t idx;
+-			const UCHAR *cp = (const UCHAR *) str;
++			const UCHAR *cp = (const UCHAR *) &str;
+ 
+ 			/* This #include defines a local function!  */
+ # if WIDE_CHAR_VERSION

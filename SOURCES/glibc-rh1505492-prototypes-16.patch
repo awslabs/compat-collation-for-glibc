@@ -1,0 +1,1736 @@
+commit 9dd346ff431fc761f1b748bd4da8bb59f7652094
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Oct 20 11:54:09 2015 +0000
+
+    Convert 113 more function definitions to prototype style (files with assertions).
+    
+    This mostly automatically-generated patch converts 113 function
+    definitions in glibc from old-style K&R to prototype-style.  Following
+    my other recent such patches, this one deals with the case of function
+    definitions in files that either contain assertions or where grep
+    suggested they might contain assertions - and thus where it isn't
+    possible to use a simple object code comparison as a sanity check on
+    the correctness of the patch, because line numbers are changed.
+    
+    A few such automatically-generated changes needed to be supplemented
+    by manual changes for the result to compile.  openat64 had a prototype
+    declaration with "..." but an old-style definition in
+    sysdeps/unix/sysv/linux/dl-openat64.c, and "..." needed adding to the
+    generated prototype in the definition (I've filed
+    <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68024> for diagnosing
+    such cases in GCC; the old state was undefined behavior not requiring
+    a diagnostic, but one seems a good idea).  In addition, as Florian has
+    noted regparm attribute mismatches between declaration and definition
+    are only diagnosed for prototype definitions, and five functions
+    needed internal_function added to their definitions (in the case of
+    __pthread_mutex_cond_lock, via the macro definition of
+    __pthread_mutex_lock) to compile on i386.
+    
+    After this patch is in, remaining old-style definitions are probably
+    most readily fixed manually before we can turn on
+    -Wold-style-definition for all builds.
+    
+    Tested for x86_64 and x86 (testsuite).
+    
+            * crypt/md5-crypt.c (__md5_crypt_r): Convert to prototype-style
+            function definition.
+            * crypt/sha256-crypt.c (__sha256_crypt_r): Likewise.
+            * crypt/sha512-crypt.c (__sha512_crypt_r): Likewise.
+            * debug/backtracesyms.c (__backtrace_symbols): Likewise.
+            * elf/dl-minimal.c (_itoa): Likewise.
+            * hurd/hurdmalloc.c (malloc): Likewise.
+            (free): Likewise.
+            (realloc): Likewise.
+            * inet/inet6_option.c (inet6_option_space): Likewise.
+            (inet6_option_init): Likewise.
+            (inet6_option_append): Likewise.
+            (inet6_option_alloc): Likewise.
+            (inet6_option_next): Likewise.
+            (inet6_option_find): Likewise.
+            * io/ftw.c (FTW_NAME): Likewise.
+            (NFTW_NAME): Likewise.
+            (NFTW_NEW_NAME): Likewise.
+            (NFTW_OLD_NAME): Likewise.
+            * libio/iofwide.c (_IO_fwide): Likewise.
+            * libio/strops.c (_IO_str_init_static_internal): Likewise.
+            (_IO_str_init_static): Likewise.
+            (_IO_str_init_readonly): Likewise.
+            (_IO_str_overflow): Likewise.
+            (_IO_str_underflow): Likewise.
+            (_IO_str_count): Likewise.
+            (_IO_str_seekoff): Likewise.
+            (_IO_str_pbackfail): Likewise.
+            (_IO_str_finish): Likewise.
+            * libio/wstrops.c (_IO_wstr_init_static): Likewise.
+            (_IO_wstr_overflow): Likewise.
+            (_IO_wstr_underflow): Likewise.
+            (_IO_wstr_count): Likewise.
+            (_IO_wstr_seekoff): Likewise.
+            (_IO_wstr_pbackfail): Likewise.
+            (_IO_wstr_finish): Likewise.
+            * locale/programs/localedef.c (normalize_codeset): Likewise.
+            * locale/programs/locarchive.c (add_locale_to_archive): Likewise.
+            (add_locales_to_archive): Likewise.
+            (delete_locales_from_archive): Likewise.
+            * malloc/malloc.c (__libc_mallinfo): Likewise.
+            * math/gen-auto-libm-tests.c (init_fp_formats): Likewise.
+            * misc/tsearch.c (__tfind): Likewise.
+            * nptl/pthread_attr_destroy.c (__pthread_attr_destroy): Likewise.
+            * nptl/pthread_attr_getdetachstate.c
+            (__pthread_attr_getdetachstate): Likewise.
+            * nptl/pthread_attr_getguardsize.c (pthread_attr_getguardsize):
+            Likewise.
+            * nptl/pthread_attr_getinheritsched.c
+            (__pthread_attr_getinheritsched): Likewise.
+            * nptl/pthread_attr_getschedparam.c
+            (__pthread_attr_getschedparam): Likewise.
+            * nptl/pthread_attr_getschedpolicy.c
+            (__pthread_attr_getschedpolicy): Likewise.
+            * nptl/pthread_attr_getscope.c (__pthread_attr_getscope):
+            Likewise.
+            * nptl/pthread_attr_getstack.c (__pthread_attr_getstack):
+            Likewise.
+            * nptl/pthread_attr_getstackaddr.c (__pthread_attr_getstackaddr):
+            Likewise.
+            * nptl/pthread_attr_getstacksize.c (__pthread_attr_getstacksize):
+            Likewise.
+            * nptl/pthread_attr_init.c (__pthread_attr_init_2_1): Likewise.
+            (__pthread_attr_init_2_0): Likewise.
+            * nptl/pthread_attr_setdetachstate.c
+            (__pthread_attr_setdetachstate): Likewise.
+            * nptl/pthread_attr_setguardsize.c (pthread_attr_setguardsize):
+            Likewise.
+            * nptl/pthread_attr_setinheritsched.c
+            (__pthread_attr_setinheritsched): Likewise.
+            * nptl/pthread_attr_setschedparam.c
+            (__pthread_attr_setschedparam): Likewise.
+            * nptl/pthread_attr_setschedpolicy.c
+            (__pthread_attr_setschedpolicy): Likewise.
+            * nptl/pthread_attr_setscope.c (__pthread_attr_setscope):
+            Likewise.
+            * nptl/pthread_attr_setstack.c (__pthread_attr_setstack):
+            Likewise.
+            * nptl/pthread_attr_setstackaddr.c (__pthread_attr_setstackaddr):
+            Likewise.
+            * nptl/pthread_attr_setstacksize.c (__pthread_attr_setstacksize):
+            Likewise.
+            * nptl/pthread_condattr_setclock.c (pthread_condattr_setclock):
+            Likewise.
+            * nptl/pthread_create.c (__find_in_stack_list): Likewise.
+            * nptl/pthread_getattr_np.c (pthread_getattr_np): Likewise.
+            * nptl/pthread_mutex_cond_lock.c (__pthread_mutex_lock): Define to
+            use internal_function.
+            * nptl/pthread_mutex_init.c (__pthread_mutex_init): Convert to
+            prototype-style function definition.
+            * nptl/pthread_mutex_lock.c (__pthread_mutex_lock): Likewise.
+            (__pthread_mutex_cond_lock_adjust): Likewise.  Use
+            internal_function.
+            * nptl/pthread_mutex_timedlock.c (pthread_mutex_timedlock):
+            Convert to prototype-style function definition.
+            * nptl/pthread_mutex_trylock.c (__pthread_mutex_trylock):
+            Likewise.
+            * nptl/pthread_mutex_unlock.c (__pthread_mutex_unlock_usercnt):
+            Likewise.
+            (__pthread_mutex_unlock): Likewise.
+            * nptl_db/td_ta_clear_event.c (td_ta_clear_event): Likewise.
+            * nptl_db/td_ta_set_event.c (td_ta_set_event): Likewise.
+            * nptl_db/td_thr_clear_event.c (td_thr_clear_event): Likewise.
+            * nptl_db/td_thr_event_enable.c (td_thr_event_enable): Likewise.
+            * nptl_db/td_thr_set_event.c (td_thr_set_event): Likewise.
+            * nss/makedb.c (process_input): Likewise.
+            * posix/fnmatch.c (__strchrnul): Likewise.
+            (__wcschrnul): Likewise.
+            (fnmatch): Likewise.
+            * posix/fnmatch_loop.c (FCT): Likewise.
+            * posix/glob.c (globfree): Likewise.
+            (__glob_pattern_type): Likewise.
+            (__glob_pattern_p): Likewise.
+            * posix/regcomp.c (re_compile_pattern): Likewise.
+            (re_set_syntax): Likewise.
+            (re_compile_fastmap): Likewise.
+            (regcomp): Likewise.
+            (regerror): Likewise.
+            (regfree): Likewise.
+            * posix/regexec.c (regexec): Likewise.
+            (re_match): Likewise.
+            (re_search): Likewise.
+            (re_match_2): Likewise.
+            (re_search_2): Likewise.
+            (re_search_stub): Likewise.  Use internal_function
+            (re_copy_regs): Likewise.
+            (re_set_registers): Convert to prototype-style function
+            definition.
+            (prune_impossible_nodes): Likewise.  Use internal_function.
+            * resolv/inet_net_pton.c (inet_net_pton): Convert to
+            prototype-style function definition.
+            (inet_net_pton_ipv4): Likewise.
+            * stdlib/strtod_l.c (____STRTOF_INTERNAL): Likewise.
+            * sysdeps/pthread/aio_cancel.c (aio_cancel): Likewise.
+            * sysdeps/pthread/aio_suspend.c (aio_suspend): Likewise.
+            * sysdeps/pthread/timer_delete.c (timer_delete): Likewise.
+            * sysdeps/unix/sysv/linux/dl-openat64.c (openat64): Likewise.
+            Make variadic.
+            * time/strptime_l.c (localtime_r): Convert to prototype-style
+            function definition.
+            * wcsmbs/mbsnrtowcs.c (__mbsnrtowcs): Likewise.
+            * wcsmbs/mbsrtowcs_l.c (__mbsrtowcs_l): Likewise.
+            * wcsmbs/wcsnrtombs.c (__wcsnrtombs): Likewise.
+            * wcsmbs/wcsrtombs.c (__wcsrtombs): Likewise.
+
+Conflicts:
+	malloc/malloc.c
+	  (Textual conflict due to malloc reformatting.)
+	math/gen-auto-libm-tests.c
+	  (Missing backport of ffb536d0ac914a110c160c48d01097d132e20531,
+	  Start generating libm tests automatically with MPFR; file
+	  deleted manually.)
+	sysdeps/pthread/timer_delete.c
+	  (Applied to nptl/sysdeps/pthread/timer_delete.c.)
+
+diff --git a/crypt/md5-crypt.c b/crypt/md5-crypt.c
+index db4ea9c6f1f42f00..e8db37641ac50573 100644
+--- a/crypt/md5-crypt.c
++++ b/crypt/md5-crypt.c
+@@ -93,11 +93,7 @@ extern char *__md5_crypt (const char *key, const char *salt);
+ /* This entry point is equivalent to the `crypt' function in Unix
+    libcs.  */
+ char *
+-__md5_crypt_r (key, salt, buffer, buflen)
+-     const char *key;
+-     const char *salt;
+-     char *buffer;
+-     int buflen;
++__md5_crypt_r (const char *key, const char *salt, char *buffer, int buflen)
+ {
+   unsigned char alt_result[16]
+     __attribute__ ((__aligned__ (__alignof__ (md5_uint32))));
+diff --git a/crypt/sha256-crypt.c b/crypt/sha256-crypt.c
+index 440933ac015ab2f6..7532d7ddbb558e9a 100644
+--- a/crypt/sha256-crypt.c
++++ b/crypt/sha256-crypt.c
+@@ -101,11 +101,7 @@ extern char *__sha256_crypt (const char *key, const char *salt);
+ 
+ 
+ char *
+-__sha256_crypt_r (key, salt, buffer, buflen)
+-     const char *key;
+-     const char *salt;
+-     char *buffer;
+-     int buflen;
++__sha256_crypt_r (const char *key, const char *salt, char *buffer, int buflen)
+ {
+   unsigned char alt_result[32]
+     __attribute__ ((__aligned__ (__alignof__ (uint32_t))));
+diff --git a/crypt/sha512-crypt.c b/crypt/sha512-crypt.c
+index e5d9cacfdac437a1..8cba4264d2a871e5 100644
+--- a/crypt/sha512-crypt.c
++++ b/crypt/sha512-crypt.c
+@@ -101,11 +101,7 @@ extern char *__sha512_crypt (const char *key, const char *salt);
+ 
+ 
+ char *
+-__sha512_crypt_r (key, salt, buffer, buflen)
+-     const char *key;
+-     const char *salt;
+-     char *buffer;
+-     int buflen;
++__sha512_crypt_r (const char *key, const char *salt, char *buffer, int buflen)
+ {
+   unsigned char alt_result[64]
+     __attribute__ ((__aligned__ (__alignof__ (uint64_t))));
+diff --git a/debug/backtracesyms.c b/debug/backtracesyms.c
+index 3fabf26a8be2289c..938f5f6ff6b38b8a 100644
+--- a/debug/backtracesyms.c
++++ b/debug/backtracesyms.c
+@@ -34,9 +34,7 @@
+ 
+ 
+ char **
+-__backtrace_symbols (array, size)
+-     void *const *array;
+-     int size;
++__backtrace_symbols (void *const *array, int size)
+ {
+   Dl_info info[size];
+   int status[size];
+diff --git a/elf/dl-minimal.c b/elf/dl-minimal.c
+index a8b2d4f339e4c3dd..55ee1af9829bd8f1 100644
+--- a/elf/dl-minimal.c
++++ b/elf/dl-minimal.c
+@@ -309,11 +309,8 @@ __strtoul_internal (const char *nptr, char **endptr, int base, int group)
+    also has to be present and it is never about speed when these
+    functions are used.  */
+ char *
+-_itoa (value, buflim, base, upper_case)
+-     unsigned long long int value;
+-     char *buflim;
+-     unsigned int base;
+-     int upper_case;
++_itoa (unsigned long long int value, char *buflim, unsigned int base,
++       int upper_case)
+ {
+   assert (! upper_case);
+ 
+diff --git a/hurd/hurdmalloc.c b/hurd/hurdmalloc.c
+index da611653b602975f..8d1ac3069758bd2d 100644
+--- a/hurd/hurdmalloc.c
++++ b/hurd/hurdmalloc.c
+@@ -202,8 +202,7 @@ more_memory(int size, free_list_t fl)
+ 
+ /* Declaration changed to standard one for GNU.  */
+ void *
+-malloc(size)
+-	size_t size;
++malloc (size_t size)
+ {
+ 	int i, n;
+ 	free_list_t fl;
+@@ -269,8 +268,7 @@ malloc(size)
+ 
+ /* Declaration changed to standard one for GNU.  */
+ void
+-free(base)
+-	void *base;
++free (void *base)
+ {
+ 	header_t h;
+ 	free_list_t fl;
+@@ -318,9 +316,7 @@ free(base)
+ 
+ /* Declaration changed to standard one for GNU.  */
+ void *
+-realloc(old_base, new_size)
+-        void *old_base;
+-        size_t new_size;
++realloc (void *old_base, size_t new_size)
+ {
+ 	header_t h;
+ 	free_list_t fl;
+diff --git a/inet/inet6_option.c b/inet/inet6_option.c
+index b5ca2a604126b93a..d8c202b867bbe9f6 100644
+--- a/inet/inet6_option.c
++++ b/inet/inet6_option.c
+@@ -88,8 +88,7 @@ static uint8_t *option_alloc (struct cmsghdr *cmsg, int datalen, int multx,
+    beginning (the value y in the alignment term "xn + y"), the type
+    byte, the length byte, and the option data.  */
+ int
+-inet6_option_space (nbytes)
+-     int nbytes;
++inet6_option_space (int nbytes)
+ {
+   /* Add room for the extension header.  */
+   nbytes += sizeof (struct ip6_ext);
+@@ -106,10 +105,7 @@ link_warning (inet6_option_space,
+    contain either Hop-by-Hop or Destination options.  It returns 0 on
+    success or -1 on an error.  */
+ int
+-inet6_option_init (bp, cmsgp, type)
+-     void *bp;
+-     struct cmsghdr **cmsgp;
+-     int type;
++inet6_option_init (void *bp, struct cmsghdr **cmsgp, int type)
+ {
+   /* Only Hop-by-Hop or Destination options allowed.  */
+   if (type != IPV6_HOPOPTS && type != IPV6_DSTOPTS)
+@@ -143,11 +139,8 @@ link_warning (inet6_option_init,
+    inet6_option_init().  This function returns 0 if it succeeds or -1 on
+    an error.  */
+ int
+-inet6_option_append (cmsg, typep, multx, plusy)
+-     struct cmsghdr *cmsg;
+-     const uint8_t *typep;
+-     int multx;
+-     int plusy;
++inet6_option_append (struct cmsghdr *cmsg, const uint8_t *typep, int multx,
++		     int plusy)
+ {
+   /* typep is a pointer to the 8-bit option type.  It is assumed that this
+      field is immediately followed by the 8-bit option data length field,
+@@ -223,11 +216,7 @@ option_alloc (struct cmsghdr *cmsg, int datalen, int multx, int plusy)
+ 
+ 
+ uint8_t *
+-inet6_option_alloc (cmsg, datalen, multx, plusy)
+-     struct cmsghdr *cmsg;
+-     int datalen;
+-     int multx;
+-     int plusy;
++inet6_option_alloc (struct cmsghdr *cmsg, int datalen, int multx, int plusy)
+ {
+   return option_alloc (cmsg, datalen, multx, plusy);
+ }
+@@ -245,9 +234,7 @@ link_warning (inet6_option_alloc,
+    to be processed, the return value is -1 and *tptrp is NULL.  If an
+    error occurs, the return value is -1 and *tptrp is not NULL.  */
+ int
+-inet6_option_next (cmsg, tptrp)
+-     const struct cmsghdr *cmsg;
+-     uint8_t **tptrp;
++inet6_option_next (const struct cmsghdr *cmsg, uint8_t **tptrp)
+ {
+   /* Make sure it is an option of the right type.  */
+   if (cmsg->cmsg_level != IPPROTO_IPV6
+@@ -303,10 +290,7 @@ link_warning (inet6_option_next,
+    pointer to cmsghdr structure of which cmsg_level equals IPPROTO_IPV6
+    and cmsg_type equals either IPV6_HOPOPTS or IPV6_DSTOPTS.  */
+ int
+-inet6_option_find (cmsg, tptrp, type)
+-     const struct cmsghdr *cmsg;
+-     uint8_t **tptrp;
+-     int type;
++inet6_option_find (const struct cmsghdr *cmsg, uint8_t **tptrp, int type)
+ {
+   /* Make sure it is an option of the right type.  */
+   if (cmsg->cmsg_level != IPPROTO_IPV6
+diff --git a/io/ftw.c b/io/ftw.c
+index ffdb4b02dc7ca4d5..57777b3de86e417c 100644
+--- a/io/ftw.c
++++ b/io/ftw.c
+@@ -817,21 +817,14 @@ ftw_startup (const char *dir, int is_nftw, void *func, int descriptors,
+ /* Entry points.  */
+ 
+ int
+-FTW_NAME (path, func, descriptors)
+-     const char *path;
+-     FTW_FUNC_T func;
+-     int descriptors;
++FTW_NAME (const char *path, FTW_FUNC_T func, int descriptors)
+ {
+   return ftw_startup (path, 0, func, descriptors, 0);
+ }
+ 
+ #ifndef _LIBC
+ int
+-NFTW_NAME (path, func, descriptors, flags)
+-     const char *path;
+-     NFTW_FUNC_T func;
+-     int descriptors;
+-     int flags;
++NFTW_NAME (const char *path, NFTW_FUNC_T func, int descriptors, int flags)
+ {
+   return ftw_startup (path, 1, func, descriptors, flags);
+ }
+@@ -842,11 +835,7 @@ NFTW_NAME (path, func, descriptors, flags)
+ int NFTW_NEW_NAME (const char *, NFTW_FUNC_T, int, int);
+ 
+ int
+-NFTW_NEW_NAME (path, func, descriptors, flags)
+-     const char *path;
+-     NFTW_FUNC_T func;
+-     int descriptors;
+-     int flags;
++NFTW_NEW_NAME (const char *path, NFTW_FUNC_T func, int descriptors, int flags)
+ {
+   if (flags
+       & ~(FTW_PHYS | FTW_MOUNT | FTW_CHDIR | FTW_DEPTH | FTW_ACTIONRETVAL))
+@@ -867,11 +856,7 @@ int NFTW_OLD_NAME (const char *, NFTW_FUNC_T, int, int);
+ 
+ int
+ attribute_compat_text_section
+-NFTW_OLD_NAME (path, func, descriptors, flags)
+-     const char *path;
+-     NFTW_FUNC_T func;
+-     int descriptors;
+-     int flags;
++NFTW_OLD_NAME (const char *path, NFTW_FUNC_T func, int descriptors, int flags)
+ {
+   flags &= (FTW_PHYS | FTW_MOUNT | FTW_CHDIR | FTW_DEPTH);
+   return ftw_startup (path, 1, func, descriptors, flags);
+diff --git a/libio/iofwide.c b/libio/iofwide.c
+index 675fbccc794ffe79..fe685402001a5336 100644
+--- a/libio/iofwide.c
++++ b/libio/iofwide.c
+@@ -93,9 +93,7 @@ const struct __gconv_trans_data __libio_translit attribute_hidden =
+    the orientation first.  */
+ #undef _IO_fwide
+ int
+-_IO_fwide (fp, mode)
+-     _IO_FILE *fp;
+-     int mode;
++_IO_fwide (_IO_FILE *fp, int mode)
+ {
+   /* Normalize the value.  */
+   mode = mode < 0 ? -1 : (mode == 0 ? 0 : 1);
+diff --git a/libio/strops.c b/libio/strops.c
+index a5b76af963e77877..fdd113a60811e593 100644
+--- a/libio/strops.c
++++ b/libio/strops.c
+@@ -31,11 +31,8 @@
+ #include <stdio_ext.h>
+ 
+ void
+-_IO_str_init_static_internal (sf, ptr, size, pstart)
+-     _IO_strfile *sf;
+-     char *ptr;
+-     _IO_size_t size;
+-     char *pstart;
++_IO_str_init_static_internal (_IO_strfile *sf, char *ptr, _IO_size_t size,
++			      char *pstart)
+ {
+   _IO_FILE *fp = &sf->_sbf._f;
+   char *end;
+@@ -81,9 +78,7 @@ _IO_str_init_readonly (_IO_strfile *sf, const char *ptr, int size)
+ }
+ 
+ int
+-_IO_str_overflow (fp, c)
+-     _IO_FILE *fp;
+-     int c;
++_IO_str_overflow (_IO_FILE *fp, int c)
+ {
+   int flush_only = c == EOF;
+   _IO_size_t pos;
+@@ -144,8 +139,7 @@ _IO_str_overflow (fp, c)
+ libc_hidden_def (_IO_str_overflow)
+ 
+ int
+-_IO_str_underflow (fp)
+-     _IO_FILE *fp;
++_IO_str_underflow (_IO_FILE *fp)
+ {
+   if (fp->_IO_write_ptr > fp->_IO_read_end)
+     fp->_IO_read_end = fp->_IO_write_ptr;
+@@ -165,8 +159,7 @@ libc_hidden_def (_IO_str_underflow)
+ /* The size of the valid part of the buffer.  */
+ 
+ _IO_ssize_t
+-_IO_str_count (fp)
+-     _IO_FILE *fp;
++_IO_str_count (_IO_FILE *fp)
+ {
+   return ((fp->_IO_write_ptr > fp->_IO_read_end
+ 	   ? fp->_IO_write_ptr : fp->_IO_read_end)
+@@ -239,11 +232,7 @@ enlarge_userbuf (_IO_FILE *fp, _IO_off64_t offset, int reading)
+ 
+ 
+ _IO_off64_t
+-_IO_str_seekoff (fp, offset, dir, mode)
+-     _IO_FILE *fp;
+-     _IO_off64_t offset;
+-     int dir;
+-     int mode;
++_IO_str_seekoff (_IO_FILE *fp, _IO_off64_t offset, int dir, int mode)
+ {
+   _IO_off64_t new_pos;
+ 
+@@ -316,9 +305,7 @@ _IO_str_seekoff (fp, offset, dir, mode)
+ libc_hidden_def (_IO_str_seekoff)
+ 
+ int
+-_IO_str_pbackfail (fp, c)
+-     _IO_FILE *fp;
+-     int c;
++_IO_str_pbackfail (_IO_FILE *fp, int c)
+ {
+   if ((fp->_flags & _IO_NO_WRITES) && c != EOF)
+     return EOF;
+@@ -327,9 +314,7 @@ _IO_str_pbackfail (fp, c)
+ libc_hidden_def (_IO_str_pbackfail)
+ 
+ void
+-_IO_str_finish (fp, dummy)
+-     _IO_FILE *fp;
+-     int dummy;
++_IO_str_finish (_IO_FILE *fp, int dummy)
+ {
+   if (fp->_IO_buf_base && !(fp->_flags & _IO_USER_BUF))
+     (((_IO_strfile *) fp)->_s._free_buffer) (fp->_IO_buf_base);
+diff --git a/libio/wstrops.c b/libio/wstrops.c
+index d84c5883ad7ca20d..7a9a33ab8763b8ff 100644
+--- a/libio/wstrops.c
++++ b/libio/wstrops.c
+@@ -32,11 +32,8 @@
+ #include <stdio_ext.h>
+ 
+ void
+-_IO_wstr_init_static (fp, ptr, size, pstart)
+-     _IO_FILE *fp;
+-     wchar_t *ptr;
+-     _IO_size_t size;
+-     wchar_t *pstart;
++_IO_wstr_init_static (_IO_FILE *fp, wchar_t *ptr, _IO_size_t size,
++		      wchar_t *pstart)
+ {
+   wchar_t *end;
+ 
+@@ -70,9 +67,7 @@ _IO_wstr_init_static (fp, ptr, size, pstart)
+ }
+ 
+ _IO_wint_t
+-_IO_wstr_overflow (fp, c)
+-     _IO_FILE *fp;
+-     _IO_wint_t c;
++_IO_wstr_overflow (_IO_FILE *fp, _IO_wint_t c)
+ {
+   int flush_only = c == WEOF;
+   _IO_size_t pos;
+@@ -142,8 +137,7 @@ _IO_wstr_overflow (fp, c)
+ 
+ 
+ _IO_wint_t
+-_IO_wstr_underflow (fp)
+-     _IO_FILE *fp;
++_IO_wstr_underflow (_IO_FILE *fp)
+ {
+   if (fp->_wide_data->_IO_write_ptr > fp->_wide_data->_IO_read_end)
+     fp->_wide_data->_IO_read_end = fp->_wide_data->_IO_write_ptr;
+@@ -162,8 +156,7 @@ _IO_wstr_underflow (fp)
+ 
+ /* The size of the valid part of the buffer.  */
+ _IO_ssize_t
+-_IO_wstr_count (fp)
+-     _IO_FILE *fp;
++_IO_wstr_count (_IO_FILE *fp)
+ {
+   struct _IO_wide_data *wd = fp->_wide_data;
+ 
+@@ -244,11 +237,7 @@ enlarge_userbuf (_IO_FILE *fp, _IO_off64_t offset, int reading)
+ 
+ 
+ _IO_off64_t
+-_IO_wstr_seekoff (fp, offset, dir, mode)
+-     _IO_FILE *fp;
+-     _IO_off64_t offset;
+-     int dir;
+-     int mode;
++_IO_wstr_seekoff (_IO_FILE *fp, _IO_off64_t offset, int dir, int mode)
+ {
+   _IO_off64_t new_pos;
+ 
+@@ -326,9 +315,7 @@ _IO_wstr_seekoff (fp, offset, dir, mode)
+ }
+ 
+ _IO_wint_t
+-_IO_wstr_pbackfail (fp, c)
+-     _IO_FILE *fp;
+-     _IO_wint_t c;
++_IO_wstr_pbackfail (_IO_FILE *fp, _IO_wint_t c)
+ {
+   if ((fp->_flags & _IO_NO_WRITES) && c != WEOF)
+     return WEOF;
+@@ -336,9 +323,7 @@ _IO_wstr_pbackfail (fp, c)
+ }
+ 
+ void
+-_IO_wstr_finish (fp, dummy)
+-     _IO_FILE *fp;
+-     int dummy;
++_IO_wstr_finish (_IO_FILE *fp, int dummy)
+ {
+   if (fp->_wide_data->_IO_buf_base && !(fp->_flags2 & _IO_FLAGS2_USER_WBUF))
+     (((_IO_strfile *) fp)->_s._free_buffer) (fp->_wide_data->_IO_buf_base);
+diff --git a/locale/programs/localedef.c b/locale/programs/localedef.c
+index d1a8916888d21235..4a63f68dd8309ec7 100644
+--- a/locale/programs/localedef.c
++++ b/locale/programs/localedef.c
+@@ -491,9 +491,7 @@ construct_output_path (char *path)
+    names.  Normalization allows the user to use any of the common
+    names.  */
+ static const char *
+-normalize_codeset (codeset, name_len)
+-     const char *codeset;
+-     size_t name_len;
++normalize_codeset (const char *codeset, size_t name_len)
+ {
+   int len = 0;
+   int only_digit = 1;
+diff --git a/locale/programs/locarchive.c b/locale/programs/locarchive.c
+index 1eae271186bc80a9..de98b994425474ba 100644
+--- a/locale/programs/locarchive.c
++++ b/locale/programs/locarchive.c
+@@ -1059,11 +1059,8 @@ add_locale (struct locarhandle *ah,
+    of the files if necessary.  Add all the names, possibly overwriting
+    old files.  */
+ int
+-add_locale_to_archive (ah, name, data, replace)
+-     struct locarhandle *ah;
+-     const char *name;
+-     locale_data_t data;
+-     bool replace;
++add_locale_to_archive (struct locarhandle *ah, const char *name,
++		       locale_data_t data, bool replace)
+ {
+   char *normalized_name = NULL;
+   uint32_t locrec_offset;
+@@ -1260,10 +1257,7 @@ add_locale_to_archive (ah, name, data, replace)
+ 
+ 
+ int
+-add_locales_to_archive (nlist, list, replace)
+-     size_t nlist;
+-     char *list[];
+-     bool replace;
++add_locales_to_archive (size_t nlist, char *list[], bool replace)
+ {
+   struct locarhandle ah;
+   int result = 0;
+@@ -1460,9 +1454,7 @@ add_locales_to_archive (nlist, list, replace)
+ 
+ 
+ int
+-delete_locales_from_archive (nlist, list)
+-     size_t nlist;
+-     char *list[];
++delete_locales_from_archive (size_t nlist, char *list[])
+ {
+   struct locarhandle ah;
+   struct locarhead *head;
+diff --git a/malloc/malloc.c b/malloc/malloc.c
+index 3e7b9bf9e8d71247..1de07de97bb421d6 100644
+--- a/malloc/malloc.c
++++ b/malloc/malloc.c
+@@ -4662,7 +4662,8 @@ int_mallinfo(mstate av, struct mallinfo *m)
+ }
+ 
+ 
+-struct mallinfo __libc_mallinfo()
++struct mallinfo
++__libc_mallinfo (void)
+ {
+   struct mallinfo m;
+   mstate ar_ptr;
+diff --git a/misc/tsearch.c b/misc/tsearch.c
+index eb4d97d7eee89a89..5f012e9ba9f678dc 100644
+--- a/misc/tsearch.c
++++ b/misc/tsearch.c
+@@ -300,10 +300,7 @@ weak_alias (__tsearch, tsearch)
+    KEY is the key to be located, ROOTP is the address of tree root,
+    COMPAR the ordering function.  */
+ void *
+-__tfind (key, vrootp, compar)
+-     const void *key;
+-     void *const *vrootp;
+-     __compar_fn_t compar;
++__tfind (const void *key, void *const *vrootp, __compar_fn_t compar)
+ {
+   node *rootp = (node *) vrootp;
+ 
+diff --git a/nptl/pthread_attr_destroy.c b/nptl/pthread_attr_destroy.c
+index c79752d89d05e158..ccdb5cc41f10bcdf 100644
+--- a/nptl/pthread_attr_destroy.c
++++ b/nptl/pthread_attr_destroy.c
+@@ -24,8 +24,7 @@
+ #include <shlib-compat.h>
+ 
+ int
+-__pthread_attr_destroy (attr)
+-     pthread_attr_t *attr;
++__pthread_attr_destroy (pthread_attr_t *attr)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getdetachstate.c b/nptl/pthread_attr_getdetachstate.c
+index 1c800323bf165a9d..601c5e77483bb5dc 100644
+--- a/nptl/pthread_attr_getdetachstate.c
++++ b/nptl/pthread_attr_getdetachstate.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-__pthread_attr_getdetachstate (attr, detachstate)
+-     const pthread_attr_t *attr;
+-     int *detachstate;
++__pthread_attr_getdetachstate (const pthread_attr_t *attr, int *detachstate)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getguardsize.c b/nptl/pthread_attr_getguardsize.c
+index 497010dc17002951..3fba0b8c548305f5 100644
+--- a/nptl/pthread_attr_getguardsize.c
++++ b/nptl/pthread_attr_getguardsize.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-pthread_attr_getguardsize (attr, guardsize)
+-     const pthread_attr_t *attr;
+-     size_t *guardsize;
++pthread_attr_getguardsize (const pthread_attr_t *attr, size_t *guardsize)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getinheritsched.c b/nptl/pthread_attr_getinheritsched.c
+index b25d808247cd26f1..df2c31dfa5955677 100644
+--- a/nptl/pthread_attr_getinheritsched.c
++++ b/nptl/pthread_attr_getinheritsched.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-__pthread_attr_getinheritsched (attr, inherit)
+-     const pthread_attr_t *attr;
+-     int *inherit;
++__pthread_attr_getinheritsched (const pthread_attr_t *attr, int *inherit)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getschedparam.c b/nptl/pthread_attr_getschedparam.c
+index 352ecb54f31e0cd5..f8a0b8be60bc059b 100644
+--- a/nptl/pthread_attr_getschedparam.c
++++ b/nptl/pthread_attr_getschedparam.c
+@@ -22,9 +22,8 @@
+ 
+ 
+ int
+-__pthread_attr_getschedparam (attr, param)
+-     const pthread_attr_t *attr;
+-     struct sched_param *param;
++__pthread_attr_getschedparam (const pthread_attr_t *attr,
++			      struct sched_param *param)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getschedpolicy.c b/nptl/pthread_attr_getschedpolicy.c
+index badec6b4e73ebe4c..4140876527bf833f 100644
+--- a/nptl/pthread_attr_getschedpolicy.c
++++ b/nptl/pthread_attr_getschedpolicy.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-__pthread_attr_getschedpolicy (attr, policy)
+-     const pthread_attr_t *attr;
+-     int *policy;
++__pthread_attr_getschedpolicy (const pthread_attr_t *attr, int *policy)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getscope.c b/nptl/pthread_attr_getscope.c
+index b2e1b141b6d109e9..fc79b8e95a779e99 100644
+--- a/nptl/pthread_attr_getscope.c
++++ b/nptl/pthread_attr_getscope.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-__pthread_attr_getscope (attr, scope)
+-     const pthread_attr_t *attr;
+-     int *scope;
++__pthread_attr_getscope (const pthread_attr_t *attr, int *scope)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getstack.c b/nptl/pthread_attr_getstack.c
+index 0ede9e77a1260997..df77a35380be68a4 100644
+--- a/nptl/pthread_attr_getstack.c
++++ b/nptl/pthread_attr_getstack.c
+@@ -21,10 +21,8 @@
+ 
+ 
+ int
+-__pthread_attr_getstack (attr, stackaddr, stacksize)
+-     const pthread_attr_t *attr;
+-     void **stackaddr;
+-     size_t *stacksize;
++__pthread_attr_getstack (const pthread_attr_t *attr, void **stackaddr,
++			 size_t *stacksize)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getstackaddr.c b/nptl/pthread_attr_getstackaddr.c
+index 958a856f5842c0c1..859eb7dec98568b7 100644
+--- a/nptl/pthread_attr_getstackaddr.c
++++ b/nptl/pthread_attr_getstackaddr.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_attr_getstackaddr (attr, stackaddr)
+-     const pthread_attr_t *attr;
+-     void **stackaddr;
++__pthread_attr_getstackaddr (const pthread_attr_t *attr, void **stackaddr)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_getstacksize.c b/nptl/pthread_attr_getstacksize.c
+index 7c63e55942536cc3..53d65257ebdcd408 100644
+--- a/nptl/pthread_attr_getstacksize.c
++++ b/nptl/pthread_attr_getstacksize.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-__pthread_attr_getstacksize (attr, stacksize)
+-     const pthread_attr_t *attr;
+-     size_t *stacksize;
++__pthread_attr_getstacksize (const pthread_attr_t *attr, size_t *stacksize)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_init.c b/nptl/pthread_attr_init.c
+index a7add4b80d248cc8..e5b800b72e100acf 100644
+--- a/nptl/pthread_attr_init.c
++++ b/nptl/pthread_attr_init.c
+@@ -30,8 +30,7 @@ int __attr_list_lock = LLL_LOCK_INITIALIZER;
+ 
+ 
+ int
+-__pthread_attr_init_2_1 (attr)
+-     pthread_attr_t *attr;
++__pthread_attr_init_2_1 (pthread_attr_t *attr)
+ {
+   struct pthread_attr *iattr;
+ 
+@@ -54,8 +53,7 @@ versioned_symbol (libpthread, __pthread_attr_init_2_1, pthread_attr_init,
+ 
+ #if SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_1)
+ int
+-__pthread_attr_init_2_0 (attr)
+-     pthread_attr_t *attr;
++__pthread_attr_init_2_0 (pthread_attr_t *attr)
+ {
+   /* This code is specific to the old LinuxThread code which has a too
+      small pthread_attr_t definition.  The struct looked like
+diff --git a/nptl/pthread_attr_setdetachstate.c b/nptl/pthread_attr_setdetachstate.c
+index 9ce8651f0b5906d3..9d22974536c07822 100644
+--- a/nptl/pthread_attr_setdetachstate.c
++++ b/nptl/pthread_attr_setdetachstate.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_attr_setdetachstate (attr, detachstate)
+-     pthread_attr_t *attr;
+-     int detachstate;
++__pthread_attr_setdetachstate (pthread_attr_t *attr, int detachstate)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setguardsize.c b/nptl/pthread_attr_setguardsize.c
+index b9f1436054577e15..475054642f406517 100644
+--- a/nptl/pthread_attr_setguardsize.c
++++ b/nptl/pthread_attr_setguardsize.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ int
+-pthread_attr_setguardsize (attr, guardsize)
+-     pthread_attr_t *attr;
+-     size_t guardsize;
++pthread_attr_setguardsize (pthread_attr_t *attr, size_t guardsize)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setinheritsched.c b/nptl/pthread_attr_setinheritsched.c
+index 2cc8c0ee06149f96..1107c64866f7e078 100644
+--- a/nptl/pthread_attr_setinheritsched.c
++++ b/nptl/pthread_attr_setinheritsched.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_attr_setinheritsched (attr, inherit)
+-     pthread_attr_t *attr;
+-     int inherit;
++__pthread_attr_setinheritsched (pthread_attr_t *attr, int inherit)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setschedparam.c b/nptl/pthread_attr_setschedparam.c
+index 239a41bfcc764903..ad7488688cc8d51d 100644
+--- a/nptl/pthread_attr_setschedparam.c
++++ b/nptl/pthread_attr_setschedparam.c
+@@ -23,9 +23,8 @@
+ 
+ 
+ int
+-__pthread_attr_setschedparam (attr, param)
+-     pthread_attr_t *attr;
+-     const struct sched_param *param;
++__pthread_attr_setschedparam (pthread_attr_t *attr,
++			      const struct sched_param *param)
+ {
+   assert (sizeof (*attr) >= sizeof (struct pthread_attr));
+   struct pthread_attr *iattr = (struct pthread_attr *) attr;
+diff --git a/nptl/pthread_attr_setschedpolicy.c b/nptl/pthread_attr_setschedpolicy.c
+index 0ba38a022eb564bf..ccab923cabe9f20b 100644
+--- a/nptl/pthread_attr_setschedpolicy.c
++++ b/nptl/pthread_attr_setschedpolicy.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_attr_setschedpolicy (attr, policy)
+-     pthread_attr_t *attr;
+-     int policy;
++__pthread_attr_setschedpolicy (pthread_attr_t *attr, int policy)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setscope.c b/nptl/pthread_attr_setscope.c
+index eb03731cb2563e5a..62d250c4fdb34497 100644
+--- a/nptl/pthread_attr_setscope.c
++++ b/nptl/pthread_attr_setscope.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_attr_setscope (attr, scope)
+-     pthread_attr_t *attr;
+-     int scope;
++__pthread_attr_setscope (pthread_attr_t *attr, int scope)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setstack.c b/nptl/pthread_attr_setstack.c
+index 72eaee218474de88..e8c2b8515dc5912b 100644
+--- a/nptl/pthread_attr_setstack.c
++++ b/nptl/pthread_attr_setstack.c
+@@ -28,10 +28,8 @@
+ 
+ 
+ int
+-__pthread_attr_setstack (attr, stackaddr, stacksize)
+-     pthread_attr_t *attr;
+-     void *stackaddr;
+-     size_t stacksize;
++__pthread_attr_setstack (pthread_attr_t *attr, void *stackaddr,
++			 size_t stacksize)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setstackaddr.c b/nptl/pthread_attr_setstackaddr.c
+index b1a33d8c3f7043c3..e20eff61fa591364 100644
+--- a/nptl/pthread_attr_setstackaddr.c
++++ b/nptl/pthread_attr_setstackaddr.c
+@@ -22,9 +22,7 @@
+ 
+ 
+ int
+-__pthread_attr_setstackaddr (attr, stackaddr)
+-     pthread_attr_t *attr;
+-     void *stackaddr;
++__pthread_attr_setstackaddr (pthread_attr_t *attr, void *stackaddr)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_attr_setstacksize.c b/nptl/pthread_attr_setstacksize.c
+index 954cc0f4d0b5a56e..890d3a492bc83030 100644
+--- a/nptl/pthread_attr_setstacksize.c
++++ b/nptl/pthread_attr_setstacksize.c
+@@ -27,9 +27,7 @@
+ 
+ 
+ int
+-__pthread_attr_setstacksize (attr, stacksize)
+-     pthread_attr_t *attr;
+-     size_t stacksize;
++__pthread_attr_setstacksize (pthread_attr_t *attr, size_t stacksize)
+ {
+   struct pthread_attr *iattr;
+ 
+diff --git a/nptl/pthread_condattr_setclock.c b/nptl/pthread_condattr_setclock.c
+index 8b05dc84e923cf63..fd0b7328088e6f30 100644
+--- a/nptl/pthread_condattr_setclock.c
++++ b/nptl/pthread_condattr_setclock.c
+@@ -26,9 +26,7 @@
+ 
+ 
+ int
+-pthread_condattr_setclock (attr, clock_id)
+-     pthread_condattr_t *attr;
+-     clockid_t clock_id;
++pthread_condattr_setclock (pthread_condattr_t *attr, clockid_t clock_id)
+ {
+   /* Only a few clocks are allowed.  */
+   if (clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_REALTIME)
+diff --git a/nptl/pthread_create.c b/nptl/pthread_create.c
+index 1083d6faacca5ab6..987469ba58e7bffa 100644
+--- a/nptl/pthread_create.c
++++ b/nptl/pthread_create.c
+@@ -60,8 +60,7 @@ unsigned int __nptl_nthreads = 1;
+ 
+ struct pthread *
+ internal_function
+-__find_in_stack_list (pd)
+-     struct pthread *pd;
++__find_in_stack_list (struct pthread *pd)
+ {
+   list_t *entry;
+   struct pthread *result = NULL;
+diff --git a/nptl/pthread_getattr_np.c b/nptl/pthread_getattr_np.c
+index 72361c9f0497e048..8df7f6feb93ca0bb 100644
+--- a/nptl/pthread_getattr_np.c
++++ b/nptl/pthread_getattr_np.c
+@@ -30,9 +30,7 @@
+ 
+ 
+ int
+-pthread_getattr_np (thread_id, attr)
+-     pthread_t thread_id;
+-     pthread_attr_t *attr;
++pthread_getattr_np (pthread_t thread_id, pthread_attr_t *attr)
+ {
+   struct pthread *thread = (struct pthread *) thread_id;
+   struct pthread_attr *iattr = (struct pthread_attr *) attr;
+diff --git a/nptl/pthread_mutex_init.c b/nptl/pthread_mutex_init.c
+index 2979468fa516c587..0aec130f4d1754d9 100644
+--- a/nptl/pthread_mutex_init.c
++++ b/nptl/pthread_mutex_init.c
+@@ -37,9 +37,8 @@ static int tpi_supported;
+ 
+ 
+ int
+-__pthread_mutex_init (mutex, mutexattr)
+-     pthread_mutex_t *mutex;
+-     const pthread_mutexattr_t *mutexattr;
++__pthread_mutex_init (pthread_mutex_t *mutex,
++		      const pthread_mutexattr_t *mutexattr)
+ {
+   const struct pthread_mutexattr *imutexattr;
+ 
+diff --git a/nptl/pthread_mutex_lock.c b/nptl/pthread_mutex_lock.c
+index f8c9b217efbce91b..d17e6b5ea5947f6e 100644
+--- a/nptl/pthread_mutex_lock.c
++++ b/nptl/pthread_mutex_lock.c
+@@ -58,8 +58,7 @@ static int __pthread_mutex_lock_full (pthread_mutex_t *mutex)
+      __attribute_noinline__;
+ 
+ int
+-__pthread_mutex_lock (mutex)
+-     pthread_mutex_t *mutex;
++__pthread_mutex_lock (pthread_mutex_t *mutex)
+ {
+   assert (sizeof (mutex->__size) >= sizeof (mutex->__data));
+ 
+@@ -517,8 +516,8 @@ hidden_def (__pthread_mutex_lock)
+ 
+ #ifdef NO_INCR
+ void
+-__pthread_mutex_cond_lock_adjust (mutex)
+-     pthread_mutex_t *mutex;
++internal_function
++__pthread_mutex_cond_lock_adjust (pthread_mutex_t *mutex)
+ {
+   assert ((mutex->__data.__kind & PTHREAD_MUTEX_PRIO_INHERIT_NP) != 0);
+   assert ((mutex->__data.__kind & PTHREAD_MUTEX_ROBUST_NORMAL_NP) == 0);
+diff --git a/nptl/pthread_mutex_timedlock.c b/nptl/pthread_mutex_timedlock.c
+index 7959885a244c6d95..f035b29f621cebd6 100644
+--- a/nptl/pthread_mutex_timedlock.c
++++ b/nptl/pthread_mutex_timedlock.c
+@@ -38,9 +38,8 @@
+ #endif
+ 
+ int
+-pthread_mutex_timedlock (mutex, abstime)
+-     pthread_mutex_t *mutex;
+-     const struct timespec *abstime;
++pthread_mutex_timedlock (pthread_mutex_t *mutex,
++			 const struct timespec *abstime)
+ {
+   int oldval;
+   pid_t id = THREAD_GETMEM (THREAD_SELF, tid);
+diff --git a/nptl/pthread_mutex_trylock.c b/nptl/pthread_mutex_trylock.c
+index 7e96ec48f81dfc2c..40ba3e9fa9664756 100644
+--- a/nptl/pthread_mutex_trylock.c
++++ b/nptl/pthread_mutex_trylock.c
+@@ -34,8 +34,7 @@
+    lock state if the lock was actually busy.  */
+ 
+ int
+-__pthread_mutex_trylock (mutex)
+-     pthread_mutex_t *mutex;
++__pthread_mutex_trylock (pthread_mutex_t *mutex)
+ {
+   int oldval;
+   pid_t id = THREAD_GETMEM (THREAD_SELF, tid);
+diff --git a/nptl/pthread_mutex_unlock.c b/nptl/pthread_mutex_unlock.c
+index 69e18f5057b5c6a5..27055ea7b2c8c493 100644
+--- a/nptl/pthread_mutex_unlock.c
++++ b/nptl/pthread_mutex_unlock.c
+@@ -34,9 +34,7 @@ __pthread_mutex_unlock_full (pthread_mutex_t *mutex, int decr)
+ 
+ int
+ internal_function attribute_hidden
+-__pthread_mutex_unlock_usercnt (mutex, decr)
+-     pthread_mutex_t *mutex;
+-     int decr;
++__pthread_mutex_unlock_usercnt (pthread_mutex_t *mutex, int decr)
+ {
+   int type = PTHREAD_MUTEX_TYPE_ELISION (mutex);
+   if (__builtin_expect (type &
+@@ -304,8 +302,7 @@ __pthread_mutex_unlock_full (pthread_mutex_t *mutex, int decr)
+ 
+ 
+ int
+-__pthread_mutex_unlock (mutex)
+-     pthread_mutex_t *mutex;
++__pthread_mutex_unlock (pthread_mutex_t *mutex)
+ {
+   return __pthread_mutex_unlock_usercnt (mutex, 1);
+ }
+diff --git a/nptl/sysdeps/pthread/timer_delete.c b/nptl/sysdeps/pthread/timer_delete.c
+index a529d73925e9ed0d..546d19bf3f4a418a 100644
+--- a/nptl/sysdeps/pthread/timer_delete.c
++++ b/nptl/sysdeps/pthread/timer_delete.c
+@@ -26,8 +26,7 @@
+ 
+ /* Delete timer TIMERID.  */
+ int
+-timer_delete (timerid)
+-     timer_t timerid;
++timer_delete (timer_t timerid)
+ {
+   struct timer_node *timer;
+   int retval = -1;
+diff --git a/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c b/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c
+index 7b6fbc18aa5f1153..2ac421fd63af3b75 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c
++++ b/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c
+@@ -14,7 +14,7 @@
+ #define LLL_ROBUST_MUTEX_LOCK(mutex, id) \
+   lll_robust_cond_lock ((mutex)->__data.__lock, id, \
+ 			PTHREAD_ROBUST_MUTEX_PSHARED (mutex))
+-#define __pthread_mutex_lock __pthread_mutex_cond_lock
++#define __pthread_mutex_lock internal_function __pthread_mutex_cond_lock
+ #define __pthread_mutex_lock_full __pthread_mutex_cond_lock_full
+ #define NO_INCR
+ 
+diff --git a/nptl_db/td_ta_clear_event.c b/nptl_db/td_ta_clear_event.c
+index 0c5f808496a0040b..74d22f964c80adb8 100644
+--- a/nptl_db/td_ta_clear_event.c
++++ b/nptl_db/td_ta_clear_event.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ td_err_e
+-td_ta_clear_event (ta_arg, event)
+-     const td_thragent_t *ta_arg;
+-     td_thr_events_t *event;
++td_ta_clear_event (const td_thragent_t *ta_arg, td_thr_events_t *event)
+ {
+   td_thragent_t *const ta = (td_thragent_t *) ta_arg;
+   td_err_e err;
+diff --git a/nptl_db/td_ta_set_event.c b/nptl_db/td_ta_set_event.c
+index e51e4b5c8762bf96..940b3472549406db 100644
+--- a/nptl_db/td_ta_set_event.c
++++ b/nptl_db/td_ta_set_event.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ td_err_e
+-td_ta_set_event (ta_arg, event)
+-     const td_thragent_t *ta_arg;
+-     td_thr_events_t *event;
++td_ta_set_event (const td_thragent_t *ta_arg, td_thr_events_t *event)
+ {
+   td_thragent_t *const ta = (td_thragent_t *) ta_arg;
+   td_err_e err;
+diff --git a/nptl_db/td_thr_clear_event.c b/nptl_db/td_thr_clear_event.c
+index 8ee9ac146aa8036b..4f2ccf3ae179dcc7 100644
+--- a/nptl_db/td_thr_clear_event.c
++++ b/nptl_db/td_thr_clear_event.c
+@@ -23,9 +23,7 @@
+ 
+ 
+ td_err_e
+-td_thr_clear_event (th, event)
+-     const td_thrhandle_t *th;
+-     td_thr_events_t *event;
++td_thr_clear_event (const td_thrhandle_t *th, td_thr_events_t *event)
+ {
+   td_err_e err;
+   psaddr_t eventmask;
+diff --git a/nptl_db/td_thr_event_enable.c b/nptl_db/td_thr_event_enable.c
+index fed7f70655092365..fd94580112ba3eb0 100644
+--- a/nptl_db/td_thr_event_enable.c
++++ b/nptl_db/td_thr_event_enable.c
+@@ -21,9 +21,7 @@
+ 
+ 
+ td_err_e
+-td_thr_event_enable (th, onoff)
+-     const td_thrhandle_t *th;
+-     int onoff;
++td_thr_event_enable (const td_thrhandle_t *th, int onoff)
+ {
+   LOG ("td_thr_event_enable");
+ 
+diff --git a/nptl_db/td_thr_set_event.c b/nptl_db/td_thr_set_event.c
+index edc4efb35b78cf50..20989c5bfcddde3b 100644
+--- a/nptl_db/td_thr_set_event.c
++++ b/nptl_db/td_thr_set_event.c
+@@ -23,9 +23,7 @@
+ 
+ 
+ td_err_e
+-td_thr_set_event (th, event)
+-     const td_thrhandle_t *th;
+-     td_thr_events_t *event;
++td_thr_set_event (const td_thrhandle_t *th, td_thr_events_t *event)
+ {
+   td_err_e err;
+   psaddr_t eventmask;
+diff --git a/nss/makedb.c b/nss/makedb.c
+index e372f5d77e5273bc..9c96724fd214981d 100644
+--- a/nss/makedb.c
++++ b/nss/makedb.c
+@@ -417,11 +417,7 @@ valstr_compare (const void *p1, const void *p2)
+ 
+ 
+ static int
+-process_input (input, inname, to_lowercase, be_quiet)
+-     FILE *input;
+-     const char *inname;
+-     int to_lowercase;
+-     int be_quiet;
++process_input (FILE *input, const char *inname, int to_lowercase, int be_quiet)
+ {
+   char *line;
+   size_t linelen;
+diff --git a/posix/fnmatch.c b/posix/fnmatch.c
+index eed12b7b515e390c..107ba1010059c07f 100644
+--- a/posix/fnmatch.c
++++ b/posix/fnmatch.c
+@@ -167,9 +167,7 @@ static int posixly_correct;
+ 
+ # if !defined HAVE___STRCHRNUL && !defined _LIBC
+ static char *
+-__strchrnul (s, c)
+-     const char *s;
+-     int c;
++__strchrnul (const char *s, int c)
+ {
+   char *result = strchr (s, c);
+   if (result == NULL)
+@@ -180,9 +178,7 @@ __strchrnul (s, c)
+ 
+ # if HANDLE_MULTIBYTE && !defined HAVE___STRCHRNUL && !defined _LIBC
+ static wchar_t *
+-__wcschrnul (s, c)
+-     const wchar_t *s;
+-     wint_t c;
++__wcschrnul (const wchar_t *s, wint_t c)
+ {
+   wchar_t *result = wcschr (s, c);
+   if (result == NULL)
+@@ -320,10 +316,7 @@ is_char_class (const wchar_t *wcs)
+ 
+ 
+ int
+-fnmatch (pattern, string, flags)
+-     const char *pattern;
+-     const char *string;
+-     int flags;
++fnmatch (const char *pattern, const char *string, int flags)
+ {
+ # if HANDLE_MULTIBYTE
+   if (__builtin_expect (MB_CUR_MAX, 1) != 1)
+diff --git a/posix/fnmatch_loop.c b/posix/fnmatch_loop.c
+index 2bd788f3942c6e7d..da1fe0c987f21942 100644
+--- a/posix/fnmatch_loop.c
++++ b/posix/fnmatch_loop.c
+@@ -37,14 +37,8 @@ static const CHAR *END (const CHAR *patternp) internal_function;
+ 
+ static int
+ internal_function
+-FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+-     const CHAR *pattern;
+-     const CHAR *string;
+-     const CHAR *string_end;
+-     int no_leading_period;
+-     int flags;
+-     struct STRUCT *ends;
+-     size_t alloca_used;
++FCT (const CHAR *pattern, const CHAR *string, const CHAR *string_end,
++     int no_leading_period, int flags, struct STRUCT *ends, size_t alloca_used)
+ {
+   const CHAR *p = pattern, *n = string;
+   UCHAR c;
+diff --git a/posix/glob.c b/posix/glob.c
+index 8c7a80085128475a..e3d6fe0f15f7d9ce 100644
+--- a/posix/glob.c
++++ b/posix/glob.c
+@@ -1263,8 +1263,7 @@ libc_hidden_def (glob)
+ 
+ /* Free storage allocated in PGLOB by a previous `glob' call.  */
+ void
+-globfree (pglob)
+-     glob_t *pglob;
++globfree (glob_t *pglob)
+ {
+   if (pglob->gl_pathv != NULL)
+     {
+@@ -1359,9 +1358,7 @@ prefix_array (const char *dirname, char **array, size_t n)
+ /* We must not compile this function twice.  */
+ #if !defined _LIBC || !defined NO_GLOB_PATTERN_P
+ int
+-__glob_pattern_type (pattern, quote)
+-     const char *pattern;
+-     int quote;
++__glob_pattern_type (const char *pattern, int quote)
+ {
+   const char *p;
+   int ret = 0;
+@@ -1398,9 +1395,7 @@ __glob_pattern_type (pattern, quote)
+ /* Return nonzero if PATTERN contains any metacharacters.
+    Metacharacters can be quoted with backslashes if QUOTE is nonzero.  */
+ int
+-__glob_pattern_p (pattern, quote)
+-     const char *pattern;
+-     int quote;
++__glob_pattern_p (const char *pattern, int quote)
+ {
+   return __glob_pattern_type (pattern, quote) == 1;
+ }
+diff --git a/posix/regcomp.c b/posix/regcomp.c
+index 99fee76b8a8cbb12..80359e58db504ed6 100644
+--- a/posix/regcomp.c
++++ b/posix/regcomp.c
+@@ -210,10 +210,8 @@ const size_t __re_error_msgid_idx[] attribute_hidden =
+    are set in BUFP on entry.  */
+ 
+ const char *
+-re_compile_pattern (pattern, length, bufp)
+-    const char *pattern;
+-    size_t length;
+-    struct re_pattern_buffer *bufp;
++re_compile_pattern (const char *pattern, size_t length,
++		    struct re_pattern_buffer *bufp)
+ {
+   reg_errcode_t ret;
+ 
+@@ -251,8 +249,7 @@ reg_syntax_t re_syntax_options;
+    defined in regex.h.  We return the old syntax.  */
+ 
+ reg_syntax_t
+-re_set_syntax (syntax)
+-    reg_syntax_t syntax;
++re_set_syntax (reg_syntax_t syntax)
+ {
+   reg_syntax_t ret = re_syntax_options;
+ 
+@@ -264,8 +261,7 @@ weak_alias (__re_set_syntax, re_set_syntax)
+ #endif
+ 
+ int
+-re_compile_fastmap (bufp)
+-    struct re_pattern_buffer *bufp;
++re_compile_fastmap (struct re_pattern_buffer *bufp)
+ {
+   re_dfa_t *dfa = (re_dfa_t *) bufp->buffer;
+   char *fastmap = bufp->fastmap;
+@@ -463,10 +459,7 @@ re_compile_fastmap_iter (regex_t *bufp, const re_dfastate_t *init_state,
+    the return codes and their meanings.)  */
+ 
+ int
+-regcomp (preg, pattern, cflags)
+-    regex_t *__restrict preg;
+-    const char *__restrict pattern;
+-    int cflags;
++regcomp (regex_t *__restrict preg, const char *__restrict pattern, int cflags)
+ {
+   reg_errcode_t ret;
+   reg_syntax_t syntax = ((cflags & REG_EXTENDED) ? RE_SYNTAX_POSIX_EXTENDED
+@@ -525,11 +518,8 @@ weak_alias (__regcomp, regcomp)
+    from either regcomp or regexec.   We don't use PREG here.  */
+ 
+ size_t
+-regerror (errcode, preg, errbuf, errbuf_size)
+-    int errcode;
+-    const regex_t *__restrict preg;
+-    char *__restrict errbuf;
+-    size_t errbuf_size;
++regerror (int errcode, const regex_t *__restrict preg, char *__restrict errbuf,
++	  size_t errbuf_size)
+ {
+   const char *msg;
+   size_t msg_size;
+@@ -633,8 +623,7 @@ free_dfa_content (re_dfa_t *dfa)
+ /* Free dynamically allocated space used by PREG.  */
+ 
+ void
+-regfree (preg)
+-    regex_t *preg;
++regfree (regex_t *preg)
+ {
+   re_dfa_t *dfa = (re_dfa_t *) preg->buffer;
+   if (BE (dfa != NULL, 1))
+diff --git a/posix/regexec.c b/posix/regexec.c
+index 5b31f5bbd7e5115a..f315149af88ac6bb 100644
+--- a/posix/regexec.c
++++ b/posix/regexec.c
+@@ -217,12 +217,8 @@ static reg_errcode_t extend_buffers (re_match_context_t *mctx, int min_len)
+    We return 0 if we find a match and REG_NOMATCH if not.  */
+ 
+ int
+-regexec (preg, string, nmatch, pmatch, eflags)
+-    const regex_t *__restrict preg;
+-    const char *__restrict string;
+-    size_t nmatch;
+-    regmatch_t pmatch[];
+-    int eflags;
++regexec (const regex_t *__restrict preg, const char *__restrict string,
++	 size_t nmatch, regmatch_t pmatch[], int eflags)
+ {
+   reg_errcode_t err;
+   int start, length;
+@@ -303,11 +299,8 @@ compat_symbol (libc, __compat_regexec, regexec, GLIBC_2_0);
+    match was found and -2 indicates an internal error.  */
+ 
+ int
+-re_match (bufp, string, length, start, regs)
+-    struct re_pattern_buffer *bufp;
+-    const char *string;
+-    int length, start;
+-    struct re_registers *regs;
++re_match (struct re_pattern_buffer *bufp, const char *string, int length,
++	  int start, struct re_registers *regs)
+ {
+   return re_search_stub (bufp, string, length, start, 0, length, regs, 1);
+ }
+@@ -316,11 +309,8 @@ weak_alias (__re_match, re_match)
+ #endif
+ 
+ int
+-re_search (bufp, string, length, start, range, regs)
+-    struct re_pattern_buffer *bufp;
+-    const char *string;
+-    int length, start, range;
+-    struct re_registers *regs;
++re_search (struct re_pattern_buffer *bufp, const char *string, int length,
++	   int start, int range, struct re_registers *regs)
+ {
+   return re_search_stub (bufp, string, length, start, range, length, regs, 0);
+ }
+@@ -329,11 +319,9 @@ weak_alias (__re_search, re_search)
+ #endif
+ 
+ int
+-re_match_2 (bufp, string1, length1, string2, length2, start, regs, stop)
+-    struct re_pattern_buffer *bufp;
+-    const char *string1, *string2;
+-    int length1, length2, start, stop;
+-    struct re_registers *regs;
++re_match_2 (struct re_pattern_buffer *bufp, const char *string1, int length1,
++	    const char *string2, int length2, int start,
++	    struct re_registers *regs, int stop)
+ {
+   return re_search_2_stub (bufp, string1, length1, string2, length2,
+ 			   start, 0, regs, stop, 1);
+@@ -343,11 +331,9 @@ weak_alias (__re_match_2, re_match_2)
+ #endif
+ 
+ int
+-re_search_2 (bufp, string1, length1, string2, length2, start, range, regs, stop)
+-    struct re_pattern_buffer *bufp;
+-    const char *string1, *string2;
+-    int length1, length2, start, range, stop;
+-    struct re_registers *regs;
++re_search_2 (struct re_pattern_buffer *bufp, const char *string1, int length1,
++	     const char *string2, int length2, int start, int range,
++	     struct re_registers *regs, int stop)
+ {
+   return re_search_2_stub (bufp, string1, length1, string2, length2,
+ 			   start, range, regs, stop, 0);
+@@ -404,11 +390,10 @@ re_search_2_stub (bufp, string1, length1, string2, length2, start, range, regs,
+    otherwise the position of the match is returned.  */
+ 
+ static int
+-re_search_stub (bufp, string, length, start, range, stop, regs, ret_len)
+-    struct re_pattern_buffer *bufp;
+-    const char *string;
+-    int length, start, range, stop, ret_len;
+-    struct re_registers *regs;
++internal_function
++re_search_stub (struct re_pattern_buffer *bufp, const char *string, int length,
++		int start, int range, int stop, struct re_registers *regs,
++		int ret_len)
+ {
+   reg_errcode_t result;
+   regmatch_t *pmatch;
+@@ -493,10 +478,9 @@ re_search_stub (bufp, string, length, start, range, stop, regs, ret_len)
+ }
+ 
+ static unsigned
+-re_copy_regs (regs, pmatch, nregs, regs_allocated)
+-    struct re_registers *regs;
+-    regmatch_t *pmatch;
+-    int nregs, regs_allocated;
++internal_function
++re_copy_regs (struct re_registers *regs, regmatch_t *pmatch, int nregs,
++	      int regs_allocated)
+ {
+   int rval = REGS_REALLOCATE;
+   int i;
+@@ -573,11 +557,8 @@ re_copy_regs (regs, pmatch, nregs, regs_allocated)
+    freeing the old data.  */
+ 
+ void
+-re_set_registers (bufp, regs, num_regs, starts, ends)
+-    struct re_pattern_buffer *bufp;
+-    struct re_registers *regs;
+-    unsigned num_regs;
+-    regoff_t *starts, *ends;
++re_set_registers (struct re_pattern_buffer *bufp, struct re_registers *regs,
++		  unsigned num_regs, regoff_t *starts, regoff_t *ends)
+ {
+   if (num_regs)
+     {
+@@ -951,9 +932,8 @@ re_search_internal (preg, string, length, start, range, stop, nmatch, pmatch,
+ }
+ 
+ static reg_errcode_t
+-__attribute_warn_unused_result__
+-prune_impossible_nodes (mctx)
+-     re_match_context_t *mctx;
++internal_function __attribute_warn_unused_result__
++prune_impossible_nodes (re_match_context_t *mctx)
+ {
+   const re_dfa_t *const dfa = mctx->dfa;
+   int halt_node, match_last;
+diff --git a/stdlib/strtod_l.c b/stdlib/strtod_l.c
+index 2047203a4cee1111..e5b30d443106ee91 100644
+--- a/stdlib/strtod_l.c
++++ b/stdlib/strtod_l.c
+@@ -472,11 +472,8 @@ __mpn_lshift_1 (mp_limb_t *ptr, mp_size_t size, unsigned int count,
+    return 0.0.  If the number is too big to be represented, set `errno' to
+    ERANGE and return HUGE_VAL with the appropriate sign.  */
+ FLOAT
+-____STRTOF_INTERNAL (nptr, endptr, group, loc)
+-     const STRING_TYPE *nptr;
+-     STRING_TYPE **endptr;
+-     int group;
+-     __locale_t loc;
++____STRTOF_INTERNAL (const STRING_TYPE *nptr, STRING_TYPE **endptr, int group,
++		     __locale_t loc)
+ {
+   int negative;			/* The sign of the number.  */
+   MPN_VAR (num);		/* MP representation of the number.  */
+diff --git a/sysdeps/pthread/aio_cancel.c b/sysdeps/pthread/aio_cancel.c
+index e405e66cdf40951d..e6170a4fd82895a9 100644
+--- a/sysdeps/pthread/aio_cancel.c
++++ b/sysdeps/pthread/aio_cancel.c
+@@ -38,9 +38,7 @@
+ 
+ 
+ int
+-aio_cancel (fildes, aiocbp)
+-     int fildes;
+-     struct aiocb *aiocbp;
++aio_cancel (int fildes, struct aiocb *aiocbp)
+ {
+   struct requestlist *req = NULL;
+   int result = AIO_ALLDONE;
+diff --git a/sysdeps/pthread/aio_suspend.c b/sysdeps/pthread/aio_suspend.c
+index 9d3c8f996a2839ad..27d6d24e6610d98b 100644
+--- a/sysdeps/pthread/aio_suspend.c
++++ b/sysdeps/pthread/aio_suspend.c
+@@ -105,10 +105,8 @@ do_aio_misc_wait(int *cntr, const struct timespec *timeout)
+ #endif
+ 
+ int
+-aio_suspend (list, nent, timeout)
+-     const struct aiocb *const list[];
+-     int nent;
+-     const struct timespec *timeout;
++aio_suspend (const struct aiocb *const list[], int nent,
++	     const struct timespec *timeout)
+ {
+   if (__builtin_expect (nent < 0, 0))
+     {
+diff --git a/sysdeps/unix/sysv/linux/dl-openat64.c b/sysdeps/unix/sysv/linux/dl-openat64.c
+index 69f02f65b1cca130..673eb1dde673370a 100644
+--- a/sysdeps/unix/sysv/linux/dl-openat64.c
++++ b/sysdeps/unix/sysv/linux/dl-openat64.c
+@@ -23,10 +23,7 @@
+ 
+ 
+ int
+-openat64 (dfd, file, oflag)
+-     int dfd;
+-     const char *file;
+-     int oflag;
++openat64 (int dfd, const char *file, int oflag, ...)
+ {
+   assert (!__OPEN_NEEDS_MODE (oflag));
+ 
+diff --git a/time/strptime_l.c b/time/strptime_l.c
+index 14d50a2e879a2c5c..cb2b8faa6d740748 100644
+--- a/time/strptime_l.c
++++ b/time/strptime_l.c
+@@ -41,9 +41,7 @@
+ #  define localtime_r my_localtime_r
+ static struct tm *localtime_r (const time_t *, struct tm *);
+ static struct tm *
+-localtime_r (t, tp)
+-     const time_t *t;
+-     struct tm *tp;
++localtime_r (const time_t *t, struct tm *tp)
+ {
+   struct tm *l = localtime (t);
+   if (! l)
+diff --git a/wcsmbs/mbsnrtowcs.c b/wcsmbs/mbsnrtowcs.c
+index fc8396c00dc074a4..36cfed0a010f2873 100644
+--- a/wcsmbs/mbsnrtowcs.c
++++ b/wcsmbs/mbsnrtowcs.c
+@@ -38,12 +38,8 @@ static mbstate_t state;
+    implementation of stdio because we have to deal with unterminated
+    buffers.  At most NMC bytes will be converted.  */
+ size_t
+-__mbsnrtowcs (dst, src, nmc, len, ps)
+-     wchar_t *dst;
+-     const char **src;
+-     size_t nmc;
+-     size_t len;
+-     mbstate_t *ps;
++__mbsnrtowcs (wchar_t *dst, const char **src, size_t nmc, size_t len,
++	      mbstate_t *ps)
+ {
+   const unsigned char *srcend;
+   struct __gconv_step_data data;
+diff --git a/wcsmbs/mbsrtowcs_l.c b/wcsmbs/mbsrtowcs_l.c
+index d489266d38bddfd5..ec8b7bebb0a2cc9a 100644
+--- a/wcsmbs/mbsrtowcs_l.c
++++ b/wcsmbs/mbsrtowcs_l.c
+@@ -37,12 +37,8 @@
+ 
+ size_t
+ attribute_hidden
+-__mbsrtowcs_l (dst, src, len, ps, l)
+-     wchar_t *dst;
+-     const char **src;
+-     size_t len;
+-     mbstate_t *ps;
+-     __locale_t l;
++__mbsrtowcs_l (wchar_t *dst, const char **src, size_t len, mbstate_t *ps,
++	       __locale_t l)
+ {
+   struct __gconv_step_data data;
+   size_t result;
+diff --git a/wcsmbs/wcsnrtombs.c b/wcsmbs/wcsnrtombs.c
+index e5e5db86b57fee44..7c0efad7a27c2920 100644
+--- a/wcsmbs/wcsnrtombs.c
++++ b/wcsmbs/wcsnrtombs.c
+@@ -37,12 +37,8 @@ static mbstate_t state;
+    implementation of stdio because we have to deal with unterminated
+    buffers.  At most NWC wide character will be converted.  */
+ size_t
+-__wcsnrtombs (dst, src, nwc, len, ps)
+-     char *dst;
+-     const wchar_t **src;
+-     size_t nwc;
+-     size_t len;
+-     mbstate_t *ps;
++__wcsnrtombs (char *dst, const wchar_t **src, size_t nwc, size_t len,
++	      mbstate_t *ps)
+ {
+   struct __gconv_step_data data;
+   const wchar_t *srcend;
+diff --git a/wcsmbs/wcsrtombs.c b/wcsmbs/wcsrtombs.c
+index dfb28d31254ec201..ab843f6dc47edc52 100644
+--- a/wcsmbs/wcsrtombs.c
++++ b/wcsmbs/wcsrtombs.c
+@@ -35,11 +35,7 @@
+ static mbstate_t state;
+ 
+ size_t
+-__wcsrtombs (dst, src, len, ps)
+-     char *dst;
+-     const wchar_t **src;
+-     size_t len;
+-     mbstate_t *ps;
++__wcsrtombs (char *dst, const wchar_t **src, size_t len, mbstate_t *ps)
+ {
+   struct __gconv_step_data data;
+   int status;

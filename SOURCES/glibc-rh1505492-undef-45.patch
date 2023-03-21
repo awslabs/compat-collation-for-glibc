@@ -1,0 +1,33 @@
+commit 78dd658a025fb16d004677284b4db0d0c0191845
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Fri Aug 1 14:24:41 2014 +0530
+
+    Check if DEBUG is defined in regex_internal.c
+    
+    The DEBUG macro is checked for its value in one place and if it is
+    defined in another.  Make this consistent across the two cases and use
+    the same style that we did in mktime.c, which is to check if the macro
+    is defined and it is set.
+
+diff --git a/posix/regex_internal.c b/posix/regex_internal.c
+index 9be8a532e6d34150..1765035f06e906e5 100644
+--- a/posix/regex_internal.c
++++ b/posix/regex_internal.c
+@@ -679,7 +679,7 @@ re_string_reconstruct (re_string_t *pstr, int idx, int eflags)
+ 			 pstr->valid_len - offset);
+ 	      pstr->valid_len -= offset;
+ 	      pstr->valid_raw_len -= offset;
+-#if DEBUG
++#if defined DEBUG && DEBUG
+ 	      assert (pstr->valid_len > 0);
+ #endif
+ 	    }
+@@ -936,7 +936,7 @@ re_string_context_at (const re_string_t *input, int idx, int eflags)
+       int wc_idx = idx;
+       while(input->wcs[wc_idx] == WEOF)
+ 	{
+-#ifdef DEBUG
++#if defined DEBUG && DEBUG
+ 	  /* It must not happen.  */
+ 	  assert (wc_idx >= 0);
+ #endif

@@ -1,0 +1,269 @@
+commit 32a45bea390b39e3be3cfa81c68a5892eaa539d2
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Jan 31 23:00:15 2013 +0000
+
+    Remove CHECK_SIGSET and CHECK_SIGSET_NULL_OK.
+
+diff --git a/ports/sysdeps/unix/sysv/linux/ia64/sigpending.c b/ports/sysdeps/unix/sysv/linux/ia64/sigpending.c
+index 8d02643a151cb18c..c56147c97802108b 100644
+--- a/ports/sysdeps/unix/sysv/linux/ia64/sigpending.c
++++ b/ports/sysdeps/unix/sysv/linux/ia64/sigpending.c
+@@ -24,7 +24,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+@@ -34,5 +33,5 @@ sigpending (set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigpending, 2, CHECK_SIGSET (set), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigpending, 2, set, _NSIG / 8);
+ }
+diff --git a/ports/sysdeps/unix/sysv/linux/ia64/sigprocmask.c b/ports/sysdeps/unix/sysv/linux/ia64/sigprocmask.c
+index 8776c2000aca1945..97fd364073bfd4f4 100644
+--- a/ports/sysdeps/unix/sysv/linux/ia64/sigprocmask.c
++++ b/ports/sysdeps/unix/sysv/linux/ia64/sigprocmask.c
+@@ -26,7 +26,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+@@ -38,7 +37,6 @@ __sigprocmask (how, set, oset)
+ 
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigprocmask, 4, how, CHECK_SIGSET (set),
+-			 CHECK_SIGSET_NULL_OK (oset), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigprocmask, 4, how, set, oset, _NSIG / 8);
+ }
+ weak_alias (__sigprocmask, sigprocmask)
+diff --git a/sysdeps/generic/bp-checks.h b/sysdeps/generic/bp-checks.h
+index f007eee12db8543c..86f998ae69feb81f 100644
+--- a/sysdeps/generic/bp-checks.h
++++ b/sysdeps/generic/bp-checks.h
+@@ -66,11 +66,6 @@ extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+ /* Same as CHECK_STRING, but tolerate ARG == NULL.  */
+ # define CHECK_STRING_NULL_OK(ARG) _CHECK_STRING ((ARG), __ptrvalue (ARG))
+ 
+-/* Check bounds of signal syscall args with type sigset_t.  */
+-# define CHECK_SIGSET(SET) CHECK_N ((SET), _NSIG / (8 * sizeof *(SET)))
+-/* Same as CHECK_SIGSET, but tolerate SET == NULL.  */
+-# define CHECK_SIGSET_NULL_OK(SET) CHECK_N_NULL_OK ((SET), _NSIG / (8 * sizeof *(SET)))
+-
+ # if defined (_IOC_SIZESHIFT) && defined (_IOC_SIZEBITS)
+ /* Extract the size of the ioctl data and check its bounds.  */
+ #  define CHECK_IOCTL(ARG, CMD)						\
+@@ -114,8 +109,6 @@ extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+ # define CHECK_N(ARG, N) (ARG)
+ # define CHECK_N_NULL_OK(ARG, N) (ARG)
+ # define CHECK_STRING(ARG) (ARG)
+-# define CHECK_SIGSET(SET) (SET)
+-# define CHECK_SIGSET_NULL_OK(SET) (SET)
+ # define CHECK_IOCTL(ARG, CMD) (ARG)
+ # define CHECK_FCNTL(ARG, CMD) (ARG)
+ # define CHECK_N_PAGES(ARG, NBYTES) (ARG)
+diff --git a/sysdeps/unix/sysv/linux/sigpending.c b/sysdeps/unix/sysv/linux/sigpending.c
+index 7174b4ae3a791f86..bd6126143923ab8e 100644
+--- a/sysdeps/unix/sysv/linux/sigpending.c
++++ b/sysdeps/unix/sysv/linux/sigpending.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -32,5 +31,5 @@ int
+ sigpending (set)
+      sigset_t *set;
+ {
+-  return INLINE_SYSCALL (rt_sigpending, 2, CHECK_SIGSET (set), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigpending, 2, set, _NSIG / 8);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sigprocmask.c b/sysdeps/unix/sysv/linux/sigprocmask.c
+index a5ac4dd501964dff..8d69613049c9629c 100644
+--- a/sysdeps/unix/sysv/linux/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/sigprocmask.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -55,7 +54,6 @@ __sigprocmask (how, set, oset)
+     }
+ #endif
+ 
+-  return INLINE_SYSCALL (rt_sigprocmask, 4, how, CHECK_SIGSET_NULL_OK (set),
+-			 CHECK_SIGSET_NULL_OK (oset), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigprocmask, 4, how, set, oset, _NSIG / 8);
+ }
+ weak_alias (__sigprocmask, sigprocmask)
+diff --git a/sysdeps/unix/sysv/linux/sigsuspend.c b/sysdeps/unix/sysv/linux/sigsuspend.c
+index e1ee87b29fa258ee..c673cf2b65cfe7ea 100644
+--- a/sysdeps/unix/sysv/linux/sigsuspend.c
++++ b/sysdeps/unix/sysv/linux/sigsuspend.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -29,7 +28,7 @@
+ static inline int __attribute__ ((always_inline))
+ do_sigsuspend (const sigset_t *set)
+ {
+-  return INLINE_SYSCALL (rt_sigsuspend, 2, CHECK_SIGSET (set), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigsuspend, 2, set, _NSIG / 8);
+ }
+ 
+ /* Change the set of blocked signals to SET,
+diff --git a/sysdeps/unix/sysv/linux/sigtimedwait.c b/sysdeps/unix/sysv/linux/sigtimedwait.c
+index 8686b9a66bd99738..34834c0cb1f9e362 100644
+--- a/sysdeps/unix/sysv/linux/sigtimedwait.c
++++ b/sysdeps/unix/sysv/linux/sigtimedwait.c
+@@ -51,7 +51,7 @@ do_sigtimedwait (const sigset_t *set, siginfo_t *info,
+ 
+     /* XXX The size argument hopefully will have to be changed to the
+        real size of the user-level sigset_t.  */
+-  int result = INLINE_SYSCALL (rt_sigtimedwait, 4, CHECK_SIGSET (set),
++  int result = INLINE_SYSCALL (rt_sigtimedwait, 4, set,
+ 			       CHECK_1 (info), timeout, _NSIG / 8);
+ 
+   /* The kernel generates a SI_TKILL code in si_code in case tkill is
+diff --git a/sysdeps/unix/sysv/linux/sigwait.c b/sysdeps/unix/sysv/linux/sigwait.c
+index a304ed978bcdbd1d..5e7d8ca8c8a62f19 100644
+--- a/sysdeps/unix/sysv/linux/sigwait.c
++++ b/sysdeps/unix/sysv/linux/sigwait.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #ifdef __NR_rt_sigtimedwait
+ 
+@@ -58,7 +57,7 @@ do_sigwait (const sigset_t *set, int *sig)
+ #ifdef INTERNAL_SYSCALL
+   INTERNAL_SYSCALL_DECL (err);
+   do
+-    ret = INTERNAL_SYSCALL (rt_sigtimedwait, err, 4, CHECK_SIGSET (set),
++    ret = INTERNAL_SYSCALL (rt_sigtimedwait, err, 4, set,
+ 			    NULL, NULL, _NSIG / 8);
+   while (INTERNAL_SYSCALL_ERROR_P (ret, err)
+ 	 && INTERNAL_SYSCALL_ERRNO (ret, err) == EINTR);
+@@ -71,8 +70,7 @@ do_sigwait (const sigset_t *set, int *sig)
+     ret = INTERNAL_SYSCALL_ERRNO (ret, err);
+ #else
+   do
+-    ret = INLINE_SYSCALL (rt_sigtimedwait, 4, CHECK_SIGSET (set),
+-			  NULL, NULL, _NSIG / 8);
++    ret = INLINE_SYSCALL (rt_sigtimedwait, 4, set, NULL, NULL, _NSIG / 8);
+   while (ret == -1 && errno == EINTR);
+   if (ret != -1)
+     {
+diff --git a/sysdeps/unix/sysv/linux/sigwaitinfo.c b/sysdeps/unix/sysv/linux/sigwaitinfo.c
+index 9f2b1d40c941bbfc..f70386a31bce66bd 100644
+--- a/sysdeps/unix/sysv/linux/sigwaitinfo.c
++++ b/sysdeps/unix/sysv/linux/sigwaitinfo.c
+@@ -52,7 +52,7 @@ do_sigwaitinfo (const sigset_t *set, siginfo_t *info)
+ 
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  int result = INLINE_SYSCALL (rt_sigtimedwait, 4, CHECK_SIGSET (set),
++  int result = INLINE_SYSCALL (rt_sigtimedwait, 4, set,
+ 			       CHECK_1 (info), NULL, _NSIG / 8);
+ 
+   /* The kernel generates a SI_TKILL code in si_code in case tkill is
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c b/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c
+index 011aa2ab3964b887..7548435ca29ae294 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+@@ -31,5 +30,5 @@ sigpending (set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigpending, 2, CHECK_SIGSET (set), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigpending, 2, set, _NSIG / 8);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c b/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
+index 7622c0a28ca0d04a..60f95b4f554d7966 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+@@ -32,7 +31,6 @@ __sigprocmask (how, set, oset)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigprocmask, 4, how, CHECK_SIGSET (set),
+-			 CHECK_SIGSET_NULL_OK (oset), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigprocmask, 4, how, set, oset, _NSIG / 8);
+ }
+ weak_alias (__sigprocmask, sigprocmask)
+diff --git a/sysdeps/unix/sysv/linux/x86_64/sigpending.c b/sysdeps/unix/sysv/linux/x86_64/sigpending.c
+index b3f2547b137847d3..7e448c0327cbcd19 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/sigpending.c
++++ b/sysdeps/unix/sysv/linux/x86_64/sigpending.c
+@@ -24,7 +24,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+@@ -34,5 +33,5 @@ sigpending (set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigpending, 2, CHECK_SIGSET (set), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigpending, 2, set, _NSIG / 8);
+ }
+diff --git a/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c b/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c
+index 9f05e4a5d306839f..210fd97f9f33521e 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c
+@@ -25,7 +25,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+@@ -37,7 +36,6 @@ __sigprocmask (how, set, oset)
+ 
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigprocmask, 4, how, CHECK_SIGSET (set),
+-			CHECK_SIGSET_NULL_OK (oset), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigprocmask, 4, how, set, oset, _NSIG / 8);
+ }
+ weak_alias (__sigprocmask, sigprocmask)

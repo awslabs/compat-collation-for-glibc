@@ -1,0 +1,1991 @@
+commit 92945b5261c412eb590b2b34c7ec9a035f0693a1
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Feb 19 21:58:08 2013 +0000
+
+    Remove some bounded-pointers support from i386 .S files.
+
+diff --git a/sysdeps/i386/add_n.S b/sysdeps/i386/add_n.S
+index 5223d685952d6093..df3ea2362c76247a 100644
+--- a/sysdeps/i386/add_n.S
++++ b/sysdeps/i386/add_n.S
+@@ -30,7 +30,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_add_n))
+-	ENTER
+ 
+ 	pushl %edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -43,13 +42,6 @@ ENTRY (BP_SYM (__mpn_add_n))
+ 	cfi_rel_offset (esi, 0)
+ 	movl S2(%esp),%edx
+ 	movl SIZE(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ecx	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S1(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%edx, S2(%esp), %ecx)
+-	shrl	$2, %ecx
+-#endif
+ 	movl	%ecx,%eax
+ 	shrl	$3,%ecx			/* compute count for unrolled loop */
+ 	negl	%eax
+@@ -117,6 +109,5 @@ L(oop):	movl	(%esi),%eax
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_add_n))
+diff --git a/sysdeps/i386/addmul_1.S b/sysdeps/i386/addmul_1.S
+index 02acb436d9833033..006c08a92de4e303 100644
+--- a/sysdeps/i386/addmul_1.S
++++ b/sysdeps/i386/addmul_1.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_addmul_1))
+-	ENTER
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -53,12 +52,6 @@ ENTRY (BP_SYM (__mpn_addmul_1))
+ 	movl	SIZE(%esp), %sizeP
+ 	movl	S2LIMB(%esp), %s2_limb
+ 	cfi_rel_offset (s2_limb, 0)
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %sizeP	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%res_ptr, RES(%esp), %sizeP)
+-	CHECK_BOUNDS_BOTH_WIDE (%s1_ptr, S1(%esp), %sizeP)
+-	shrl	$2, %sizeP
+-#endif
+ 	leal	(%res_ptr,%sizeP,4), %res_ptr
+ 	leal	(%s1_ptr,%sizeP,4), %s1_ptr
+ 	negl	%sizeP
+@@ -91,6 +84,5 @@ L(oop):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (res_ptr)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_addmul_1))
+diff --git a/sysdeps/i386/bp-asm.h b/sysdeps/i386/bp-asm.h
+index 5e66e90b450846ed..75e1a007cb3eca71 100644
+--- a/sysdeps/i386/bp-asm.h
++++ b/sysdeps/i386/bp-asm.h
+@@ -34,81 +34,12 @@
+ /* Although the caller pushes the hidden arg, the callee is
+    responsible for popping it.  */
+ #   define RET_PTR ret $RTN_SIZE
+-/* Maintain frame pointer chain in leaf assembler functions for the benefit
+-   of debugging stack traces when bounds violations occur.  */
+-#   define ENTER pushl %ebp; movl %esp, %ebp
+-#   define LEAVE movl %ebp, %esp; popl %ebp
+ /* Stack space overhead of procedure-call linkage: return address and
+    frame pointer.  */
+ #   define LINKAGE 8
+ /* Stack offset of return address after calling ENTER.  */
+ #   define PCOFF 4
+ 
+-/* Int 5 is the "bound range" exception also raised by the "bound"
+-   instruction.  */
+-#   define BOUNDS_VIOLATED int $5
+-
+-#   define CHECK_BOUNDS_LOW(VAL_REG, BP_MEM)	\
+-	cmpl 4+BP_MEM, VAL_REG;			\
+-	jae 0f; /* continue if value >= low */	\
+-	BOUNDS_VIOLATED;			\
+-    0:
+-
+-#   define CHECK_BOUNDS_HIGH(VAL_REG, BP_MEM, Jcc)	\
+-	cmpl 8+BP_MEM, VAL_REG;				\
+-	Jcc 0f; /* continue if value < high */		\
+-	BOUNDS_VIOLATED;				\
+-    0:
+-
+-#   define CHECK_BOUNDS_BOTH(VAL_REG, BP_MEM)	\
+-	cmpl 4+BP_MEM, VAL_REG;			\
+-	jb 1f; /* die if value < low */		\
+-    	cmpl 8+BP_MEM, VAL_REG;			\
+-	jb 0f; /* continue if value < high */	\
+-    1:	BOUNDS_VIOLATED;			\
+-    0:
+-
+-#   define CHECK_BOUNDS_BOTH_WIDE(VAL_REG, BP_MEM, LENGTH)	\
+-	CHECK_BOUNDS_LOW(VAL_REG, BP_MEM);			\
+-	addl LENGTH, VAL_REG;					\
+-    	cmpl 8+BP_MEM, VAL_REG;					\
+-	jbe 0f; /* continue if value <= high */			\
+-	BOUNDS_VIOLATED;					\
+-    0:	subl LENGTH, VAL_REG /* restore value */
+-
+-/* Take bounds from BP_MEM and affix them to the pointer
+-   value in %eax, stuffing all into memory at RTN(%esp).
+-   Use %edx as a scratch register.  */
+-
+-#   define RETURN_BOUNDED_POINTER(BP_MEM)	\
+-	movl RTN(%esp), %edx;			\
+-	movl %eax, 0(%edx);			\
+-	movl 4+BP_MEM, %eax;			\
+-	movl %eax, 4(%edx);			\
+-	movl 8+BP_MEM, %eax;			\
+-	movl %eax, 8(%edx)
+-
+-#   define RETURN_NULL_BOUNDED_POINTER		\
+-	movl RTN(%esp), %edx;			\
+-	movl %eax, 0(%edx);			\
+-	movl %eax, 4(%edx);			\
+-	movl %eax, 8(%edx)
+-
+-/* The caller of __errno_location is responsible for allocating space
+-   for the three-word BP return-value and passing pushing its address
+-   as an implicit first argument.  */
+-#   define PUSH_ERRNO_LOCATION_RETURN		\
+-	subl $8, %esp;				\
+-	subl $4, %esp;				\
+-	pushl %esp
+-
+-/* __errno_location is responsible for popping the implicit first
+-   argument, but we must pop the space for the BP itself.  We also
+-   dereference the return value in order to dig out the pointer value.  */
+-#   define POP_ERRNO_LOCATION_RETURN		\
+-	popl %eax;				\
+-	addl $8, %esp
+-
+ #  else /* !__BOUNDED_POINTERS__ */
+ 
+ /* Unbounded pointers occupy one word.  */
+@@ -117,25 +48,11 @@
+ #   define RTN_SIZE 0
+ /* Use simple return instruction for unbounded pointer values.  */
+ #   define RET_PTR ret
+-/* Don't maintain frame pointer chain for leaf assembler functions.  */
+-#   define ENTER
+-#   define LEAVE
+ /* Stack space overhead of procedure-call linkage: return address only.  */
+ #   define LINKAGE 4
+ /* Stack offset of return address after calling ENTER.  */
+ #   define PCOFF 0
+ 
+-#   define CHECK_BOUNDS_LOW(VAL_REG, BP_MEM)
+-#   define CHECK_BOUNDS_HIGH(VAL_REG, BP_MEM, Jcc)
+-#   define CHECK_BOUNDS_BOTH(VAL_REG, BP_MEM)
+-#   define CHECK_BOUNDS_BOTH_WIDE(VAL_REG, BP_MEM, LENGTH)
+-#   define RETURN_BOUNDED_POINTER(BP_MEM)
+-
+-#   define RETURN_NULL_BOUNDED_POINTER
+-
+-#   define PUSH_ERRNO_LOCATION_RETURN
+-#   define POP_ERRNO_LOCATION_RETURN
+-
+ #  endif /* !__BOUNDED_POINTERS__ */
+ 
+ # endif /* __ASSEMBLER__ */
+diff --git a/sysdeps/i386/bsd-_setjmp.S b/sysdeps/i386/bsd-_setjmp.S
+index 8a5d0d8624c0e17d..fe0224145643ea0b 100644
+--- a/sysdeps/i386/bsd-_setjmp.S
++++ b/sysdeps/i386/bsd-_setjmp.S
+@@ -31,11 +31,9 @@
+ #define SIGMSK	JMPBUF+PTR_SIZE
+ 
+ ENTRY (BP_SYM (_setjmp))
+-	ENTER
+ 
+ 	xorl %eax, %eax
+ 	movl JMPBUF(%esp), %edx
+-	CHECK_BOUNDS_BOTH_WIDE (%edx, JMPBUF(%esp), $(JB_SIZE+4))
+ 
+      	/* Save registers.  */
+ 	movl %ebx, (JB_BX*4)(%edx)
+@@ -52,7 +50,6 @@ ENTRY (BP_SYM (_setjmp))
+ 	PTR_MANGLE (%ecx)
+ #endif
+      	movl %ecx, (JB_PC*4)(%edx)
+-	LEAVE
+ 	movl %ebp, (JB_BP*4)(%edx) /* Save caller's frame pointer.  */
+ 
+ 	movl %eax, JB_SIZE(%edx) /* No signal mask set.  */
+diff --git a/sysdeps/i386/bsd-setjmp.S b/sysdeps/i386/bsd-setjmp.S
+index d3a284ef28196c29..25470f3904a8ca73 100644
+--- a/sysdeps/i386/bsd-setjmp.S
++++ b/sysdeps/i386/bsd-setjmp.S
+@@ -34,10 +34,8 @@ ENTRY (BP_SYM (setjmp))
+ 	/* Note that we have to use a non-exported symbol in the next
+ 	   jump since otherwise gas will emit it as a jump through the
+ 	   PLT which is what we cannot use here.  */
+-	ENTER
+ 
+ 	movl JMPBUF(%esp), %eax
+-	CHECK_BOUNDS_BOTH_WIDE (%eax, JMPBUF(%esp), $JB_SIZE)
+ 
+      	/* Save registers.  */
+ 	movl %ebx, (JB_BX*4)(%eax)
+@@ -54,7 +52,6 @@ ENTRY (BP_SYM (setjmp))
+ 	PTR_MANGLE (%ecx)
+ #endif
+      	movl %ecx, (JB_PC*4)(%eax)
+-	LEAVE /* pop frame pointer to prepare for tail-call.  */
+ 	movl %ebp, (JB_BP*4)(%eax) /* Save caller's frame pointer.  */
+ 
+ 	/* Call __sigjmp_save.  */
+diff --git a/sysdeps/i386/fpu/s_frexp.S b/sysdeps/i386/fpu/s_frexp.S
+index e76732dc8bc2a091..6c5cd8fdfd9f825b 100644
+--- a/sysdeps/i386/fpu/s_frexp.S
++++ b/sysdeps/i386/fpu/s_frexp.S
+@@ -41,7 +41,6 @@ two54:	.byte 0, 0, 0, 0, 0, 0, 0x50, 0x43
+ 
+ 	.text
+ ENTRY (BP_SYM (__frexp))
+-	ENTER
+ 
+ 	movl	VAL0(%esp), %ecx
+ 	movl	VAL1(%esp), %eax
+@@ -78,11 +77,9 @@ ENTRY (BP_SYM (__frexp))
+ 	/* Store %ecx in the variable pointed to by the second argument,
+ 	   get the factor from the stack and return.  */
+ 1:	movl	EXPP(%esp), %eax
+-	CHECK_BOUNDS_BOTH_WIDE (%eax, EXPP(%esp), $4)
+ 	fldl	VAL0(%esp)
+ 	movl	%ecx, (%eax)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__frexp))
+ weak_alias (BP_SYM (__frexp), BP_SYM (frexp))
+diff --git a/sysdeps/i386/fpu/s_frexpf.S b/sysdeps/i386/fpu/s_frexpf.S
+index af0dc8ee3d58c1a6..4fe2181873de7302 100644
+--- a/sysdeps/i386/fpu/s_frexpf.S
++++ b/sysdeps/i386/fpu/s_frexpf.S
+@@ -40,7 +40,6 @@ two25:	.byte 0, 0, 0, 0x4c
+ 
+ 	.text
+ ENTRY (BP_SYM (__frexpf))
+-	ENTER
+ 
+ 	movl	VAL(%esp), %eax
+ 	xorl	%ecx, %ecx
+@@ -75,11 +74,9 @@ ENTRY (BP_SYM (__frexpf))
+ 	/* Store %ecx in the variable pointed to by the second argument,
+ 	   get the factor from the stack and return.  */
+ 1:	movl	EXPP(%esp), %eax
+-	CHECK_BOUNDS_BOTH_WIDE (%eax, EXPP(%esp), $4)
+ 	flds	VAL(%esp)
+ 	movl	%ecx, (%eax)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__frexpf))
+ weak_alias (BP_SYM (__frexpf), BP_SYM (frexpf))
+diff --git a/sysdeps/i386/fpu/s_frexpl.S b/sysdeps/i386/fpu/s_frexpl.S
+index 6f464a89d6a2e75d..54d5010185792bd9 100644
+--- a/sysdeps/i386/fpu/s_frexpl.S
++++ b/sysdeps/i386/fpu/s_frexpl.S
+@@ -42,7 +42,6 @@ two64:	.byte 0, 0, 0, 0, 0, 0, 0xf0, 0x43
+ 
+ 	.text
+ ENTRY (BP_SYM (__frexpl))
+-	ENTER
+ 
+ 	movl	VAL0(%esp), %ecx
+ 	movl	VAL2(%esp), %eax
+@@ -80,11 +79,9 @@ ENTRY (BP_SYM (__frexpl))
+ 	/* Store %ecx in the variable pointed to by the second argument,
+ 	   get the factor from the stack and return.  */
+ 1:	movl	EXPP(%esp), %eax
+-	CHECK_BOUNDS_BOTH_WIDE (%eax, EXPP(%esp), $4)
+ 	fldt	VAL0(%esp)
+ 	movl	%ecx, (%eax)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__frexpl))
+ weak_alias (BP_SYM (__frexpl), BP_SYM (frexpl))
+diff --git a/sysdeps/i386/fpu/s_remquo.S b/sysdeps/i386/fpu/s_remquo.S
+index 5056593214e66f3c..e61ff5be7bc826df 100644
+--- a/sysdeps/i386/fpu/s_remquo.S
++++ b/sysdeps/i386/fpu/s_remquo.S
+@@ -15,7 +15,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__remquo))
+-	ENTER
+ 
+ 	fldl	DVSOR(%esp)
+ 	fldl	DVDND(%esp)
+@@ -36,7 +35,6 @@ ENTRY (BP_SYM (__remquo))
+ 	shrl	%cl, %eax
+ 	andl	$7, %eax
+ 	movl	QUOP(%esp), %ecx
+-	CHECK_BOUNDS_BOTH_WIDE (%ecx, QUOP(%esp), $4)
+ 	movl	DVDND+4(%esp), %edx
+ 	xorl	DVSOR+4(%esp), %edx
+ 	testl	$0x80000000, %edx
+@@ -44,7 +42,6 @@ ENTRY (BP_SYM (__remquo))
+ 	negl	%eax
+ 1:	movl	%eax, (%ecx)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__remquo))
+ weak_alias (BP_SYM (__remquo), BP_SYM (remquo))
+diff --git a/sysdeps/i386/fpu/s_remquof.S b/sysdeps/i386/fpu/s_remquof.S
+index d3c5965be455e42d..c2b351b859c28e7c 100644
+--- a/sysdeps/i386/fpu/s_remquof.S
++++ b/sysdeps/i386/fpu/s_remquof.S
+@@ -15,7 +15,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__remquof))
+-	ENTER
+ 
+ 	flds	DVSOR(%esp)
+ 	flds	DVDND(%esp)
+@@ -36,7 +35,6 @@ ENTRY (BP_SYM (__remquof))
+ 	shrl	%cl, %eax
+ 	andl	$7, %eax
+ 	movl	QUOP(%esp), %ecx
+-	CHECK_BOUNDS_BOTH_WIDE (%ecx, QUOP(%esp), $4)
+ 	movl	DVDND(%esp), %edx
+ 	xorl	DVSOR(%esp), %edx
+ 	testl	$0x80000000, %edx
+@@ -44,7 +42,6 @@ ENTRY (BP_SYM (__remquof))
+ 	negl	%eax
+ 1:	movl	%eax, (%ecx)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__remquof))
+ weak_alias (BP_SYM (__remquof), BP_SYM (remquof))
+diff --git a/sysdeps/i386/fpu/s_remquol.S b/sysdeps/i386/fpu/s_remquol.S
+index 65240adbe47f6014..2cbe43589609a2b8 100644
+--- a/sysdeps/i386/fpu/s_remquol.S
++++ b/sysdeps/i386/fpu/s_remquol.S
+@@ -15,7 +15,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__remquol))
+-	ENTER
+ 
+ 	fldt	DVSOR(%esp)
+ 	fldt	DVDND(%esp)
+@@ -36,7 +35,6 @@ ENTRY (BP_SYM (__remquol))
+ 	shrl	%cl, %eax
+ 	andl	$7, %eax
+ 	movl	QUOP(%esp), %ecx
+-	CHECK_BOUNDS_BOTH_WIDE (%ecx, QUOP(%esp), $4)
+ 	movl	DVDND+8(%esp), %edx
+ 	xorl	DVSOR+8(%esp), %edx
+ 	testl	$0x8000, %edx
+@@ -44,7 +42,6 @@ ENTRY (BP_SYM (__remquol))
+ 	negl	%eax
+ 1:	movl	%eax, (%ecx)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__remquol))
+ weak_alias (BP_SYM (__remquol), BP_SYM (remquol))
+diff --git a/sysdeps/i386/i486/strcat.S b/sysdeps/i386/i486/strcat.S
+index 7596a0dcdbff6fcc..b3212c8beb948411 100644
+--- a/sysdeps/i386/i486/strcat.S
++++ b/sysdeps/i386/i486/strcat.S
+@@ -31,15 +31,12 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strcat))
+-	ENTER
+ 
+ 	pushl %edi		/* Save callee-safe register.  */
+ 	cfi_adjust_cfa_offset (4)
+ 
+ 	movl DEST(%esp), %edx
+ 	movl SRC(%esp), %ecx
+-	CHECK_BOUNDS_LOW (%edx, DEST(%esp))
+-	CHECK_BOUNDS_LOW (%ecx, SRC(%esp))
+ 
+ 	testb $0xff, (%ecx)	/* Is source string empty? */
+ 	jz L(8)			/* yes => return */
+@@ -262,12 +259,10 @@ L(9):	movb %al, (%ecx,%edx)	/* store first byte of last word */
+ 
+ L(8):	/* GKM FIXME: check high bounds */
+ 	movl DEST(%esp), %eax	/* start address of destination is result */
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ 	popl %edi		/* restore saved register */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (strcat))
+ libc_hidden_builtin_def (strcat)
+diff --git a/sysdeps/i386/i486/strlen.S b/sysdeps/i386/i486/strlen.S
+index 3ba4df92d9a40d91..76c31098e84a1c93 100644
+--- a/sysdeps/i386/i486/strlen.S
++++ b/sysdeps/i386/i486/strlen.S
+@@ -28,10 +28,8 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strlen))
+-	ENTER
+ 
+ 	movl STR(%esp), %ecx
+-	CHECK_BOUNDS_LOW (%ecx, STR(%esp))
+ 	movl %ecx, %eax		/* duplicate it */
+ 
+ 	andl $3, %ecx		/* mask alignment bits */
+@@ -129,10 +127,8 @@ L(3):	testb %cl, %cl		/* is first byte NUL? */
+ 	jz L(2)			/* yes => return pointer */
+ 	incl %eax		/* increment pointer */
+ 
+-L(2):	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	subl STR(%esp), %eax	/* compute difference to string start */
++L(2):	subl STR(%esp), %eax	/* compute difference to string start */
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (strlen))
+ libc_hidden_builtin_def (strlen)
+diff --git a/sysdeps/i386/i586/add_n.S b/sysdeps/i386/i586/add_n.S
+index d6ed224035868645..a2b502d0d21bf9f5 100644
+--- a/sysdeps/i386/i586/add_n.S
++++ b/sysdeps/i386/i586/add_n.S
+@@ -30,7 +30,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_add_n))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -48,13 +47,6 @@ ENTRY (BP_SYM (__mpn_add_n))
+ 	movl	S2(%esp),%ebx
+ 	cfi_rel_offset (ebx, 0)
+ 	movl	SIZE(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ecx		/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S1(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%ebx, S2(%esp), %ecx)
+-	shrl	$2, %ecx
+-#endif
+ 	movl	(%ebx),%ebp
+ 	cfi_rel_offset (ebp, 4)
+ 
+@@ -149,6 +141,5 @@ L(end2):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_add_n))
+diff --git a/sysdeps/i386/i586/addmul_1.S b/sysdeps/i386/i586/addmul_1.S
+index 89bf87c4ea2a87af..a9d0b08b5e8072ab 100644
+--- a/sysdeps/i386/i586/addmul_1.S
++++ b/sysdeps/i386/i586/addmul_1.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_addmul_1))
+-	ENTER
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -53,12 +52,6 @@ ENTRY (BP_SYM (__mpn_addmul_1))
+ 	movl	SIZE(%esp), %size
+ 	movl	S2LIMB(%esp), %s2_limb
+ 	cfi_rel_offset (s2_limb, 0)
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %size	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%res_ptr, RES(%esp), %size)
+-	CHECK_BOUNDS_BOTH_WIDE (%s1_ptr, S1(%esp), %size)
+-	shrl	$2, %size
+-#endif
+ 	leal	(%res_ptr,%size,4), %res_ptr
+ 	leal	(%s1_ptr,%size,4), %s1_ptr
+ 	negl	%size
+@@ -98,7 +91,6 @@ L(oop):	adcl	$0, %ebp
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (res_ptr)
+ 
+-	LEAVE
+ 	ret
+ #undef size
+ END (BP_SYM (__mpn_addmul_1))
+diff --git a/sysdeps/i386/i586/lshift.S b/sysdeps/i386/i586/lshift.S
+index d619c58d2dda212d..23c5002d69f50f8f 100644
+--- a/sysdeps/i386/i586/lshift.S
++++ b/sysdeps/i386/i586/lshift.S
+@@ -29,7 +29,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_lshift))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -48,12 +47,6 @@ ENTRY (BP_SYM (__mpn_lshift))
+ 	movl	SIZE(%esp),%ebx
+ 	cfi_rel_offset (ebx, 0)
+ 	movl	CNT(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ebx		/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ebx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S(%esp), %ebx)
+-	shrl	$2, %ebx
+-#endif
+ 
+ /* We can use faster code for shift-by-1 under certain conditions.  */
+ 	cmp	$1,%ecx
+@@ -155,7 +148,6 @@ L(end2):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ 
+ /* We loop from least significant end of the arrays, which is only
+@@ -261,6 +253,5 @@ L(L1):	movl	%edx,(%edi)		/* store last limb */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_lshift))
+diff --git a/sysdeps/i386/i586/memcpy.S b/sysdeps/i386/i586/memcpy.S
+index a3f3524ad03509c1..07f5432d761c453d 100644
+--- a/sysdeps/i386/i586/memcpy.S
++++ b/sysdeps/i386/i586/memcpy.S
+@@ -42,7 +42,6 @@ ENTRY (__memcpy_chk)
+ END (__memcpy_chk)
+ #endif
+ ENTRY (BP_SYM (memcpy))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -54,8 +53,6 @@ ENTRY (BP_SYM (memcpy))
+ 	movl	SRC(%esp), %esi
+ 	cfi_rel_offset (esi, 0)
+ 	movl	LEN(%esp), %ecx
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, DEST(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, SRC(%esp), %ecx)
+ 	movl	%edi, %eax
+ 
+ 	/* We need this in any case.  */
+@@ -127,7 +124,6 @@ L(1):	rep; movsb
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (memcpy))
+ #if !MEMPCPY_P
+diff --git a/sysdeps/i386/i586/memset.S b/sysdeps/i386/i586/memset.S
+index d7a4b73a72b1abce..8234b99d734b24b0 100644
+--- a/sysdeps/i386/i586/memset.S
++++ b/sysdeps/i386/i586/memset.S
+@@ -45,7 +45,6 @@ ENTRY (__memset_chk)
+ END (__memset_chk)
+ #endif
+ ENTRY (BP_SYM (memset))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -53,7 +52,6 @@ ENTRY (BP_SYM (memset))
+ 	movl	DEST(%esp), %edi
+ 	cfi_rel_offset (edi, 0)
+ 	movl	LEN(%esp), %edx
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, DEST(%esp), %edx)
+ #if BZERO_P
+ 	xorl	%eax, %eax	/* we fill with 0 */
+ #else
+@@ -111,13 +109,11 @@ L(2):	shrl	$2, %ecx	/* convert byte count to longword count */
+ #if !BZERO_P
+ 	/* Load result (only if used as memset).  */
+ 	movl DEST(%esp), %eax	/* start address of destination is result */
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ #endif
+ 	popl	%edi
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ #if BZERO_P
+ 	ret
+ #else
+diff --git a/sysdeps/i386/i586/mul_1.S b/sysdeps/i386/i586/mul_1.S
+index 28670a24679d0e7e..c694afb42141b16f 100644
+--- a/sysdeps/i386/i586/mul_1.S
++++ b/sysdeps/i386/i586/mul_1.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_mul_1))
+-	ENTER
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -53,12 +52,6 @@ ENTRY (BP_SYM (__mpn_mul_1))
+ 	movl	SIZE(%esp), %size
+ 	movl	S2LIMB(%esp), %s2_limb
+ 	cfi_rel_offset (s2_limb, 0)
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %size	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%res_ptr, RES(%esp), %size)
+-	CHECK_BOUNDS_BOTH_WIDE (%s1_ptr, S1(%esp), %size)
+-	shrl	$2, %size
+-#endif
+ 	leal	(%res_ptr,%size,4), %res_ptr
+ 	leal	(%s1_ptr,%size,4), %s1_ptr
+ 	negl	%size
+@@ -94,7 +87,6 @@ L(oop):	adcl	$0, %ebp
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (res_ptr)
+ 
+-	LEAVE
+ 	ret
+ #undef size
+ END (BP_SYM (__mpn_mul_1))
+diff --git a/sysdeps/i386/i586/rshift.S b/sysdeps/i386/i586/rshift.S
+index caf0986d2f473c74..ce3710391193dbac 100644
+--- a/sysdeps/i386/i586/rshift.S
++++ b/sysdeps/i386/i586/rshift.S
+@@ -29,7 +29,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_rshift))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -48,12 +47,6 @@ ENTRY (BP_SYM (__mpn_rshift))
+ 	movl	SIZE(%esp),%ebx
+ 	cfi_rel_offset (ebx, 0)
+ 	movl	CNT(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ebx		/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ebx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S(%esp), %ebx)
+-	shrl	$2, %ebx
+-#endif
+ 
+ /* We can use faster code for shift-by-1 under certain conditions.  */
+ 	cmp	$1,%ecx
+@@ -152,7 +145,6 @@ L(end2):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ 
+ /* We loop from least significant end of the arrays, which is only
+@@ -261,6 +253,5 @@ L(L1):	movl	%edx,(%edi)		/* store last limb */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_rshift))
+diff --git a/sysdeps/i386/i586/strchr.S b/sysdeps/i386/i586/strchr.S
+index 4c424763224ca839..35259fb085840180 100644
+--- a/sysdeps/i386/i586/strchr.S
++++ b/sysdeps/i386/i586/strchr.S
+@@ -43,7 +43,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strchr))
+-	ENTER
+ 
+ 	pushl %edi		/* Save callee-safe registers.  */
+ 	cfi_adjust_cfa_offset (-4)
+@@ -57,7 +56,6 @@ ENTRY (BP_SYM (strchr))
+ 
+ 	movl STR(%esp), %eax
+ 	movl CHR(%esp), %edx
+-	CHECK_BOUNDS_LOW (%eax, STR(%esp))
+ 
+ 	movl %eax, %edi		/* duplicate string pointer for later */
+ 	cfi_rel_offset (edi, 12)
+@@ -82,7 +80,7 @@ ENTRY (BP_SYM (strchr))
+ 	jp L(0)			/* exactly two bits set */
+ 
+ 	xorb (%eax), %cl	/* is byte the one we are looking for? */
+-	jz L(2)			/* yes => return pointer */
++	jz L(out)		/* yes => return pointer */
+ 
+ 	xorb %dl, %cl		/* load single byte and test for NUL */
+ 	je L(3)			/* yes => return NULL */
+@@ -91,7 +89,7 @@ ENTRY (BP_SYM (strchr))
+ 	incl %eax
+ 
+ 	cmpb %cl, %dl		/* is byte == C? */
+-	je L(2)			/* aligned => return pointer */
++	je L(out)		/* aligned => return pointer */
+ 
+ 	cmpb $0, %cl		/* is byte NUL? */
+ 	je L(3)			/* yes => return NULL */
+@@ -104,7 +102,7 @@ ENTRY (BP_SYM (strchr))
+ L(0):	movb (%eax), %cl	/* load single byte */
+ 
+ 	cmpb %cl, %dl		/* is byte == C? */
+-	je L(2)			/* aligned => return pointer */
++	je L(out)		/* aligned => return pointer */
+ 
+ 	cmpb $0, %cl		/* is byte NUL? */
+ 	je L(3)			/* yes => return NULL */
+@@ -274,23 +272,21 @@ L(1):	xorl %ecx, %ebp			/* (word^magic) */
+ L(5):	subl $4, %eax		/* adjust pointer */
+ 	testb %bl, %bl		/* first byte == C? */
+ 
+-	jz L(2)			/* yes => return pointer */
++	jz L(out)		/* yes => return pointer */
+ 
+ 	incl %eax		/* increment pointer */
+ 	testb %bh, %bh		/* second byte == C? */
+ 
+-	jz L(2)			/* yes => return pointer */
++	jz L(out)		/* yes => return pointer */
+ 
+ 	shrl $16, %ebx		/* make upper bytes accessible */
+ 	incl %eax		/* increment pointer */
+ 
+ 	cmp $0, %bl		/* third byte == C */
+-	je L(2)			/* yes => return pointer */
++	je L(out)		/* yes => return pointer */
+ 
+ 	incl %eax		/* increment pointer */
+ 
+-L(2):	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	RETURN_BOUNDED_POINTER (STR(%esp))
+ L(out):	popl %ebp		/* restore saved registers */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (ebp)
+@@ -305,7 +301,6 @@ L(out):	popl %ebp		/* restore saved registers */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ 
+ 	cfi_adjust_cfa_offset (16)
+@@ -318,7 +313,7 @@ L(out):	popl %ebp		/* restore saved registers */
+ L(4):	subl $4, %eax		/* adjust pointer */
+ 	cmpb %dl, %cl		/* first byte == C? */
+ 
+-	je L(2)			/* yes => return pointer */
++	je L(out)		/* yes => return pointer */
+ 
+ 	cmpb $0, %cl		/* first byte == NUL? */
+ 	je L(3)			/* yes => return NULL */
+@@ -326,7 +321,7 @@ L(4):	subl $4, %eax		/* adjust pointer */
+ 	incl %eax		/* increment pointer */
+ 
+ 	cmpb %dl, %ch		/* second byte == C? */
+-	je L(2)			/* yes => return pointer */
++	je L(out)		/* yes => return pointer */
+ 
+ 	cmpb $0, %ch		/* second byte == NUL? */
+ 	je L(3)			/* yes => return NULL */
+@@ -335,7 +330,7 @@ L(4):	subl $4, %eax		/* adjust pointer */
+ 	incl %eax		/* increment pointer */
+ 
+ 	cmpb %dl, %cl		/* third byte == C? */
+-	je L(2)			/* yes => return pointer */
++	je L(out)		/* yes => return pointer */
+ 
+ 	cmpb $0, %cl		/* third byte == NUL? */
+ 	je L(3)			/* yes => return NULL */
+@@ -344,10 +339,9 @@ L(4):	subl $4, %eax		/* adjust pointer */
+ 
+ 	/* The test four the fourth byte is necessary!  */
+ 	cmpb %dl, %ch		/* fourth byte == C? */
+-	je L(2)			/* yes => return pointer */
++	je L(out)		/* yes => return pointer */
+ 
+ L(3):	xorl %eax, %eax
+-	RETURN_NULL_BOUNDED_POINTER
+ 	jmp L(out)
+ END (BP_SYM (strchr))
+ 
+diff --git a/sysdeps/i386/i586/strcpy.S b/sysdeps/i386/i586/strcpy.S
+index 50fc521dd2e28c17..edd21f135d46a732 100644
+--- a/sysdeps/i386/i586/strcpy.S
++++ b/sysdeps/i386/i586/strcpy.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (STRCPY))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -48,8 +47,6 @@ ENTRY (BP_SYM (STRCPY))
+ 	cfi_rel_offset (edi, 8)
+ 	movl	SRC(%esp), %esi
+ 	cfi_rel_offset (esi, 4)
+-	CHECK_BOUNDS_LOW (%edi, DEST(%esp))
+-	CHECK_BOUNDS_LOW (%esi, SRC(%esp))
+ 
+ 	xorl	%eax, %eax
+ 	leal	-1(%esi), %ecx
+@@ -158,7 +155,6 @@ L(end2):
+ #else
+ 	movl	DEST(%esp), %eax
+ #endif
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ 	popl	%ebx
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (ebx)
+@@ -169,7 +165,6 @@ L(end2):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (STRCPY))
+ #ifndef USE_AS_STPCPY
+diff --git a/sysdeps/i386/i586/strlen.S b/sysdeps/i386/i586/strlen.S
+index 29d81d6b8de51b87..323cb950790174e6 100644
+--- a/sysdeps/i386/i586/strlen.S
++++ b/sysdeps/i386/i586/strlen.S
+@@ -41,10 +41,8 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strlen))
+-	ENTER
+ 
+ 	movl STR(%esp), %eax
+-	CHECK_BOUNDS_LOW (%eax, STR(%esp))
+ 	movl $3, %edx		/* load mask (= 3) */
+ 
+ 	andl %eax, %edx		/* separate last two bits of address */
+@@ -178,11 +176,9 @@ L(3):	subl $4, %eax		/* correct too early pointer increment */
+ 
+ 	incl %eax		/* increment pointer */
+ 
+-L(2):	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	subl STR(%esp), %eax	/* now compute the length as difference
++L(2):	subl STR(%esp), %eax	/* now compute the length as difference
+ 				   between start and terminating NUL
+ 				   character */
+-	LEAVE
+ 	ret
+ END (BP_SYM (strlen))
+ libc_hidden_builtin_def (strlen)
+diff --git a/sysdeps/i386/i586/sub_n.S b/sysdeps/i386/i586/sub_n.S
+index 6ac1447be31f84f0..07bddca9a8ce7fe8 100644
+--- a/sysdeps/i386/i586/sub_n.S
++++ b/sysdeps/i386/i586/sub_n.S
+@@ -30,7 +30,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_sub_n))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -48,13 +47,6 @@ ENTRY (BP_SYM (__mpn_sub_n))
+ 	movl	S2(%esp),%ebx
+ 	cfi_rel_offset (ebx, 0)
+ 	movl	SIZE(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ecx	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S1(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%ebx, S2(%esp), %ecx)
+-	shrl	$2, %ecx
+-#endif
+ 	movl	(%ebx),%ebp
+ 	cfi_rel_offset (ebp, 4)
+ 
+@@ -149,6 +141,5 @@ L(end2):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_sub_n))
+diff --git a/sysdeps/i386/i586/submul_1.S b/sysdeps/i386/i586/submul_1.S
+index b08902562fbc8807..a028d7089798ceb7 100644
+--- a/sysdeps/i386/i586/submul_1.S
++++ b/sysdeps/i386/i586/submul_1.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_submul_1))
+-	ENTER
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -53,12 +52,6 @@ ENTRY (BP_SYM (__mpn_submul_1))
+ 	movl	SIZE(%esp), %size
+ 	movl	S2LIMB(%esp), %s2_limb
+ 	cfi_rel_offset (s2_limb, 0)
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %sizeP	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%res_ptr, RES(%esp), %sizeP)
+-	CHECK_BOUNDS_BOTH_WIDE (%s1_ptr, S1(%esp), %sizeP)
+-	shrl	$2, %sizeP
+-#endif
+ 	leal	(%res_ptr,%size,4), %res_ptr
+ 	leal	(%s1_ptr,%size,4), %s1_ptr
+ 	negl	%size
+@@ -98,7 +91,6 @@ L(oop):	adcl	$0, %ebp
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (res_ptr)
+ 
+-	LEAVE
+ 	ret
+ #undef size
+ END (BP_SYM (__mpn_submul_1))
+diff --git a/sysdeps/i386/i686/add_n.S b/sysdeps/i386/i686/add_n.S
+index ff4c66db354d6100..f645a21c1cad52ab 100644
+--- a/sysdeps/i386/i686/add_n.S
++++ b/sysdeps/i386/i686/add_n.S
+@@ -34,7 +34,6 @@ L(1):	addl    (%esp), %eax
+ 	ret
+ #endif
+ ENTRY (BP_SYM (__mpn_add_n))
+-	ENTER
+ 
+ 	pushl %edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -47,13 +46,6 @@ ENTRY (BP_SYM (__mpn_add_n))
+ 	cfi_rel_offset (esi, 0)
+ 	movl	S2(%esp),%edx
+ 	movl	SIZE(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ecx	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S1(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%edx, S2(%esp), %ecx)
+-	shrl	$2, %ecx
+-#endif
+ 	movl	%ecx,%eax
+ 	shrl	$3,%ecx			/* compute count for unrolled loop */
+ 	negl	%eax
+@@ -116,6 +108,5 @@ L(oop):	movl	(%esi),%eax
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_add_n))
+diff --git a/sysdeps/i386/i686/memcmp.S b/sysdeps/i386/i686/memcmp.S
+index 9eab978983695f20..f45a22400242cb02 100644
+--- a/sysdeps/i386/i686/memcmp.S
++++ b/sysdeps/i386/i686/memcmp.S
+@@ -26,9 +26,9 @@
+ #define BLK2		BLK1+PTR_SIZE
+ #define LEN		BLK2+PTR_SIZE
+ #define ENTRANCE	pushl %ebx; cfi_adjust_cfa_offset (4); \
+-			cfi_rel_offset (ebx, 0); ENTER
++			cfi_rel_offset (ebx, 0)
+ #define RETURN		popl %ebx; cfi_adjust_cfa_offset (-4); \
+-			cfi_restore (ebx); LEAVE; ret
++			cfi_restore (ebx); ret
+ 
+ /* Load an entry in a jump table into EBX.  TABLE is a jump table
+    with relative offsets.  INDEX is a register contains the index
+diff --git a/sysdeps/i386/i686/memcpy.S b/sysdeps/i386/i686/memcpy.S
+index a720b02c3b2d5ed8..68f7e40031b1b4db 100644
+--- a/sysdeps/i386/i686/memcpy.S
++++ b/sysdeps/i386/i686/memcpy.S
+@@ -38,7 +38,6 @@ ENTRY_CHK (__memcpy_chk)
+ END_CHK (__memcpy_chk)
+ #endif
+ ENTRY (BP_SYM (memcpy))
+-	ENTER
+ 
+ 	movl	%edi, %eax
+ 	movl	DEST(%esp), %edi
+@@ -81,9 +80,7 @@ ENTRY (BP_SYM (memcpy))
+ .Lend:	movl	%eax, %edi
+ 	movl	%edx, %esi
+ 	movl	DEST(%esp), %eax
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ 
+-	LEAVE
+ 	RET_PTR
+ 
+ 	/* When we come here the pointers do not have the same
+diff --git a/sysdeps/i386/i686/memmove.S b/sysdeps/i386/i686/memmove.S
+index 2de2a193eab59da7..683f45fc44fc4f4f 100644
+--- a/sysdeps/i386/i686/memmove.S
++++ b/sysdeps/i386/i686/memmove.S
+@@ -47,7 +47,6 @@ END_CHK (__memmove_chk)
+ #endif
+ 
+ ENTRY (BP_SYM (memmove))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -58,8 +57,6 @@ ENTRY (BP_SYM (memmove))
+ 	movl	%esi, %edx
+ 	movl	SRC(%esp), %esi
+ 	cfi_register (esi, edx)
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, DEST(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, SRC(%esp), %ecx)
+ 
+ 	movl	%edi, %eax
+ 	subl	%esi, %eax
+@@ -79,14 +76,12 @@ ENTRY (BP_SYM (memmove))
+ 	cfi_restore (esi)
+ #ifndef USE_AS_BCOPY
+ 	movl	DEST(%esp), %eax
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ #endif
+ 
+ 	popl	%edi
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ 
+ 	cfi_adjust_cfa_offset (4)
+@@ -113,7 +108,6 @@ ENTRY (BP_SYM (memmove))
+ 	cfi_restore (esi)
+ #ifndef USE_AS_BCOPY
+ 	movl	DEST(%esp), %eax
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ #endif
+ 
+ 	cld
+@@ -121,7 +115,6 @@ ENTRY (BP_SYM (memmove))
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (memmove))
+ #ifndef USE_AS_BCOPY
+diff --git a/sysdeps/i386/i686/mempcpy.S b/sysdeps/i386/i686/mempcpy.S
+index 402c415e06b3c80f..facff870e3f8f9de 100644
+--- a/sysdeps/i386/i686/mempcpy.S
++++ b/sysdeps/i386/i686/mempcpy.S
+@@ -38,17 +38,14 @@ ENTRY_CHK (__mempcpy_chk)
+ END_CHK (__mempcpy_chk)
+ #endif
+ ENTRY (BP_SYM (__mempcpy))
+-	ENTER
+ 
+ 	movl	LEN(%esp), %ecx
+ 	movl	%edi, %eax
+ 	cfi_register (edi, eax)
+ 	movl	DEST(%esp), %edi
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, DEST(%esp), %ecx)
+ 	movl	%esi, %edx
+ 	cfi_register (esi, edx)
+ 	movl	SRC(%esp), %esi
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, SRC(%esp), %ecx)
+ 	cld
+ 	shrl	$1, %ecx
+ 	jnc	1f
+@@ -62,9 +59,7 @@ ENTRY (BP_SYM (__mempcpy))
+ 	cfi_restore (edi)
+ 	movl	%edx, %esi
+ 	cfi_restore (esi)
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (__mempcpy))
+ libc_hidden_def (BP_SYM (__mempcpy))
+diff --git a/sysdeps/i386/i686/memset.S b/sysdeps/i386/i686/memset.S
+index 429c5386ec0a395b..7db25497117b6258 100644
+--- a/sysdeps/i386/i686/memset.S
++++ b/sysdeps/i386/i686/memset.S
+@@ -46,14 +46,12 @@ ENTRY_CHK (__memset_chk)
+ END_CHK (__memset_chk)
+ #endif
+ ENTRY (BP_SYM (memset))
+-	ENTER
+ 
+ 	cld
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+ 	movl	DEST(%esp), %edx
+ 	movl	LEN(%esp), %ecx
+-	CHECK_BOUNDS_BOTH_WIDE (%edx, DEST(%esp), %ecx)
+ #if BZERO_P
+ 	xorl	%eax, %eax	/* fill with 0 */
+ #else
+@@ -90,13 +88,11 @@ ENTRY (BP_SYM (memset))
+ 1:
+ #if !BZERO_P
+ 	movl DEST(%esp), %eax	/* start address of destination is result */
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ #endif
+ 	popl	%edi
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ #if BZERO_P
+ 	ret
+ #else
+diff --git a/sysdeps/i386/i686/strcmp.S b/sysdeps/i386/i686/strcmp.S
+index 3dcc289bfc172db5..0423aac297358c77 100644
+--- a/sysdeps/i386/i686/strcmp.S
++++ b/sysdeps/i386/i686/strcmp.S
+@@ -28,12 +28,9 @@
+ 
+         .text
+ ENTRY (BP_SYM (strcmp))
+-	ENTER
+ 
+ 	movl	STR1(%esp), %ecx
+ 	movl	STR2(%esp), %edx
+-	CHECK_BOUNDS_LOW (%ecx, STR1(%esp))
+-	CHECK_BOUNDS_LOW (%edx, STR2(%esp))
+ 
+ L(oop):	movb	(%ecx), %al
+ 	cmpb	(%edx), %al
+@@ -46,26 +43,12 @@ L(oop):	movb	(%ecx), %al
+ 	xorl	%eax, %eax
+ 	/* when strings are equal, pointers rest one beyond
+ 	   the end of the NUL terminators.  */
+-	CHECK_BOUNDS_HIGH (%ecx, STR1(%esp), jbe)
+-	CHECK_BOUNDS_HIGH (%edx, STR2(%esp), jbe)
+-	LEAVE
+ 	ret
+ 
+-#ifndef __BOUNDED_POINTERS__
+ L(neq):	movl	$1, %eax
+ 	movl	$-1, %ecx
+ 	cmovbl	%ecx, %eax
+-#else
+-L(neq):	movl	$1, %eax
+-	ja	L(chk)
+-	negl	%eax
+-	/* When strings differ, pointers rest on
+-	   the unequal characters.  */
+-L(chk):	CHECK_BOUNDS_HIGH (%ecx, STR1(%esp), jb)
+-	CHECK_BOUNDS_HIGH (%edx, STR2(%esp), jb)
+-#endif
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (strcmp))
+ libc_hidden_builtin_def (strcmp)
+diff --git a/sysdeps/i386/i686/strtok.S b/sysdeps/i386/i686/strtok.S
+index 5589ae5360918944..372352e32a84f81d 100644
+--- a/sysdeps/i386/i686/strtok.S
++++ b/sysdeps/i386/i686/strtok.S
+@@ -46,11 +46,7 @@
+ 	.type save_ptr, @object
+ 	.size save_ptr, 4
+ save_ptr:
+-# if __BOUNDED_POINTERS__
+-	.space 12
+-# else
+ 	.space 4
+-# endif
+ 
+ # ifdef PIC
+ #  define SAVE_PTR save_ptr@GOTOFF(%ebx)
+@@ -81,7 +77,6 @@ save_ptr:
+ #endif
+ 
+ ENTRY (BP_SYM (FUNCTION))
+-	ENTER
+ 
+ #if !defined USE_AS_STRTOK_R && defined PIC
+ 	pushl %ebx			/* Save PIC register.  */
+@@ -127,23 +122,7 @@ ENTRY (BP_SYM (FUNCTION))
+ 	cmove %eax, %edx
+ 	testl %edx, %edx
+ 	jz L(returnNULL)
+-#if __BOUNDED_POINTERS__
+-# ifdef USE_AS_STRTOK_R
+-	movl SAVE(%esp), %ecx	/* borrow %ecx for a moment */
+-# endif
+-	je L(0)
+-	/* Save bounds of incoming non-NULL STR into save area.  */
+-	movl 4+STR(%esp), %eax
+-	movl %eax, 4+SAVE_PTR
+-	movl 8+STR(%esp), %eax
+-	movl %eax, 8+SAVE_PTR
+-L(0):	CHECK_BOUNDS_LOW (%edx, SAVE_PTR)
+-# ifdef USE_AS_STRTOK_R
+-	xorl %ecx, %ecx		/* restore %ecx to zero */
+-# endif
+-#endif
+ 	movl DELIM(%esp), %eax		/* Get start of delimiter set.  */
+-	CHECK_BOUNDS_LOW (%eax, DELIM(%esp))
+ 
+ /* For understanding the following code remember that %ecx == 0 now.
+    Although all the following instruction only modify %cl we always
+@@ -151,17 +130,17 @@ L(0):	CHECK_BOUNDS_LOW (%edx, SAVE_PTR)
+ 
+ L(2):	movb (%eax), %cl	/* get byte from stopset */
+ 	testb %cl, %cl		/* is NUL char? */
+-	jz L(1_1)		/* yes => start compare loop */
++	jz L(1)			/* yes => start compare loop */
+ 	movb %cl, (%esp,%ecx)	/* set corresponding byte in stopset table */
+ 
+ 	movb 1(%eax), %cl	/* get byte from stopset */
+ 	testb $0xff, %cl	/* is NUL char? */
+-	jz L(1_2)		/* yes => start compare loop */
++	jz L(1)			/* yes => start compare loop */
+ 	movb %cl, (%esp,%ecx)	/* set corresponding byte in stopset table */
+ 
+ 	movb 2(%eax), %cl	/* get byte from stopset */
+ 	testb $0xff, %cl	/* is NUL char? */
+-	jz L(1_3)		/* yes => start compare loop */
++	jz L(1)			/* yes => start compare loop */
+ 	movb %cl, (%esp,%ecx)	/* set corresponding byte in stopset table */
+ 
+ 	movb 3(%eax), %cl	/* get byte from stopset */
+@@ -170,16 +149,7 @@ L(2):	movb (%eax), %cl	/* get byte from stopset */
+ 	testb $0xff, %cl	/* is NUL char? */
+ 	jnz L(2)		/* no => process next dword from stopset */
+ 
+-#if __BOUNDED_POINTERS__
+-	jmp L(1_0)		/* pointer is correct for bounds check */
+-L(1_3):	incl %eax		/* adjust pointer for bounds check */
+-L(1_2):	incl %eax		/* ditto */
+-L(1_1):	incl %eax		/* ditto */
+-L(1_0):	CHECK_BOUNDS_HIGH (%eax, DELIM(%esp), jbe)
+-#else
+-L(1_3):; L(1_2):; L(1_1):	/* fall through */
+-#endif
+-	leal -4(%edx), %eax	/* prepare loop */
++L(1):	leal -4(%edx), %eax	/* prepare loop */
+ 
+ 	/* We use a neat trick for the following loop.  Normally we would
+ 	   have to test for two termination conditions
+@@ -253,8 +223,6 @@ L(8):	cmpl %eax, %edx
+ 	movl SAVE(%esp), %ecx
+ #endif
+ 	movl %edx, SAVE_PTR
+-	CHECK_BOUNDS_HIGH (%edx, SAVE_PTR, jb)
+-	RETURN_BOUNDED_POINTER (SAVE_PTR)
+ 
+ L(epilogue):
+ 	/* Remove the stopset table.  */
+@@ -265,7 +233,6 @@ L(epilogue):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (ebx)
+ #endif
+-	LEAVE
+ 	RET_PTR
+ 
+ L(returnNULL):
+@@ -274,7 +241,6 @@ L(returnNULL):
+ 	movl SAVE(%esp), %ecx
+ #endif
+ 	movl %edx, SAVE_PTR
+-	RETURN_NULL_BOUNDED_POINTER
+ 	jmp L(epilogue)
+ 
+ END (BP_SYM (FUNCTION))
+diff --git a/sysdeps/i386/lshift.S b/sysdeps/i386/lshift.S
+index eb2e6ffd3b92ba97..b40d4ddd3a0e7fd7 100644
+--- a/sysdeps/i386/lshift.S
++++ b/sysdeps/i386/lshift.S
+@@ -29,7 +29,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_lshift))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -44,12 +43,6 @@ ENTRY (BP_SYM (__mpn_lshift))
+ 	cfi_rel_offset (esi, 4)
+ 	movl	SIZE(%esp),%edx
+ 	movl	CNT(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %edx		/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %edx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S(%esp), %edx)
+-	shrl	$2, %edx
+-#endif
+ 	subl	$4,%esi			/* adjust s_ptr */
+ 
+ 	movl	(%esi,%edx,4),%ebx	/* read most significant limb */
+@@ -92,7 +85,6 @@ L(1):	movl	(%esi,%edx,4),%eax
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ 
+ 	cfi_restore_state
+@@ -109,6 +101,5 @@ L(end):	shll	%cl,%ebx		/* compute least significant limb */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_lshift))
+diff --git a/sysdeps/i386/memchr.S b/sysdeps/i386/memchr.S
+index a3427c17dafd0cbf..88651e527650b26b 100644
+--- a/sysdeps/i386/memchr.S
++++ b/sysdeps/i386/memchr.S
+@@ -39,7 +39,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__memchr))
+-	ENTER
+ 
+ 	/* Save callee-safe registers used in this function.  */
+ 	pushl %esi
+@@ -53,7 +52,6 @@ ENTRY (BP_SYM (__memchr))
+ 	movl CHR(%esp), %edx	/* c: byte we are looking for.  */
+ 	movl LEN(%esp), %esi	/* len: length of memory block.  */
+ 	cfi_rel_offset (esi, 4)
+-	CHECK_BOUNDS_LOW (%eax, STR(%esp))
+ 
+ 	/* If my must not test more than three characters test
+ 	   them one by one.  This is especially true for 0.  */
+@@ -312,23 +310,13 @@ L(8):	testb %cl, %cl		/* test first byte in dword */
+ 	incl %eax		/* increment source pointer */
+ 
+ 	/* No further test needed we we know it is one of the four bytes.  */
+-L(9):
+-#if __BOUNDED_POINTERS__
+-	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	/* If RTN pointer is phony, don't copy return value into it.  */
+-	movl RTN(%esp), %ecx
+-	testl %ecx, %ecx
+-	jz L(pop)
+-	RETURN_BOUNDED_POINTER (STR(%esp))
+-#endif
+-L(pop):	popl %edi		/* pop saved registers */
++L(9):	popl %edi		/* pop saved registers */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 	popl %esi
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (__memchr))
+ 
+diff --git a/sysdeps/i386/memcmp.S b/sysdeps/i386/memcmp.S
+index e21e4916e6151c28..1d5535a29dd12b33 100644
+--- a/sysdeps/i386/memcmp.S
++++ b/sysdeps/i386/memcmp.S
+@@ -28,7 +28,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (memcmp))
+-	ENTER
+ 
+ 	pushl %esi		/* Save callee-safe registers.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -40,8 +39,6 @@ ENTRY (BP_SYM (memcmp))
+ 	cfi_rel_offset (esi, 0)
+ 	movl BLK2(%esp), %edi
+ 	movl LEN(%esp), %ecx
+-	CHECK_BOUNDS_LOW (%esi, BLK1(%esp))
+-	CHECK_BOUNDS_LOW (%edi, BLK2(%esp))
+ 
+ 	cld			/* Set direction of comparison.  */
+ 
+@@ -64,15 +61,12 @@ ENTRY (BP_SYM (memcmp))
+ 	   Note that the following operation does not change 0xffffffff.  */
+ 	orb $1, %al		/* Change 0 to 1.  */
+ 
+-L(1):	CHECK_BOUNDS_HIGH (%esi, BLK1(%esp), jbe)
+-	CHECK_BOUNDS_HIGH (%edi, BLK2(%esp), jbe)
+-	popl %esi		/* Restore registers.  */
++L(1):	popl %esi		/* Restore registers.  */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 	movl %edx, %edi
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (memcmp))
+ 
+diff --git a/sysdeps/i386/mul_1.S b/sysdeps/i386/mul_1.S
+index c599a96eade313e4..71f8dceb188057d9 100644
+--- a/sysdeps/i386/mul_1.S
++++ b/sysdeps/i386/mul_1.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_mul_1))
+-	ENTER
+ 
+ 	pushl	%res_ptr
+ 	cfi_adjust_cfa_offset (4)
+@@ -53,12 +52,6 @@ ENTRY (BP_SYM (__mpn_mul_1))
+ 	movl	SIZE(%esp), %size
+ 	movl	S2LIMB(%esp), %s2_limb
+ 	cfi_rel_offset (s2_limb, 0)
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %size	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%res_ptr, RES(%esp), %size)
+-	CHECK_BOUNDS_BOTH_WIDE (%s1_ptr, S1(%esp), %size)
+-	shrl	$2, %size
+-#endif
+ 	leal	(%res_ptr,%size,4), %res_ptr
+ 	leal	(%s1_ptr,%size,4), %s1_ptr
+ 	negl	%size
+@@ -90,7 +83,6 @@ L(oop):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (res_ptr)
+ 
+-	LEAVE
+ 	ret
+ #undef size
+ END (BP_SYM (__mpn_mul_1))
+diff --git a/sysdeps/i386/rawmemchr.S b/sysdeps/i386/rawmemchr.S
+index 7479e3bd75b9d4a0..3ce497485e439c02 100644
+--- a/sysdeps/i386/rawmemchr.S
++++ b/sysdeps/i386/rawmemchr.S
+@@ -38,7 +38,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__rawmemchr))
+-	ENTER
+ 
+ 	/* Save callee-safe register used in this function.  */
+ 	pushl %edi
+@@ -48,7 +47,6 @@ ENTRY (BP_SYM (__rawmemchr))
+ 	/* Load parameters into registers.  */
+ 	movl STR(%esp), %eax
+ 	movl CHR(%esp), %edx
+-	CHECK_BOUNDS_LOW (%eax, STR(%esp))
+ 
+ 	/* At the moment %edx contains C.  What we need for the
+ 	   algorithm is C in all bytes of the dword.  Avoid
+@@ -215,13 +213,10 @@ L(8):	testb %cl, %cl		/* test first byte in dword */
+ 	/* No further test needed we we know it is one of the four bytes.  */
+ 
+ L(9):
+-	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	RETURN_BOUNDED_POINTER (STR(%esp))
+ 	popl %edi		/* pop saved register */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (__rawmemchr))
+ 
+diff --git a/sysdeps/i386/rshift.S b/sysdeps/i386/rshift.S
+index c9ec570979f5b555..48f7c4f89dc408d3 100644
+--- a/sysdeps/i386/rshift.S
++++ b/sysdeps/i386/rshift.S
+@@ -29,7 +29,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_rshift))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -44,12 +43,6 @@ ENTRY (BP_SYM (__mpn_rshift))
+ 	cfi_rel_offset (esi, 4)
+ 	movl	SIZE(%esp),%edx
+ 	movl	CNT(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %edx		/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %edx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S(%esp), %edx)
+-	shrl	$2, %edx
+-#endif
+ 	leal	-4(%edi,%edx,4),%edi
+ 	leal	(%esi,%edx,4),%esi
+ 	negl	%edx
+@@ -94,7 +87,6 @@ L(1):	movl	(%esi,%edx,4),%eax
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ 
+ 	cfi_restore_state
+@@ -111,6 +103,5 @@ L(end):	shrl	%cl,%ebx		/* compute most significant limb */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_rshift))
+diff --git a/sysdeps/i386/setjmp.S b/sysdeps/i386/setjmp.S
+index 518f3c30c01893b5..8e7a4df25bd2ff8d 100644
+--- a/sysdeps/i386/setjmp.S
++++ b/sysdeps/i386/setjmp.S
+@@ -28,10 +28,8 @@
+ #define SIGMSK	JMPBUF+PTR_SIZE
+ 
+ ENTRY (BP_SYM (__sigsetjmp))
+-	ENTER
+ 
+ 	movl JMPBUF(%esp), %eax
+-	CHECK_BOUNDS_BOTH_WIDE (%eax, JMPBUF(%esp), $JB_SIZE)
+ 
+      	/* Save registers.  */
+ 	movl %ebx, (JB_BX*4)(%eax)
+@@ -48,7 +46,6 @@ ENTRY (BP_SYM (__sigsetjmp))
+ 	PTR_MANGLE (%ecx)
+ #endif
+      	movl %ecx, (JB_PC*4)(%eax)
+-	LEAVE /* pop frame pointer to prepare for tail-call.  */
+ 	movl %ebp, (JB_BP*4)(%eax) /* Save caller's frame pointer.  */
+ 
+ #if IS_IN (rtld)
+diff --git a/sysdeps/i386/stpcpy.S b/sysdeps/i386/stpcpy.S
+index 472c315ce7a1ad00..3a01be3174ef0863 100644
+--- a/sysdeps/i386/stpcpy.S
++++ b/sysdeps/i386/stpcpy.S
+@@ -34,12 +34,9 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__stpcpy))
+-	ENTER
+ 
+ 	movl DEST(%esp), %eax
+ 	movl SRC(%esp), %ecx
+-	CHECK_BOUNDS_LOW (%eax, DEST(%esp))
+-	CHECK_BOUNDS_LOW (%ecx, SRC(%esp))
+ 	subl %eax, %ecx		/* magic: reduce number of loop variants
+ 				   to one using addressing mode */
+ 
+@@ -85,10 +82,7 @@ L(1):	addl $4, %eax		/* increment loop counter */
+ L(4):	incl %eax
+ L(3):	incl %eax
+ L(2):
+-	CHECK_BOUNDS_HIGH (%eax, DEST(%esp), jb)
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (__stpcpy))
+ 
+diff --git a/sysdeps/i386/stpncpy.S b/sysdeps/i386/stpncpy.S
+index d74a42f188d8d849..7f3ca8c3b775b42f 100644
+--- a/sysdeps/i386/stpncpy.S
++++ b/sysdeps/i386/stpncpy.S
+@@ -36,7 +36,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__stpncpy))
+-	ENTER
+ 
+ 	pushl %esi
+ 	cfi_adjust_cfa_offset (4)
+@@ -45,8 +44,6 @@ ENTRY (BP_SYM (__stpncpy))
+ 	movl SRC(%esp), %esi
+ 	cfi_rel_offset (esi, 0)
+ 	movl LEN(%esp), %ecx
+-	CHECK_BOUNDS_LOW (%eax, DEST(%esp))
+-	CHECK_BOUNDS_LOW (%esi, SRC(%esp))
+ 
+ 	subl %eax, %esi		/* magic: reduce number of loop variants
+ 				   to one using addressing mode */
+@@ -141,18 +138,10 @@ L(8):
+ L(3):	decl %ecx		/* all bytes written? */
+ 	jnz L(8)		/* no, then again */
+ 
+-L(9):
+-#if __BOUNDED_POINTERS__
+-	addl %eax, %esi		/* undo magic: %esi now points beyond end of SRC */
+-	CHECK_BOUNDS_HIGH (%esi, SRC(%esp), jbe)
+-	CHECK_BOUNDS_HIGH (%eax, DEST(%esp), jbe)
+-	RETURN_BOUNDED_POINTER (DEST(%esp))
+-#endif
+-	popl %esi		/* restore saved register content */
++L(9):	popl %esi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (__stpncpy))
+ 
+diff --git a/sysdeps/i386/strchr.S b/sysdeps/i386/strchr.S
+index 80a7bd825df55e87..aff95b9b7ee4c35c 100644
+--- a/sysdeps/i386/strchr.S
++++ b/sysdeps/i386/strchr.S
+@@ -32,14 +32,12 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strchr))
+-	ENTER
+ 
+ 	pushl %edi		/* Save callee-safe registers used here.  */
+ 	cfi_adjust_cfa_offset (4)
+ 	cfi_rel_offset (edi, 0)
+ 	movl STR(%esp), %eax
+ 	movl CHR(%esp), %edx
+-	CHECK_BOUNDS_LOW (%eax, STR(%esp))
+ 
+ 	/* At the moment %edx contains C.  What we need for the
+ 	   algorithm is C in all bytes of the dword.  Avoid
+@@ -244,12 +242,10 @@ L(11):	movl (%eax), %ecx	/* get word (= 4 bytes) in question */
+ 
+ L(2):	/* Return NULL.  */
+ 	xorl %eax, %eax
+-	RETURN_NULL_BOUNDED_POINTER
+ 	popl %edi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ 
+ 	cfi_adjust_cfa_offset (4)
+@@ -286,13 +282,10 @@ L(7):	testb %cl, %cl		/* is first byte C? */
+ 	incl %eax
+ 
+ L(6):
+-	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	RETURN_BOUNDED_POINTER (STR(%esp))
+ 	popl %edi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (strchr))
+ 
+diff --git a/sysdeps/i386/strchrnul.S b/sysdeps/i386/strchrnul.S
+index 65b950008f970a12..2aa7d82cc8af1dfc 100644
+--- a/sysdeps/i386/strchrnul.S
++++ b/sysdeps/i386/strchrnul.S
+@@ -32,7 +32,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__strchrnul))
+-	ENTER
+ 
+ 	pushl %edi		/* Save callee-safe registers used here.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -40,7 +39,6 @@ ENTRY (BP_SYM (__strchrnul))
+ 
+ 	movl STR(%esp), %eax
+ 	movl CHR(%esp), %edx
+-	CHECK_BOUNDS_LOW (%eax, STR(%esp))
+ 
+ 	/* At the moment %edx contains CHR.  What we need for the
+ 	   algorithm is CHR in all bytes of the dword.  Avoid
+@@ -272,13 +270,10 @@ L(7):	testb %cl, %cl		/* is first byte CHR? */
+ 	/* It must be in the fourth byte and it cannot be NUL.  */
+ 	incl %eax
+ 
+-L(6):	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	RETURN_BOUNDED_POINTER (STR(%esp))
+-	popl %edi		/* restore saved register content */
++L(6):	popl %edi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (__strchrnul))
+ 
+diff --git a/sysdeps/i386/strcspn.S b/sysdeps/i386/strcspn.S
+index 1934daffb0ec41d1..40b5207809f74530 100644
+--- a/sysdeps/i386/strcspn.S
++++ b/sysdeps/i386/strcspn.S
+@@ -31,11 +31,9 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strcspn))
+-	ENTER
+ 
+ 	movl STR(%esp), %edx
+ 	movl STOP(%esp), %eax
+-	CHECK_BOUNDS_LOW (%edx, STR(%esp))
+ 
+ 	/* First we create a table with flags for all possible characters.
+ 	   For the ASCII (7bit/8bit) or ISO-8859-X character sets which are
+@@ -236,11 +234,9 @@ L(5):	incl %eax
+ 
+ L(4):	addl $256, %esp		/* remove stopset */
+ 	cfi_adjust_cfa_offset (-256)
+-	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+ 	subl %edx, %eax		/* we have to return the number of valid
+ 				   characters, so compute distance to first
+ 				   non-valid character */
+-	LEAVE
+ 	ret
+ END (BP_SYM (strcspn))
+ libc_hidden_builtin_def (strcspn)
+diff --git a/sysdeps/i386/strpbrk.S b/sysdeps/i386/strpbrk.S
+index 9696b9acd50b4885..ae35ba44f6a624a7 100644
+--- a/sysdeps/i386/strpbrk.S
++++ b/sysdeps/i386/strpbrk.S
+@@ -32,11 +32,9 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strpbrk))
+-	ENTER
+ 
+ 	movl STR(%esp), %edx
+ 	movl STOP(%esp), %eax
+-	CHECK_BOUNDS_LOW (%edx, STR(%esp))
+ 
+ 	/* First we create a table with flags for all possible characters.
+ 	   For the ASCII (7bit/8bit) or ISO-8859-X character sets which are
+@@ -238,18 +236,10 @@ L(5):	incl %eax
+ L(4):	addl $256, %esp		/* remove stopset */
+ 	cfi_adjust_cfa_offset (-256)
+ 
+-	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+ 	orb %cl, %cl		/* was last character NUL? */
+ 	jnz L(7)		/* no => return pointer */
+ 	xorl %eax, %eax
+-	RETURN_NULL_BOUNDED_POINTER
+ 
+-	LEAVE
+-	RET_PTR
+-
+-L(7):	RETURN_BOUNDED_POINTER (STR(%esp))
+-
+-	LEAVE
+-	RET_PTR
++L(7):	RET_PTR
+ END (BP_SYM (strpbrk))
+ libc_hidden_builtin_def (strpbrk)
+diff --git a/sysdeps/i386/strrchr.S b/sysdeps/i386/strrchr.S
+index f3fe8b75540c58e1..57931c165831aa55 100644
+--- a/sysdeps/i386/strrchr.S
++++ b/sysdeps/i386/strrchr.S
+@@ -31,7 +31,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strrchr))
+-	ENTER
+ 
+ 	pushl %edi		/* Save callee-safe registers used here.  */
+ 	cfi_adjust_cfa_offset (4)
+@@ -43,7 +42,6 @@ ENTRY (BP_SYM (strrchr))
+ 	movl STR(%esp), %esi
+ 	cfi_rel_offset (esi, 0)
+ 	movl CHR(%esp), %ecx
+-	CHECK_BOUNDS_LOW (%esi, STR(%esp))
+ 
+ 	/* At the moment %ecx contains C.  What we need for the
+ 	   algorithm is C in all bytes of the dword.  Avoid
+@@ -324,16 +322,13 @@ L(26):	testb %dl, %dl		/* is third byte == NUL */
+ 	jne L(2)		/* no => skip */
+ 	leal 3(%esi), %eax	/* store address as result */
+ 
+-L(2):	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+-	RETURN_BOUNDED_POINTER (STR(%esp))
+-	popl %esi		/* restore saved register content */
++L(2):	popl %esi		/* restore saved register content */
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (esi)
+ 	popl %edi
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	RET_PTR
+ END (BP_SYM (strrchr))
+ 
+diff --git a/sysdeps/i386/strspn.S b/sysdeps/i386/strspn.S
+index 4193f376590fa48c..2b5c2a4c670bdfa2 100644
+--- a/sysdeps/i386/strspn.S
++++ b/sysdeps/i386/strspn.S
+@@ -31,11 +31,9 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (strspn))
+-	ENTER
+ 
+ 	movl STR(%esp), %edx
+ 	movl SKIP(%esp), %eax
+-	CHECK_BOUNDS_LOW (%edx, STR(%esp))
+ 
+ 	/* First we create a table with flags for all possible characters.
+ 	   For the ASCII (7bit/8bit) or ISO-8859-X character sets which are
+@@ -236,11 +234,9 @@ L(5):	incl %eax
+ 
+ L(4):	addl $256, %esp		/* remove stopset */
+ 	cfi_adjust_cfa_offset (-256)
+-	CHECK_BOUNDS_HIGH (%eax, STR(%esp), jb)
+ 	subl %edx, %eax		/* we have to return the number of valid
+ 				   characters, so compute distance to first
+ 				   non-valid character */
+-	LEAVE
+ 	ret
+ END (BP_SYM (strspn))
+ libc_hidden_builtin_def (strspn)
+diff --git a/sysdeps/i386/strtok.S b/sysdeps/i386/strtok.S
+index 3b222aff3dd7d237..eb586928eb19bf21 100644
+--- a/sysdeps/i386/strtok.S
++++ b/sysdeps/i386/strtok.S
+@@ -46,11 +46,7 @@
+ 	.type save_ptr, @object
+ 	.size save_ptr, 4
+ save_ptr:
+-# if __BOUNDED_POINTERS__
+-	.space 12
+-# else
+ 	.space 4
+-# endif
+ 
+ # ifdef PIC
+ #  define SAVE_PTR save_ptr@GOTOFF(%ebx)
+@@ -69,11 +65,9 @@ save_ptr:
+ 
+ 	.text
+ ENTRY (BP_SYM (FUNCTION))
+-	ENTER
+ 
+ 	movl STR(%esp), %edx
+ 	movl DELIM(%esp), %eax
+-	CHECK_BOUNDS_LOW (%eax, DELIM(%esp))
+ 
+ #if !defined USE_AS_STRTOK_R && defined PIC
+ 	pushl %ebx			/* Save PIC register.  */
+@@ -90,22 +84,7 @@ L(here):
+ 	/* If the pointer is NULL we have to use the stored value of
+ 	   the last run.  */
+ 	cmpl $0, %edx
+-#if __BOUNDED_POINTERS__
+-	movl SAVE(%esp), %ecx
+-	je L(0)
+-	/* Save bounds of incoming non-NULL STR into save area.  */
+-	movl 4+STR(%esp), %eax
+-	movl %eax, 4+SAVE_PTR
+-	movl 8+STR(%esp), %eax
+-	movl %eax, 8+SAVE_PTR
+-	CHECK_BOUNDS_LOW (%edx, SAVE_PTR)
+-	jmp L(1)
+-L(0):	movl SAVE_PTR, %edx
+-	CHECK_BOUNDS_LOW (%edx, SAVE_PTR)
+-	jmp L(1)
+-#else
+ 	jne L(1)
+-#endif
+ 
+ #ifdef USE_AS_STRTOK_R
+ 	/* The value is stored in the third argument.  */
+@@ -267,12 +246,12 @@ L(2):	movb (%eax), %cl	/* get byte from stopset */
+ 
+ 	movb 1(%eax), %cl	/* get byte from stopset */
+ 	testb $0xff, %cl	/* is NUL char? */
+-	jz L(1_2)		/* yes => start compare loop */
++	jz L(1_1)		/* yes => start compare loop */
+ 	movb %cl, (%esp,%ecx)	/* set corresponding byte in stopset table */
+ 
+ 	movb 2(%eax), %cl	/* get byte from stopset */
+ 	testb $0xff, %cl	/* is NUL char? */
+-	jz L(1_3)		/* yes => start compare loop */
++	jz L(1_1)		/* yes => start compare loop */
+ 	movb %cl, (%esp,%ecx)	/* set corresponding byte in stopset table */
+ 
+ 	movb 3(%eax), %cl	/* get byte from stopset */
+@@ -281,16 +260,7 @@ L(2):	movb (%eax), %cl	/* get byte from stopset */
+ 	testb $0xff, %cl	/* is NUL char? */
+ 	jnz L(2)		/* no => process next dword from stopset */
+ 
+-#if __BOUNDED_POINTERS__
+-	jmp L(1_0)		/* pointer is correct for bounds check */
+-L(1_3):	incl %eax		/* adjust pointer for bounds check */
+-L(1_2):	incl %eax		/* ditto */
+-L(1_1):	incl %eax		/* ditto */
+-L(1_0):	CHECK_BOUNDS_HIGH (%eax, DELIM(%esp), jbe)
+-#else
+-L(1_3):; L(1_2):; L(1_1):	/* fall through */
+-#endif
+-	leal -4(%edx), %eax	/* prepare loop */
++L(1_1):	leal -4(%edx), %eax	/* prepare loop */
+ 
+ 	/* We use a neat trick for the following loop.  Normally we would
+ 	   have to test for two termination conditions
+@@ -370,8 +340,6 @@ L(11):
+ 	movl SAVE(%esp), %ecx
+ #endif
+ 	movl %edx, SAVE_PTR
+-	CHECK_BOUNDS_HIGH (%edx, SAVE_PTR, jb)
+-	RETURN_BOUNDED_POINTER (SAVE_PTR)
+ 
+ L(epilogue):
+ #if !defined USE_AS_STRTOK_R && defined PIC
+@@ -379,7 +347,6 @@ L(epilogue):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (ebx)
+ #endif
+-	LEAVE
+ 	RET_PTR
+ 
+ L(returnNULL):
+@@ -388,7 +355,6 @@ L(returnNULL):
+ 	movl SAVE(%esp), %ecx
+ #endif
+ 	movl %edx, SAVE_PTR
+-	RETURN_NULL_BOUNDED_POINTER
+ 	jmp L(epilogue)
+ 
+ END (BP_SYM (FUNCTION))
+diff --git a/sysdeps/i386/sub_n.S b/sysdeps/i386/sub_n.S
+index dbda4d4d4e7180f4..2a09256f9c71f93a 100644
+--- a/sysdeps/i386/sub_n.S
++++ b/sysdeps/i386/sub_n.S
+@@ -31,7 +31,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_sub_n))
+-	ENTER
+ 
+ 	pushl %edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -44,13 +43,6 @@ ENTRY (BP_SYM (__mpn_sub_n))
+ 	cfi_rel_offset (esi, 0)
+ 	movl	S2(%esp),%edx
+ 	movl	SIZE(%esp),%ecx
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %ecx	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%edi, RES(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%esi, S1(%esp), %ecx)
+-	CHECK_BOUNDS_BOTH_WIDE (%edx, S2(%esp), %ecx)
+-	shrl	$2, %ecx
+-#endif
+ 	movl	%ecx,%eax
+ 	shrl	$3,%ecx			/* compute count for unrolled loop */
+ 	negl	%eax
+@@ -118,6 +110,5 @@ L(oop):	movl	(%esi),%eax
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_sub_n))
+diff --git a/sysdeps/i386/submul_1.S b/sysdeps/i386/submul_1.S
+index beb0eb5f07f31a06..c7054e0f6bd48a5e 100644
+--- a/sysdeps/i386/submul_1.S
++++ b/sysdeps/i386/submul_1.S
+@@ -35,7 +35,6 @@
+ 
+ 	.text
+ ENTRY (BP_SYM (__mpn_submul_1))
+-	ENTER
+ 
+ 	pushl	%edi
+ 	cfi_adjust_cfa_offset (4)
+@@ -54,12 +53,6 @@ ENTRY (BP_SYM (__mpn_submul_1))
+ 	movl	S1(%esp), %s1_ptr
+ 	movl	SIZE(%esp), %sizeP
+ 	movl	S2LIMB(%esp), %s2_limb
+-#if __BOUNDED_POINTERS__
+-	shll	$2, %sizeP	/* convert limbs to bytes */
+-	CHECK_BOUNDS_BOTH_WIDE (%res_ptr, RES(%esp), %sizeP)
+-	CHECK_BOUNDS_BOTH_WIDE (%s1_ptr, S1(%esp), %sizeP)
+-	shrl	$2, %sizeP
+-#endif
+ 	leal	(%res_ptr,%sizeP,4), %res_ptr
+ 	leal	(%s1_ptr,%sizeP,4), %s1_ptr
+ 	negl	%sizeP
+@@ -91,6 +84,5 @@ L(oop):
+ 	cfi_adjust_cfa_offset (-4)
+ 	cfi_restore (edi)
+ 
+-	LEAVE
+ 	ret
+ END (BP_SYM (__mpn_submul_1))

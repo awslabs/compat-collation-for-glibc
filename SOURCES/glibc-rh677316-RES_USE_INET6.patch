@@ -1,0 +1,461 @@
+Backport this upstream commit, but without the resolv/resolv.h change
+which introduces the deprecation warning:
+
+commit b76e065991ec01299225d9da90a627ebe6c1ac97
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Tue Oct 4 11:52:10 2016 +0200
+
+    resolv: Deprecate the "inet6" option and RES_USE_INET6 [BZ #19582]
+
+No Makefile changes are needed here because we have not backported the
+resolver testsuite at this point.  Furthermore, due to the lack of
+actual RES_USE_INET6 deprecation, resolv/gethnamaddr.c is not modified
+in this patch (because it still compiles).
+
+diff --git a/nis/nss_nis/nis-hosts.c b/nis/nss_nis/nis-hosts.c
+index d79b0bd9c79173c8..fa2d79e7b69da57b 100644
+--- a/nis/nss_nis/nis-hosts.c
++++ b/nis/nss_nis/nis-hosts.c
+@@ -28,7 +28,7 @@
+ #include <string.h>
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ #include <bits/libc-lock.h>
+ #include <rpcsvc/yp.h>
+ #include <rpcsvc/ypclnt.h>
+@@ -232,8 +232,8 @@ _nss_nis_gethostent_r (struct hostent *host, char *buffer, size_t buflen,
+   __libc_lock_lock (lock);
+ 
+   status = internal_nis_gethostent_r (host, buffer, buflen, errnop, h_errnop,
+-			((_res.options & RES_USE_INET6) ? AF_INET6 : AF_INET),
+-			((_res.options & RES_USE_INET6) ? AI_V4MAPPED : 0 ));
++			(res_use_inet6 () ? AF_INET6 : AF_INET),
++			(res_use_inet6 () ? AI_V4MAPPED : 0 ));
+ 
+   __libc_lock_unlock (lock);
+ 
+@@ -345,7 +345,7 @@ _nss_nis_gethostbyname2_r (const char *name, int af, struct hostent *host,
+ 
+   return internal_gethostbyname2_r (name, af, host, buffer, buflen, errnop,
+ 				    h_errnop,
+-			((_res.options & RES_USE_INET6) ? AI_V4MAPPED : 0));
++			(res_use_inet6 () ? AI_V4MAPPED : 0));
+ }
+ 
+ 
+@@ -353,7 +353,7 @@ enum nss_status
+ _nss_nis_gethostbyname_r (const char *name, struct hostent *host, char *buffer,
+ 			  size_t buflen, int *errnop, int *h_errnop)
+ {
+-  if (_res.options & RES_USE_INET6)
++  if (res_use_inet6 ())
+     {
+       enum nss_status status;
+ 
+@@ -427,9 +427,8 @@ _nss_nis_gethostbyaddr_r (const void *addr, socklen_t addrlen, int af,
+   free (result);
+ 
+   int parse_res = parse_line (p, host, data, buflen, errnop, af,
+-			      ((_res.options & RES_USE_INET6)
+-			       ? AI_V4MAPPED : 0));
+-  if (__builtin_expect (parse_res < 1, 0))
++			      (res_use_inet6 () ? AI_V4MAPPED : 0));
++  if (__glibc_unlikely (parse_res < 1))
+     {
+       if (parse_res == -1)
+ 	{
+diff --git a/nis/nss_nisplus/nisplus-hosts.c b/nis/nss_nisplus/nisplus-hosts.c
+index 772d71097d6a2442..fb7461579b5408c9 100644
+--- a/nis/nss_nisplus/nisplus-hosts.c
++++ b/nis/nss_nisplus/nisplus-hosts.c
+@@ -43,6 +43,7 @@ static u_long tablename_len;
+ 	(NIS_RES_OBJECT (res)[idx].EN_data.en_cols.en_cols_val[col].ec_value.ec_value_len)
+ 
+ /* Get implementation for some internal functions. */
++#include <resolv/resolv-internal.h>
+ #include <resolv/mapv4v6addr.h>
+ 
+ 
+@@ -321,7 +322,7 @@ internal_nisplus_gethostent_r (struct hostent *host, char *buffer,
+ 	    }
+ 	}
+ 
+-      if (_res.options & RES_USE_INET6)
++      if (res_use_inet6 ())
+ 	parse_res = _nss_nisplus_parse_hostent (result, AF_INET6, host, buffer,
+ 						buflen, errnop, AI_V4MAPPED);
+       else
+@@ -488,7 +489,7 @@ _nss_nisplus_gethostbyname2_r (const char *name, int af, struct hostent *host,
+ 
+   return internal_gethostbyname2_r (name, af, host, buffer, buflen, errnop,
+ 				    herrnop,
+-			 ((_res.options & RES_USE_INET6) ? AI_V4MAPPED : 0));
++				    (res_use_inet6 () ? AI_V4MAPPED : 0));
+ }
+ 
+ 
+@@ -497,7 +498,7 @@ _nss_nisplus_gethostbyname_r (const char *name, struct hostent *host,
+ 			      char *buffer, size_t buflen, int *errnop,
+ 			      int *h_errnop)
+ {
+-  if (_res.options & RES_USE_INET6)
++  if (res_use_inet6 ())
+     {
+       enum nss_status status;
+ 
+@@ -558,7 +559,7 @@ _nss_nisplus_gethostbyaddr_r (const void *addr, socklen_t addrlen, int af,
+ 
+   parse_res = _nss_nisplus_parse_hostent (result, af, host,
+ 					  buffer, buflen, errnop,
+-					  ((_res.options & RES_USE_INET6)
++					  (res_use_inet6 ()
+ 					   ? AI_V4MAPPED : 0));
+   nis_freeresult (result);
+ 
+diff --git a/nscd/aicache.c b/nscd/aicache.c
+index abab042757920811..0ee25247cd464940 100644
+--- a/nscd/aicache.c
++++ b/nscd/aicache.c
+@@ -25,6 +25,7 @@
+ #include <time.h>
+ #include <unistd.h>
+ #include <sys/mman.h>
++#include <resolv/resolv-internal.h>
+ #include <resolv/res_hconf.h>
+ 
+ #include "dbg_log.h"
+@@ -112,7 +113,7 @@ addhstaiX (struct database_dyn *db, int fd, request_header *req,
+      IPv6 addresses.  Currently this is decided by setting the
+      RES_USE_INET6 bit in _res.options.  */
+   int old_res_options = _res.options;
+-  _res.options &= ~RES_USE_INET6;
++  _res.options &= ~DEPRECATED_RES_USE_INET6;
+ 
+   size_t tmpbuf6len = 1024;
+   char *tmpbuf6 = alloca (tmpbuf6len);
+@@ -537,7 +538,7 @@ next_nip:
+    }
+ 
+  out:
+-  _res.options |= old_res_options & RES_USE_INET6;
++  _res.options |= old_res_options & DEPRECATED_RES_USE_INET6;
+ 
+   if (dataset != NULL && !alloca_used)
+     {
+diff --git a/nscd/nscd_gethst_r.c b/nscd/nscd_gethst_r.c
+index d64ad2e7b6c9e58b..41488ed6c033ffcd 100644
+--- a/nscd/nscd_gethst_r.c
++++ b/nscd/nscd_gethst_r.c
+@@ -17,7 +17,7 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <errno.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <arpa/nameser.h>
+@@ -41,7 +41,7 @@ __nscd_gethostbyname_r (const char *name, struct hostent *resultbuf,
+ {
+   request_type reqtype;
+ 
+-  reqtype = (_res.options & RES_USE_INET6) ? GETHOSTBYNAMEv6 : GETHOSTBYNAME;
++  reqtype = res_use_inet6 () ? GETHOSTBYNAMEv6 : GETHOSTBYNAME;
+ 
+   return nscd_gethst_r (name, strlen (name) + 1, reqtype, resultbuf,
+ 			buffer, buflen, result, h_errnop);
+diff --git a/nss/digits_dots.c b/nss/digits_dots.c
+index ee530c69610d5393..7a2b57bdebe03408 100644
+--- a/nss/digits_dots.c
++++ b/nss/digits_dots.c
+@@ -22,7 +22,7 @@
+ #include <stdlib.h>
+ #include <ctype.h>
+ #include <wctype.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ #include <netdb.h>
+ #include <arpa/inet.h>
+ #include "nsswitch.h"
+@@ -80,7 +80,7 @@ __nss_hostname_digits_dots (const char *name, struct hostent *resbuf,
+ 	  break;
+ 
+ 	default:
+-	  af = (_res.options & RES_USE_INET6) ? AF_INET6 : AF_INET;
++	  af = res_use_inet6 () ? AF_INET6 : AF_INET;
+ 	  addr_size = af == AF_INET6 ? IN6ADDRSZ : INADDRSZ;
+ 	  break;
+ 	}
+@@ -167,7 +167,7 @@ __nss_hostname_digits_dots (const char *name, struct hostent *resbuf,
+ 		  (*h_addr_ptrs)[0] = (char *) host_addr;
+ 		  (*h_addr_ptrs)[1] = NULL;
+ 		  resbuf->h_addr_list = *h_addr_ptrs;
+-		  if (af == AF_INET && (_res.options & RES_USE_INET6))
++		  if (af == AF_INET && res_use_inet6 ())
+ 		    {
+ 		      /* We need to change the IP v4 address into the
+ 			 IP v6 address.  */
+@@ -211,7 +211,7 @@ __nss_hostname_digits_dots (const char *name, struct hostent *resbuf,
+ 	  switch (af)
+ 	    {
+ 	    default:
+-	      af = (_res.options & RES_USE_INET6) ? AF_INET6 : AF_INET;
++	      af = res_use_inet6 () ? AF_INET6 : AF_INET;
+ 	      if (af == AF_INET6)
+ 		{
+ 		  addr_size = IN6ADDRSZ;
+diff --git a/nss/nss_files/files-hosts.c b/nss/nss_files/files-hosts.c
+index 6c06b89dc179fd9a..b25ebe5ed19bdded 100644
+--- a/nss/nss_files/files-hosts.c
++++ b/nss/nss_files/files-hosts.c
+@@ -21,7 +21,7 @@
+ #include <arpa/inet.h>
+ #include <arpa/nameser.h>
+ #include <netdb.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ 
+ 
+ /* Get implementation for some internal functions.  */
+@@ -98,8 +98,8 @@ LINE_PARSER
+  })
+ 
+ #define EXTRA_ARGS_VALUE \
+-  , ((_res.options & RES_USE_INET6) ? AF_INET6 : AF_INET),		      \
+-  ((_res.options & RES_USE_INET6) ? AI_V4MAPPED : 0)
++  , (res_use_inet6 () ? AF_INET6 : AF_INET),		      \
++  (res_use_inet6 () ? AI_V4MAPPED : 0)
+ #include "files-XXX.c"
+ #undef EXTRA_ARGS_VALUE
+ 
+@@ -133,7 +133,7 @@ _nss_files_gethostbyname3_r (const char *name, int af, struct hostent *result,
+     {
+       /* XXX Is using _res to determine whether we want to convert IPv4
+          addresses to IPv6 addresses really the right thing to do?  */
+-      int flags = ((_res.options & RES_USE_INET6) ? AI_V4MAPPED : 0);
++      int flags = (res_use_inet6 () ? AI_V4MAPPED : 0);
+ 
+       /* Tell getent function that we have repositioned the file pointer.  */
+       last_use = getby;
+@@ -358,7 +358,7 @@ _nss_files_gethostbyname_r (const char *name, struct hostent *result,
+ 			    char *buffer, size_t buflen, int *errnop,
+ 			    int *herrnop)
+ {
+-  int af = ((_res.options & RES_USE_INET6) ? AF_INET6 : AF_INET);
++  int af = (res_use_inet6 () ? AF_INET6 : AF_INET);
+ 
+   return _nss_files_gethostbyname3_r (name, af, result, buffer, buflen,
+ 				      errnop, herrnop, NULL, NULL);
+diff --git a/resolv/README b/resolv/README
+index 416205da77a15564..1a70bbb1dc615ac9 100644
+--- a/resolv/README
++++ b/resolv/README
+@@ -84,11 +84,7 @@ code:
+ 
+ * In Multi-threaded that manipulate the _res structure, calls to
+   functions like `gethostbyname' in threads other than the "main"
+-  thread won't be influenced by the those changes anymore.  So if you
+-  set RES_USE_INET6, a call to `gethostbyname' won't return any IPv6
+-  hosts anymore.  If you recompile such programs, manipulating the
+-  _res structure will affect the thread in which you do so instead of
+-  the "main" thread.
++  thread won't be influenced by the those changes anymore.
+ 
+ We recommend to use the new thread-safe interfaces in new code, since
+ the traditional interfaces have been deprecated by the BIND folks.
+diff --git a/resolv/nss_dns/dns-host.c b/resolv/nss_dns/dns-host.c
+index 774d575dd1ce22af..7fc154db5d3130a3 100644
+--- a/resolv/nss_dns/dns-host.c
++++ b/resolv/nss_dns/dns-host.c
+@@ -82,7 +82,8 @@
+ 
+ #include "nsswitch.h"
+ 
+-/* Get implementation for some internal functions.  */
++/* Get implementeation for some internal functions.  */
++#include <resolv/resolv-internal.h>
+ #include <resolv/mapv4v6addr.h>
+ #include <resolv/mapv4v6hostent.h>
+ 
+@@ -221,7 +222,7 @@ _nss_dns_gethostbyname3_r (const char *name, int af, struct hostent *result,
+       /* If we are looking for an IPv6 address and mapping is enabled
+ 	 by having the RES_USE_INET6 bit in _res.options set, we try
+ 	 another lookup.  */
+-      if (af == AF_INET6 && (_res.options & RES_USE_INET6))
++      if (af == AF_INET6 && res_use_inet6 ())
+ 	n = __libc_res_nsearch (&_res, name, C_IN, T_A, host_buffer.buf->buf,
+ 				host_buffer.buf != orig_host_buffer
+ 				? MAXPACKET : 1024, &host_buffer.ptr,
+@@ -266,7 +267,7 @@ _nss_dns_gethostbyname_r (const char *name, struct hostent *result,
+ {
+   enum nss_status status = NSS_STATUS_NOTFOUND;
+ 
+-  if (_res.options & RES_USE_INET6)
++  if (res_use_inet6 ())
+     status = _nss_dns_gethostbyname3_r (name, AF_INET6, result, buffer,
+ 					buflen, errnop, h_errnop, NULL, NULL);
+   if (status == NSS_STATUS_NOTFOUND)
+@@ -519,17 +520,6 @@ _nss_dns_gethostbyaddr2_r (const void *addr, socklen_t len, int af,
+   memcpy (host_data->host_addr, addr, len);
+   host_data->h_addr_ptrs[0] = (char *) host_data->host_addr;
+   host_data->h_addr_ptrs[1] = NULL;
+-#if 0
+-  /* XXX I think this is wrong.  Why should an IPv4 address be
+-     converted to IPv6 if the user explicitly asked for IPv4?  */
+-  if (af == AF_INET && (_res.options & RES_USE_INET6))
+-    {
+-      map_v4v6_address ((char *) host_data->host_addr,
+-			(char *) host_data->host_addr);
+-      result->h_addrtype = AF_INET6;
+-      result->h_length = IN6ADDRSZ;
+-    }
+-#endif
+   *h_errnop = NETDB_SUCCESS;
+   return NSS_STATUS_SUCCESS;
+ }
+diff --git a/resolv/res_debug.c b/resolv/res_debug.c
+index 3daa44e273db5a41..6549e4ba5ee77f93 100644
+--- a/resolv/res_debug.c
++++ b/resolv/res_debug.c
+@@ -106,7 +106,7 @@ static const char rcsid[] = "$BINDId: res_debug.c,v 8.34 2000/02/29 05:30:55 vix
+ #include <errno.h>
+ #include <math.h>
+ #include <netdb.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -582,7 +582,7 @@ p_option(u_long option) {
+ 	case RES_DNSRCH:	return "dnsrch";
+ 	case RES_INSECURE1:	return "insecure1";
+ 	case RES_INSECURE2:	return "insecure2";
+-	case RES_USE_INET6:	return "inet6";
++	case DEPRECATED_RES_USE_INET6:	return "inet6";
+ 	case RES_ROTATE:	return "rotate";
+ 	case RES_NOCHECKNAME:	return "no-check-names";
+ 	case RES_USEBSTRING:	return "ip6-bytstring";
+diff --git a/resolv/res_init.c b/resolv/res_init.c
+index 2e3d0f746e855aff..0ed74e0520131418 100644
+--- a/resolv/res_init.c
++++ b/resolv/res_init.c
+@@ -71,7 +71,7 @@ static const char rcsid[] = "$BINDId: res_init.c,v 8.16 2000/05/09 07:10:12 vixi
+ 
+ #include <ctype.h>
+ #include <netdb.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ #include <stdio.h>
+ #include <stdio_ext.h>
+ #include <stdlib.h>
+@@ -530,7 +530,7 @@ res_setoptions(res_state statp, const char *options, const char *source) {
+ 		    unsigned long int flag;
+ 		  } options[] = {
+ #define STRnLEN(str) str, sizeof (str) - 1
+-		    { STRnLEN ("inet6"), 0, RES_USE_INET6 },
++		    { STRnLEN ("inet6"), 0, DEPRECATED_RES_USE_INET6 },
+ 		    { STRnLEN ("ip6-bytestring"), 0, RES_USEBSTRING },
+ 		    { STRnLEN ("no-ip6-dotint"), 0, RES_NOIP6DOTINT },
+ 		    { STRnLEN ("ip6-dotint"), 1, ~RES_NOIP6DOTINT },
+diff --git a/resolv/resolv-internal.h b/resolv/resolv-internal.h
+new file mode 100644
+index 0000000000000000..269758c416544cb4
+--- /dev/null
++++ b/resolv/resolv-internal.h
+@@ -0,0 +1,35 @@
++/* libresolv interfaces for internal use across glibc.
++   Copyright (C) 2016 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifndef _RESOLV_INTERNAL_H
++#define _RESOLV_INTERNAL_H 1
++
++#include <resolv.h>
++#include <stdbool.h>
++
++/* Internal version of RES_USE_INET6 which does not trigger a
++   deprecation warning.  */
++#define DEPRECATED_RES_USE_INET6 0x00002000
++
++static inline bool
++res_use_inet6 (void)
++{
++  return _res.options & DEPRECATED_RES_USE_INET6;
++}
++
++#endif  /* _RESOLV_INTERNAL_H */
+diff --git a/sysdeps/posix/getaddrinfo.c b/sysdeps/posix/getaddrinfo.c
+index a678d8d7e8b23d1d..7a6cf71c170ec42f 100644
+--- a/sysdeps/posix/getaddrinfo.c
++++ b/sysdeps/posix/getaddrinfo.c
+@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <ifaddrs.h>
+ #include <netdb.h>
+ #include <nss.h>
+-#include <resolv.h>
++#include <resolv/resolv-internal.h>
+ #include <stdbool.h>
+ #include <stdio.h>
+ #include <stdio_ext.h>
+@@ -222,7 +222,7 @@ gaih_inet_serv (const char *servicename, const struct gaih_typeproto *tp,
+       if (herrno == NETDB_INTERNAL)					      \
+ 	{								      \
+ 	  __set_h_errno (herrno);					      \
+-	  _res.options |= old_res_options & RES_USE_INET6;		      \
++	  _res.options |= old_res_options & DEPRECATED_RES_USE_INET6;	      \
+ 	  result = -EAI_SYSTEM;						      \
+ 	  goto free_and_return;						      \
+ 	}								      \
+@@ -839,7 +839,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
+ 	     addresses to IPv6 addresses.  Currently this is decided
+ 	     by setting the RES_USE_INET6 bit in _res.options.  */
+ 	  old_res_options = _res.options;
+-	  _res.options &= ~RES_USE_INET6;
++	  _res.options &= ~DEPRECATED_RES_USE_INET6;
+ 
+ 	  size_t tmpbuflen = 1024 + sizeof(struct gaih_addrtuple);
+ 	  malloc_tmpbuf = !__libc_use_alloca (alloca_used + tmpbuflen);
+@@ -900,7 +900,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
+ 						2 * tmpbuflen);
+ 			  if (newp == NULL)
+ 			    {
+-			      _res.options |= old_res_options & RES_USE_INET6;
++			      _res.options |= old_res_options & DEPRECATED_RES_USE_INET6;
+ 			      result = -EAI_MEMORY;
+ 			      goto free_and_return;
+ 			    }
+@@ -1021,7 +1021,8 @@ gaih_inet (const char *name, const struct gaih_service *service,
+ 				      if (canonbuf == NULL)
+ 					{
+ 					  _res.options
+-					    |= old_res_options & RES_USE_INET6;
++					    |= old_res_options
++					       & DEPRECATED_RES_USE_INET6;
+ 					  result = -EAI_MEMORY;
+ 					  goto free_and_return;
+ 					}
+@@ -1082,7 +1083,7 @@ gaih_inet (const char *name, const struct gaih_service *service,
+ 		nip = nip->next;
+ 	    }
+ 
+-	  _res.options |= old_res_options & RES_USE_INET6;
++	  _res.options |= old_res_options & DEPRECATED_RES_USE_INET6;
+ 
+ 	  if (h_errno == NETDB_INTERNAL)
+ 	    {

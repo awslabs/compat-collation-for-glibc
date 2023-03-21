@@ -1,0 +1,61 @@
+commit 9ce673b69e82578044958f66d93dcaddb23f6e95
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Wed Aug 30 16:20:20 2017 +0200
+
+    Do not scale NPTL tests with available number of CPUs
+    
+    On very large multi-processor systems, creating hundreds of threads
+    runs into a test time out.  The tests do not seem to benefit from
+    massive over-scheduling.
+
+Index: b/nptl/tst-cond16.c
+===================================================================
+--- a/nptl/tst-cond16.c
++++ b/nptl/tst-cond16.c
+@@ -27,7 +27,7 @@ pthread_cond_t cv = PTHREAD_COND_INITIAL
+ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+ bool n, exiting;
+ FILE *f;
+-int count;
++enum { count = 8 };		/* Number of worker threads.  */
+ 
+ void *
+ tf (void *dummy)
+@@ -70,11 +70,6 @@ do_test (void)
+       return 1;
+     }
+ 
+-  count = sysconf (_SC_NPROCESSORS_ONLN);
+-  if (count <= 0)
+-    count = 1;
+-  count *= 4;
+-
+   pthread_t th[count];
+   pthread_attr_t attr;
+   int i, ret, sz;
+Index: b/nptl/tst-cond18.c
+===================================================================
+--- a/nptl/tst-cond18.c
++++ b/nptl/tst-cond18.c
+@@ -27,7 +27,8 @@
+ pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
+ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+ bool exiting;
+-int fd, count, spins, nn;
++int fd, spins, nn;
++enum { count = 8 };		/* Number of worker threads.  */
+ 
+ void *
+ tf (void *id)
+@@ -81,11 +82,6 @@ do_test (void)
+       return 1;
+     }
+ 
+-  count = sysconf (_SC_NPROCESSORS_ONLN);
+-  if (count <= 0)
+-    count = 1;
+-  count *= 8;
+-
+   pthread_t th[count + 1];
+   pthread_attr_t attr;
+   int i, ret, sz;

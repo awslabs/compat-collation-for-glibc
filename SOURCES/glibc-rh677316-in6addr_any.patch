@@ -1,0 +1,62 @@
+Partial backport of:
+
+commit 17c199ee92e4ca8a34a47c42924608a25a444eb2
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Jun 17 20:08:22 2015 +0000
+
+    Fix gethostbyaddr in6addr_any, in6addr_loopback namespace (bug 18532).
+
+The conform/Makefile changes have been omitted because glibc 2.17 did
+not have linknamespace tests.
+
+diff --git a/include/netinet/in.h b/include/netinet/in.h
+index 6fb5c86de999ba82..5e377469e782a5b1 100644
+--- a/include/netinet/in.h
++++ b/include/netinet/in.h
+@@ -5,7 +5,11 @@
+ #ifndef _ISOMAC
+ libc_hidden_proto (bindresvport)
+ libc_hidden_proto (in6addr_loopback)
++extern __typeof (in6addr_loopback) __in6addr_loopback;
++libc_hidden_proto (__in6addr_loopback)
+ libc_hidden_proto (in6addr_any)
++extern __typeof (in6addr_any) __in6addr_any;
++libc_hidden_proto (__in6addr_any)
+ #endif
+ 
+ #endif
+diff --git a/inet/gethstbyad_r.c b/inet/gethstbyad_r.c
+index d8e4988a312a0799..5ae854b4f91e72ad 100644
+--- a/inet/gethstbyad_r.c
++++ b/inet/gethstbyad_r.c
+@@ -32,7 +32,7 @@
+    be performed.  */
+ #define PREPROCESS \
+   if (len == sizeof (struct in6_addr)					      \
+-      && __builtin_expect (memcmp (&in6addr_any, addr,			      \
++      && __builtin_expect (memcmp (&__in6addr_any, addr,		      \
+ 				   sizeof (struct in6_addr)), 1) == 0)	      \
+     {									      \
+       *h_errnop = HOST_NOT_FOUND;					      \
+diff --git a/inet/in6_addr.c b/inet/in6_addr.c
+index 558b375e46dc62dc..03fbb85803e3d0b7 100644
+--- a/inet/in6_addr.c
++++ b/inet/in6_addr.c
+@@ -18,9 +18,13 @@
+ 
+ #include <netinet/in.h>
+ 
+-const struct in6_addr in6addr_any =
++const struct in6_addr __in6addr_any =
+ { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } };
+-libc_hidden_data_def (in6addr_any)
+-const struct in6_addr in6addr_loopback =
++libc_hidden_data_def (__in6addr_any)
++weak_alias (__in6addr_any, in6addr_any)
++libc_hidden_data_weak (in6addr_any)
++const struct in6_addr __in6addr_loopback =
+ { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } } };
+-libc_hidden_data_def (in6addr_loopback)
++libc_hidden_data_def (__in6addr_loopback)
++weak_alias (__in6addr_loopback, in6addr_loopback)
++libc_hidden_data_weak (in6addr_loopback)

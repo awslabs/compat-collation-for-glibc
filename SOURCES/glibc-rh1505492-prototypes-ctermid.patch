@@ -1,0 +1,23 @@
+Introduce prototype-style function definition for ctermid.  Upstream,
+this was part of:
+
+commit 7729e0e91afbf8d45bb322d7e2d53f417fab01ed
+Author: Alexandre Oliva <aoliva@redhat.com>
+Date:   Fri Nov 21 02:06:22 2014 -0200
+
+    ctermid: return string literal, document MT-Safety pitfall
+
+diff --git a/sysdeps/posix/ctermid.c b/sysdeps/posix/ctermid.c
+index 8a0ebac8afaf23ff..94c0a6d25a5b430e 100644
+--- a/sysdeps/posix/ctermid.c
++++ b/sysdeps/posix/ctermid.c
+@@ -23,8 +23,7 @@
+    If S is not NULL, the name is copied into it (it should be at
+    least L_ctermid bytes long), otherwise a static buffer is used.  */
+ char *
+-ctermid (s)
+-     char *s;
++ctermid (char *s)
+ {
+   static char name[L_ctermid];
+ 

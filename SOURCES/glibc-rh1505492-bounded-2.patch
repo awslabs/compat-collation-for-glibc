@@ -1,0 +1,274 @@
+commit 2e8a5c8c46f0a897a2629131eb86d1cae8321234
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Jan 31 22:59:04 2013 +0000
+
+    Remove bp-semctl.h and CHECK_SEMCTL.
+
+Conflicts:
+	sysdeps/generic/bp-semctl.h
+
+Copyright header change; file removed manually.
+
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/semctl.c b/ports/sysdeps/unix/sysv/linux/alpha/semctl.c
+index 0e59ee27af5d25cd..0d28667bf84b57bc 100644
+--- a/ports/sysdeps/unix/sysv/linux/alpha/semctl.c
++++ b/ports/sysdeps/unix/sysv/linux/alpha/semctl.c
+@@ -33,10 +33,6 @@ union semun
+   struct seminfo *__buf;	/* buffer for IPC_INFO */
+ };
+ 
+-#include <bp-checks.h>
+-#include <bp-semctl.h>
+-
+-
+ int
+ __new_semctl (int semid, int semnum, int cmd, ...)
+ {
+@@ -51,7 +47,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+   va_end (ap);
+ 
+   return INLINE_SYSCALL (semctl, 4, semid, semnum, cmd | __IPC_64,
+-			 CHECK_SEMCTL (&arg, semid, cmd | __IPC_64)->array);
++			 arg.array);
+ }
+ 
+ #include <shlib-compat.h>
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/semctl.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/semctl.c
+index 3c1c9106420bd67b..7c7d7caafe5db9bf 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/semctl.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/semctl.c
+@@ -30,9 +30,6 @@ union semun
+   struct seminfo *__buf;	/* buffer for IPC_INFO */
+ };
+ 
+-#include <bp-checks.h>
+-#include <bp-semctl.h>		/* definition of CHECK_SEMCTL needs union semum */
+-
+ int __semctl (int semid, int semnum, int cmd, ...);
+ 
+ int
+@@ -49,7 +46,7 @@ __semctl (int semid, int semnum, int cmd, ...)
+   va_end (ap);
+ 
+   return INLINE_SYSCALL (semctl, 4, semid, semnum, cmd | __IPC_64,
+-			 CHECK_SEMCTL (&arg, semid, cmd | __IPC_64)->array);
++			 arg.array);
+ }
+ 
+ #include <shlib-compat.h>
+diff --git a/sysdeps/generic/bp-semctl.h b/sysdeps/generic/bp-semctl.h
+deleted file mode 100644
+index af132837cc40bcc9..0000000000000000
+--- a/sysdeps/generic/bp-semctl.h
++++ /dev/null
+@@ -1,66 +0,0 @@
+-/* Bounded-pointer checking macros for C.
+-   Copyright (C) 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Greg McGary <greg@mcgary.org>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _bp_semctl_h_
+-#define _bp_semctl_h_ 1
+-
+-#if __BOUNDED_POINTERS__
+-
+-# define CHECK_SEMCTL(ARGP, SEMID, CMD) check_semctl (ARGP, SEMID, CMD)
+-
+-union semun *__unbounded
+-check_semctl (union semun *arg, int semid, int cmd)
+-{
+-  int ipc64 = (cmd & __IPC_64);
+-
+-  switch (cmd & ~__IPC_64)
+-    {
+-    case IPC_STAT:
+-    case IPC_SET:
+-      (void) CHECK_1 (arg->buf);
+-      break;
+-
+-    case GETALL:
+-    case SETALL:
+-      {
+-	struct semid_ds ds;
+-	union semun un = { .buf = &ds };
+-	unsigned int length = ~0;
+-
+-	/* It's unfortunate that we need to make a recursive
+-	   system call to get the size of the semaphore set...  */
+-	if (semctl (semid, 0, IPC_STAT | ipc64, un) == 0)
+-	  length = ds.sem_nsems;
+-	(void) CHECK_N (arg->array, length);
+-	break;
+-      }
+-
+-    case IPC_INFO:
+-      (void) CHECK_1 (arg->__buf);
+-      break;
+-    }
+-
+-  return __ptrvalue (arg);
+-}
+-
+-#else
+-# define CHECK_SEMCTL(ARGP, SEMID, CMD) (ARGP)
+-#endif
+-
+-#endif /* _bp_semctl_h_ */
+diff --git a/sysdeps/unix/sysv/linux/i386/semctl.c b/sysdeps/unix/sysv/linux/i386/semctl.c
+index 5e2d9480598e56c4..c340e57f0e6899c0 100644
+--- a/sysdeps/unix/sysv/linux/i386/semctl.c
++++ b/sysdeps/unix/sysv/linux/i386/semctl.c
+@@ -49,9 +49,6 @@ union semun
+   struct __old_semid_ds *__old_buf;
+ };
+ 
+-#include <bp-checks.h>
+-#include <bp-semctl.h>		/* definition of CHECK_SEMCTL needs union semum */
+-
+ /* Return identifier for array of NSEMS semaphores associated with
+    KEY.  */
+ #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_2)
+@@ -75,7 +72,7 @@ __old_semctl (int semid, int semnum, int cmd, ...)
+   va_end (ap);
+ 
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd,
+-			 CHECK_SEMCTL (&arg, semid, cmd));
++			 &arg);
+ }
+ compat_symbol (libc, __old_semctl, semctl, GLIBC_2_0);
+ #endif
+@@ -94,7 +91,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+   va_end (ap);
+ 
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd | __IPC_64,
+-			 CHECK_SEMCTL (&arg, semid, cmd | __IPC_64));
++			 &arg);
+ }
+ 
+ versioned_symbol (libc, __new_semctl, semctl, GLIBC_2_2);
+diff --git a/sysdeps/unix/sysv/linux/semctl.c b/sysdeps/unix/sysv/linux/semctl.c
+index 2d28cf661e9b3ad0..bae5a8d28306e653 100644
+--- a/sysdeps/unix/sysv/linux/semctl.c
++++ b/sysdeps/unix/sysv/linux/semctl.c
+@@ -51,9 +51,6 @@ union semun
+   struct __old_semid_ds *__old_buf;
+ };
+ 
+-#include <bp-checks.h>
+-#include <bp-semctl.h>		/* definition of CHECK_SEMCTL needs union semum */
+-
+ /* Return identifier for array of NSEMS semaphores associated with
+    KEY.  */
+ #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_2)
+@@ -92,7 +89,7 @@ __old_semctl (int semid, int semnum, int cmd, ...)
+   va_end (ap);
+ 
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd,
+-			 CHECK_SEMCTL (&arg, semid, cmd));
++			 &arg);
+ }
+ compat_symbol (libc, __old_semctl, semctl, GLIBC_2_0);
+ #endif
+@@ -127,7 +124,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+ 
+ #if __ASSUME_IPC64 > 0
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd | __IPC_64,
+-			 CHECK_SEMCTL (&arg, semid, cmd | __IPC_64));
++			 &arg);
+ #else
+   switch (cmd)
+     {
+@@ -137,7 +134,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+       break;
+     default:
+       return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd,
+-			     CHECK_SEMCTL (&arg, semid, cmd));
++			     &arg);
+     }
+ 
+   {
+@@ -148,7 +145,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+     /* Unfortunately there is no way how to find out for sure whether
+        we should use old or new semctl.  */
+     result = INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd | __IPC_64,
+-			     CHECK_SEMCTL (&arg, semid, cmd | __IPC_64));
++			     &arg);
+     if (result != -1 || errno != EINVAL)
+       return result;
+ 
+@@ -168,7 +165,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+ 	  }
+       }
+     result = INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd,
+-			     CHECK_SEMCTL (&arg, semid, cmd));
++			     &arg);
+     if (result != -1 && cmd != IPC_SET)
+       {
+ 	memset(buf, 0, sizeof(*buf));
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc32/semctl.c b/sysdeps/unix/sysv/linux/sparc/sparc32/semctl.c
+index 464f0b502d65c52a..9dac28c4f1cb4657 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc32/semctl.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc32/semctl.c
+@@ -50,9 +50,6 @@ union semun
+   struct __old_semid_ds *__old_buf;
+ };
+ 
+-#include <bp-checks.h>
+-#include <bp-semctl.h>		/* definition of CHECK_SEMCTL needs union semum */
+-
+ /* Return identifier for array of NSEMS semaphores associated with
+    KEY.  */
+ #if SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_2)
+@@ -87,7 +84,7 @@ __old_semctl (int semid, int semnum, int cmd, ...)
+     }
+ 
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd,
+-			 CHECK_SEMCTL (&arg, semid, cmd));
++			 &arg);
+ }
+ compat_symbol (libc, __old_semctl, semctl, GLIBC_2_0);
+ #endif
+@@ -117,7 +114,7 @@ __new_semctl (int semid, int semnum, int cmd, ...)
+     }
+ 
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd | __IPC_64,
+-			 CHECK_SEMCTL (&arg, semid, cmd | __IPC_64));
++			 &arg);
+ }
+ 
+ versioned_symbol (libc, __new_semctl, semctl, GLIBC_2_2);
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/semctl.c b/sysdeps/unix/sysv/linux/sparc/sparc64/semctl.c
+index 3ac389e5b178a01d..658db0e8d91afa88 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/semctl.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/semctl.c
+@@ -33,9 +33,6 @@ union semun
+   struct seminfo *__buf;	/* buffer for IPC_INFO */
+ };
+ 
+-#include <bp-checks.h>
+-#include <bp-semctl.h>		/* definition of CHECK_SEMCTL needs union semum */
+-
+ /* Return identifier for array of NSEMS semaphores associated with
+    KEY.  */
+ 
+@@ -53,5 +50,5 @@ semctl (int semid, int semnum, int cmd, ...)
+   va_end (ap);
+ 
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semctl, semid, semnum, cmd,
+-			 CHECK_SEMCTL (&arg, semid, cmd)->array);
++			 arg.array);
+ }

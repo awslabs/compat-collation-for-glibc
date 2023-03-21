@@ -1,0 +1,98 @@
+commit cab91f947a6059907a314a91f4c90abcccfb0262
+Author: Dmitry V. Levin <ldv@altlinux.org>
+Date:   Sun Jul 23 23:22:53 2017 +0000
+
+    S390: fix sys/ptrace.h to make it includible again after asm/ptrace.h
+    
+    sys/ptrace.h on S390 used to be includible both before and after
+    asm/ptrace.h, until commit b08a6a0dea63742313ed3d9577c1e2d83436b196
+    among other changes introduced PTRACE_SINGLEBLOCK enum constant which
+    is also defined in asm/ptrace.h as a macro, making sys/ptrace.h fail
+    to compile when included after asm/ptrace.h.
+    
+    * sysdeps/unix/sysv/linux/s390/sys/ptrace.h [_LINUX_PTRACE_H ||
+    _S390_PTRACE_H]: Undefine all PTRACE_* macro constants defined
+    later as enum constants, except PTRACE_PEEKUSER, PTRACE_POKEUSER,
+    and PTRACE_SEIZE_DEVEL that are not defined by Linux headers.
+
+diff --git a/sysdeps/unix/sysv/linux/s390/sys/ptrace.h b/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
+index 88079fc..e913647 100644
+--- a/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
++++ b/sysdeps/unix/sysv/linux/s390/sys/ptrace.h
+@@ -24,24 +24,60 @@
+ #include <bits/types.h>
+ 
+ __BEGIN_DECLS
+-#ifdef _LINUX_PTRACE_H
++#if defined _LINUX_PTRACE_H || defined _S390_PTRACE_H
+ /* Kludge to stop stuff gdb & strace compiles from getting upset
+  */
+-#undef PTRACE_TRACEME
+-#undef PTRACE_PEEKTEXT
+-#undef PTRACE_PEEKDATA
+-#undef PTRACE_PEEKUSR
+-#undef PTRACE_POKETEXT
+-#undef PTRACE_POKEDATA
+-#undef PTRACE_POKEUSR
+-#undef PTRACE_CONT
+-#undef PTRACE_KILL
+-#undef PTRACE_SINGLESTEP
+-
+-#undef PTRACE_ATTACH
+-#undef PTRACE_DETACH
+-
+-#undef PTRACE_SYSCALL
++# undef PTRACE_TRACEME
++# undef PTRACE_PEEKTEXT
++# undef PTRACE_PEEKDATA
++# undef PTRACE_POKETEXT
++# undef PTRACE_POKEDATA
++# undef PTRACE_CONT
++# undef PTRACE_KILL
++# undef PTRACE_SINGLESTEP
++# undef PTRACE_SINGLEBLOCK
++# undef PTRACE_ATTACH
++# undef PTRACE_DETACH
++# undef PTRACE_SYSCALL
++# undef PTRACE_SETOPTIONS
++# undef PTRACE_GETEVENTMSG
++# undef PTRACE_GETSIGINFO
++# undef PTRACE_SETSIGINFO
++# undef PTRACE_GETREGSET
++# undef PTRACE_SETREGSET
++# undef PTRACE_SEIZE
++# undef PTRACE_INTERRUPT
++# undef PTRACE_LISTEN
++# undef PTRACE_PEEKSIGINFO
++# undef PTRACE_GETSIGMASK
++# undef PTRACE_SETSIGMASK
++# undef PTRACE_SECCOMP_GET_FILTER
++# undef PTRACE_PEEKUSR_AREA
++# undef PTRACE_POKEUSR_AREA
++# undef PTRACE_GET_LAST_BREAK
++# undef PTRACE_ENABLE_TE
++# undef PTRACE_DISABLE_TE
++# undef PTRACE_TE_ABORT_RAND
++# undef PTRACE_O_TRACESYSGOOD
++# undef PTRACE_O_TRACEFORK
++# undef PTRACE_O_TRACEVFORK
++# undef PTRACE_O_TRACECLONE
++# undef PTRACE_O_TRACEEXEC
++# undef PTRACE_O_TRACEVFORKDONE
++# undef PTRACE_O_TRACEEXIT
++# undef PTRACE_O_TRACESECCOMP
++# undef PTRACE_O_EXITKILL
++# undef PTRACE_O_SUSPEND_SECCOMP
++# undef PTRACE_O_MASK
++# undef PTRACE_EVENT_FORK
++# undef PTRACE_EVENT_VFORK
++# undef PTRACE_EVENT_CLONE
++# undef PTRACE_EVENT_EXEC
++# undef PTRACE_EVENT_VFORK_DONE
++# undef PTRACE_EVENT_EXIT
++# undef PTRACE_EVENT_SECCOMP
++# undef PTRACE_EVENT_STOP
++# undef PTRACE_PEEKSIGINFO_SHARED
+ #endif
+ /* Type of the REQUEST argument to `ptrace.'  */
+ enum __ptrace_request

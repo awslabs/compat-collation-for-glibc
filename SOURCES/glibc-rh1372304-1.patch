@@ -1,0 +1,506 @@
+While the original upstream commit  adds several error-checked wrappers
+around pthread functions in test-skeleton.c, a later upstream change
+(c23de0aacb, containing the new support/ infrastructure for testing) removed
+these wrappers and replaced them with an include declaration that provides
+these functions (support/xthread.h). This backport does the same, because
+the same change (new support/ infrastructure) is already included in RHEL as
+well.
+
+Also note: The correct sourceware bug number is 19946. The original upstream
+commit message refers to an incorrect one.
+
+commit 7e625f7e85b4e88f10dbde35a0641742af581806
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Aug 26 19:27:16 2016 +0200
+
+    nptl: Avoid expected SIGALRM in most tests [BZ #20432]
+    
+    Before this change, several tests did not detect early deadlocks
+    because they used SIGALRM as the expected signal, and they ran
+    for the full default TIMEOUT seconds.
+    
+    This commit adds a new delayed_exit function to the test skeleton,
+    along with several error-checking wrappers to pthread functions.
+    Additional error checking is introduced into several tests.
+
+Index: b/nptl/tst-cond3.c
+===================================================================
+--- a/nptl/tst-cond3.c
++++ b/nptl/tst-cond3.c
+@@ -22,6 +22,10 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ /* Note that this test requires more than the standard.  It is
+    required that there are no spurious wakeups if only more readers
+@@ -50,7 +54,8 @@ tf (void *arg)
+     }
+ 
+   /* This call should never return.  */
+-  pthread_cond_wait (&cond, &mut);
++  xpthread_cond_wait (&cond, &mut);
++  puts ("error: pthread_cond_wait in tf returned");
+ 
+   /* We should never get here.  */
+   exit (1);
+@@ -96,17 +101,11 @@ do_test (void)
+ 	}
+     }
+ 
+-  /* Set an alarm for 1 second.  The wrapper will expect this.  */
+-  alarm (1);
++  delayed_exit (1);
+ 
+   /* This call should never return.  */
+-  pthread_cond_wait (&cond, &mut);
++  xpthread_cond_wait (&cond, &mut);
+ 
+-  puts ("cond_wait returned");
++  puts ("error: pthread_cond_wait in do_test returned");
+   return 1;
+ }
+-
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-eintr1.c
+===================================================================
+--- a/nptl/tst-eintr1.c
++++ b/nptl/tst-eintr1.c
+@@ -23,6 +23,11 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
++
+ #include "eintr.c"
+ 
+ 
+@@ -92,13 +97,8 @@ do_test (void)
+ 	}
+     }
+ 
++  delayed_exit (3);
++  /* This call must never return.  */
+   (void) tf1 (NULL);
+-  /* NOTREACHED */
+-
+-  return 0;
++  return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TIMEOUT 3
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-eintr2.c
+===================================================================
+--- a/nptl/tst-eintr2.c
++++ b/nptl/tst-eintr2.c
+@@ -24,6 +24,11 @@
+ #include <string.h>
+ #include <sys/time.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
++
+ #include "eintr.c"
+ 
+ 
+@@ -103,6 +108,7 @@ do_test (void)
+       exit (1);
+     }
+ 
++  delayed_exit (3);
+   /* This call must never return.  */
+   e = pthread_mutex_lock (&m1);
+   printf ("main: mutex_lock returned: %s\n",
+@@ -110,8 +116,3 @@ do_test (void)
+ 
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TIMEOUT 3
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-eintr3.c
+===================================================================
+--- a/nptl/tst-eintr3.c
++++ b/nptl/tst-eintr3.c
+@@ -23,6 +23,11 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
++
+ #include "eintr.c"
+ 
+ 
+@@ -56,16 +61,9 @@ do_test (void)
+       exit (1);
+     }
+ 
++  delayed_exit (1);
+   /* This call must never return.  */
+-  e = pthread_join (th, NULL);
+-
+-  if (e == EINTR)
+-    puts ("pthread_join returned with EINTR");
+-
+-  return 0;
++  xpthread_join (th);
++  puts ("error: pthread_join returned");
++  return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TIMEOUT 1
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-eintr4.c
+===================================================================
+--- a/nptl/tst-eintr4.c
++++ b/nptl/tst-eintr4.c
+@@ -23,6 +23,11 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
++
+ #include "eintr.c"
+ 
+ 
+@@ -40,16 +45,9 @@ do_test (void)
+       exit (1);
+     }
+ 
++  delayed_exit (1);
+   /* This call must never return.  */
+-  int e = pthread_barrier_wait (&b);
+-
+-  if (e == EINTR)
+-    puts ("pthread_join returned with EINTR");
+-
+-  return 0;
++  xpthread_barrier_wait (&b);
++  puts ("error: pthread_barrier_wait returned");
++  return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TIMEOUT 1
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-eintr5.c
+===================================================================
+--- a/nptl/tst-eintr5.c
++++ b/nptl/tst-eintr5.c
+@@ -24,6 +24,11 @@
+ #include <string.h>
+ #include <sys/time.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
++
+ #include "eintr.c"
+ 
+ 
+@@ -66,15 +71,9 @@ do_test (void)
+       exit (1);
+     }
+ 
++  delayed_exit (3);
+   /* This call must never return.  */
+-  e = pthread_cond_wait (&c, &m);
+-  printf ("main: cond_wait returned: %s\n",
+-	  strerror_r (e, buf, sizeof (buf)));
+-
+-  return 0;
++  xpthread_cond_wait (&c, &m);
++  puts ("error: pthread_cond_wait returned");
++  return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TIMEOUT 3
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-exit2.c
+===================================================================
+--- a/nptl/tst-exit2.c
++++ b/nptl/tst-exit2.c
+@@ -4,6 +4,10 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ static void *
+ tf (void *arg)
+@@ -28,13 +32,11 @@ do_test (void)
+       return 1;
+     }
+ 
++  delayed_exit (1);
++
+   /* Terminate only this thread.  */
+   pthread_exit (NULL);
+ 
+   /* NOTREACHED */
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-exit3.c
+===================================================================
+--- a/nptl/tst-exit3.c
++++ b/nptl/tst-exit3.c
+@@ -5,6 +5,10 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ static pthread_barrier_t b;
+ 
+@@ -69,13 +73,11 @@ do_test (void)
+       exit (1);
+     }
+ 
++  delayed_exit (3);
++
+   /* Terminate only this thread.  */
+   pthread_exit (NULL);
+ 
+   /* NOTREACHED */
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-mutex6.c
+===================================================================
+--- a/nptl/tst-mutex6.c
++++ b/nptl/tst-mutex6.c
+@@ -22,6 +22,11 @@
+ #include <unistd.h>
+ #include <errno.h>
+ 
++#ifndef TEST_FUNCTION
++static int do_test (void);
++# define TEST_FUNCTION do_test ()
++#endif
++#include "../test-skeleton.c"
+ 
+ #ifndef ATTR
+ pthread_mutexattr_t *attr;
+@@ -58,18 +63,10 @@ do_test (void)
+       return 1;
+     }
+ 
+-  /* Set an alarm for 1 second.  The wrapper will expect this.  */
+-  alarm (1);
+-
++  delayed_exit (1);
+   /* This call should never return.  */
+-  pthread_mutex_lock (&m);
++  xpthread_mutex_lock (&m);
+ 
+   puts ("2nd mutex_lock returned");
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#ifndef TEST_FUNCTION
+-# define TEST_FUNCTION do_test ()
+-#endif
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-rwlock5.c
+===================================================================
+--- a/nptl/tst-rwlock5.c
++++ b/nptl/tst-rwlock5.c
+@@ -22,6 +22,10 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+ static pthread_rwlock_t r;
+@@ -65,22 +69,16 @@ do_test (void)
+       return 1;
+     }
+ 
+-  /* Set an alarm for 1 second.  The wrapper will expect this.  */
+-  alarm (1);
+-
+   if (pthread_create (&th, NULL, tf, NULL) != 0)
+     {
+       puts ("create failed");
+       return 1;
+     }
+ 
++  delayed_exit (1);
+   /* This call should never return.  */
+-  pthread_mutex_lock (&m);
++  xpthread_mutex_lock (&m);
+ 
+   puts ("2nd mutex_lock returned");
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-sem2.c
+===================================================================
+--- a/nptl/tst-sem2.c
++++ b/nptl/tst-sem2.c
+@@ -17,11 +17,16 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <errno.h>
++#include <pthread.h>
+ #include <semaphore.h>
+ #include <signal.h>
+ #include <stdio.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ static int
+ do_test (void)
+@@ -34,8 +39,7 @@ do_test (void)
+       return 1;
+     }
+ 
+-  /* Set an alarm for 1 second.  The wrapper will expect this.  */
+-  alarm (1);
++  delayed_exit (1);
+ 
+   if (TEMP_FAILURE_RETRY (sem_wait (&s)) == -1)
+     {
+@@ -47,7 +51,3 @@ do_test (void)
+   puts ("wait succeeded");
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-spin3.c
+===================================================================
+--- a/nptl/tst-spin3.c
++++ b/nptl/tst-spin3.c
+@@ -21,6 +21,10 @@
+ #include <stdio.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ static int
+ do_test (void)
+@@ -39,16 +43,11 @@ do_test (void)
+       return 1;
+     }
+ 
+-  /* Set an alarm for 1 second.  The wrapper will expect this.  */
+-  alarm (1);
++  delayed_exit (1);
+ 
+   /* This call should never return.  */
+-  pthread_spin_lock (&s);
++  xpthread_spin_lock (&s);
+ 
+   puts ("2nd spin_lock returned");
+   return 1;
+ }
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/nptl/tst-stdio1.c
+===================================================================
+--- a/nptl/tst-stdio1.c
++++ b/nptl/tst-stdio1.c
+@@ -21,6 +21,10 @@
+ #include <stdio.h>
+ #include <unistd.h>
+ 
++static int do_test (void);
++
++#define TEST_FUNCTION do_test ()
++#include "../test-skeleton.c"
+ 
+ static void *tf (void *a)
+ {
+@@ -43,14 +47,10 @@ do_test (void)
+       _exit (1);
+     }
+ 
+-  pthread_join (th, NULL);
++  delayed_exit (1);
++  xpthread_join (th);
+ 
+   puts ("join returned");
+ 
+-  return 0;
++  return 1;
+ }
+-
+-
+-#define EXPECTED_SIGNAL SIGALRM
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
+Index: b/test-skeleton.c
+===================================================================
+--- a/test-skeleton.c
++++ b/test-skeleton.c
+@@ -427,3 +427,9 @@ main (int argc, char *argv[])
+   return 0;
+ #endif
+ }
++
++/* The following functionality is only available if <pthread.h> was
++   included before this file.  */
++#ifdef _PTHREAD_H
++# include <support/xthread.h>
++#endif	/* _PTHREAD_H */

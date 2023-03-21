@@ -1,0 +1,23 @@
+Introduce prototype-style function definition for sem_unlink.  This
+happened upstream as part of:
+
+commit e4f639e4a106d90c6f3159230788653fd6e40a26
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Fri Dec 12 13:17:21 2014 -0800
+
+    NPTL: Refactor named semaphore code to use shm-directory.h
+
+diff --git a/nptl/sem_unlink.c b/nptl/sem_unlink.c
+index 610d82e7a6fe5bd1..1523522c41a52d76 100644
+--- a/nptl/sem_unlink.c
++++ b/nptl/sem_unlink.c
+@@ -25,8 +25,7 @@
+ 
+ 
+ int
+-sem_unlink (name)
+-     const char *name;
++sem_unlink (const char *name)
+ {
+   char *fname;
+   size_t namelen;

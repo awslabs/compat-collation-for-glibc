@@ -1,0 +1,18 @@
+Do not define IN_MODULE.  The IS_IN framework will define it for us.
+This fixes a macro redefinition warning.
+
+rtkaio is not upstream, so there is no upstream patch.
+
+diff --git a/rtkaio/Makefile b/rtkaio/Makefile
+index 066a1232e1bae283..cf42e0cbbdf04134 100644
+--- a/rtkaio/Makefile
++++ b/rtkaio/Makefile
+@@ -69,7 +69,7 @@ CFLAGS-kaio_librt-cancellation.c = -fasynchronous-unwind-tables
+ 
+ LDFLAGS-rtkaio.so = -Wl,-soname=lib$(libprefix)rt.so$(librt.so-version) \
+ 		    -Wl,--enable-new-dtags,-z,nodelete
+-CPPFLAGS-librtkaio += -UIN_MODULE -DIN_MODULE=MODULE_librt \
++CPPFLAGS-librtkaio += \
+ 		      -UMODULE_NAME -DMODULE_NAME=librt \
+ 		      -UIS_IN_librt -DIS_IN_librt=1 \
+ 		      -I$(..)rt

@@ -1,0 +1,37 @@
+Backport the check_mul_overflow_size_t function from this upstream commit:
+
+commit 2e0bbbfbf95fc9e22692e93658a6fbdd2d4554da
+Author: Dennis Wölfing <denniswoelfing@gmx.de>
+Date:   Tue May 30 18:26:19 2017 -0300
+
+    Add reallocarray function
+
+diff --git a/malloc/malloc-internal.h b/malloc/malloc-internal.h
+index b830d3f58fe74ca3..6ffa091ba3292901 100644
+--- a/malloc/malloc-internal.h
++++ b/malloc/malloc-internal.h
+@@ -28,5 +28,24 @@ void __malloc_fork_unlock_parent (void) internal_function attribute_hidden;
+ /* Called in the child process after a fork.  */
+ void __malloc_fork_unlock_child (void) internal_function attribute_hidden;
+ 
++/* Set *RESULT to LEFT * RIGHT.  Return true if the multiplication
++   overflowed.  */
++static inline bool
++check_mul_overflow_size_t (size_t left, size_t right, size_t *result)
++{
++#if __GNUC__ >= 5
++  return __builtin_mul_overflow (left, right, result);
++#else
++  /* size_t is unsigned so the behavior on overflow is defined.  */
++  *result = left * right;
++  size_t half_size_t = ((size_t) 1) << (8 * sizeof (size_t) / 2);
++  if (__glibc_unlikely ((left | right) >= half_size_t))
++    {
++      if (__glibc_unlikely (right != 0 && *result / right != left))
++        return true;
++    }
++  return false;
++#endif
++}
+ 
+ #endif /* _MALLOC_PRIVATE_H */

@@ -1,0 +1,127 @@
+commit c13a72b7c4864f23b9f2e96a3369e5875ed3b51b
+Author: Will Newton <will.newton@linaro.org>
+Date:   Thu Feb 6 08:54:20 2014 +0000
+
+    malloc/mtrace.c: Cosmetic cleanup.
+    
+    Remove an unused #define and use ANSI prototypes.
+    
+    Generated code identical on x86_64-unknown-linux-gnu.
+    
+    ChangeLog:
+    
+    2014-02-11  Will Newton  <will.newton@linaro.org>
+    
+            * malloc/mtrace.c (attribute_hidden): Remove unused macro
+            definition.  (tr_where, tr_freehook, tr_mallochook,
+            tr_reallochook, tr_memalignhook): Use ANSI protoype.
+
+Conflicts:
+	malloc/mtrace.c
+
+Textual conflicts due to missing backport of commit
+6c8dbf00f536d78b1937b5af6f57be47fd376344 (Reformat malloc to gnu
+style.).
+
+diff --git a/malloc/mtrace.c b/malloc/mtrace.c
+index 34ec2a85b219882c..5c4deda5a55a799c 100644
+--- a/malloc/mtrace.c
++++ b/malloc/mtrace.c
+@@ -41,10 +41,6 @@
+ 
+ #include <kernel-features.h>
+ 
+-#ifndef attribute_hidden
+-# define attribute_hidden
+-#endif
+-
+ #define TRACE_BUFFER_SIZE 512
+ 
+ static FILE *mallstream;
+@@ -77,12 +73,8 @@ tr_break (void)
+ }
+ libc_hidden_def (tr_break)
+ 
+-static void tr_where (const __ptr_t, Dl_info *) __THROW internal_function;
+-static void
+-internal_function
+-tr_where (caller, info)
+-     const __ptr_t caller;
+-     Dl_info *info;
++static void internal_function
++tr_where (const __ptr_t caller, Dl_info *info)
+ {
+   if (caller != NULL)
+     {
+@@ -115,7 +107,6 @@ tr_where (caller, info)
+     }
+ }
+ 
+-
+ static Dl_info *
+ lock_and_info (const __ptr_t caller, Dl_info *mem)
+ {
+@@ -129,12 +120,8 @@ lock_and_info (const __ptr_t caller, Dl_info *mem)
+   return res;
+ }
+ 
+-
+-static void tr_freehook (__ptr_t, const __ptr_t) __THROW;
+ static void
+-tr_freehook (ptr, caller)
+-     __ptr_t ptr;
+-     const __ptr_t caller;
++tr_freehook (__ptr_t ptr, const __ptr_t caller)
+ {
+   if (ptr == NULL)
+     return;
+@@ -159,11 +146,8 @@ tr_freehook (ptr, caller)
+   __libc_lock_unlock (lock);
+ }
+ 
+-static __ptr_t tr_mallochook (size_t, const __ptr_t) __THROW;
+ static __ptr_t
+-tr_mallochook (size, caller)
+-     size_t size;
+-     const __ptr_t caller;
++tr_mallochook (size_t size, const __ptr_t caller)
+ {
+   __ptr_t hdr;
+ 
+@@ -189,13 +173,8 @@ tr_mallochook (size, caller)
+   return hdr;
+ }
+ 
+-static __ptr_t tr_reallochook (__ptr_t, size_t, const __ptr_t)
+-     __THROW;
+ static __ptr_t
+-tr_reallochook (ptr, size, caller)
+-     __ptr_t ptr;
+-     size_t size;
+-     const __ptr_t caller;
++tr_reallochook (__ptr_t ptr, size_t size, const __ptr_t caller)
+ {
+   __ptr_t hdr;
+ 
+@@ -237,12 +216,8 @@ tr_reallochook (ptr, size, caller)
+   return hdr;
+ }
+ 
+-static __ptr_t tr_memalignhook (size_t, size_t,
+-				const __ptr_t) __THROW;
+ static __ptr_t
+-tr_memalignhook (alignment, size, caller)
+-     size_t alignment, size;
+-     const __ptr_t caller;
++tr_memalignhook (size_t alignment, size_t size, const __ptr_t caller)
+ {
+   __ptr_t hdr;
+ 
+@@ -271,7 +246,6 @@ tr_memalignhook (alignment, size, caller)
+ }
+ 
+ 
+-
+ #ifdef _LIBC
+ 
+ /* This function gets called to make sure all memory the library

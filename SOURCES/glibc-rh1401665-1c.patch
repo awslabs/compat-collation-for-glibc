@@ -1,0 +1,26 @@
+This is needed for i686 which doesn't have futex_timed_wait_bitset.
+
+commit 35df5a77f3ad2a35761631928440d2994a9e4bc5
+Author: Carlos O'Donell <carlos@redhat.com>
+Date:   Tue Jun 12 16:17:05 2018 -0400
+
+    Fix fallback path in __pthread_mutex_timedlock ().
+    
+    Fix the typo in the fallback path in __pthread_mutex_timedlock ()
+    whic hcalls lll_futex_timed_wait ().  This is only useful for cases
+    where the patch is being backported to older distributions where
+    only lll_futex_timed_wait () is available.
+
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_timedlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+@@ -272,7 +272,7 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	  /* Block using the futex.  */
+ #if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
+      || !defined lll_futex_timed_wait_bitset)
+-	  lll_futex_timed wait (&mutex->__data.__lock, oldval,
++	  lll_futex_timed_wait (&mutex->__data.__lock, oldval,
+ 				&rt, PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
+ #else
+ 	  int err = lll_futex_timed_wait_bitset (&mutex->__data.__lock,

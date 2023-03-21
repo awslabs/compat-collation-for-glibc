@@ -1,0 +1,116 @@
+Revert this upstream commit:
+
+commit 9a0cc8c1bd7645bf3c988890ffb59639c07a5812
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Jun 23 22:51:00 2017 +0200
+
+    inet_pton: Reject IPv6 addresses with many leading zeros [BZ #16637]
+    
+    2001:db8:00001::f is not a valid IPv6 address according to RFC 2373.
+
+We do not want this behavioral change in Red Hat Enterprise Linux 7.
+See rhbz#1484034 for some discussion.
+
+diff --git a/resolv/inet_pton.c b/resolv/inet_pton.c
+index 16ee33e0c0dfb015..b95da47c17ef8afc 100644
+--- a/resolv/inet_pton.c
++++ b/resolv/inet_pton.c
+@@ -144,8 +144,7 @@ inet_pton6 (const char *src, const char *src_endp, unsigned char *dst)
+ {
+   unsigned char tmp[NS_IN6ADDRSZ], *tp, *endp, *colonp;
+   const char *curtok;
+-  int ch;
+-  size_t xdigits_seen;	/* Number of hex digits since colon.  */
++  int ch, saw_xdigit;
+   unsigned int val;
+ 
+   tp = memset (tmp, '\0', NS_IN6ADDRSZ);
+@@ -163,7 +162,7 @@ inet_pton6 (const char *src, const char *src_endp, unsigned char *dst)
+     }
+ 
+   curtok = src;
+-  xdigits_seen = 0;
++  saw_xdigit = 0;
+   val = 0;
+   while (src < src_endp)
+     {
+@@ -171,19 +170,17 @@ inet_pton6 (const char *src, const char *src_endp, unsigned char *dst)
+       int digit = hex_digit_value (ch);
+       if (digit >= 0)
+ 	{
+-	  if (xdigits_seen == 4)
+-	    return 0;
+ 	  val <<= 4;
+ 	  val |= digit;
+ 	  if (val > 0xffff)
+ 	    return 0;
+-	  ++xdigits_seen;
++	  saw_xdigit = 1;
+ 	  continue;
+ 	}
+       if (ch == ':')
+ 	{
+ 	  curtok = src;
+-	  if (xdigits_seen == 0)
++	  if (!saw_xdigit)
+ 	    {
+ 	      if (colonp)
+ 		return 0;
+@@ -196,7 +193,7 @@ inet_pton6 (const char *src, const char *src_endp, unsigned char *dst)
+ 	    return 0;
+ 	  *tp++ = (unsigned char) (val >> 8) & 0xff;
+ 	  *tp++ = (unsigned char) val & 0xff;
+-	  xdigits_seen = 0;
++	  saw_xdigit = 0;
+ 	  val = 0;
+ 	  continue;
+ 	}
+@@ -204,12 +201,12 @@ inet_pton6 (const char *src, const char *src_endp, unsigned char *dst)
+           && inet_pton4 (curtok, src_endp, tp) > 0)
+ 	{
+ 	  tp += NS_INADDRSZ;
+-	  xdigits_seen = 0;
++	  saw_xdigit = 0;
+ 	  break;  /* '\0' was seen by inet_pton4.  */
+ 	}
+       return 0;
+     }
+-  if (xdigits_seen > 0)
++  if (saw_xdigit)
+     {
+       if (tp + NS_INT16SZ > endp)
+ 	return 0;
+diff --git a/resolv/tst-inet_pton.c b/resolv/tst-inet_pton.c
+index 4bb9f8119378b467..7fffb24cdf9eb1f4 100644
+--- a/resolv/tst-inet_pton.c
++++ b/resolv/tst-inet_pton.c
+@@ -226,7 +226,13 @@ const struct test_case test_cases[] =
+     },
+     {.input = "2", },
+     {.input = "2.", },
+-    {.input = "2001:db8:00001::f", },
++    {.input = "2001:db8:00001::f",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x1, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf
++     },
++    },
+     {.input = "2001:db8:10000::f", },
+     {.input = "2001:db8:1234:5678:abcd:ef01:2345:67",
+      .ipv6_ok = true,
+@@ -448,7 +454,13 @@ const struct test_case test_cases[] =
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+      },
+     },
+-    {.input = "::00001", },
++    {.input = "::00001",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1
++     },
++    },
+     {.input = "::1",
+      .ipv6_ok = true,
+      .ipv6_expected = {

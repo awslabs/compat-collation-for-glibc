@@ -1,0 +1,613 @@
+Recreation of this upstream commit:
+
+commit 5abebba403181de898bbea4ee1bcce5f088c663b
+Author: Carlos O'Donell <carlos@systemhalted.org>
+Date:   Tue Apr 29 03:08:48 2014 -0400
+
+    Relocate hppa from ports to libc.
+
+Commands used:
+
+git mv ports/sysdeps/hppa sysdeps/
+git mv ports/sysdeps/unix/sysv/linux/hppa sysdeps/unix/sysv/linux/
+
+diff --git a/ports/sysdeps/hppa/Makefile b/sysdeps/hppa/Makefile
+similarity index 100%
+rename from ports/sysdeps/hppa/Makefile
+rename to sysdeps/hppa/Makefile
+diff --git a/ports/sysdeps/hppa/Versions b/sysdeps/hppa/Versions
+similarity index 100%
+rename from ports/sysdeps/hppa/Versions
+rename to sysdeps/hppa/Versions
+diff --git a/ports/sysdeps/hppa/__longjmp.c b/sysdeps/hppa/__longjmp.c
+similarity index 100%
+rename from ports/sysdeps/hppa/__longjmp.c
+rename to sysdeps/hppa/__longjmp.c
+diff --git a/ports/sysdeps/hppa/abort-instr.h b/sysdeps/hppa/abort-instr.h
+similarity index 100%
+rename from ports/sysdeps/hppa/abort-instr.h
+rename to sysdeps/hppa/abort-instr.h
+diff --git a/ports/sysdeps/hppa/add_n.S b/sysdeps/hppa/add_n.S
+similarity index 100%
+rename from ports/sysdeps/hppa/add_n.S
+rename to sysdeps/hppa/add_n.S
+diff --git a/ports/sysdeps/hppa/bits/endian.h b/sysdeps/hppa/bits/endian.h
+similarity index 100%
+rename from ports/sysdeps/hppa/bits/endian.h
+rename to sysdeps/hppa/bits/endian.h
+diff --git a/ports/sysdeps/hppa/bits/link.h b/sysdeps/hppa/bits/link.h
+similarity index 100%
+rename from ports/sysdeps/hppa/bits/link.h
+rename to sysdeps/hppa/bits/link.h
+diff --git a/ports/sysdeps/hppa/bits/linkmap.h b/sysdeps/hppa/bits/linkmap.h
+similarity index 100%
+rename from ports/sysdeps/hppa/bits/linkmap.h
+rename to sysdeps/hppa/bits/linkmap.h
+diff --git a/ports/sysdeps/hppa/bits/setjmp.h b/sysdeps/hppa/bits/setjmp.h
+similarity index 100%
+rename from ports/sysdeps/hppa/bits/setjmp.h
+rename to sysdeps/hppa/bits/setjmp.h
+diff --git a/ports/sysdeps/hppa/bsd-_setjmp.S b/sysdeps/hppa/bsd-_setjmp.S
+similarity index 100%
+rename from ports/sysdeps/hppa/bsd-_setjmp.S
+rename to sysdeps/hppa/bsd-_setjmp.S
+diff --git a/ports/sysdeps/hppa/bsd-setjmp.S b/sysdeps/hppa/bsd-setjmp.S
+similarity index 100%
+rename from ports/sysdeps/hppa/bsd-setjmp.S
+rename to sysdeps/hppa/bsd-setjmp.S
+diff --git a/ports/sysdeps/hppa/configure b/sysdeps/hppa/configure
+similarity index 100%
+rename from ports/sysdeps/hppa/configure
+rename to sysdeps/hppa/configure
+diff --git a/ports/sysdeps/hppa/configure.in b/sysdeps/hppa/configure.in
+similarity index 100%
+rename from ports/sysdeps/hppa/configure.in
+rename to sysdeps/hppa/configure.in
+diff --git a/ports/sysdeps/hppa/crti.S b/sysdeps/hppa/crti.S
+similarity index 100%
+rename from ports/sysdeps/hppa/crti.S
+rename to sysdeps/hppa/crti.S
+diff --git a/ports/sysdeps/hppa/crtn.S b/sysdeps/hppa/crtn.S
+similarity index 100%
+rename from ports/sysdeps/hppa/crtn.S
+rename to sysdeps/hppa/crtn.S
+diff --git a/ports/sysdeps/hppa/dl-fptr.c b/sysdeps/hppa/dl-fptr.c
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-fptr.c
+rename to sysdeps/hppa/dl-fptr.c
+diff --git a/ports/sysdeps/hppa/dl-fptr.h b/sysdeps/hppa/dl-fptr.h
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-fptr.h
+rename to sysdeps/hppa/dl-fptr.h
+diff --git a/ports/sysdeps/hppa/dl-irel.h b/sysdeps/hppa/dl-irel.h
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-irel.h
+rename to sysdeps/hppa/dl-irel.h
+diff --git a/ports/sysdeps/hppa/dl-lookupcfg.h b/sysdeps/hppa/dl-lookupcfg.h
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-lookupcfg.h
+rename to sysdeps/hppa/dl-lookupcfg.h
+diff --git a/ports/sysdeps/hppa/dl-machine.h b/sysdeps/hppa/dl-machine.h
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-machine.h
+rename to sysdeps/hppa/dl-machine.h
+diff --git a/ports/sysdeps/hppa/dl-symaddr.c b/sysdeps/hppa/dl-symaddr.c
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-symaddr.c
+rename to sysdeps/hppa/dl-symaddr.c
+diff --git a/ports/sysdeps/hppa/dl-tls.h b/sysdeps/hppa/dl-tls.h
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-tls.h
+rename to sysdeps/hppa/dl-tls.h
+diff --git a/ports/sysdeps/hppa/dl-trampoline.S b/sysdeps/hppa/dl-trampoline.S
+similarity index 100%
+rename from ports/sysdeps/hppa/dl-trampoline.S
+rename to sysdeps/hppa/dl-trampoline.S
+diff --git a/ports/sysdeps/hppa/entry.h b/sysdeps/hppa/entry.h
+similarity index 100%
+rename from ports/sysdeps/hppa/entry.h
+rename to sysdeps/hppa/entry.h
+diff --git a/ports/sysdeps/hppa/fpu/bits/fenv.h b/sysdeps/hppa/fpu/bits/fenv.h
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/bits/fenv.h
+rename to sysdeps/hppa/fpu/bits/fenv.h
+diff --git a/ports/sysdeps/hppa/fpu/bits/mathdef.h b/sysdeps/hppa/fpu/bits/mathdef.h
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/bits/mathdef.h
+rename to sysdeps/hppa/fpu/bits/mathdef.h
+diff --git a/ports/sysdeps/hppa/fpu/fclrexcpt.c b/sysdeps/hppa/fpu/fclrexcpt.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fclrexcpt.c
+rename to sysdeps/hppa/fpu/fclrexcpt.c
+diff --git a/ports/sysdeps/hppa/fpu/fedisblxcpt.c b/sysdeps/hppa/fpu/fedisblxcpt.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fedisblxcpt.c
+rename to sysdeps/hppa/fpu/fedisblxcpt.c
+diff --git a/ports/sysdeps/hppa/fpu/feenablxcpt.c b/sysdeps/hppa/fpu/feenablxcpt.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/feenablxcpt.c
+rename to sysdeps/hppa/fpu/feenablxcpt.c
+diff --git a/ports/sysdeps/hppa/fpu/fegetenv.c b/sysdeps/hppa/fpu/fegetenv.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fegetenv.c
+rename to sysdeps/hppa/fpu/fegetenv.c
+diff --git a/ports/sysdeps/hppa/fpu/fegetexcept.c b/sysdeps/hppa/fpu/fegetexcept.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fegetexcept.c
+rename to sysdeps/hppa/fpu/fegetexcept.c
+diff --git a/ports/sysdeps/hppa/fpu/fegetround.c b/sysdeps/hppa/fpu/fegetround.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fegetround.c
+rename to sysdeps/hppa/fpu/fegetround.c
+diff --git a/ports/sysdeps/hppa/fpu/feholdexcpt.c b/sysdeps/hppa/fpu/feholdexcpt.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/feholdexcpt.c
+rename to sysdeps/hppa/fpu/feholdexcpt.c
+diff --git a/ports/sysdeps/hppa/fpu/fesetenv.c b/sysdeps/hppa/fpu/fesetenv.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fesetenv.c
+rename to sysdeps/hppa/fpu/fesetenv.c
+diff --git a/ports/sysdeps/hppa/fpu/fesetround.c b/sysdeps/hppa/fpu/fesetround.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fesetround.c
+rename to sysdeps/hppa/fpu/fesetround.c
+diff --git a/ports/sysdeps/hppa/fpu/feupdateenv.c b/sysdeps/hppa/fpu/feupdateenv.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/feupdateenv.c
+rename to sysdeps/hppa/fpu/feupdateenv.c
+diff --git a/ports/sysdeps/hppa/fpu/fgetexcptflg.c b/sysdeps/hppa/fpu/fgetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fgetexcptflg.c
+rename to sysdeps/hppa/fpu/fgetexcptflg.c
+diff --git a/ports/sysdeps/hppa/fpu/fpu_control.h b/sysdeps/hppa/fpu/fpu_control.h
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fpu_control.h
+rename to sysdeps/hppa/fpu/fpu_control.h
+diff --git a/ports/sysdeps/hppa/fpu/fraiseexcpt.c b/sysdeps/hppa/fpu/fraiseexcpt.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fraiseexcpt.c
+rename to sysdeps/hppa/fpu/fraiseexcpt.c
+diff --git a/ports/sysdeps/hppa/fpu/fsetexcptflg.c b/sysdeps/hppa/fpu/fsetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/fsetexcptflg.c
+rename to sysdeps/hppa/fpu/fsetexcptflg.c
+diff --git a/ports/sysdeps/hppa/fpu/ftestexcept.c b/sysdeps/hppa/fpu/ftestexcept.c
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/ftestexcept.c
+rename to sysdeps/hppa/fpu/ftestexcept.c
+diff --git a/ports/sysdeps/hppa/fpu/libm-test-ulps b/sysdeps/hppa/fpu/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/hppa/fpu/libm-test-ulps
+rename to sysdeps/hppa/fpu/libm-test-ulps
+diff --git a/ports/sysdeps/hppa/frame.h b/sysdeps/hppa/frame.h
+similarity index 100%
+rename from ports/sysdeps/hppa/frame.h
+rename to sysdeps/hppa/frame.h
+diff --git a/ports/sysdeps/hppa/gccframe.h b/sysdeps/hppa/gccframe.h
+similarity index 100%
+rename from ports/sysdeps/hppa/gccframe.h
+rename to sysdeps/hppa/gccframe.h
+diff --git a/ports/sysdeps/hppa/get-rounding-mode.h b/sysdeps/hppa/get-rounding-mode.h
+similarity index 100%
+rename from ports/sysdeps/hppa/get-rounding-mode.h
+rename to sysdeps/hppa/get-rounding-mode.h
+diff --git a/ports/sysdeps/hppa/hppa1.1/Implies b/sysdeps/hppa/hppa1.1/Implies
+similarity index 100%
+rename from ports/sysdeps/hppa/hppa1.1/Implies
+rename to sysdeps/hppa/hppa1.1/Implies
+diff --git a/ports/sysdeps/hppa/hppa1.1/addmul_1.S b/sysdeps/hppa/hppa1.1/addmul_1.S
+similarity index 100%
+rename from ports/sysdeps/hppa/hppa1.1/addmul_1.S
+rename to sysdeps/hppa/hppa1.1/addmul_1.S
+diff --git a/ports/sysdeps/hppa/hppa1.1/mul_1.S b/sysdeps/hppa/hppa1.1/mul_1.S
+similarity index 100%
+rename from ports/sysdeps/hppa/hppa1.1/mul_1.S
+rename to sysdeps/hppa/hppa1.1/mul_1.S
+diff --git a/ports/sysdeps/hppa/hppa1.1/s_signbit.c b/sysdeps/hppa/hppa1.1/s_signbit.c
+similarity index 100%
+rename from ports/sysdeps/hppa/hppa1.1/s_signbit.c
+rename to sysdeps/hppa/hppa1.1/s_signbit.c
+diff --git a/ports/sysdeps/hppa/hppa1.1/submul_1.S b/sysdeps/hppa/hppa1.1/submul_1.S
+similarity index 100%
+rename from ports/sysdeps/hppa/hppa1.1/submul_1.S
+rename to sysdeps/hppa/hppa1.1/submul_1.S
+diff --git a/ports/sysdeps/hppa/hppa1.1/udiv_qrnnd.S b/sysdeps/hppa/hppa1.1/udiv_qrnnd.S
+similarity index 100%
+rename from ports/sysdeps/hppa/hppa1.1/udiv_qrnnd.S
+rename to sysdeps/hppa/hppa1.1/udiv_qrnnd.S
+diff --git a/ports/sysdeps/hppa/jmpbuf-offsets.h b/sysdeps/hppa/jmpbuf-offsets.h
+similarity index 100%
+rename from ports/sysdeps/hppa/jmpbuf-offsets.h
+rename to sysdeps/hppa/jmpbuf-offsets.h
+diff --git a/ports/sysdeps/hppa/jmpbuf-unwind.h b/sysdeps/hppa/jmpbuf-unwind.h
+similarity index 100%
+rename from ports/sysdeps/hppa/jmpbuf-unwind.h
+rename to sysdeps/hppa/jmpbuf-unwind.h
+diff --git a/ports/sysdeps/hppa/ldsodefs.h b/sysdeps/hppa/ldsodefs.h
+similarity index 100%
+rename from ports/sysdeps/hppa/ldsodefs.h
+rename to sysdeps/hppa/ldsodefs.h
+diff --git a/ports/sysdeps/hppa/libc-tls.c b/sysdeps/hppa/libc-tls.c
+similarity index 100%
+rename from ports/sysdeps/hppa/libc-tls.c
+rename to sysdeps/hppa/libc-tls.c
+diff --git a/ports/sysdeps/hppa/libgcc-compat.c b/sysdeps/hppa/libgcc-compat.c
+similarity index 100%
+rename from ports/sysdeps/hppa/libgcc-compat.c
+rename to sysdeps/hppa/libgcc-compat.c
+diff --git a/ports/sysdeps/hppa/lshift.S b/sysdeps/hppa/lshift.S
+similarity index 100%
+rename from ports/sysdeps/hppa/lshift.S
+rename to sysdeps/hppa/lshift.S
+diff --git a/ports/sysdeps/hppa/machine-gmon.h b/sysdeps/hppa/machine-gmon.h
+similarity index 100%
+rename from ports/sysdeps/hppa/machine-gmon.h
+rename to sysdeps/hppa/machine-gmon.h
+diff --git a/ports/sysdeps/hppa/memusage.h b/sysdeps/hppa/memusage.h
+similarity index 100%
+rename from ports/sysdeps/hppa/memusage.h
+rename to sysdeps/hppa/memusage.h
+diff --git a/ports/sysdeps/hppa/mp_clz_tab.c b/sysdeps/hppa/mp_clz_tab.c
+similarity index 100%
+rename from ports/sysdeps/hppa/mp_clz_tab.c
+rename to sysdeps/hppa/mp_clz_tab.c
+diff --git a/ports/sysdeps/hppa/nptl/Makefile b/sysdeps/hppa/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/Makefile
+rename to sysdeps/hppa/nptl/Makefile
+diff --git a/ports/sysdeps/hppa/nptl/jmpbuf-unwind.h b/sysdeps/hppa/nptl/jmpbuf-unwind.h
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/jmpbuf-unwind.h
+rename to sysdeps/hppa/nptl/jmpbuf-unwind.h
+diff --git a/ports/sysdeps/hppa/nptl/pthread_spin_init.c b/sysdeps/hppa/nptl/pthread_spin_init.c
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/pthread_spin_init.c
+rename to sysdeps/hppa/nptl/pthread_spin_init.c
+diff --git a/ports/sysdeps/hppa/nptl/pthread_spin_lock.c b/sysdeps/hppa/nptl/pthread_spin_lock.c
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/pthread_spin_lock.c
+rename to sysdeps/hppa/nptl/pthread_spin_lock.c
+diff --git a/ports/sysdeps/hppa/nptl/pthread_spin_unlock.c b/sysdeps/hppa/nptl/pthread_spin_unlock.c
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/pthread_spin_unlock.c
+rename to sysdeps/hppa/nptl/pthread_spin_unlock.c
+diff --git a/ports/sysdeps/hppa/nptl/pthreaddef.h b/sysdeps/hppa/nptl/pthreaddef.h
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/pthreaddef.h
+rename to sysdeps/hppa/nptl/pthreaddef.h
+diff --git a/ports/sysdeps/hppa/nptl/shlib-versions b/sysdeps/hppa/nptl/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/shlib-versions
+rename to sysdeps/hppa/nptl/shlib-versions
+diff --git a/ports/sysdeps/hppa/nptl/tcb-offsets.sym b/sysdeps/hppa/nptl/tcb-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/tcb-offsets.sym
+rename to sysdeps/hppa/nptl/tcb-offsets.sym
+diff --git a/ports/sysdeps/hppa/nptl/tls.h b/sysdeps/hppa/nptl/tls.h
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/tls.h
+rename to sysdeps/hppa/nptl/tls.h
+diff --git a/ports/sysdeps/hppa/nptl/tst-oddstacklimit.c b/sysdeps/hppa/nptl/tst-oddstacklimit.c
+similarity index 100%
+rename from ports/sysdeps/hppa/nptl/tst-oddstacklimit.c
+rename to sysdeps/hppa/nptl/tst-oddstacklimit.c
+diff --git a/ports/sysdeps/hppa/preconfigure b/sysdeps/hppa/preconfigure
+similarity index 100%
+rename from ports/sysdeps/hppa/preconfigure
+rename to sysdeps/hppa/preconfigure
+diff --git a/ports/sysdeps/hppa/rshift.S b/sysdeps/hppa/rshift.S
+similarity index 100%
+rename from ports/sysdeps/hppa/rshift.S
+rename to sysdeps/hppa/rshift.S
+diff --git a/ports/sysdeps/hppa/setjmp.S b/sysdeps/hppa/setjmp.S
+similarity index 100%
+rename from ports/sysdeps/hppa/setjmp.S
+rename to sysdeps/hppa/setjmp.S
+diff --git a/ports/sysdeps/hppa/shlib-versions b/sysdeps/hppa/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/hppa/shlib-versions
+rename to sysdeps/hppa/shlib-versions
+diff --git a/ports/sysdeps/hppa/stackinfo.h b/sysdeps/hppa/stackinfo.h
+similarity index 100%
+rename from ports/sysdeps/hppa/stackinfo.h
+rename to sysdeps/hppa/stackinfo.h
+diff --git a/ports/sysdeps/hppa/start.S b/sysdeps/hppa/start.S
+similarity index 100%
+rename from ports/sysdeps/hppa/start.S
+rename to sysdeps/hppa/start.S
+diff --git a/ports/sysdeps/hppa/sub_n.S b/sysdeps/hppa/sub_n.S
+similarity index 100%
+rename from ports/sysdeps/hppa/sub_n.S
+rename to sysdeps/hppa/sub_n.S
+diff --git a/ports/sysdeps/hppa/sysdep.h b/sysdeps/hppa/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/hppa/sysdep.h
+rename to sysdeps/hppa/sysdep.h
+diff --git a/ports/sysdeps/hppa/tininess.h b/sysdeps/hppa/tininess.h
+similarity index 100%
+rename from ports/sysdeps/hppa/tininess.h
+rename to sysdeps/hppa/tininess.h
+diff --git a/ports/sysdeps/hppa/tls-macros.h b/sysdeps/hppa/tls-macros.h
+similarity index 100%
+rename from ports/sysdeps/hppa/tls-macros.h
+rename to sysdeps/hppa/tls-macros.h
+diff --git a/ports/sysdeps/hppa/tst-audit.h b/sysdeps/hppa/tst-audit.h
+similarity index 100%
+rename from ports/sysdeps/hppa/tst-audit.h
+rename to sysdeps/hppa/tst-audit.h
+diff --git a/ports/sysdeps/hppa/udiv_qrnnd.S b/sysdeps/hppa/udiv_qrnnd.S
+similarity index 100%
+rename from ports/sysdeps/hppa/udiv_qrnnd.S
+rename to sysdeps/hppa/udiv_qrnnd.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/Makefile b/sysdeps/unix/sysv/linux/hppa/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/Makefile
+rename to sysdeps/unix/sysv/linux/hppa/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/Versions b/sysdeps/unix/sysv/linux/hppa/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/Versions
+rename to sysdeps/unix/sysv/linux/hppa/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/____longjmp_chk.c b/sysdeps/unix/sysv/linux/hppa/____longjmp_chk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/____longjmp_chk.c
+rename to sysdeps/unix/sysv/linux/hppa/____longjmp_chk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/atomic.h b/sysdeps/unix/sysv/linux/hppa/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/atomic.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/atomic.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/errno.h b/sysdeps/unix/sysv/linux/hppa/bits/errno.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/errno.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/errno.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/fcntl.h b/sysdeps/unix/sysv/linux/hppa/bits/fcntl.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/fcntl.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/fcntl.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/ioctls.h b/sysdeps/unix/sysv/linux/hppa/bits/ioctls.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/ioctls.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/ioctls.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/ipc.h b/sysdeps/unix/sysv/linux/hppa/bits/ipc.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/ipc.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/ipc.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/mman.h b/sysdeps/unix/sysv/linux/hppa/bits/mman.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/mman.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/mman.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/msq.h b/sysdeps/unix/sysv/linux/hppa/bits/msq.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/msq.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/msq.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/sem.h b/sysdeps/unix/sysv/linux/hppa/bits/sem.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/sem.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/sem.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/shm.h b/sysdeps/unix/sysv/linux/hppa/bits/shm.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/shm.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/shm.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/sigaction.h b/sysdeps/unix/sysv/linux/hppa/bits/sigaction.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/sigaction.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/sigaction.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/signum.h b/sysdeps/unix/sysv/linux/hppa/bits/signum.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/signum.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/signum.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/bits/socket_type.h b/sysdeps/unix/sysv/linux/hppa/bits/socket_type.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/bits/socket_type.h
+rename to sysdeps/unix/sysv/linux/hppa/bits/socket_type.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/brk.c b/sysdeps/unix/sysv/linux/hppa/brk.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/brk.c
+rename to sysdeps/unix/sysv/linux/hppa/brk.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/clone.S b/sysdeps/unix/sysv/linux/hppa/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/clone.S
+rename to sysdeps/unix/sysv/linux/hppa/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/fcntl.c b/sysdeps/unix/sysv/linux/hppa/fcntl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/fcntl.c
+rename to sysdeps/unix/sysv/linux/hppa/fcntl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/fxstat.c b/sysdeps/unix/sysv/linux/hppa/fxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/fxstat.c
+rename to sysdeps/unix/sysv/linux/hppa/fxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/fxstatat.c b/sysdeps/unix/sysv/linux/hppa/fxstatat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/fxstatat.c
+rename to sysdeps/unix/sysv/linux/hppa/fxstatat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/getcontext.S b/sysdeps/unix/sysv/linux/hppa/getcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/getcontext.S
+rename to sysdeps/unix/sysv/linux/hppa/getcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/getdents64.c b/sysdeps/unix/sysv/linux/hppa/getdents64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/getdents64.c
+rename to sysdeps/unix/sysv/linux/hppa/getdents64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/getrlimit64.c b/sysdeps/unix/sysv/linux/hppa/getrlimit64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/getrlimit64.c
+rename to sysdeps/unix/sysv/linux/hppa/getrlimit64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/internaltypes.h b/sysdeps/unix/sysv/linux/hppa/internaltypes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/internaltypes.h
+rename to sysdeps/unix/sysv/linux/hppa/internaltypes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/kernel-features.h b/sysdeps/unix/sysv/linux/hppa/kernel-features.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/kernel-features.h
+rename to sysdeps/unix/sysv/linux/hppa/kernel-features.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/kernel_sigaction.h b/sysdeps/unix/sysv/linux/hppa/kernel_sigaction.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/kernel_sigaction.h
+rename to sysdeps/unix/sysv/linux/hppa/kernel_sigaction.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/kernel_stat.h b/sysdeps/unix/sysv/linux/hppa/kernel_stat.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/kernel_stat.h
+rename to sysdeps/unix/sysv/linux/hppa/kernel_stat.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/lxstat.c b/sysdeps/unix/sysv/linux/hppa/lxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/lxstat.c
+rename to sysdeps/unix/sysv/linux/hppa/lxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/makecontext.c b/sysdeps/unix/sysv/linux/hppa/makecontext.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/makecontext.c
+rename to sysdeps/unix/sysv/linux/hppa/makecontext.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/mmap.c b/sysdeps/unix/sysv/linux/hppa/mmap.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/mmap.c
+rename to sysdeps/unix/sysv/linux/hppa/mmap.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/bits/pthreadtypes.h b/sysdeps/unix/sysv/linux/hppa/nptl/bits/pthreadtypes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/bits/pthreadtypes.h
+rename to sysdeps/unix/sysv/linux/hppa/nptl/bits/pthreadtypes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/bits/semaphore.h b/sysdeps/unix/sysv/linux/hppa/nptl/bits/semaphore.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/bits/semaphore.h
+rename to sysdeps/unix/sysv/linux/hppa/nptl/bits/semaphore.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/clone.S b/sysdeps/unix/sysv/linux/hppa/nptl/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/clone.S
+rename to sysdeps/unix/sysv/linux/hppa/nptl/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/createthread.c b/sysdeps/unix/sysv/linux/hppa/nptl/createthread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/createthread.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/createthread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/fork.c b/sysdeps/unix/sysv/linux/hppa/nptl/fork.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/fork.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/fork.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/libc-lowlevellock.c b/sysdeps/unix/sysv/linux/hppa/nptl/libc-lowlevellock.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/libc-lowlevellock.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/libc-lowlevellock.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.c b/sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.h b/sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.h
+rename to sysdeps/unix/sysv/linux/hppa/nptl/lowlevellock.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pt-vfork.S b/sysdeps/unix/sysv/linux/hppa/nptl/pt-vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pt-vfork.S
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pt-vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread.h b/sysdeps/unix/sysv/linux/hppa/nptl/pthread.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread.h
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthreadP.h b/sysdeps/unix/sysv/linux/hppa/nptl/pthreadP.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthreadP.h
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthreadP.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_broadcast.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_broadcast.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_broadcast.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_broadcast.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_destroy.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_destroy.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_destroy.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_destroy.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_init.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_init.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_init.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_init.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_signal.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_signal.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_signal.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_signal.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_timedwait.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_timedwait.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_timedwait.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_timedwait.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_wait.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_wait.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_wait.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_cond_wait.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c
+rename to sysdeps/unix/sysv/linux/hppa/nptl/pthread_once.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/nptl/sysdep-cancel.h b/sysdeps/unix/sysv/linux/hppa/nptl/sysdep-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/nptl/sysdep-cancel.h
+rename to sysdeps/unix/sysv/linux/hppa/nptl/sysdep-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/profil-counter.h b/sysdeps/unix/sysv/linux/hppa/profil-counter.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/profil-counter.h
+rename to sysdeps/unix/sysv/linux/hppa/profil-counter.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/setcontext.S b/sysdeps/unix/sysv/linux/hppa/setcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/setcontext.S
+rename to sysdeps/unix/sysv/linux/hppa/setcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/socket.S b/sysdeps/unix/sysv/linux/hppa/socket.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/socket.S
+rename to sysdeps/unix/sysv/linux/hppa/socket.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/swapcontext.c b/sysdeps/unix/sysv/linux/hppa/swapcontext.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/swapcontext.c
+rename to sysdeps/unix/sysv/linux/hppa/swapcontext.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/epoll.h b/sysdeps/unix/sysv/linux/hppa/sys/epoll.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/epoll.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/epoll.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/eventfd.h b/sysdeps/unix/sysv/linux/hppa/sys/eventfd.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/eventfd.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/eventfd.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/inotify.h b/sysdeps/unix/sysv/linux/hppa/sys/inotify.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/inotify.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/inotify.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/procfs.h b/sysdeps/unix/sysv/linux/hppa/sys/procfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/procfs.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/procfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/signalfd.h b/sysdeps/unix/sysv/linux/hppa/sys/signalfd.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/signalfd.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/signalfd.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/timerfd.h b/sysdeps/unix/sysv/linux/hppa/sys/timerfd.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/timerfd.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/timerfd.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/ucontext.h b/sysdeps/unix/sysv/linux/hppa/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/ucontext.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/ucontext.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sys/user.h b/sysdeps/unix/sysv/linux/hppa/sys/user.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sys/user.h
+rename to sysdeps/unix/sysv/linux/hppa/sys/user.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/syscall.S b/sysdeps/unix/sysv/linux/hppa/syscall.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/syscall.S
+rename to sysdeps/unix/sysv/linux/hppa/syscall.S
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/syscalls.list b/sysdeps/unix/sysv/linux/hppa/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/syscalls.list
+rename to sysdeps/unix/sysv/linux/hppa/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sysdep.c b/sysdeps/unix/sysv/linux/hppa/sysdep.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sysdep.c
+rename to sysdeps/unix/sysv/linux/hppa/sysdep.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/sysdep.h b/sysdeps/unix/sysv/linux/hppa/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/sysdep.h
+rename to sysdeps/unix/sysv/linux/hppa/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/ucontext_i.sym b/sysdeps/unix/sysv/linux/hppa/ucontext_i.sym
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/ucontext_i.sym
+rename to sysdeps/unix/sysv/linux/hppa/ucontext_i.sym
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/umount.c b/sysdeps/unix/sysv/linux/hppa/umount.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/umount.c
+rename to sysdeps/unix/sysv/linux/hppa/umount.c
+diff --git a/ports/sysdeps/unix/sysv/linux/hppa/xstat.c b/sysdeps/unix/sysv/linux/hppa/xstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/hppa/xstat.c
+rename to sysdeps/unix/sysv/linux/hppa/xstat.c

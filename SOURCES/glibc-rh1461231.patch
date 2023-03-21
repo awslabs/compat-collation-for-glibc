@@ -1,0 +1,43 @@
+commit 0961f7e1e300ef633b0c1ad95d0999fb5c169f4e
+Author: Jeff Layton <jlayton@poochiereds.net>
+Date:   Wed Jul 23 14:21:05 2014 -0400
+
+    fcntl-linux.h: add new definitions and manual updates for open file description locks
+    
+    Open file description locks have been merged into the Linux kernel for
+    v3.15.  Add the appropriate command-value definitions and an update to
+    the manual that describes their usage.
+
+Note by DJ: the implementation doesn't work correctly for 32-bit file
+offsets.  Upstream changed the ABI to compensate but RHEL can't, so we
+enable these only for when file offsets are 64 bits.
+
+diff -rup a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
+--- a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h	2018-04-13 18:38:24.000000000 -0400
++++ b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h	2018-04-13 20:05:21.743234360 -0400
+@@ -117,6 +117,25 @@
+ # define F_SETLKW64	14	/* Set record locking info (blocking).	*/
+ #endif
+ 
++#ifdef __USE_FILE_OFFSET64
++/* open file description locks.
++
++   Usually record locks held by a process are released on *any* close and are
++   not inherited across a fork.
++
++   These cmd values will set locks that conflict with process-associated record
++   locks, but are "owned" by the opened file description, not the process.
++   This means that they are inherited across fork or clone with CLONE_FILES
++   like BSD (flock) locks, and they are only released automatically when the
++   last reference to the the file description against which they were acquired
++   is put. */
++#ifdef __USE_GNU
++# define F_OFD_GETLK	36
++# define F_OFD_SETLK	37
++# define F_OFD_SETLKW	38
++#endif
++#endif
++
+ #ifdef __USE_LARGEFILE64
+ # define O_LARGEFILE __O_LARGEFILE
+ #endif

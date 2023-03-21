@@ -1,0 +1,58 @@
+commit 08c6e95234c60a5c2f37532d1111acf084f39345
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Jan 11 13:13:28 2018 +0100
+
+    csu: Update __libgcc_s_init comment
+    
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+commit f993b8754080ac7572b692870e926d8b493db16c
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Wed Jan 10 13:18:04 2018 +0100
+
+    nptl: Open libgcc.so with RTLD_NOW during pthread_cancel [BZ #22636]
+    
+    Disabling lazy binding reduces stack usage during unwinding.
+    
+    Note that RTLD_NOW only makes a difference if libgcc.so has not
+    already been loaded, so this is only a partial fix.
+    
+    Reviewed-by: Adhemerval Zanella <adhemerval.zanella@linaro.org>
+
+Index: glibc-2.17-c758a686/nptl/sysdeps/pthread/unwind-forcedunwind.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/pthread/unwind-forcedunwind.c
++++ glibc-2.17-c758a686/nptl/sysdeps/pthread/unwind-forcedunwind.c
+@@ -51,7 +51,7 @@ pthread_cancel_init (void)
+       return;
+     }
+ 
+-  handle = __libc_dlopen (LIBGCC_S_SO);
++  handle = __libc_dlopen_mode (LIBGCC_S_SO, RTLD_NOW | __RTLD_DLOPEN);
+ 
+   if (handle == NULL
+       || (resume = __libc_dlsym (handle, "_Unwind_Resume")) == NULL
+Index: glibc-2.17-c758a686/sysdeps/gnu/unwind-resume.c
+===================================================================
+--- glibc-2.17-c758a686.orig/sysdeps/gnu/unwind-resume.c
++++ glibc-2.17-c758a686/sysdeps/gnu/unwind-resume.c
+@@ -35,12 +35,17 @@ init (void)
+   void *resume, *personality;
+   void *handle;
+ 
+-  handle = __libc_dlopen (LIBGCC_S_SO);
++  /* Use RTLD_NOW here for consistency with pthread_cancel_init.
++     RTLD_NOW will rarely make a difference here because unwinding is
++     already in progress, so libgcc_s.so has already been loaded if
++     its unwinder is used.  */
++  handle = __libc_dlopen_mode (LIBGCC_S_SO, RTLD_NOW | __RTLD_DLOPEN);
+ 
+   if (handle == NULL
+       || (resume = __libc_dlsym (handle, "_Unwind_Resume")) == NULL
+       || (personality = __libc_dlsym (handle, "__gcc_personality_v0")) == NULL)
+-    __libc_fatal (LIBGCC_S_SO " must be installed for pthread_cancel to work\n");
++    __libc_fatal (LIBGCC_S_SO
++		  " must be installed for unwinding to work\n");
+ 
+   libgcc_s_resume = resume;
+   libgcc_s_personality = personality;

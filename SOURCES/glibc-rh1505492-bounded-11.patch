@@ -1,0 +1,592 @@
+commit e97ed6ddbe0d53d616d93669826db225b12c3235
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Feb 14 13:12:02 2013 +0000
+
+    Remove bp-sym.h and BP_SYM uses from C code.
+
+diff --git a/csu/libc-start.c b/csu/libc-start.c
+index 63757062c730c81a..b0e62da6f6ea0708 100644
+--- a/csu/libc-start.c
++++ b/csu/libc-start.c
+@@ -19,7 +19,6 @@
+ #include <stdio.h>
+ #include <unistd.h>
+ #include <ldsodefs.h>
+-#include <bp-sym.h>
+ 
+ extern void __libc_init_first (int argc, char **argv, char **envp);
+ #ifndef SHARED
+@@ -92,7 +91,7 @@ apply_irel (void)
+ # endif
+ #else
+ # define STATIC
+-# define LIBC_START_MAIN BP_SYM (__libc_start_main)
++# define LIBC_START_MAIN __libc_start_main
+ #endif
+ 
+ #ifdef MAIN_AUXVEC_ARG
+diff --git a/elf/dl-open.c b/elf/dl-open.c
+index d48c963f779f44d8..41caade36d35d015 100644
+--- a/elf/dl-open.c
++++ b/elf/dl-open.c
+@@ -28,7 +28,6 @@
+ #include <sys/param.h>
+ #include <bits/libc-lock.h>
+ #include <ldsodefs.h>
+-#include <bp-sym.h>
+ #include <caller.h>
+ #include <sysdep-cancel.h>
+ #include <tls.h>
+@@ -43,7 +42,7 @@ extern ElfW(Addr) _dl_sysdep_start (void **start_argptr,
+ 						     ElfW(Word) phnum,
+ 						     ElfW(Addr) *user_entry,
+ 						     ElfW(auxv_t) *auxv));
+-weak_extern (BP_SYM (_dl_sysdep_start))
++weak_extern (_dl_sysdep_start)
+ 
+ extern int __libc_multiple_libcs;	/* Defined in init-first.c.  */
+ 
+diff --git a/math/fegetenv.c b/math/fegetenv.c
+index f8fbdffdb35a913c..0741407f125172a3 100644
+--- a/math/fegetenv.c
++++ b/math/fegetenv.c
+@@ -19,7 +19,6 @@
+ 
+ #include <fenv.h>
+ #include <shlib-compat.h>
+-#include <bp-sym.h>
+ 
+ int
+ __fegetenv (fenv_t *envp)
+@@ -29,9 +28,9 @@ __fegetenv (fenv_t *envp)
+ }
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fegetenv, __old_fegetenv)
+-compat_symbol (libm, BP_SYM (__old_fegetenv), BP_SYM (fegetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fegetenv, fegetenv, GLIBC_2_1);
+ #endif
+ libm_hidden_ver (__fegetenv, fegetenv)
+-versioned_symbol (libm, BP_SYM (__fegetenv), BP_SYM (fegetenv), GLIBC_2_2);
++versioned_symbol (libm, __fegetenv, fegetenv, GLIBC_2_2);
+ 
+ stub_warning (fegetenv)
+diff --git a/nptl/sysdeps/pthread/bits/libc-lockP.h b/nptl/sysdeps/pthread/bits/libc-lockP.h
+index 7a1107207a1e0ffb..962a292308f92267 100644
+--- a/nptl/sysdeps/pthread/bits/libc-lockP.h
++++ b/nptl/sysdeps/pthread/bits/libc-lockP.h
+@@ -375,31 +375,30 @@ extern int __pthread_atfork (void (*__prepare) (void),
+    single-threaded processes.  */
+ #ifndef __NO_WEAK_PTHREAD_ALIASES
+ # ifdef weak_extern
+-#  include <bp-sym.h>
+-weak_extern (BP_SYM (__pthread_mutex_init))
+-weak_extern (BP_SYM (__pthread_mutex_destroy))
+-weak_extern (BP_SYM (__pthread_mutex_lock))
+-weak_extern (BP_SYM (__pthread_mutex_trylock))
+-weak_extern (BP_SYM (__pthread_mutex_unlock))
+-weak_extern (BP_SYM (__pthread_mutexattr_init))
+-weak_extern (BP_SYM (__pthread_mutexattr_destroy))
+-weak_extern (BP_SYM (__pthread_mutexattr_settype))
+-weak_extern (BP_SYM (__pthread_rwlock_init))
+-weak_extern (BP_SYM (__pthread_rwlock_destroy))
+-weak_extern (BP_SYM (__pthread_rwlock_rdlock))
+-weak_extern (BP_SYM (__pthread_rwlock_tryrdlock))
+-weak_extern (BP_SYM (__pthread_rwlock_wrlock))
+-weak_extern (BP_SYM (__pthread_rwlock_trywrlock))
+-weak_extern (BP_SYM (__pthread_rwlock_unlock))
+-weak_extern (BP_SYM (__pthread_key_create))
+-weak_extern (BP_SYM (__pthread_setspecific))
+-weak_extern (BP_SYM (__pthread_getspecific))
+-weak_extern (BP_SYM (__pthread_once))
++weak_extern (__pthread_mutex_init)
++weak_extern (__pthread_mutex_destroy)
++weak_extern (__pthread_mutex_lock)
++weak_extern (__pthread_mutex_trylock)
++weak_extern (__pthread_mutex_unlock)
++weak_extern (__pthread_mutexattr_init)
++weak_extern (__pthread_mutexattr_destroy)
++weak_extern (__pthread_mutexattr_settype)
++weak_extern (__pthread_rwlock_init)
++weak_extern (__pthread_rwlock_destroy)
++weak_extern (__pthread_rwlock_rdlock)
++weak_extern (__pthread_rwlock_tryrdlock)
++weak_extern (__pthread_rwlock_wrlock)
++weak_extern (__pthread_rwlock_trywrlock)
++weak_extern (__pthread_rwlock_unlock)
++weak_extern (__pthread_key_create)
++weak_extern (__pthread_setspecific)
++weak_extern (__pthread_getspecific)
++weak_extern (__pthread_once)
+ weak_extern (__pthread_initialize)
+ weak_extern (__pthread_atfork)
+-weak_extern (BP_SYM (_pthread_cleanup_push_defer))
+-weak_extern (BP_SYM (_pthread_cleanup_pop_restore))
+-weak_extern (BP_SYM (pthread_setcancelstate))
++weak_extern (_pthread_cleanup_push_defer)
++weak_extern (_pthread_cleanup_pop_restore)
++weak_extern (pthread_setcancelstate)
+ # else
+ #  pragma weak __pthread_mutex_init
+ #  pragma weak __pthread_mutex_destroy
+diff --git a/ports/sysdeps/alpha/memchr.c b/ports/sysdeps/alpha/memchr.c
+index b19d8200c60ffd71..86785756fc680d03 100644
+--- a/ports/sysdeps/alpha/memchr.c
++++ b/ports/sysdeps/alpha/memchr.c
+@@ -16,7 +16,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <string.h>
+-#include <bp-sym.h>
+ 
+ typedef unsigned long word;
+ 
+@@ -170,6 +169,6 @@ __memchr (const void *s, int xc, size_t n)
+ }
+ 
+ #ifdef weak_alias
+-weak_alias (__memchr, BP_SYM (memchr))
++weak_alias (__memchr, memchr)
+ #endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/ports/sysdeps/powerpc/nofpu/fegetenv.c b/ports/sysdeps/powerpc/nofpu/fegetenv.c
+index dd88fb3490c92309..95c7475a7d138e75 100644
+--- a/ports/sysdeps/powerpc/nofpu/fegetenv.c
++++ b/ports/sysdeps/powerpc/nofpu/fegetenv.c
+@@ -19,7 +19,6 @@
+ 
+ #include "soft-fp.h"
+ #include "soft-supp.h"
+-#include <bp-sym.h>
+ 
+ extern int __sim_exceptions;
+ extern int __sim_disabled_exceptions;
+@@ -42,8 +41,8 @@ __fegetenv (fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fegetenv, __old_fegetenv)
+-compat_symbol (libm, BP_SYM (__old_fegetenv), BP_SYM (fegetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fegetenv, fegetenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__fegetenv, fegetenv)
+-versioned_symbol (libm, BP_SYM (__fegetenv), BP_SYM (fegetenv), GLIBC_2_2);
++versioned_symbol (libm, __fegetenv, fegetenv, GLIBC_2_2);
+diff --git a/ports/sysdeps/powerpc/nofpu/fesetenv.c b/ports/sysdeps/powerpc/nofpu/fesetenv.c
+index dc49017c0dc68454..2e3946106460eea5 100644
+--- a/ports/sysdeps/powerpc/nofpu/fesetenv.c
++++ b/ports/sysdeps/powerpc/nofpu/fesetenv.c
+@@ -19,7 +19,6 @@
+ 
+ #include "soft-fp.h"
+ #include "soft-supp.h"
+-#include <bp-sym.h>
+ 
+ int
+ __fesetenv (const fenv_t *envp)
+@@ -36,8 +35,8 @@ __fesetenv (const fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fesetenv, __old_fesetenv)
+-compat_symbol (libm, BP_SYM (__old_fesetenv), BP_SYM (fesetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fesetenv, fesetenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__fesetenv, fesetenv)
+-versioned_symbol (libm, BP_SYM (__fesetenv), BP_SYM (fesetenv), GLIBC_2_2);
++versioned_symbol (libm, __fesetenv, fesetenv, GLIBC_2_2);
+diff --git a/ports/sysdeps/powerpc/nofpu/feupdateenv.c b/ports/sysdeps/powerpc/nofpu/feupdateenv.c
+index f5153d366968d11c..20f552135a5cca26 100644
+--- a/ports/sysdeps/powerpc/nofpu/feupdateenv.c
++++ b/ports/sysdeps/powerpc/nofpu/feupdateenv.c
+@@ -21,7 +21,6 @@
+ #include "soft-fp.h"
+ #include "soft-supp.h"
+ #include <signal.h>
+-#include <bp-sym.h>
+ 
+ int
+ __feupdateenv (const fenv_t *envp)
+@@ -45,8 +44,8 @@ __feupdateenv (const fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__feupdateenv, __old_feupdateenv)
+-compat_symbol (libm, BP_SYM (__old_feupdateenv), BP_SYM (feupdateenv), GLIBC_2_1);
++compat_symbol (libm, __old_feupdateenv, feupdateenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__feupdateenv, feupdateenv)
+-versioned_symbol (libm, BP_SYM (__feupdateenv), BP_SYM (feupdateenv), GLIBC_2_2);
++versioned_symbol (libm, __feupdateenv, feupdateenv, GLIBC_2_2);
+diff --git a/ports/sysdeps/powerpc/nofpu/fgetexcptflg.c b/ports/sysdeps/powerpc/nofpu/fgetexcptflg.c
+index 6b00ee0dcd4ca037..e0582d61aee6eed6 100644
+--- a/ports/sysdeps/powerpc/nofpu/fgetexcptflg.c
++++ b/ports/sysdeps/powerpc/nofpu/fgetexcptflg.c
+@@ -19,7 +19,6 @@
+ 
+ #include "soft-fp.h"
+ #include "soft-supp.h"
+-#include <bp-sym.h>
+ 
+ int
+ __fegetexceptflag (fexcept_t *flagp, int excepts)
+@@ -32,7 +31,7 @@ __fegetexceptflag (fexcept_t *flagp, int excepts)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fegetexceptflag, __old_fegetexceptflag)
+-compat_symbol (libm, BP_SYM (__old_fegetexceptflag), BP_SYM (fegetexceptflag), GLIBC_2_1);
++compat_symbol (libm, __old_fegetexceptflag, fegetexceptflag, GLIBC_2_1);
+ #endif
+ 
+-versioned_symbol (libm, BP_SYM (__fegetexceptflag), BP_SYM (fegetexceptflag), GLIBC_2_2);
++versioned_symbol (libm, __fegetexceptflag, fegetexceptflag, GLIBC_2_2);
+diff --git a/ports/sysdeps/powerpc/nofpu/fraiseexcpt.c b/ports/sysdeps/powerpc/nofpu/fraiseexcpt.c
+index dcfbcc48b2cd54c3..e1dde26ef964cb81 100644
+--- a/ports/sysdeps/powerpc/nofpu/fraiseexcpt.c
++++ b/ports/sysdeps/powerpc/nofpu/fraiseexcpt.c
+@@ -20,7 +20,6 @@
+ #include "soft-fp.h"
+ #include "soft-supp.h"
+ #include <signal.h>
+-#include <bp-sym.h>
+ 
+ #undef feraiseexcept
+ int
+@@ -35,8 +34,8 @@ __feraiseexcept (int x)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__feraiseexcept, __old_feraiseexcept)
+-compat_symbol (libm, BP_SYM (__old_feraiseexcept), BP_SYM (feraiseexcept), GLIBC_2_1);
++compat_symbol (libm, __old_feraiseexcept, feraiseexcept, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__feraiseexcept, feraiseexcept)
+-versioned_symbol (libm, BP_SYM (__feraiseexcept), BP_SYM (feraiseexcept), GLIBC_2_2);
++versioned_symbol (libm, __feraiseexcept, feraiseexcept, GLIBC_2_2);
+diff --git a/ports/sysdeps/powerpc/nofpu/fsetexcptflg.c b/ports/sysdeps/powerpc/nofpu/fsetexcptflg.c
+index f98da1a6177d81da..53215f49141ac5a2 100644
+--- a/ports/sysdeps/powerpc/nofpu/fsetexcptflg.c
++++ b/ports/sysdeps/powerpc/nofpu/fsetexcptflg.c
+@@ -19,7 +19,6 @@
+ 
+ #include "soft-fp.h"
+ #include "soft-supp.h"
+-#include <bp-sym.h>
+ 
+ int
+ __fesetexceptflag(const fexcept_t *flagp, int excepts)
+@@ -33,7 +32,7 @@ __fesetexceptflag(const fexcept_t *flagp, int excepts)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fesetexceptflag, __old_fesetexceptflag)
+-compat_symbol (libm, BP_SYM (__old_fesetexceptflag), BP_SYM (fesetexceptflag), GLIBC_2_1);
++compat_symbol (libm, __old_fesetexceptflag, fesetexceptflag, GLIBC_2_1);
+ #endif
+ 
+-versioned_symbol (libm, BP_SYM (__fesetexceptflag), BP_SYM (fesetexceptflag), GLIBC_2_2);
++versioned_symbol (libm, __fesetexceptflag, fesetexceptflag, GLIBC_2_2);
+diff --git a/string/memchr.c b/string/memchr.c
+index 822c0a4d49a0e538..1684bfa56885e883 100644
+--- a/string/memchr.c
++++ b/string/memchr.c
+@@ -47,11 +47,6 @@
+ #endif
+ 
+ #include <sys/types.h>
+-#if HAVE_BP_SYM_H || defined _LIBC
+-#include <bp-sym.h>
+-#else
+-# define BP_SYM(sym) sym
+-#endif
+ 
+ #undef memchr
+ #undef __memchr
+@@ -207,6 +202,6 @@ MEMCHR (s, c_in, n)
+   return 0;
+ }
+ #ifdef weak_alias
+-weak_alias (__memchr, BP_SYM (memchr))
++weak_alias (__memchr, memchr)
+ #endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/sysdeps/i386/fpu/fegetenv.c b/sysdeps/i386/fpu/fegetenv.c
+index 7cdb90e04464fc77..a4cc5d1f0ed1c796 100644
+--- a/sysdeps/i386/fpu/fegetenv.c
++++ b/sysdeps/i386/fpu/fegetenv.c
+@@ -18,7 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <fenv.h>
+-#include <bp-sym.h>
+ 
+ int
+ __fegetenv (fenv_t *envp)
+@@ -36,8 +35,8 @@ __fegetenv (fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fegetenv, __old_fegetenv)
+-compat_symbol (libm, BP_SYM (__old_fegetenv), BP_SYM (fegetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fegetenv, fegetenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__fegetenv, fegetenv)
+-versioned_symbol (libm, BP_SYM (__fegetenv), BP_SYM (fegetenv), GLIBC_2_2);
++versioned_symbol (libm, __fegetenv, fegetenv, GLIBC_2_2);
+diff --git a/sysdeps/i386/fpu/fesetenv.c b/sysdeps/i386/fpu/fesetenv.c
+index e2f9eb8178c39ed8..ee92d5c36d1e5cde 100644
+--- a/sysdeps/i386/fpu/fesetenv.c
++++ b/sysdeps/i386/fpu/fesetenv.c
+@@ -19,7 +19,6 @@
+ 
+ #include <fenv.h>
+ #include <assert.h>
+-#include <bp-sym.h>
+ 
+ 
+ int
+@@ -80,8 +79,8 @@ __fesetenv (const fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fesetenv, __old_fesetenv)
+-compat_symbol (libm, BP_SYM (__old_fesetenv), BP_SYM (fesetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fesetenv, fesetenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__fesetenv, fesetenv)
+-versioned_symbol (libm, BP_SYM (__fesetenv), BP_SYM (fesetenv), GLIBC_2_2);
++versioned_symbol (libm, __fesetenv, fesetenv, GLIBC_2_2);
+diff --git a/sysdeps/i386/fpu/feupdateenv.c b/sysdeps/i386/fpu/feupdateenv.c
+index 6e2ce35b531cd348..86a43f024372987f 100644
+--- a/sysdeps/i386/fpu/feupdateenv.c
++++ b/sysdeps/i386/fpu/feupdateenv.c
+@@ -18,7 +18,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <fenv.h>
+-#include <bp-sym.h>
+ #include <unistd.h>
+ #include <dl-procinfo.h>
+ #include <ldsodefs.h>
+@@ -53,8 +52,8 @@ __feupdateenv (const fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__feupdateenv, __old_feupdateenv)
+-compat_symbol (libm, BP_SYM (__old_feupdateenv), BP_SYM (feupdateenv), GLIBC_2_1);
++compat_symbol (libm, __old_feupdateenv, feupdateenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__feupdateenv, feupdateenv)
+-versioned_symbol (libm, BP_SYM (__feupdateenv), BP_SYM (feupdateenv), GLIBC_2_2);
++versioned_symbol (libm, __feupdateenv, feupdateenv, GLIBC_2_2);
+diff --git a/sysdeps/i386/fpu/fsetexcptflg.c b/sysdeps/i386/fpu/fsetexcptflg.c
+index 2daec71d112839c3..8751f10b23b1c690 100644
+--- a/sysdeps/i386/fpu/fsetexcptflg.c
++++ b/sysdeps/i386/fpu/fsetexcptflg.c
+@@ -19,7 +19,6 @@
+ 
+ #include <fenv.h>
+ #include <math.h>
+-#include <bp-sym.h>
+ #include <unistd.h>
+ #include <ldsodefs.h>
+ #include <dl-procinfo.h>
+@@ -64,7 +63,7 @@ __fesetexceptflag (const fexcept_t *flagp, int excepts)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fesetexceptflag, __old_fesetexceptflag)
+-compat_symbol (libm, BP_SYM (__old_fesetexceptflag), BP_SYM (fesetexceptflag), GLIBC_2_1);
++compat_symbol (libm, __old_fesetexceptflag, fesetexceptflag, GLIBC_2_1);
+ #endif
+ 
+-versioned_symbol (libm, BP_SYM (__fesetexceptflag), BP_SYM (fesetexceptflag), GLIBC_2_2);
++versioned_symbol (libm, __fesetexceptflag, fesetexceptflag, GLIBC_2_2);
+diff --git a/sysdeps/posix/open64.c b/sysdeps/posix/open64.c
+index 1aa0a57007792f36..8392e17773739a5f 100644
+--- a/sysdeps/posix/open64.c
++++ b/sysdeps/posix/open64.c
+@@ -17,7 +17,6 @@
+ 
+ #include <fcntl.h>
+ #include <stdarg.h>
+-#include <bp-sym.h>
+ #include <sysdep-cancel.h>
+ 
+ /* Open FILE with access OFLAG.  If O_CREAT or O_TMPFILE is in OFLAG,
+@@ -46,6 +45,6 @@ __libc_open64 (const char *file, int oflag, ...)
+ 
+   return result;
+ }
+-weak_alias (__libc_open64, BP_SYM (__open64))
+-libc_hidden_weak (BP_SYM (__open64))
+-weak_alias (__libc_open64, BP_SYM (open64))
++weak_alias (__libc_open64, __open64)
++libc_hidden_weak (__open64)
++weak_alias (__libc_open64, open64)
+diff --git a/sysdeps/powerpc/fpu/fegetenv.c b/sysdeps/powerpc/fpu/fegetenv.c
+index 77a8b2aa7a51d99a..d4fc41c5ae2702e6 100644
+--- a/sysdeps/powerpc/fpu/fegetenv.c
++++ b/sysdeps/powerpc/fpu/fegetenv.c
+@@ -17,7 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <fenv_libc.h>
+-#include <bp-sym.h>
+ 
+ int
+ __fegetenv (fenv_t *envp)
+@@ -31,8 +30,8 @@ __fegetenv (fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fegetenv, __old_fegetenv)
+-compat_symbol (libm, BP_SYM (__old_fegetenv), BP_SYM (fegetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fegetenv, fegetenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__fegetenv, fegetenv)
+-versioned_symbol (libm, BP_SYM (__fegetenv), BP_SYM (fegetenv), GLIBC_2_2);
++versioned_symbol (libm, __fegetenv, fegetenv, GLIBC_2_2);
+diff --git a/sysdeps/powerpc/fpu/fesetenv.c b/sysdeps/powerpc/fpu/fesetenv.c
+index e73da91101ed691e..63f653e827cbe4e5 100644
+--- a/sysdeps/powerpc/fpu/fesetenv.c
++++ b/sysdeps/powerpc/fpu/fesetenv.c
+@@ -19,7 +19,6 @@
+ 
+ #include <fenv_libc.h>
+ #include <fpu_control.h>
+-#include <bp-sym.h>
+ 
+ #define _FPU_MASK_ALL (_FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM | _FPU_MASK_XM | _FPU_MASK_IM)
+ 
+@@ -55,8 +54,8 @@ __fesetenv (const fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fesetenv, __old_fesetenv)
+-compat_symbol (libm, BP_SYM (__old_fesetenv), BP_SYM (fesetenv), GLIBC_2_1);
++compat_symbol (libm, __old_fesetenv, fesetenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__fesetenv, fesetenv)
+-versioned_symbol (libm, BP_SYM (__fesetenv), BP_SYM (fesetenv), GLIBC_2_2);
++versioned_symbol (libm, __fesetenv, fesetenv, GLIBC_2_2);
+diff --git a/sysdeps/powerpc/fpu/feupdateenv.c b/sysdeps/powerpc/fpu/feupdateenv.c
+index d24da9435294cd47..8a3491293c871a08 100644
+--- a/sysdeps/powerpc/fpu/feupdateenv.c
++++ b/sysdeps/powerpc/fpu/feupdateenv.c
+@@ -20,7 +20,6 @@
+ 
+ #include <fenv_libc.h>
+ #include <fpu_control.h>
+-#include <bp-sym.h>
+ 
+ #define _FPU_MASK_ALL (_FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM | _FPU_MASK_XM | _FPU_MASK_IM)
+ 
+@@ -62,8 +61,8 @@ __feupdateenv (const fenv_t *envp)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__feupdateenv, __old_feupdateenv)
+-compat_symbol (libm, BP_SYM (__old_feupdateenv), BP_SYM (feupdateenv), GLIBC_2_1);
++compat_symbol (libm, __old_feupdateenv, feupdateenv, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__feupdateenv, feupdateenv)
+-versioned_symbol (libm, BP_SYM (__feupdateenv), BP_SYM (feupdateenv), GLIBC_2_2);
++versioned_symbol (libm, __feupdateenv, feupdateenv, GLIBC_2_2);
+diff --git a/sysdeps/powerpc/fpu/fgetexcptflg.c b/sysdeps/powerpc/fpu/fgetexcptflg.c
+index 3f9887a024387a21..9c59fc050feb97ba 100644
+--- a/sysdeps/powerpc/fpu/fgetexcptflg.c
++++ b/sysdeps/powerpc/fpu/fgetexcptflg.c
+@@ -17,7 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <fenv_libc.h>
+-#include <bp-sym.h>
+ 
+ int
+ __fegetexceptflag (fexcept_t *flagp, int excepts)
+@@ -37,7 +36,7 @@ __fegetexceptflag (fexcept_t *flagp, int excepts)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fegetexceptflag, __old_fegetexceptflag)
+-compat_symbol (libm, BP_SYM (__old_fegetexceptflag), BP_SYM (fegetexceptflag), GLIBC_2_1);
++compat_symbol (libm, __old_fegetexceptflag, fegetexceptflag, GLIBC_2_1);
+ #endif
+ 
+-versioned_symbol (libm, BP_SYM (__fegetexceptflag), BP_SYM (fegetexceptflag), GLIBC_2_2);
++versioned_symbol (libm, __fegetexceptflag, fegetexceptflag, GLIBC_2_2);
+diff --git a/sysdeps/powerpc/fpu/fraiseexcpt.c b/sysdeps/powerpc/fpu/fraiseexcpt.c
+index 86a89e744ed4e5d8..900d01186051a2fd 100644
+--- a/sysdeps/powerpc/fpu/fraiseexcpt.c
++++ b/sysdeps/powerpc/fpu/fraiseexcpt.c
+@@ -17,7 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <fenv_libc.h>
+-#include <bp-sym.h>
+ 
+ #undef feraiseexcept
+ int
+@@ -61,8 +60,8 @@ __feraiseexcept (int excepts)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__feraiseexcept, __old_feraiseexcept)
+-compat_symbol (libm, BP_SYM (__old_feraiseexcept), BP_SYM (feraiseexcept), GLIBC_2_1);
++compat_symbol (libm, __old_feraiseexcept, feraiseexcept, GLIBC_2_1);
+ #endif
+ 
+ libm_hidden_ver (__feraiseexcept, feraiseexcept)
+-versioned_symbol (libm, BP_SYM (__feraiseexcept), BP_SYM (feraiseexcept), GLIBC_2_2);
++versioned_symbol (libm, __feraiseexcept, feraiseexcept, GLIBC_2_2);
+diff --git a/sysdeps/powerpc/fpu/fsetexcptflg.c b/sysdeps/powerpc/fpu/fsetexcptflg.c
+index 1140c8eb70489086..aadec2e8df1d5975 100644
+--- a/sysdeps/powerpc/fpu/fsetexcptflg.c
++++ b/sysdeps/powerpc/fpu/fsetexcptflg.c
+@@ -17,7 +17,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <fenv_libc.h>
+-#include <bp-sym.h>
+ 
+ int
+ __fesetexceptflag (const fexcept_t *flagp, int excepts)
+@@ -53,7 +52,7 @@ __fesetexceptflag (const fexcept_t *flagp, int excepts)
+ #include <shlib-compat.h>
+ #if SHLIB_COMPAT (libm, GLIBC_2_1, GLIBC_2_2)
+ strong_alias (__fesetexceptflag, __old_fesetexceptflag)
+-compat_symbol (libm, BP_SYM (__old_fesetexceptflag), BP_SYM (fesetexceptflag), GLIBC_2_1);
++compat_symbol (libm, __old_fesetexceptflag, fesetexceptflag, GLIBC_2_1);
+ #endif
+ 
+-versioned_symbol (libm, BP_SYM (__fesetexceptflag), BP_SYM (fesetexceptflag), GLIBC_2_2);
++versioned_symbol (libm, __fesetexceptflag, fesetexceptflag, GLIBC_2_2);
+diff --git a/sysdeps/unix/sysv/linux/powerpc/libc-start.c b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+index 078d6c7ca99c7203..7cdabe9085ef6118 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/libc-start.c
++++ b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+@@ -20,7 +20,6 @@
+ #include <unistd.h>
+ #include <ldsodefs.h>
+ #include <sysdep.h>
+-#include <bp-sym.h>
+ 
+ 
+ int __cache_line_size attribute_hidden;
+@@ -41,14 +40,12 @@ struct startup_info
+   };
+ 
+ int
+-/* GKM FIXME: GCC: this should get __BP_ prefix by virtue of the
+-   BPs in the arglist of startup_info.main and startup_info.init. */
+-  BP_SYM (__libc_start_main) (int argc, char **argv,
+-			      char **ev,
+-			      ElfW (auxv_t) * auxvec,
+-			      void (*rtld_fini) (void),
+-			      struct startup_info *stinfo,
+-			      char **stack_on_entry)
++__libc_start_main (int argc, char **argv,
++		   char **ev,
++		   ElfW (auxv_t) * auxvec,
++		   void (*rtld_fini) (void),
++		   struct startup_info *stinfo,
++		   char **stack_on_entry)
+ {
+   /* the PPC SVR4 ABI says that the top thing on the stack will
+      be a NULL pointer, so if not we assume that we're being called

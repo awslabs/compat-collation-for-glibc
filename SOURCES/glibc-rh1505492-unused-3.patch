@@ -1,0 +1,43 @@
+Partial backport of:
+
+commit 7a2ad8cf392acfcaef319e722dda9101d4d8b6bd
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Wed Nov 13 06:45:19 2013 -0600
+
+    PowerPC: Fix __fe_mask_env export
+    
+    This patch does not export __fe_mask_env anymore, only providing a
+    compatibility symbol. It fixes BZ#14143.
+
+Only the removal of the unused variable is included here.
+
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_mask.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_mask.c
+index e4bcd9800ddf1f33..dd57b9220317a075 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_mask.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_mask.c
+@@ -27,9 +27,8 @@ const fenv_t *
+ __fe_mask_env (void)
+ {
+ #if defined PR_SET_FPEXC && defined PR_FP_EXC_DISABLED
+-  int result;
+   INTERNAL_SYSCALL_DECL (err);
+-  result = INTERNAL_SYSCALL (prctl, err, 2, PR_SET_FPEXC, PR_FP_EXC_DISABLED);
++  INTERNAL_SYSCALL (prctl, err, 2, PR_SET_FPEXC, PR_FP_EXC_DISABLED);
+ #else
+   __set_errno (ENOSYS);
+ #endif
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_nomask.c b/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_nomask.c
+index 46b94789801b73e5..03eb855d3bef33e5 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_nomask.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/fpu/fe_nomask.c
+@@ -27,9 +27,8 @@ const fenv_t *
+ __fe_nomask_env (void)
+ {
+ #if defined PR_SET_FPEXC && defined PR_FP_EXC_PRECISE
+-  int result;
+   INTERNAL_SYSCALL_DECL (err);
+-  result = INTERNAL_SYSCALL (prctl, err, 2, PR_SET_FPEXC, PR_FP_EXC_PRECISE);
++  INTERNAL_SYSCALL (prctl, err, 2, PR_SET_FPEXC, PR_FP_EXC_PRECISE);
+ #else
+   __set_errno (ENOSYS);
+ #endif

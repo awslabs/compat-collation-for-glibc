@@ -1,0 +1,20 @@
+Fix -Wundef warning.  It was fixed upstream as part of this commit:
+
+commit 3247f28556d1de7f9837f6e9ee8c63fa56b93c13
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 3 01:36:10 2014 +0530
+
+    Sync up loadmsgcat.c with gettext
+
+diff --git a/intl/loadmsgcat.c b/intl/loadmsgcat.c
+index c70152010ecd2624..243783a9ac4d0929 100644
+--- a/intl/loadmsgcat.c
++++ b/intl/loadmsgcat.c
+@@ -89,6 +89,7 @@ char *alloca ();
+ # include "../locale/localeinfo.h"
+ # include <not-cancel.h>
+ # include <bits/libc-lock.h>
++# define PRI_MACROS_BROKEN 0
+ #endif
+ 
+ /* Provide fallback values for macros that ought to be defined in <inttypes.h>.

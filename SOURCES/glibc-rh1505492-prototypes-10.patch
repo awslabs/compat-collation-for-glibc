@@ -1,0 +1,777 @@
+commit 14bb4e57c094849228ad8524693ab9432c38396c
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Tue Jan 6 08:22:41 2015 -0800
+
+    Function declaration cleanup
+    
+    This patch changes the some function declaration from K&R style to
+    default ANSI C.
+    
+            * nptl/pthread_cancel.c (pthread_cancel): Use ANSI prototype.
+            * nptl/pthread_cond_timedwait.c (__pthread_cond_timedwait): Likewise.
+            * nptl/pthread_cond_wait.c (__pthread_cond_wait): Likewise.
+            * nptl/pthread_exit.c (__pthread_exit): Likewise.
+            * nptl/pthread_join.c (pthread_join): Likewise.
+            * nptl/pthread_timedjoin.c (pthread_timedjoin_np): Likewise.
+            * sysdeps/posix/waitid.c (__waitid): Likewise.
+            * sysdeps/unix/sysv/linux/arm/pread.c (__libc_pread): Likewise.
+            * sysdeps/unix/sysv/linux/arm/pread64.c (__libc_pread64): Likewise.
+            * sysdeps/unix/sysv/linux/arm/pwrite.c (__libc_pwrite): Likewise.
+            * sysdeps/unix/sysv/linux/arm/pwrite64.c (__libc_pwrite64): Likewise.
+            * sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c (__libc_pread):
+            Likewise.
+            * sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
+            (__libc_pread64): Likewise.
+            * sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
+            (__libc_pwrite): Likewise.
+            * sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
+            (__libc_pwrite64): Likewsie.
+            * sysdeps/unix/sysv/linux/mips/pread.c (__libc_pread): Likewise.
+            * sysdeps/unix/sysv/linux/mips/pread64.c (__libc_pread64): Likewise.
+            * sysdeps/unix/sysv/linux/mips/pwrite.c (__libc_pwrite): Likewise.
+            * sysdeps/unix/sysv/linux/mips/pwrite64.c (__libc_pwrite64): Likewise.
+            * sysdeps/unix/sysv/linux/msgrcv.c (__libc_msgrcv): Likewise.
+            * sysdeps/unix/sysv/linux/msgsnd.c (__libc_msgsnd): Likewise.
+            * sysdeps/unix/sysv/linux/openat.c (OPENAT_NOT_CANCEL): Likewise.
+            * sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c (__libc_pread):
+            Likewise.
+            * sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
+            (__libc_pread64): Likewise.
+            * sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c (__libc_pwrite):
+            Likewise.
+            * sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
+            (__libc_pwrite64): Likewise.
+            * sysdeps/unix/sysv/linux/pread.c (__libc_pread): Likewise.
+            * sysdeps/unix/sysv/linux/pread64.c (__libc_pread64): Likewise.
+            * sysdeps/unix/sysv/linux/preadv.c (PREADV): Likewise.
+            * sysdeps/unix/sysv/linux/pthread_kill.c (__pthread_kill): Likewise.
+            * sysdeps/unix/sysv/linux/pwrite.c (__libc_pwrite): Likewise.
+            * sysdeps/unix/sysv/linux/pwrite64.c (__libc_pwrite64): Likewise.
+            * sysdeps/unix/sysv/linux/pwritev.c (__libc_pwritev): Likewise.
+            * sysdeps/unix/sysv/linux/sh/pread.c (__libc_pread): Likewise.
+            * sysdeps/unix/sysv/linux/sh/pread64.c (__libc_pread64): Likewise.
+            * sysdeps/unix/sysv/linux/sh/pwrite.c (__libc_pwrite): Likewise.
+            * sysdeps/unix/sysv/linux/sh/pwrite64.c (__libc_write64): Likewise.
+            * sysdeps/unix/sysv/linux/sigsuspend.c (__sigsuspend): Likewise.
+            * sysdeps/unix/sysv/linux/sigtimedwait.c (__sigtimedwait): Likewise.
+            * sysdeps/unix/sysv/linux/sigwait.c (__sigwait): Likewise.
+            * sysdeps/unix/sysv/linux/sigwaitinfo.c (__sigwaitinfo): Likewise.
+            * sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c (__libc_msgrcv):
+            Likewise.
+
+Conflicts:
+	sysdeps/unix/sysv/linux/pthread_kill.c
+
+Change applied to nptl/sysdeps/unix/sysv/linux/pthread_kill.c instead.
+
+diff --git a/nptl/pthread_cancel.c b/nptl/pthread_cancel.c
+index cf6e48b4144f504f..75b3821862bdc8b0 100644
+--- a/nptl/pthread_cancel.c
++++ b/nptl/pthread_cancel.c
+@@ -25,8 +25,7 @@
+ 
+ 
+ int
+-pthread_cancel (th)
+-     pthread_t th;
++pthread_cancel (pthread_t th)
+ {
+   volatile struct pthread *pd = (volatile struct pthread *) th;
+ 
+diff --git a/nptl/pthread_cond_timedwait.c b/nptl/pthread_cond_timedwait.c
+index ef33b966b82b702f..c1468169fec665b9 100644
+--- a/nptl/pthread_cond_timedwait.c
++++ b/nptl/pthread_cond_timedwait.c
+@@ -48,10 +48,8 @@ struct _condvar_cleanup_buffer
+ };
+ 
+ int
+-__pthread_cond_timedwait (cond, mutex, abstime)
+-     pthread_cond_t *cond;
+-     pthread_mutex_t *mutex;
+-     const struct timespec *abstime;
++__pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
++			  const struct timespec *abstime)
+ {
+   struct _pthread_cleanup_buffer buffer;
+   struct _condvar_cleanup_buffer cbuffer;
+diff --git a/nptl/pthread_cond_wait.c b/nptl/pthread_cond_wait.c
+index 35505d9a191879e4..3bcfb6c0ee476e70 100644
+--- a/nptl/pthread_cond_wait.c
++++ b/nptl/pthread_cond_wait.c
+@@ -91,9 +91,7 @@ __condvar_cleanup (void *arg)
+ 
+ 
+ int
+-__pthread_cond_wait (cond, mutex)
+-     pthread_cond_t *cond;
+-     pthread_mutex_t *mutex;
++__pthread_cond_wait (pthread_cond_t *cond, pthread_mutex_t *mutex)
+ {
+   struct _pthread_cleanup_buffer buffer;
+   struct _condvar_cleanup_buffer cbuffer;
+diff --git a/nptl/pthread_exit.c b/nptl/pthread_exit.c
+index 2d1037b5c4f2b386..7fa58cf50daba368 100644
+--- a/nptl/pthread_exit.c
++++ b/nptl/pthread_exit.c
+@@ -21,8 +21,7 @@
+ 
+ 
+ void
+-__pthread_exit (value)
+-     void *value;
++__pthread_exit (void *value)
+ {
+   THREAD_SETMEM (THREAD_SELF, result, value);
+ 
+diff --git a/nptl/pthread_join.c b/nptl/pthread_join.c
+index bf1a01dbc93235de..431cd3a40b4c2c7e 100644
+--- a/nptl/pthread_join.c
++++ b/nptl/pthread_join.c
+@@ -37,9 +37,7 @@ cleanup (void *arg)
+ 
+ 
+ int
+-pthread_join (threadid, thread_return)
+-     pthread_t threadid;
+-     void **thread_return;
++pthread_join (pthread_t threadid, void **thread_return)
+ {
+   struct pthread *pd = (struct pthread *) threadid;
+ 
+diff --git a/nptl/pthread_timedjoin.c b/nptl/pthread_timedjoin.c
+index 754f5d2538eb37b0..2dae7338afb1c88d 100644
+--- a/nptl/pthread_timedjoin.c
++++ b/nptl/pthread_timedjoin.c
+@@ -30,10 +30,8 @@ cleanup (void *arg)
+ 
+ 
+ int
+-pthread_timedjoin_np (threadid, thread_return, abstime)
+-     pthread_t threadid;
+-     void **thread_return;
+-     const struct timespec *abstime;
++pthread_timedjoin_np (pthread_t threadid, void **thread_return,
++		      const struct timespec *abstime)
+ {
+   struct pthread *self;
+   struct pthread *pd = (struct pthread *) threadid;
+diff --git a/nptl/sysdeps/unix/sysv/linux/pthread_kill.c b/nptl/sysdeps/unix/sysv/linux/pthread_kill.c
+index 6804bf283f6635d8..20a9635b635bde9b 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pthread_kill.c
++++ b/nptl/sysdeps/unix/sysv/linux/pthread_kill.c
+@@ -25,9 +25,7 @@
+ 
+ 
+ int
+-__pthread_kill (threadid, signo)
+-     pthread_t threadid;
+-     int signo;
++__pthread_kill (pthread_t threadid, int signo)
+ {
+   struct pthread *pd = (struct pthread *) threadid;
+ 
+diff --git a/sysdeps/posix/waitid.c b/sysdeps/posix/waitid.c
+index 69e71aca3189e37b..06542f775e1e2bee 100644
+--- a/sysdeps/posix/waitid.c
++++ b/sysdeps/posix/waitid.c
+@@ -149,11 +149,7 @@ OUR_WAITID (idtype_t idtype, id_t id, siginfo_t *infop, int options)
+ 
+ 
+ int
+-__waitid (idtype, id, infop, options)
+-     idtype_t idtype;
+-     id_t id;
+-     siginfo_t *infop;
+-     int options;
++__waitid (idtype_t idtype, id_t id, siginfo_t *infop, int options)
+ {
+   if (SINGLE_THREAD_P)
+     return do_waitid (idtype, id, infop, options);
+diff --git a/sysdeps/unix/sysv/linux/arm/pread.c b/sysdeps/unix/sysv/linux/arm/pread.c
+index ed7be7394307892c..545cb5e2637cbe28 100644
+--- a/sysdeps/unix/sysv/linux/arm/pread.c
++++ b/sysdeps/unix/sysv/linux/arm/pread.c
+@@ -25,11 +25,7 @@
+ #include <sys/syscall.h>
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/arm/pread64.c b/sysdeps/unix/sysv/linux/arm/pread64.c
+index a3e8dfccb7446d76..41424d218d4a0cdc 100644
+--- a/sysdeps/unix/sysv/linux/arm/pread64.c
++++ b/sysdeps/unix/sysv/linux/arm/pread64.c
+@@ -25,11 +25,7 @@
+ #include <sys/syscall.h>
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/arm/pwrite.c b/sysdeps/unix/sysv/linux/arm/pwrite.c
+index a102f307926c2873..1ce8beaf9ebf2924 100644
+--- a/sysdeps/unix/sysv/linux/arm/pwrite.c
++++ b/sysdeps/unix/sysv/linux/arm/pwrite.c
+@@ -25,11 +25,7 @@
+ #include <sys/syscall.h>
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/arm/pwrite64.c b/sysdeps/unix/sysv/linux/arm/pwrite64.c
+index 19b15f6bd7cb2e0d..c5dbc71102b5a660 100644
+--- a/sysdeps/unix/sysv/linux/arm/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/arm/pwrite64.c
+@@ -25,11 +25,7 @@
+ #include <sys/syscall.h>
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c
+index 5145755e807ad59b..a5d7979302c0a765 100644
+--- a/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c
++++ b/sysdeps/unix/sysv/linux/generic/wordsize-32/pread.c
+@@ -37,11 +37,7 @@ do_pread (int fd, void *buf, size_t count, off_t offset)
+ }
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pread (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
+index fd3aa1f2804337fd..eb04712a86dcb4ed 100644
+--- a/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
++++ b/sysdeps/unix/sysv/linux/generic/wordsize-32/pread64.c
+@@ -37,11 +37,7 @@ do_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ 
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pread64 (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
+index 0f226ff79abe2477..6b21bdcd81fe239d 100644
+--- a/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
++++ b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite.c
+@@ -38,11 +38,7 @@ do_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ 
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pwrite (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
+index 1afc13d24579a9f8..26ce2d5da471c019 100644
+--- a/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/generic/wordsize-32/pwrite64.c
+@@ -37,11 +37,7 @@ do_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ 
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pwrite64 (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/mips/pread.c b/sysdeps/unix/sysv/linux/mips/pread.c
+index f24e500c10efae99..fd739d1d176c13f2 100644
+--- a/sysdeps/unix/sysv/linux/mips/pread.c
++++ b/sysdeps/unix/sysv/linux/mips/pread.c
+@@ -38,11 +38,7 @@
+ 
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset):
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/mips/pread64.c b/sysdeps/unix/sysv/linux/mips/pread64.c
+index d5172a039d7fd269..77340c5ad9469ce9 100644
+--- a/sysdeps/unix/sysv/linux/mips/pread64.c
++++ b/sysdeps/unix/sysv/linux/mips/pread64.c
+@@ -37,11 +37,7 @@
+ 
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/mips/pwrite.c b/sysdeps/unix/sysv/linux/mips/pwrite.c
+index caa69cbb4f7e3e77..fe278a31f4f26132 100644
+--- a/sysdeps/unix/sysv/linux/mips/pwrite.c
++++ b/sysdeps/unix/sysv/linux/mips/pwrite.c
+@@ -38,11 +38,7 @@
+ 
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/mips/pwrite64.c b/sysdeps/unix/sysv/linux/mips/pwrite64.c
+index d8ae27a9abf5c606..4bc03e76d1869e66 100644
+--- a/sysdeps/unix/sysv/linux/mips/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/mips/pwrite64.c
+@@ -37,11 +37,7 @@
+ 
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/msgrcv.c b/sysdeps/unix/sysv/linux/msgrcv.c
+index a3085abda24d4512..f5575ebebee3eed8 100644
+--- a/sysdeps/unix/sysv/linux/msgrcv.c
++++ b/sysdeps/unix/sysv/linux/msgrcv.c
+@@ -33,12 +33,8 @@ struct ipc_kludge
+ 
+ 
+ ssize_t
+-__libc_msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)
+-     int msqid;
+-     void *msgp;
+-     size_t msgsz;
+-     long int msgtyp;
+-     int msgflg;
++__libc_msgrcv (int msqid, void *msgp, size_t msgsz, long int msgtyp,
++	       int msgflg)
+ {
+   /* The problem here is that Linux' calling convention only allows up to
+      fives parameters to a system call.  */
+diff --git a/sysdeps/unix/sysv/linux/msgsnd.c b/sysdeps/unix/sysv/linux/msgsnd.c
+index 2883cad8aa370c6c..e9657785942aec4d 100644
+--- a/sysdeps/unix/sysv/linux/msgsnd.c
++++ b/sysdeps/unix/sysv/linux/msgsnd.c
+@@ -24,11 +24,7 @@
+ #include <sys/syscall.h>
+ 
+ int
+-__libc_msgsnd (msqid, msgp, msgsz, msgflg)
+-     int msqid;
+-     const void *msgp;
+-     size_t msgsz;
+-     int msgflg;
++__libc_msgsnd (int msqid, const void *msgp, size_t msgsz, int msgflg)
+ {
+   if (SINGLE_THREAD_P)
+     return INLINE_SYSCALL (ipc, 5, IPCOP_msgsnd, msqid, msgsz,
+diff --git a/sysdeps/unix/sysv/linux/openat.c b/sysdeps/unix/sysv/linux/openat.c
+index 233266d4e748152d..14f81c5048bbe62a 100644
+--- a/sysdeps/unix/sysv/linux/openat.c
++++ b/sysdeps/unix/sysv/linux/openat.c
+@@ -71,11 +71,7 @@ int __have_atfcts;
+ 
+ 
+ int
+-OPENAT_NOT_CANCEL (fd, file, oflag, mode)
+-     int fd;
+-     const char *file;
+-     int oflag;
+-     mode_t mode;
++OPENAT_NOT_CANCEL (int fd, const char *file, int oflag, mode_t mode)
+ {
+ 
+   /* We have to add the O_LARGEFILE flag for openat64.  */
+@@ -151,10 +147,7 @@ OPENAT_NOT_CANCEL (fd, file, oflag, mode)
+    the directory associated with FD.  If OFLAG includes O_CREAT or
+    O_TMPFILE, a fourth argument is the file protection.  */
+ int
+-__OPENAT (fd, file, oflag)
+-     int fd;
+-     const char *file;
+-     int oflag;
++__OPENAT (int fd, const char *file, int oflag, ...)
+ {
+   mode_t mode = 0;
+   if (__OPEN_NEEDS_MODE (oflag))
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c
+index 9a9d0d456e5db1c0..bf31ed83a06abb5e 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread.c
+@@ -26,11 +26,7 @@
+ #include <kernel-features.h>
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
+index 1435b293b143159b..b7800fcc459f1db4 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pread64.c
+@@ -26,11 +26,7 @@
+ 
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c
+index d3a551c5a97550ca..ef0ea532e12bf868 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite.c
+@@ -27,11 +27,7 @@
+ 
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
+index d89a1759d1903eba..412357d704696487 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/pwrite64.c
+@@ -26,11 +26,7 @@
+ 
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/pread.c b/sysdeps/unix/sysv/linux/pread.c
+index 7322e42d6ed990c1..2d6a8a64c69fc967 100644
+--- a/sysdeps/unix/sysv/linux/pread.c
++++ b/sysdeps/unix/sysv/linux/pread.c
+@@ -51,11 +51,7 @@ do_pread (int fd, void *buf, size_t count, off_t offset)
+ 
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pread (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/pread64.c b/sysdeps/unix/sysv/linux/pread64.c
+index 03e5f1402bf8b888..8006a1765113234c 100644
+--- a/sysdeps/unix/sysv/linux/pread64.c
++++ b/sysdeps/unix/sysv/linux/pread64.c
+@@ -47,11 +47,7 @@ do_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ 
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pread64 (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/preadv.c b/sysdeps/unix/sysv/linux/preadv.c
+index a189680773a0765c..fedc9b6518629410 100644
+--- a/sysdeps/unix/sysv/linux/preadv.c
++++ b/sysdeps/unix/sysv/linux/preadv.c
+@@ -47,11 +47,7 @@ static ssize_t PREADV_REPLACEMENT (int, const struct iovec *,
+ 
+ 
+ ssize_t
+-PREADV (fd, vector, count, offset)
+-     int fd;
+-     const struct iovec *vector;
+-     int count;
+-     OFF_T offset;
++PREADV (int fd, const struct iovec *vector, int count, OFF_T offset)
+ {
+ #ifdef __NR_preadv
+   ssize_t result;
+diff --git a/sysdeps/unix/sysv/linux/pwrite.c b/sysdeps/unix/sysv/linux/pwrite.c
+index e773d65f2e5602a8..ea9cde3151b80a52 100644
+--- a/sysdeps/unix/sysv/linux/pwrite.c
++++ b/sysdeps/unix/sysv/linux/pwrite.c
+@@ -51,11 +51,7 @@ do_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ 
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pwrite (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/pwrite64.c b/sysdeps/unix/sysv/linux/pwrite64.c
+index 558a08e735616649..ab08948ad6977844 100644
+--- a/sysdeps/unix/sysv/linux/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/pwrite64.c
+@@ -47,11 +47,7 @@ do_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ 
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   if (SINGLE_THREAD_P)
+     return do_pwrite64 (fd, buf, count, offset);
+diff --git a/sysdeps/unix/sysv/linux/pwritev.c b/sysdeps/unix/sysv/linux/pwritev.c
+index cfb4491ac7d65f22..22af4518b9ee9e18 100644
+--- a/sysdeps/unix/sysv/linux/pwritev.c
++++ b/sysdeps/unix/sysv/linux/pwritev.c
+@@ -47,11 +47,7 @@ static ssize_t PWRITEV_REPLACEMENT (int, const struct iovec *,
+ 
+ 
+ ssize_t
+-PWRITEV (fd, vector, count, offset)
+-     int fd;
+-     const struct iovec *vector;
+-     int count;
+-     OFF_T offset;
++PWRITEV (int fd, const struct iovec *vector, int count, OFF_T offset)
+ {
+ #ifdef __NR_pwritev
+   ssize_t result;
+diff --git a/sysdeps/unix/sysv/linux/sh/pread.c b/sysdeps/unix/sysv/linux/sh/pread.c
+index 160c906a4d0197fd..e67c1b6d27b089d8 100644
+--- a/sysdeps/unix/sysv/linux/sh/pread.c
++++ b/sysdeps/unix/sysv/linux/sh/pread.c
+@@ -35,11 +35,7 @@
+ 
+ 
+ ssize_t
+-__libc_pread (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pread (int fd, void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sh/pread64.c b/sysdeps/unix/sysv/linux/sh/pread64.c
+index bb4f13d06b72fdf1..32a08c6f992eb054 100644
+--- a/sysdeps/unix/sysv/linux/sh/pread64.c
++++ b/sysdeps/unix/sysv/linux/sh/pread64.c
+@@ -34,11 +34,7 @@
+ 
+ 
+ ssize_t
+-__libc_pread64 (fd, buf, count, offset)
+-     int fd;
+-     void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pread64 (int fd, void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sh/pwrite.c b/sysdeps/unix/sysv/linux/sh/pwrite.c
+index b17bd87a5d4f74cc..1db96ffc67df623f 100644
+--- a/sysdeps/unix/sysv/linux/sh/pwrite.c
++++ b/sysdeps/unix/sysv/linux/sh/pwrite.c
+@@ -35,11 +35,7 @@
+ 
+ 
+ ssize_t
+-__libc_pwrite (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off_t offset;
++__libc_pwrite (int fd, const void *buf, size_t count, off_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sh/pwrite64.c b/sysdeps/unix/sysv/linux/sh/pwrite64.c
+index d9f41ec34cf01fb4..e6e7de32046a7954 100644
+--- a/sysdeps/unix/sysv/linux/sh/pwrite64.c
++++ b/sysdeps/unix/sysv/linux/sh/pwrite64.c
+@@ -34,11 +34,7 @@
+ 
+ 
+ ssize_t
+-__libc_pwrite64 (fd, buf, count, offset)
+-     int fd;
+-     const void *buf;
+-     size_t count;
+-     off64_t offset;
++__libc_pwrite64 (int fd, const void *buf, size_t count, off64_t offset)
+ {
+   ssize_t result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sigsuspend.c b/sysdeps/unix/sysv/linux/sigsuspend.c
+index c673cf2b65cfe7ea..1cd1de88d303fd66 100644
+--- a/sysdeps/unix/sysv/linux/sigsuspend.c
++++ b/sysdeps/unix/sysv/linux/sigsuspend.c
+@@ -34,8 +34,7 @@ do_sigsuspend (const sigset_t *set)
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-__sigsuspend (set)
+-     const sigset_t *set;
++__sigsuspend (const sigset_t *set)
+ {
+   if (SINGLE_THREAD_P)
+     return do_sigsuspend (set);
+diff --git a/sysdeps/unix/sysv/linux/sigtimedwait.c b/sysdeps/unix/sysv/linux/sigtimedwait.c
+index 1cf24d0e47330b8a..30ad3023b24e7c47 100644
+--- a/sysdeps/unix/sysv/linux/sigtimedwait.c
++++ b/sysdeps/unix/sysv/linux/sigtimedwait.c
+@@ -66,10 +66,8 @@ do_sigtimedwait (const sigset_t *set, siginfo_t *info,
+ 
+ /* Return any pending signal or wait for one for the given time.  */
+ int
+-__sigtimedwait (set, info, timeout)
+-     const sigset_t *set;
+-     siginfo_t *info;
+-     const struct timespec *timeout;
++__sigtimedwait (const sigset_t *set, siginfo_t *info,
++		const struct timespec *timeout)
+ {
+   if (SINGLE_THREAD_P)
+     return do_sigtimedwait (set, info, timeout);
+diff --git a/sysdeps/unix/sysv/linux/sigwait.c b/sysdeps/unix/sysv/linux/sigwait.c
+index 5e7d8ca8c8a62f19..2e4b34f474720742 100644
+--- a/sysdeps/unix/sysv/linux/sigwait.c
++++ b/sysdeps/unix/sysv/linux/sigwait.c
+@@ -85,9 +85,7 @@ do_sigwait (const sigset_t *set, int *sig)
+ }
+ 
+ int
+-__sigwait (set, sig)
+-     const sigset_t *set;
+-     int *sig;
++__sigwait (const sigset_t *set, int *sig)
+ {
+   if (SINGLE_THREAD_P)
+     return do_sigwait (set, sig);
+diff --git a/sysdeps/unix/sysv/linux/sigwaitinfo.c b/sysdeps/unix/sysv/linux/sigwaitinfo.c
+index 0e38dff1be6cc21a..ba3408aab15ade61 100644
+--- a/sysdeps/unix/sysv/linux/sigwaitinfo.c
++++ b/sysdeps/unix/sysv/linux/sigwaitinfo.c
+@@ -67,9 +67,7 @@ do_sigwaitinfo (const sigset_t *set, siginfo_t *info)
+ 
+ /* Return any pending signal or wait for one for the given time.  */
+ int
+-__sigwaitinfo (set, info)
+-     const sigset_t *set;
+-     siginfo_t *info;
++__sigwaitinfo (const sigset_t *set, siginfo_t *info)
+ {
+   if (SINGLE_THREAD_P)
+     return do_sigwaitinfo (set, info);
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c b/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c
+index 3684a01142f68323..d62ce29e05122763 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/msgrcv.c
+@@ -23,12 +23,8 @@
+ #include <sys/syscall.h>
+ 
+ ssize_t
+-__libc_msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)
+-     int msqid;
+-     void *msgp;
+-     size_t msgsz;
+-     long int msgtyp;
+-     int msgflg;
++__libc_msgrcv (int msqid, void *msgp, size_t msgsz, long int msgtyp,
++	       int msgflg)
+ {
+   if (SINGLE_THREAD_P)
+     return INLINE_SYSCALL (ipc, 6, IPCOP_msgrcv, msqid, msgsz, msgflg,

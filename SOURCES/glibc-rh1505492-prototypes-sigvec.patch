@@ -1,0 +1,63 @@
+Change function declarations and definitions related to sigvec.
+Addressed upstream with the removal of sigvec in this commit:
+
+commit 0781a7772ae1385fe8d7a734fdb35df81b1e6590
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Fri Nov 14 10:52:16 2014 -0800
+
+    Remove sigvec.
+
+diff --git a/include/signal.h b/include/signal.h
+index a019395882176073..d9f279c9bf0aca3d 100644
+--- a/include/signal.h
++++ b/include/signal.h
+@@ -40,6 +40,7 @@ extern int __sigtimedwait (const sigset_t *__set, siginfo_t *__info,
+ libc_hidden_proto (__sigtimedwait)
+ extern int __sigqueue (__pid_t __pid, int __sig,
+ 		       const union sigval __val);
++struct sigvec;
+ extern int __sigvec (int __sig, const struct sigvec *__vec,
+ 		     struct sigvec *__ovec);
+ extern int __sigreturn (struct sigcontext *__scp);
+diff --git a/signal/sigvec.c b/signal/sigvec.c
+index e44daf1ab6fd2f39..21e304d944e46c18 100644
+--- a/signal/sigvec.c
++++ b/signal/sigvec.c
+@@ -24,10 +24,7 @@
+    reset to SIG_DFL before `sv_handler' is entered.  If OVEC is non-NULL,
+    it is filled in with the old information for SIG.  */
+ int
+-__sigvec (sig, vec, ovec)
+-     int sig;
+-     const struct sigvec *vec;
+-     struct sigvec *ovec;
++__sigvec (int sig, const struct sigvec *vec, struct sigvec *ovec)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/sysdeps/posix/sigvec.c b/sysdeps/posix/sigvec.c
+index 89e3d44d88ce3ee5..6a3ccc8eaf8ae0a5 100644
+--- a/sysdeps/posix/sigvec.c
++++ b/sysdeps/posix/sigvec.c
+@@ -43,10 +43,7 @@ static struct sigvec_wrapper_data sigvec_wrapper_data[NSIG];
+    reset to SIG_DFL before `sv_handler' is entered.  If OVEC is non-NULL,
+    it is filled in with the old information for SIG.  */
+ int
+-__sigvec (sig, vec, ovec)
+-     int sig;
+-     const struct sigvec *vec;
+-     struct sigvec *ovec;
++__sigvec (int sig, const struct sigvec *vec, struct sigvec *ovec)
+ {
+   struct sigaction old;
+ 
+@@ -159,8 +156,7 @@ weak_alias (__sigvec, sigvec)
+ 
+ #ifndef SA_RESETHAND
+ static void
+-sigvec_wrapper_handler (sig)
+-     int sig;
++sigvec_wrapper_handler (int sig)
+ {
+   struct sigvec_wrapper_data *data;
+   struct sigaction act;

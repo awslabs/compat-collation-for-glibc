@@ -1,0 +1,38 @@
+commit 3f17b03b0947fbe2482e2776f654056d1d5ba093
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Tue Jun 24 06:41:46 2014 -0500
+
+    PowerPC: Guard CALL_ELF check for ppc64 only in link.h
+    
+    This patch fixes powerpc32 undef compiler warnings for _CALL_ELF,
+    since it is defined only for powerpc64.
+
+diff --git a/sysdeps/powerpc/bits/link.h b/sysdeps/powerpc/bits/link.h
+index 6c7867e04353a39e..201d3427dac8aece 100644
+--- a/sysdeps/powerpc/bits/link.h
++++ b/sysdeps/powerpc/bits/link.h
+@@ -63,7 +63,8 @@ extern unsigned int la_ppc32_gnu_pltexit (Elf32_Sym *__sym,
+ 
+ __END_DECLS
+ 
+-#elif _CALL_ELF != 2
++#elif __ELF_NATIVE_CLASS == 64
++# if _CALL_ELF != 2
+ 
+ /* Registers for entry into PLT on PPC64.  */
+ typedef struct La_ppc64_regs
+@@ -107,7 +108,7 @@ extern unsigned int la_ppc64_gnu_pltexit (Elf64_Sym *__sym,
+ 
+ __END_DECLS
+ 
+-#else
++# else
+ 
+ /* Registers for entry into PLT on PPC64 in the ELFv2 ABI.  */
+ typedef struct La_ppc64v2_regs
+@@ -151,4 +152,5 @@ extern unsigned int la_ppc64v2_gnu_pltexit (Elf64_Sym *__sym,
+ 
+ __END_DECLS
+ 
++# endif
+ #endif

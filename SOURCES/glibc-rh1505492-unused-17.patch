@@ -1,0 +1,71 @@
+commit b4f518ecfad09fc4279ea26a565332835e403dab
+Author: Carlos O'Donell <carlos@redhat.com>
+Date:   Tue Mar 15 23:16:47 2016 -0400
+
+    Fix building glibc master with NDEBUG and --with-cpu.
+    
+    When building on i686, x86_64, and arm, and with NDEBUG, or --with-cpu
+    there are various variables and functions which are unused based on
+    these settings.
+    
+    This patch marks all such variables with __attribute__((unused)) to
+    avoid the compiler warnings when building with the aformentioned
+    options.
+
+Conflicts:
+	dlfcn/bug-dl-leaf-lib.c
+	  (Missing backport of fix for swbz#15897; file removed.)
+	sysdeps/arm/dl-machine.h
+	  (Missing backport of fix for swbz#17078.)
+
+diff --git a/catgets/tst-catgets.c b/catgets/tst-catgets.c
+index 140de722c893297d..fdc9f2758ffd60a1 100644
+--- a/catgets/tst-catgets.c
++++ b/catgets/tst-catgets.c
+@@ -22,7 +22,7 @@ do_bz17905 (void)
+ {
+   char *buf;
+   struct rlimit rl;
+-  nl_catd result;
++  nl_catd result __attribute__ ((unused));
+ 
+   const int sz = 1024 * 1024;
+ 
+diff --git a/math/atest-exp.c b/math/atest-exp.c
+index d384c4920acb044f..8f4711aaa90d09e5 100644
+--- a/math/atest-exp.c
++++ b/math/atest-exp.c
+@@ -61,7 +61,7 @@ exp_mpn (mp1 ex, mp1 x)
+    unsigned n;
+    mp1 xp;
+    mp2 tmp;
+-   mp_limb_t chk;
++   mp_limb_t chk __attribute__ ((unused));
+    mp1 tol;
+ 
+    memset (xp, 0, sizeof (mp1));
+diff --git a/math/atest-exp2.c b/math/atest-exp2.c
+index 1a2be9ba021bb24a..6f5dd7760c78b7e2 100644
+--- a/math/atest-exp2.c
++++ b/math/atest-exp2.c
+@@ -102,7 +102,7 @@ exp_mpn (mp1 ex, mp1 x)
+    unsigned int n;
+    mp1 xp;
+    mp2 tmp;
+-   mp_limb_t chk;
++   mp_limb_t chk __attribute__ ((unused));
+    mp1 tol;
+ 
+    memset (xp, 0, sizeof (mp1));
+diff --git a/sysdeps/i386/i686/dl-hash.h b/sysdeps/i386/i686/dl-hash.h
+index 14fbbc251148c176..65acc88a6e6f093c 100644
+--- a/sysdeps/i386/i686/dl-hash.h
++++ b/sysdeps/i386/i686/dl-hash.h
+@@ -26,6 +26,7 @@
+    would be much slower than the generic C implementation.  So don't
+    use it.  */
+ static unsigned int
++__attribute__ ((unused))
+ _dl_elf_hash (const char *name)
+ {
+   unsigned int result;

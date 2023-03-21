@@ -1,0 +1,16 @@
+Adjust resolv/tst-inet_aton_exact to use tests instead of tests-internal.
+Downstream, tests-internal is currently ignored.
+
+diff --git a/resolv/Makefile b/resolv/Makefile
+index 0130a09db2d69451..033c3c651f0deb1b 100644
+--- a/resolv/Makefile
++++ b/resolv/Makefile
+@@ -34,7 +34,7 @@ routines := herror inet_addr inet_ntop inet_pton nsap_addr res_init \
+ tests = tst-aton tst-leaks tst-inet_ntop
+ xtests = tst-leaks2
+ 
+-tests-internal += tst-inet_aton_exact
++tests += tst-inet_aton_exact
+ 
+ 
+ generate := mtrace-tst-leaks.out tst-leaks.mtrace tst-leaks2.mtrace

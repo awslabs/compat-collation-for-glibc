@@ -1,0 +1,1449 @@
+Recreation of this upstream commit:
+
+commit 68b7efaadb1b6045a56277ea62d324c20ac0b633
+Author: Richard Henderson <rth@twiddle.net>
+Date:   Wed Feb 12 06:54:57 2014 -0800
+
+    Relocate alpha from ports to libc
+
+The git commands used were:
+
+git mv ports/sysdeps/alpha sysdeps/
+git mv ports/sysdeps/unix/alpha sysdeps/unix/
+git mv ports/sysdeps/unix/sysv/linux/alpha sysdeps/unix/sysv/linux/
+
+Note that the upstream whitespace changes are not part of this
+commit.
+
+diff --git a/ports/sysdeps/alpha/Implies b/sysdeps/alpha/Implies
+similarity index 100%
+rename from ports/sysdeps/alpha/Implies
+rename to sysdeps/alpha/Implies
+diff --git a/ports/sysdeps/alpha/Makefile b/sysdeps/alpha/Makefile
+similarity index 100%
+rename from ports/sysdeps/alpha/Makefile
+rename to sysdeps/alpha/Makefile
+diff --git a/ports/sysdeps/alpha/Subdirs b/sysdeps/alpha/Subdirs
+similarity index 100%
+rename from ports/sysdeps/alpha/Subdirs
+rename to sysdeps/alpha/Subdirs
+diff --git a/ports/sysdeps/alpha/Versions b/sysdeps/alpha/Versions
+similarity index 100%
+rename from ports/sysdeps/alpha/Versions
+rename to sysdeps/alpha/Versions
+diff --git a/ports/sysdeps/alpha/__longjmp.S b/sysdeps/alpha/__longjmp.S
+similarity index 100%
+rename from ports/sysdeps/alpha/__longjmp.S
+rename to sysdeps/alpha/__longjmp.S
+diff --git a/ports/sysdeps/alpha/_mcount.S b/sysdeps/alpha/_mcount.S
+similarity index 100%
+rename from ports/sysdeps/alpha/_mcount.S
+rename to sysdeps/alpha/_mcount.S
+diff --git a/ports/sysdeps/alpha/add_n.S b/sysdeps/alpha/add_n.S
+similarity index 100%
+rename from ports/sysdeps/alpha/add_n.S
+rename to sysdeps/alpha/add_n.S
+diff --git a/ports/sysdeps/alpha/addmul_1.S b/sysdeps/alpha/addmul_1.S
+similarity index 100%
+rename from ports/sysdeps/alpha/addmul_1.S
+rename to sysdeps/alpha/addmul_1.S
+diff --git a/ports/sysdeps/alpha/alphaev5/add_n.S b/sysdeps/alpha/alphaev5/add_n.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev5/add_n.S
+rename to sysdeps/alpha/alphaev5/add_n.S
+diff --git a/ports/sysdeps/alpha/alphaev5/lshift.S b/sysdeps/alpha/alphaev5/lshift.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev5/lshift.S
+rename to sysdeps/alpha/alphaev5/lshift.S
+diff --git a/ports/sysdeps/alpha/alphaev5/rshift.S b/sysdeps/alpha/alphaev5/rshift.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev5/rshift.S
+rename to sysdeps/alpha/alphaev5/rshift.S
+diff --git a/ports/sysdeps/alpha/alphaev5/sub_n.S b/sysdeps/alpha/alphaev5/sub_n.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev5/sub_n.S
+rename to sysdeps/alpha/alphaev5/sub_n.S
+diff --git a/ports/sysdeps/alpha/alphaev6/Implies b/sysdeps/alpha/alphaev6/Implies
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/Implies
+rename to sysdeps/alpha/alphaev6/Implies
+diff --git a/ports/sysdeps/alpha/alphaev6/addmul_1.S b/sysdeps/alpha/alphaev6/addmul_1.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/addmul_1.S
+rename to sysdeps/alpha/alphaev6/addmul_1.S
+diff --git a/ports/sysdeps/alpha/alphaev6/fpu/e_sqrt.S b/sysdeps/alpha/alphaev6/fpu/e_sqrt.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/fpu/e_sqrt.S
+rename to sysdeps/alpha/alphaev6/fpu/e_sqrt.S
+diff --git a/ports/sysdeps/alpha/alphaev6/fpu/e_sqrtf.S b/sysdeps/alpha/alphaev6/fpu/e_sqrtf.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/fpu/e_sqrtf.S
+rename to sysdeps/alpha/alphaev6/fpu/e_sqrtf.S
+diff --git a/ports/sysdeps/alpha/alphaev6/memcpy.S b/sysdeps/alpha/alphaev6/memcpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/memcpy.S
+rename to sysdeps/alpha/alphaev6/memcpy.S
+diff --git a/ports/sysdeps/alpha/alphaev6/memset.S b/sysdeps/alpha/alphaev6/memset.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/memset.S
+rename to sysdeps/alpha/alphaev6/memset.S
+diff --git a/ports/sysdeps/alpha/alphaev6/stxcpy.S b/sysdeps/alpha/alphaev6/stxcpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/stxcpy.S
+rename to sysdeps/alpha/alphaev6/stxcpy.S
+diff --git a/ports/sysdeps/alpha/alphaev6/stxncpy.S b/sysdeps/alpha/alphaev6/stxncpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev6/stxncpy.S
+rename to sysdeps/alpha/alphaev6/stxncpy.S
+diff --git a/ports/sysdeps/alpha/alphaev67/Implies b/sysdeps/alpha/alphaev67/Implies
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/Implies
+rename to sysdeps/alpha/alphaev67/Implies
+diff --git a/ports/sysdeps/alpha/alphaev67/ffs.S b/sysdeps/alpha/alphaev67/ffs.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/ffs.S
+rename to sysdeps/alpha/alphaev67/ffs.S
+diff --git a/ports/sysdeps/alpha/alphaev67/ffsll.S b/sysdeps/alpha/alphaev67/ffsll.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/ffsll.S
+rename to sysdeps/alpha/alphaev67/ffsll.S
+diff --git a/ports/sysdeps/alpha/alphaev67/fpu/Implies b/sysdeps/alpha/alphaev67/fpu/Implies
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/fpu/Implies
+rename to sysdeps/alpha/alphaev67/fpu/Implies
+diff --git a/ports/sysdeps/alpha/alphaev67/rawmemchr.S b/sysdeps/alpha/alphaev67/rawmemchr.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/rawmemchr.S
+rename to sysdeps/alpha/alphaev67/rawmemchr.S
+diff --git a/ports/sysdeps/alpha/alphaev67/stpcpy.S b/sysdeps/alpha/alphaev67/stpcpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/stpcpy.S
+rename to sysdeps/alpha/alphaev67/stpcpy.S
+diff --git a/ports/sysdeps/alpha/alphaev67/stpncpy.S b/sysdeps/alpha/alphaev67/stpncpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/stpncpy.S
+rename to sysdeps/alpha/alphaev67/stpncpy.S
+diff --git a/ports/sysdeps/alpha/alphaev67/strcat.S b/sysdeps/alpha/alphaev67/strcat.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/strcat.S
+rename to sysdeps/alpha/alphaev67/strcat.S
+diff --git a/ports/sysdeps/alpha/alphaev67/strchr.S b/sysdeps/alpha/alphaev67/strchr.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/strchr.S
+rename to sysdeps/alpha/alphaev67/strchr.S
+diff --git a/ports/sysdeps/alpha/alphaev67/strlen.S b/sysdeps/alpha/alphaev67/strlen.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/strlen.S
+rename to sysdeps/alpha/alphaev67/strlen.S
+diff --git a/ports/sysdeps/alpha/alphaev67/strncat.S b/sysdeps/alpha/alphaev67/strncat.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/strncat.S
+rename to sysdeps/alpha/alphaev67/strncat.S
+diff --git a/ports/sysdeps/alpha/alphaev67/strrchr.S b/sysdeps/alpha/alphaev67/strrchr.S
+similarity index 100%
+rename from ports/sysdeps/alpha/alphaev67/strrchr.S
+rename to sysdeps/alpha/alphaev67/strrchr.S
+diff --git a/ports/sysdeps/alpha/backtrace.c b/sysdeps/alpha/backtrace.c
+similarity index 100%
+rename from ports/sysdeps/alpha/backtrace.c
+rename to sysdeps/alpha/backtrace.c
+diff --git a/ports/sysdeps/alpha/bb_init_func.S b/sysdeps/alpha/bb_init_func.S
+similarity index 100%
+rename from ports/sysdeps/alpha/bb_init_func.S
+rename to sysdeps/alpha/bb_init_func.S
+diff --git a/ports/sysdeps/alpha/bits/atomic.h b/sysdeps/alpha/bits/atomic.h
+similarity index 100%
+rename from ports/sysdeps/alpha/bits/atomic.h
+rename to sysdeps/alpha/bits/atomic.h
+diff --git a/ports/sysdeps/alpha/bits/endian.h b/sysdeps/alpha/bits/endian.h
+similarity index 100%
+rename from ports/sysdeps/alpha/bits/endian.h
+rename to sysdeps/alpha/bits/endian.h
+diff --git a/ports/sysdeps/alpha/bits/link.h b/sysdeps/alpha/bits/link.h
+similarity index 100%
+rename from ports/sysdeps/alpha/bits/link.h
+rename to sysdeps/alpha/bits/link.h
+diff --git a/ports/sysdeps/alpha/bits/mathdef.h b/sysdeps/alpha/bits/mathdef.h
+similarity index 100%
+rename from ports/sysdeps/alpha/bits/mathdef.h
+rename to sysdeps/alpha/bits/mathdef.h
+diff --git a/ports/sysdeps/alpha/bits/setjmp.h b/sysdeps/alpha/bits/setjmp.h
+similarity index 100%
+rename from ports/sysdeps/alpha/bits/setjmp.h
+rename to sysdeps/alpha/bits/setjmp.h
+diff --git a/ports/sysdeps/alpha/bsd-_setjmp.S b/sysdeps/alpha/bsd-_setjmp.S
+similarity index 100%
+rename from ports/sysdeps/alpha/bsd-_setjmp.S
+rename to sysdeps/alpha/bsd-_setjmp.S
+diff --git a/ports/sysdeps/alpha/bsd-setjmp.S b/sysdeps/alpha/bsd-setjmp.S
+similarity index 100%
+rename from ports/sysdeps/alpha/bsd-setjmp.S
+rename to sysdeps/alpha/bsd-setjmp.S
+diff --git a/ports/sysdeps/alpha/bzero.S b/sysdeps/alpha/bzero.S
+similarity index 100%
+rename from ports/sysdeps/alpha/bzero.S
+rename to sysdeps/alpha/bzero.S
+diff --git a/ports/sysdeps/alpha/configure b/sysdeps/alpha/configure
+similarity index 100%
+rename from ports/sysdeps/alpha/configure
+rename to sysdeps/alpha/configure
+diff --git a/ports/sysdeps/alpha/configure.in b/sysdeps/alpha/configure.in
+similarity index 100%
+rename from ports/sysdeps/alpha/configure.in
+rename to sysdeps/alpha/configure.in
+diff --git a/ports/sysdeps/alpha/crti.S b/sysdeps/alpha/crti.S
+similarity index 100%
+rename from ports/sysdeps/alpha/crti.S
+rename to sysdeps/alpha/crti.S
+diff --git a/ports/sysdeps/alpha/crtn.S b/sysdeps/alpha/crtn.S
+similarity index 100%
+rename from ports/sysdeps/alpha/crtn.S
+rename to sysdeps/alpha/crtn.S
+diff --git a/ports/sysdeps/alpha/div.S b/sysdeps/alpha/div.S
+similarity index 100%
+rename from ports/sysdeps/alpha/div.S
+rename to sysdeps/alpha/div.S
+diff --git a/ports/sysdeps/alpha/div_libc.h b/sysdeps/alpha/div_libc.h
+similarity index 100%
+rename from ports/sysdeps/alpha/div_libc.h
+rename to sysdeps/alpha/div_libc.h
+diff --git a/ports/sysdeps/alpha/divl.S b/sysdeps/alpha/divl.S
+similarity index 100%
+rename from ports/sysdeps/alpha/divl.S
+rename to sysdeps/alpha/divl.S
+diff --git a/ports/sysdeps/alpha/divlu.S b/sysdeps/alpha/divlu.S
+similarity index 100%
+rename from ports/sysdeps/alpha/divlu.S
+rename to sysdeps/alpha/divlu.S
+diff --git a/ports/sysdeps/alpha/divq.S b/sysdeps/alpha/divq.S
+similarity index 100%
+rename from ports/sysdeps/alpha/divq.S
+rename to sysdeps/alpha/divq.S
+diff --git a/ports/sysdeps/alpha/divqu.S b/sysdeps/alpha/divqu.S
+similarity index 100%
+rename from ports/sysdeps/alpha/divqu.S
+rename to sysdeps/alpha/divqu.S
+diff --git a/ports/sysdeps/alpha/dl-dtprocnum.h b/sysdeps/alpha/dl-dtprocnum.h
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-dtprocnum.h
+rename to sysdeps/alpha/dl-dtprocnum.h
+diff --git a/ports/sysdeps/alpha/dl-machine.h b/sysdeps/alpha/dl-machine.h
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-machine.h
+rename to sysdeps/alpha/dl-machine.h
+diff --git a/ports/sysdeps/alpha/dl-procinfo.c b/sysdeps/alpha/dl-procinfo.c
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-procinfo.c
+rename to sysdeps/alpha/dl-procinfo.c
+diff --git a/ports/sysdeps/alpha/dl-procinfo.h b/sysdeps/alpha/dl-procinfo.h
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-procinfo.h
+rename to sysdeps/alpha/dl-procinfo.h
+diff --git a/ports/sysdeps/alpha/dl-sysdep.h b/sysdeps/alpha/dl-sysdep.h
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-sysdep.h
+rename to sysdeps/alpha/dl-sysdep.h
+diff --git a/ports/sysdeps/alpha/dl-tls.h b/sysdeps/alpha/dl-tls.h
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-tls.h
+rename to sysdeps/alpha/dl-tls.h
+diff --git a/ports/sysdeps/alpha/dl-trampoline.S b/sysdeps/alpha/dl-trampoline.S
+similarity index 100%
+rename from ports/sysdeps/alpha/dl-trampoline.S
+rename to sysdeps/alpha/dl-trampoline.S
+diff --git a/ports/sysdeps/alpha/ffs.S b/sysdeps/alpha/ffs.S
+similarity index 100%
+rename from ports/sysdeps/alpha/ffs.S
+rename to sysdeps/alpha/ffs.S
+diff --git a/ports/sysdeps/alpha/ffsll.S b/sysdeps/alpha/ffsll.S
+similarity index 100%
+rename from ports/sysdeps/alpha/ffsll.S
+rename to sysdeps/alpha/ffsll.S
+diff --git a/ports/sysdeps/alpha/fpu/Versions b/sysdeps/alpha/fpu/Versions
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/Versions
+rename to sysdeps/alpha/fpu/Versions
+diff --git a/ports/sysdeps/alpha/fpu/bits/fenv.h b/sysdeps/alpha/fpu/bits/fenv.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/bits/fenv.h
+rename to sysdeps/alpha/fpu/bits/fenv.h
+diff --git a/ports/sysdeps/alpha/fpu/bits/mathinline.h b/sysdeps/alpha/fpu/bits/mathinline.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/bits/mathinline.h
+rename to sysdeps/alpha/fpu/bits/mathinline.h
+diff --git a/ports/sysdeps/alpha/fpu/cabsf.c b/sysdeps/alpha/fpu/cabsf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/cabsf.c
+rename to sysdeps/alpha/fpu/cabsf.c
+diff --git a/ports/sysdeps/alpha/fpu/cargf.c b/sysdeps/alpha/fpu/cargf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/cargf.c
+rename to sysdeps/alpha/fpu/cargf.c
+diff --git a/ports/sysdeps/alpha/fpu/cfloat-compat.h b/sysdeps/alpha/fpu/cfloat-compat.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/cfloat-compat.h
+rename to sysdeps/alpha/fpu/cfloat-compat.h
+diff --git a/ports/sysdeps/alpha/fpu/cimagf.c b/sysdeps/alpha/fpu/cimagf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/cimagf.c
+rename to sysdeps/alpha/fpu/cimagf.c
+diff --git a/ports/sysdeps/alpha/fpu/conjf.c b/sysdeps/alpha/fpu/conjf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/conjf.c
+rename to sysdeps/alpha/fpu/conjf.c
+diff --git a/ports/sysdeps/alpha/fpu/crealf.c b/sysdeps/alpha/fpu/crealf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/crealf.c
+rename to sysdeps/alpha/fpu/crealf.c
+diff --git a/ports/sysdeps/alpha/fpu/e_sqrt.c b/sysdeps/alpha/fpu/e_sqrt.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/e_sqrt.c
+rename to sysdeps/alpha/fpu/e_sqrt.c
+diff --git a/ports/sysdeps/alpha/fpu/fclrexcpt.c b/sysdeps/alpha/fpu/fclrexcpt.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fclrexcpt.c
+rename to sysdeps/alpha/fpu/fclrexcpt.c
+diff --git a/ports/sysdeps/alpha/fpu/fedisblxcpt.c b/sysdeps/alpha/fpu/fedisblxcpt.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fedisblxcpt.c
+rename to sysdeps/alpha/fpu/fedisblxcpt.c
+diff --git a/ports/sysdeps/alpha/fpu/feenablxcpt.c b/sysdeps/alpha/fpu/feenablxcpt.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/feenablxcpt.c
+rename to sysdeps/alpha/fpu/feenablxcpt.c
+diff --git a/ports/sysdeps/alpha/fpu/fegetenv.c b/sysdeps/alpha/fpu/fegetenv.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fegetenv.c
+rename to sysdeps/alpha/fpu/fegetenv.c
+diff --git a/ports/sysdeps/alpha/fpu/fegetexcept.c b/sysdeps/alpha/fpu/fegetexcept.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fegetexcept.c
+rename to sysdeps/alpha/fpu/fegetexcept.c
+diff --git a/ports/sysdeps/alpha/fpu/fegetround.c b/sysdeps/alpha/fpu/fegetround.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fegetround.c
+rename to sysdeps/alpha/fpu/fegetround.c
+diff --git a/ports/sysdeps/alpha/fpu/feholdexcpt.c b/sysdeps/alpha/fpu/feholdexcpt.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/feholdexcpt.c
+rename to sysdeps/alpha/fpu/feholdexcpt.c
+diff --git a/ports/sysdeps/alpha/fpu/fenv_libc.h b/sysdeps/alpha/fpu/fenv_libc.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fenv_libc.h
+rename to sysdeps/alpha/fpu/fenv_libc.h
+diff --git a/ports/sysdeps/alpha/fpu/fesetenv.c b/sysdeps/alpha/fpu/fesetenv.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fesetenv.c
+rename to sysdeps/alpha/fpu/fesetenv.c
+diff --git a/ports/sysdeps/alpha/fpu/fesetround.c b/sysdeps/alpha/fpu/fesetround.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fesetround.c
+rename to sysdeps/alpha/fpu/fesetround.c
+diff --git a/ports/sysdeps/alpha/fpu/feupdateenv.c b/sysdeps/alpha/fpu/feupdateenv.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/feupdateenv.c
+rename to sysdeps/alpha/fpu/feupdateenv.c
+diff --git a/ports/sysdeps/alpha/fpu/fgetexcptflg.c b/sysdeps/alpha/fpu/fgetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fgetexcptflg.c
+rename to sysdeps/alpha/fpu/fgetexcptflg.c
+diff --git a/ports/sysdeps/alpha/fpu/fpu_control.h b/sysdeps/alpha/fpu/fpu_control.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fpu_control.h
+rename to sysdeps/alpha/fpu/fpu_control.h
+diff --git a/ports/sysdeps/alpha/fpu/fsetexcptflg.c b/sysdeps/alpha/fpu/fsetexcptflg.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/fsetexcptflg.c
+rename to sysdeps/alpha/fpu/fsetexcptflg.c
+diff --git a/ports/sysdeps/alpha/fpu/ftestexcept.c b/sysdeps/alpha/fpu/ftestexcept.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/ftestexcept.c
+rename to sysdeps/alpha/fpu/ftestexcept.c
+diff --git a/ports/sysdeps/alpha/fpu/get-rounding-mode.h b/sysdeps/alpha/fpu/get-rounding-mode.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/get-rounding-mode.h
+rename to sysdeps/alpha/fpu/get-rounding-mode.h
+diff --git a/ports/sysdeps/alpha/fpu/libm-test-ulps b/sysdeps/alpha/fpu/libm-test-ulps
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/libm-test-ulps
+rename to sysdeps/alpha/fpu/libm-test-ulps
+diff --git a/ports/sysdeps/alpha/fpu/math_private.h b/sysdeps/alpha/fpu/math_private.h
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/math_private.h
+rename to sysdeps/alpha/fpu/math_private.h
+diff --git a/ports/sysdeps/alpha/fpu/s_cacosf.c b/sysdeps/alpha/fpu/s_cacosf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_cacosf.c
+rename to sysdeps/alpha/fpu/s_cacosf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_cacoshf.c b/sysdeps/alpha/fpu/s_cacoshf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_cacoshf.c
+rename to sysdeps/alpha/fpu/s_cacoshf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_casinf.c b/sysdeps/alpha/fpu/s_casinf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_casinf.c
+rename to sysdeps/alpha/fpu/s_casinf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_casinhf.c b/sysdeps/alpha/fpu/s_casinhf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_casinhf.c
+rename to sysdeps/alpha/fpu/s_casinhf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_catanf.c b/sysdeps/alpha/fpu/s_catanf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_catanf.c
+rename to sysdeps/alpha/fpu/s_catanf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_catanhf.c b/sysdeps/alpha/fpu/s_catanhf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_catanhf.c
+rename to sysdeps/alpha/fpu/s_catanhf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_ccosf.c b/sysdeps/alpha/fpu/s_ccosf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_ccosf.c
+rename to sysdeps/alpha/fpu/s_ccosf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_ccoshf.c b/sysdeps/alpha/fpu/s_ccoshf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_ccoshf.c
+rename to sysdeps/alpha/fpu/s_ccoshf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_ceil.c b/sysdeps/alpha/fpu/s_ceil.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_ceil.c
+rename to sysdeps/alpha/fpu/s_ceil.c
+diff --git a/ports/sysdeps/alpha/fpu/s_ceilf.c b/sysdeps/alpha/fpu/s_ceilf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_ceilf.c
+rename to sysdeps/alpha/fpu/s_ceilf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_cexpf.c b/sysdeps/alpha/fpu/s_cexpf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_cexpf.c
+rename to sysdeps/alpha/fpu/s_cexpf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_clog10f.c b/sysdeps/alpha/fpu/s_clog10f.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_clog10f.c
+rename to sysdeps/alpha/fpu/s_clog10f.c
+diff --git a/ports/sysdeps/alpha/fpu/s_clogf.c b/sysdeps/alpha/fpu/s_clogf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_clogf.c
+rename to sysdeps/alpha/fpu/s_clogf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_copysign.c b/sysdeps/alpha/fpu/s_copysign.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_copysign.c
+rename to sysdeps/alpha/fpu/s_copysign.c
+diff --git a/ports/sysdeps/alpha/fpu/s_copysignf.c b/sysdeps/alpha/fpu/s_copysignf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_copysignf.c
+rename to sysdeps/alpha/fpu/s_copysignf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_cpowf.c b/sysdeps/alpha/fpu/s_cpowf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_cpowf.c
+rename to sysdeps/alpha/fpu/s_cpowf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_cprojf.c b/sysdeps/alpha/fpu/s_cprojf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_cprojf.c
+rename to sysdeps/alpha/fpu/s_cprojf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_csinf.c b/sysdeps/alpha/fpu/s_csinf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_csinf.c
+rename to sysdeps/alpha/fpu/s_csinf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_csinhf.c b/sysdeps/alpha/fpu/s_csinhf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_csinhf.c
+rename to sysdeps/alpha/fpu/s_csinhf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_csqrtf.c b/sysdeps/alpha/fpu/s_csqrtf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_csqrtf.c
+rename to sysdeps/alpha/fpu/s_csqrtf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_ctanf.c b/sysdeps/alpha/fpu/s_ctanf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_ctanf.c
+rename to sysdeps/alpha/fpu/s_ctanf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_ctanhf.c b/sysdeps/alpha/fpu/s_ctanhf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_ctanhf.c
+rename to sysdeps/alpha/fpu/s_ctanhf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_fabs.c b/sysdeps/alpha/fpu/s_fabs.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_fabs.c
+rename to sysdeps/alpha/fpu/s_fabs.c
+diff --git a/ports/sysdeps/alpha/fpu/s_fabsf.c b/sysdeps/alpha/fpu/s_fabsf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_fabsf.c
+rename to sysdeps/alpha/fpu/s_fabsf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_floor.c b/sysdeps/alpha/fpu/s_floor.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_floor.c
+rename to sysdeps/alpha/fpu/s_floor.c
+diff --git a/ports/sysdeps/alpha/fpu/s_floorf.c b/sysdeps/alpha/fpu/s_floorf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_floorf.c
+rename to sysdeps/alpha/fpu/s_floorf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_fmax.S b/sysdeps/alpha/fpu/s_fmax.S
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_fmax.S
+rename to sysdeps/alpha/fpu/s_fmax.S
+diff --git a/ports/sysdeps/alpha/fpu/s_fmaxf.S b/sysdeps/alpha/fpu/s_fmaxf.S
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_fmaxf.S
+rename to sysdeps/alpha/fpu/s_fmaxf.S
+diff --git a/ports/sysdeps/alpha/fpu/s_fmin.S b/sysdeps/alpha/fpu/s_fmin.S
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_fmin.S
+rename to sysdeps/alpha/fpu/s_fmin.S
+diff --git a/ports/sysdeps/alpha/fpu/s_fminf.S b/sysdeps/alpha/fpu/s_fminf.S
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_fminf.S
+rename to sysdeps/alpha/fpu/s_fminf.S
+diff --git a/ports/sysdeps/alpha/fpu/s_isnan.c b/sysdeps/alpha/fpu/s_isnan.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_isnan.c
+rename to sysdeps/alpha/fpu/s_isnan.c
+diff --git a/ports/sysdeps/alpha/fpu/s_isnanf.c b/sysdeps/alpha/fpu/s_isnanf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_isnanf.c
+rename to sysdeps/alpha/fpu/s_isnanf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_llrint.c b/sysdeps/alpha/fpu/s_llrint.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_llrint.c
+rename to sysdeps/alpha/fpu/s_llrint.c
+diff --git a/ports/sysdeps/alpha/fpu/s_llrintf.c b/sysdeps/alpha/fpu/s_llrintf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_llrintf.c
+rename to sysdeps/alpha/fpu/s_llrintf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_llround.c b/sysdeps/alpha/fpu/s_llround.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_llround.c
+rename to sysdeps/alpha/fpu/s_llround.c
+diff --git a/ports/sysdeps/alpha/fpu/s_llroundf.c b/sysdeps/alpha/fpu/s_llroundf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_llroundf.c
+rename to sysdeps/alpha/fpu/s_llroundf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_lrint.c b/sysdeps/alpha/fpu/s_lrint.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_lrint.c
+rename to sysdeps/alpha/fpu/s_lrint.c
+diff --git a/ports/sysdeps/alpha/fpu/s_lrintf.c b/sysdeps/alpha/fpu/s_lrintf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_lrintf.c
+rename to sysdeps/alpha/fpu/s_lrintf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_lround.c b/sysdeps/alpha/fpu/s_lround.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_lround.c
+rename to sysdeps/alpha/fpu/s_lround.c
+diff --git a/ports/sysdeps/alpha/fpu/s_lroundf.c b/sysdeps/alpha/fpu/s_lroundf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_lroundf.c
+rename to sysdeps/alpha/fpu/s_lroundf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_nearbyint.c b/sysdeps/alpha/fpu/s_nearbyint.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_nearbyint.c
+rename to sysdeps/alpha/fpu/s_nearbyint.c
+diff --git a/ports/sysdeps/alpha/fpu/s_nearbyintf.c b/sysdeps/alpha/fpu/s_nearbyintf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_nearbyintf.c
+rename to sysdeps/alpha/fpu/s_nearbyintf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_rint.c b/sysdeps/alpha/fpu/s_rint.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_rint.c
+rename to sysdeps/alpha/fpu/s_rint.c
+diff --git a/ports/sysdeps/alpha/fpu/s_rintf.c b/sysdeps/alpha/fpu/s_rintf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_rintf.c
+rename to sysdeps/alpha/fpu/s_rintf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_round.c b/sysdeps/alpha/fpu/s_round.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_round.c
+rename to sysdeps/alpha/fpu/s_round.c
+diff --git a/ports/sysdeps/alpha/fpu/s_roundf.c b/sysdeps/alpha/fpu/s_roundf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_roundf.c
+rename to sysdeps/alpha/fpu/s_roundf.c
+diff --git a/ports/sysdeps/alpha/fpu/s_trunc.c b/sysdeps/alpha/fpu/s_trunc.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_trunc.c
+rename to sysdeps/alpha/fpu/s_trunc.c
+diff --git a/ports/sysdeps/alpha/fpu/s_truncf.c b/sysdeps/alpha/fpu/s_truncf.c
+similarity index 100%
+rename from ports/sysdeps/alpha/fpu/s_truncf.c
+rename to sysdeps/alpha/fpu/s_truncf.c
+diff --git a/ports/sysdeps/alpha/gccframe.h b/sysdeps/alpha/gccframe.h
+similarity index 100%
+rename from ports/sysdeps/alpha/gccframe.h
+rename to sysdeps/alpha/gccframe.h
+diff --git a/ports/sysdeps/alpha/hp-timing.h b/sysdeps/alpha/hp-timing.h
+similarity index 100%
+rename from ports/sysdeps/alpha/hp-timing.h
+rename to sysdeps/alpha/hp-timing.h
+diff --git a/ports/sysdeps/alpha/htonl.S b/sysdeps/alpha/htonl.S
+similarity index 100%
+rename from ports/sysdeps/alpha/htonl.S
+rename to sysdeps/alpha/htonl.S
+diff --git a/ports/sysdeps/alpha/htons.S b/sysdeps/alpha/htons.S
+similarity index 100%
+rename from ports/sysdeps/alpha/htons.S
+rename to sysdeps/alpha/htons.S
+diff --git a/ports/sysdeps/alpha/jmpbuf-offsets.h b/sysdeps/alpha/jmpbuf-offsets.h
+similarity index 100%
+rename from ports/sysdeps/alpha/jmpbuf-offsets.h
+rename to sysdeps/alpha/jmpbuf-offsets.h
+diff --git a/ports/sysdeps/alpha/jmpbuf-unwind.h b/sysdeps/alpha/jmpbuf-unwind.h
+similarity index 100%
+rename from ports/sysdeps/alpha/jmpbuf-unwind.h
+rename to sysdeps/alpha/jmpbuf-unwind.h
+diff --git a/ports/sysdeps/alpha/ldiv.S b/sysdeps/alpha/ldiv.S
+similarity index 100%
+rename from ports/sysdeps/alpha/ldiv.S
+rename to sysdeps/alpha/ldiv.S
+diff --git a/ports/sysdeps/alpha/ldsodefs.h b/sysdeps/alpha/ldsodefs.h
+similarity index 100%
+rename from ports/sysdeps/alpha/ldsodefs.h
+rename to sysdeps/alpha/ldsodefs.h
+diff --git a/ports/sysdeps/alpha/libc-tls.c b/sysdeps/alpha/libc-tls.c
+similarity index 100%
+rename from ports/sysdeps/alpha/libc-tls.c
+rename to sysdeps/alpha/libc-tls.c
+diff --git a/ports/sysdeps/alpha/lldiv.S b/sysdeps/alpha/lldiv.S
+similarity index 100%
+rename from ports/sysdeps/alpha/lldiv.S
+rename to sysdeps/alpha/lldiv.S
+diff --git a/ports/sysdeps/alpha/lshift.S b/sysdeps/alpha/lshift.S
+similarity index 100%
+rename from ports/sysdeps/alpha/lshift.S
+rename to sysdeps/alpha/lshift.S
+diff --git a/ports/sysdeps/alpha/machine-gmon.h b/sysdeps/alpha/machine-gmon.h
+similarity index 100%
+rename from ports/sysdeps/alpha/machine-gmon.h
+rename to sysdeps/alpha/machine-gmon.h
+diff --git a/ports/sysdeps/alpha/memchr.c b/sysdeps/alpha/memchr.c
+similarity index 100%
+rename from ports/sysdeps/alpha/memchr.c
+rename to sysdeps/alpha/memchr.c
+diff --git a/ports/sysdeps/alpha/memset.S b/sysdeps/alpha/memset.S
+similarity index 100%
+rename from ports/sysdeps/alpha/memset.S
+rename to sysdeps/alpha/memset.S
+diff --git a/ports/sysdeps/alpha/memusage.h b/sysdeps/alpha/memusage.h
+similarity index 100%
+rename from ports/sysdeps/alpha/memusage.h
+rename to sysdeps/alpha/memusage.h
+diff --git a/ports/sysdeps/alpha/mul_1.S b/sysdeps/alpha/mul_1.S
+similarity index 100%
+rename from ports/sysdeps/alpha/mul_1.S
+rename to sysdeps/alpha/mul_1.S
+diff --git a/ports/sysdeps/alpha/nptl/Makefile b/sysdeps/alpha/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/alpha/nptl/Makefile
+rename to sysdeps/alpha/nptl/Makefile
+diff --git a/ports/sysdeps/alpha/nptl/pthread_spin_lock.S b/sysdeps/alpha/nptl/pthread_spin_lock.S
+similarity index 100%
+rename from ports/sysdeps/alpha/nptl/pthread_spin_lock.S
+rename to sysdeps/alpha/nptl/pthread_spin_lock.S
+diff --git a/ports/sysdeps/alpha/nptl/pthread_spin_trylock.S b/sysdeps/alpha/nptl/pthread_spin_trylock.S
+similarity index 100%
+rename from ports/sysdeps/alpha/nptl/pthread_spin_trylock.S
+rename to sysdeps/alpha/nptl/pthread_spin_trylock.S
+diff --git a/ports/sysdeps/alpha/nptl/pthreaddef.h b/sysdeps/alpha/nptl/pthreaddef.h
+similarity index 100%
+rename from ports/sysdeps/alpha/nptl/pthreaddef.h
+rename to sysdeps/alpha/nptl/pthreaddef.h
+diff --git a/ports/sysdeps/alpha/nptl/tcb-offsets.sym b/sysdeps/alpha/nptl/tcb-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/alpha/nptl/tcb-offsets.sym
+rename to sysdeps/alpha/nptl/tcb-offsets.sym
+diff --git a/ports/sysdeps/alpha/nptl/tls.h b/sysdeps/alpha/nptl/tls.h
+similarity index 100%
+rename from ports/sysdeps/alpha/nptl/tls.h
+rename to sysdeps/alpha/nptl/tls.h
+diff --git a/ports/sysdeps/alpha/nscd-types.h b/sysdeps/alpha/nscd-types.h
+similarity index 100%
+rename from ports/sysdeps/alpha/nscd-types.h
+rename to sysdeps/alpha/nscd-types.h
+diff --git a/ports/sysdeps/alpha/preconfigure b/sysdeps/alpha/preconfigure
+similarity index 100%
+rename from ports/sysdeps/alpha/preconfigure
+rename to sysdeps/alpha/preconfigure
+diff --git a/ports/sysdeps/alpha/rawmemchr.S b/sysdeps/alpha/rawmemchr.S
+similarity index 100%
+rename from ports/sysdeps/alpha/rawmemchr.S
+rename to sysdeps/alpha/rawmemchr.S
+diff --git a/ports/sysdeps/alpha/reml.S b/sysdeps/alpha/reml.S
+similarity index 100%
+rename from ports/sysdeps/alpha/reml.S
+rename to sysdeps/alpha/reml.S
+diff --git a/ports/sysdeps/alpha/remlu.S b/sysdeps/alpha/remlu.S
+similarity index 100%
+rename from ports/sysdeps/alpha/remlu.S
+rename to sysdeps/alpha/remlu.S
+diff --git a/ports/sysdeps/alpha/remq.S b/sysdeps/alpha/remq.S
+similarity index 100%
+rename from ports/sysdeps/alpha/remq.S
+rename to sysdeps/alpha/remq.S
+diff --git a/ports/sysdeps/alpha/remqu.S b/sysdeps/alpha/remqu.S
+similarity index 100%
+rename from ports/sysdeps/alpha/remqu.S
+rename to sysdeps/alpha/remqu.S
+diff --git a/ports/sysdeps/alpha/rshift.S b/sysdeps/alpha/rshift.S
+similarity index 100%
+rename from ports/sysdeps/alpha/rshift.S
+rename to sysdeps/alpha/rshift.S
+diff --git a/ports/sysdeps/alpha/setjmp.S b/sysdeps/alpha/setjmp.S
+similarity index 100%
+rename from ports/sysdeps/alpha/setjmp.S
+rename to sysdeps/alpha/setjmp.S
+diff --git a/ports/sysdeps/alpha/shlib-versions b/sysdeps/alpha/shlib-versions
+similarity index 100%
+rename from ports/sysdeps/alpha/shlib-versions
+rename to sysdeps/alpha/shlib-versions
+diff --git a/ports/sysdeps/alpha/soft-fp/Makefile b/sysdeps/alpha/soft-fp/Makefile
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/Makefile
+rename to sysdeps/alpha/soft-fp/Makefile
+diff --git a/ports/sysdeps/alpha/soft-fp/Versions b/sysdeps/alpha/soft-fp/Versions
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/Versions
+rename to sysdeps/alpha/soft-fp/Versions
+diff --git a/ports/sysdeps/alpha/soft-fp/e_sqrtl.c b/sysdeps/alpha/soft-fp/e_sqrtl.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/e_sqrtl.c
+rename to sysdeps/alpha/soft-fp/e_sqrtl.c
+diff --git a/ports/sysdeps/alpha/soft-fp/local-soft-fp.h b/sysdeps/alpha/soft-fp/local-soft-fp.h
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/local-soft-fp.h
+rename to sysdeps/alpha/soft-fp/local-soft-fp.h
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_add.c b/sysdeps/alpha/soft-fp/ots_add.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_add.c
+rename to sysdeps/alpha/soft-fp/ots_add.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cmp.c b/sysdeps/alpha/soft-fp/ots_cmp.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cmp.c
+rename to sysdeps/alpha/soft-fp/ots_cmp.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cmpe.c b/sysdeps/alpha/soft-fp/ots_cmpe.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cmpe.c
+rename to sysdeps/alpha/soft-fp/ots_cmpe.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cvtqux.c b/sysdeps/alpha/soft-fp/ots_cvtqux.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cvtqux.c
+rename to sysdeps/alpha/soft-fp/ots_cvtqux.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cvtqx.c b/sysdeps/alpha/soft-fp/ots_cvtqx.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cvtqx.c
+rename to sysdeps/alpha/soft-fp/ots_cvtqx.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cvttx.c b/sysdeps/alpha/soft-fp/ots_cvttx.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cvttx.c
+rename to sysdeps/alpha/soft-fp/ots_cvttx.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cvtxq.c b/sysdeps/alpha/soft-fp/ots_cvtxq.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cvtxq.c
+rename to sysdeps/alpha/soft-fp/ots_cvtxq.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_cvtxt.c b/sysdeps/alpha/soft-fp/ots_cvtxt.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_cvtxt.c
+rename to sysdeps/alpha/soft-fp/ots_cvtxt.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_div.c b/sysdeps/alpha/soft-fp/ots_div.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_div.c
+rename to sysdeps/alpha/soft-fp/ots_div.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_mul.c b/sysdeps/alpha/soft-fp/ots_mul.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_mul.c
+rename to sysdeps/alpha/soft-fp/ots_mul.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_nintxq.c b/sysdeps/alpha/soft-fp/ots_nintxq.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_nintxq.c
+rename to sysdeps/alpha/soft-fp/ots_nintxq.c
+diff --git a/ports/sysdeps/alpha/soft-fp/ots_sub.c b/sysdeps/alpha/soft-fp/ots_sub.c
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/ots_sub.c
+rename to sysdeps/alpha/soft-fp/ots_sub.c
+diff --git a/ports/sysdeps/alpha/soft-fp/sfp-machine.h b/sysdeps/alpha/soft-fp/sfp-machine.h
+similarity index 100%
+rename from ports/sysdeps/alpha/soft-fp/sfp-machine.h
+rename to sysdeps/alpha/soft-fp/sfp-machine.h
+diff --git a/ports/sysdeps/alpha/sotruss-lib.c b/sysdeps/alpha/sotruss-lib.c
+similarity index 100%
+rename from ports/sysdeps/alpha/sotruss-lib.c
+rename to sysdeps/alpha/sotruss-lib.c
+diff --git a/ports/sysdeps/alpha/stackinfo.h b/sysdeps/alpha/stackinfo.h
+similarity index 100%
+rename from ports/sysdeps/alpha/stackinfo.h
+rename to sysdeps/alpha/stackinfo.h
+diff --git a/ports/sysdeps/alpha/start.S b/sysdeps/alpha/start.S
+similarity index 100%
+rename from ports/sysdeps/alpha/start.S
+rename to sysdeps/alpha/start.S
+diff --git a/ports/sysdeps/alpha/stpcpy.S b/sysdeps/alpha/stpcpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/stpcpy.S
+rename to sysdeps/alpha/stpcpy.S
+diff --git a/ports/sysdeps/alpha/stpncpy.S b/sysdeps/alpha/stpncpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/stpncpy.S
+rename to sysdeps/alpha/stpncpy.S
+diff --git a/ports/sysdeps/alpha/strcat.S b/sysdeps/alpha/strcat.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strcat.S
+rename to sysdeps/alpha/strcat.S
+diff --git a/ports/sysdeps/alpha/strchr.S b/sysdeps/alpha/strchr.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strchr.S
+rename to sysdeps/alpha/strchr.S
+diff --git a/ports/sysdeps/alpha/strcmp.S b/sysdeps/alpha/strcmp.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strcmp.S
+rename to sysdeps/alpha/strcmp.S
+diff --git a/ports/sysdeps/alpha/strcpy.S b/sysdeps/alpha/strcpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strcpy.S
+rename to sysdeps/alpha/strcpy.S
+diff --git a/ports/sysdeps/alpha/strlen.S b/sysdeps/alpha/strlen.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strlen.S
+rename to sysdeps/alpha/strlen.S
+diff --git a/ports/sysdeps/alpha/strncat.S b/sysdeps/alpha/strncat.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strncat.S
+rename to sysdeps/alpha/strncat.S
+diff --git a/ports/sysdeps/alpha/strncmp.S b/sysdeps/alpha/strncmp.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strncmp.S
+rename to sysdeps/alpha/strncmp.S
+diff --git a/ports/sysdeps/alpha/strncpy.S b/sysdeps/alpha/strncpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strncpy.S
+rename to sysdeps/alpha/strncpy.S
+diff --git a/ports/sysdeps/alpha/strrchr.S b/sysdeps/alpha/strrchr.S
+similarity index 100%
+rename from ports/sysdeps/alpha/strrchr.S
+rename to sysdeps/alpha/strrchr.S
+diff --git a/ports/sysdeps/alpha/stxcpy.S b/sysdeps/alpha/stxcpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/stxcpy.S
+rename to sysdeps/alpha/stxcpy.S
+diff --git a/ports/sysdeps/alpha/stxncpy.S b/sysdeps/alpha/stxncpy.S
+similarity index 100%
+rename from ports/sysdeps/alpha/stxncpy.S
+rename to sysdeps/alpha/stxncpy.S
+diff --git a/ports/sysdeps/alpha/sub_n.S b/sysdeps/alpha/sub_n.S
+similarity index 100%
+rename from ports/sysdeps/alpha/sub_n.S
+rename to sysdeps/alpha/sub_n.S
+diff --git a/ports/sysdeps/alpha/submul_1.S b/sysdeps/alpha/submul_1.S
+similarity index 100%
+rename from ports/sysdeps/alpha/submul_1.S
+rename to sysdeps/alpha/submul_1.S
+diff --git a/ports/sysdeps/alpha/tininess.h b/sysdeps/alpha/tininess.h
+similarity index 100%
+rename from ports/sysdeps/alpha/tininess.h
+rename to sysdeps/alpha/tininess.h
+diff --git a/ports/sysdeps/alpha/tls-macros.h b/sysdeps/alpha/tls-macros.h
+similarity index 100%
+rename from ports/sysdeps/alpha/tls-macros.h
+rename to sysdeps/alpha/tls-macros.h
+diff --git a/ports/sysdeps/alpha/tst-audit.h b/sysdeps/alpha/tst-audit.h
+similarity index 100%
+rename from ports/sysdeps/alpha/tst-audit.h
+rename to sysdeps/alpha/tst-audit.h
+diff --git a/ports/sysdeps/alpha/udiv_qrnnd.S b/sysdeps/alpha/udiv_qrnnd.S
+similarity index 100%
+rename from ports/sysdeps/alpha/udiv_qrnnd.S
+rename to sysdeps/alpha/udiv_qrnnd.S
+diff --git a/ports/sysdeps/unix/alpha/Makefile b/sysdeps/unix/alpha/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/Makefile
+rename to sysdeps/unix/alpha/Makefile
+diff --git a/ports/sysdeps/unix/alpha/getegid.S b/sysdeps/unix/alpha/getegid.S
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/getegid.S
+rename to sysdeps/unix/alpha/getegid.S
+diff --git a/ports/sysdeps/unix/alpha/geteuid.S b/sysdeps/unix/alpha/geteuid.S
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/geteuid.S
+rename to sysdeps/unix/alpha/geteuid.S
+diff --git a/ports/sysdeps/unix/alpha/getppid.S b/sysdeps/unix/alpha/getppid.S
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/getppid.S
+rename to sysdeps/unix/alpha/getppid.S
+diff --git a/ports/sysdeps/unix/alpha/pipe.S b/sysdeps/unix/alpha/pipe.S
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/pipe.S
+rename to sysdeps/unix/alpha/pipe.S
+diff --git a/ports/sysdeps/unix/alpha/rt-sysdep.S b/sysdeps/unix/alpha/rt-sysdep.S
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/rt-sysdep.S
+rename to sysdeps/unix/alpha/rt-sysdep.S
+diff --git a/ports/sysdeps/unix/alpha/sysdep.S b/sysdeps/unix/alpha/sysdep.S
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/sysdep.S
+rename to sysdeps/unix/alpha/sysdep.S
+diff --git a/ports/sysdeps/unix/alpha/sysdep.h b/sysdeps/unix/alpha/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/alpha/sysdep.h
+rename to sysdeps/unix/alpha/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/Implies b/sysdeps/unix/sysv/linux/alpha/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/Implies
+rename to sysdeps/unix/sysv/linux/alpha/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/Makefile b/sysdeps/unix/sysv/linux/alpha/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/Makefile
+rename to sysdeps/unix/sysv/linux/alpha/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/Versions b/sysdeps/unix/sysv/linux/alpha/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/Versions
+rename to sysdeps/unix/sysv/linux/alpha/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/____longjmp_chk.S b/sysdeps/unix/sysv/linux/alpha/____longjmp_chk.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/____longjmp_chk.S
+rename to sysdeps/unix/sysv/linux/alpha/____longjmp_chk.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/a.out.h b/sysdeps/unix/sysv/linux/alpha/a.out.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/a.out.h
+rename to sysdeps/unix/sysv/linux/alpha/a.out.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/adjtime.c b/sysdeps/unix/sysv/linux/alpha/adjtime.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/adjtime.c
+rename to sysdeps/unix/sysv/linux/alpha/adjtime.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/alpha/ptrace.h b/sysdeps/unix/sysv/linux/alpha/alpha/ptrace.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/alpha/ptrace.h
+rename to sysdeps/unix/sysv/linux/alpha/alpha/ptrace.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/alpha/regdef.h b/sysdeps/unix/sysv/linux/alpha/alpha/regdef.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/alpha/regdef.h
+rename to sysdeps/unix/sysv/linux/alpha/alpha/regdef.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/alphaev6/fpu/Implies b/sysdeps/unix/sysv/linux/alpha/alphaev6/fpu/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/alphaev6/fpu/Implies
+rename to sysdeps/unix/sysv/linux/alpha/alphaev6/fpu/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/alphaev67/fpu/Implies b/sysdeps/unix/sysv/linux/alpha/alphaev67/fpu/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/alphaev67/fpu/Implies
+rename to sysdeps/unix/sysv/linux/alpha/alphaev67/fpu/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/a.out.h b/sysdeps/unix/sysv/linux/alpha/bits/a.out.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/a.out.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/a.out.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/dirent.h b/sysdeps/unix/sysv/linux/alpha/bits/dirent.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/dirent.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/dirent.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/elfclass.h b/sysdeps/unix/sysv/linux/alpha/bits/elfclass.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/elfclass.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/elfclass.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/epoll.h b/sysdeps/unix/sysv/linux/alpha/bits/epoll.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/epoll.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/epoll.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/errno.h b/sysdeps/unix/sysv/linux/alpha/bits/errno.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/errno.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/errno.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/eventfd.h b/sysdeps/unix/sysv/linux/alpha/bits/eventfd.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/eventfd.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/eventfd.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/fcntl.h b/sysdeps/unix/sysv/linux/alpha/bits/fcntl.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/fcntl.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/fcntl.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/inotify.h b/sysdeps/unix/sysv/linux/alpha/bits/inotify.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/inotify.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/inotify.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/ioctls.h b/sysdeps/unix/sysv/linux/alpha/bits/ioctls.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/ioctls.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/ioctls.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/ipc.h b/sysdeps/unix/sysv/linux/alpha/bits/ipc.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/ipc.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/ipc.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/mman.h b/sysdeps/unix/sysv/linux/alpha/bits/mman.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/mman.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/mman.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/msq.h b/sysdeps/unix/sysv/linux/alpha/bits/msq.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/msq.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/msq.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/netdb.h b/sysdeps/unix/sysv/linux/alpha/bits/netdb.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/netdb.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/netdb.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/resource.h b/sysdeps/unix/sysv/linux/alpha/bits/resource.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/resource.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/resource.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/sem.h b/sysdeps/unix/sysv/linux/alpha/bits/sem.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/sem.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/sem.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/shm.h b/sysdeps/unix/sysv/linux/alpha/bits/shm.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/shm.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/shm.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/sigaction.h b/sysdeps/unix/sysv/linux/alpha/bits/sigaction.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/sigaction.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/sigaction.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/siginfo.h b/sysdeps/unix/sysv/linux/alpha/bits/siginfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/siginfo.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/siginfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/signalfd.h b/sysdeps/unix/sysv/linux/alpha/bits/signalfd.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/signalfd.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/signalfd.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/signum.h b/sysdeps/unix/sysv/linux/alpha/bits/signum.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/signum.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/signum.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/sigstack.h b/sysdeps/unix/sysv/linux/alpha/bits/sigstack.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/sigstack.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/sigstack.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/socket_type.h b/sysdeps/unix/sysv/linux/alpha/bits/socket_type.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/socket_type.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/socket_type.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/stat.h b/sysdeps/unix/sysv/linux/alpha/bits/stat.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/stat.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/stat.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/statfs.h b/sysdeps/unix/sysv/linux/alpha/bits/statfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/statfs.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/statfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/termios.h b/sysdeps/unix/sysv/linux/alpha/bits/termios.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/termios.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/termios.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/timerfd.h b/sysdeps/unix/sysv/linux/alpha/bits/timerfd.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/timerfd.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/timerfd.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/typesizes.h b/sysdeps/unix/sysv/linux/alpha/bits/typesizes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/typesizes.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/typesizes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/bits/wordsize.h b/sysdeps/unix/sysv/linux/alpha/bits/wordsize.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/bits/wordsize.h
+rename to sysdeps/unix/sysv/linux/alpha/bits/wordsize.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/brk.S b/sysdeps/unix/sysv/linux/alpha/brk.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/brk.S
+rename to sysdeps/unix/sysv/linux/alpha/brk.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/clone.S b/sysdeps/unix/sysv/linux/alpha/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/clone.S
+rename to sysdeps/unix/sysv/linux/alpha/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/configure b/sysdeps/unix/sysv/linux/alpha/configure
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/configure
+rename to sysdeps/unix/sysv/linux/alpha/configure
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/configure.in b/sysdeps/unix/sysv/linux/alpha/configure.in
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/configure.in
+rename to sysdeps/unix/sysv/linux/alpha/configure.in
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/creat.c b/sysdeps/unix/sysv/linux/alpha/creat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/creat.c
+rename to sysdeps/unix/sysv/linux/alpha/creat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/dl-auxv.h b/sysdeps/unix/sysv/linux/alpha/dl-auxv.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/dl-auxv.h
+rename to sysdeps/unix/sysv/linux/alpha/dl-auxv.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/dl-brk.S b/sysdeps/unix/sysv/linux/alpha/dl-brk.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/dl-brk.S
+rename to sysdeps/unix/sysv/linux/alpha/dl-brk.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/dl-fxstatat64.c b/sysdeps/unix/sysv/linux/alpha/dl-fxstatat64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/dl-fxstatat64.c
+rename to sysdeps/unix/sysv/linux/alpha/dl-fxstatat64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/dl-support.c b/sysdeps/unix/sysv/linux/alpha/dl-support.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/dl-support.c
+rename to sysdeps/unix/sysv/linux/alpha/dl-support.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/dl-sysdep.c b/sysdeps/unix/sysv/linux/alpha/dl-sysdep.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/dl-sysdep.c
+rename to sysdeps/unix/sysv/linux/alpha/dl-sysdep.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fdatasync.c b/sysdeps/unix/sysv/linux/alpha/fdatasync.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fdatasync.c
+rename to sysdeps/unix/sysv/linux/alpha/fdatasync.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fpu/Implies b/sysdeps/unix/sysv/linux/alpha/fpu/Implies
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fpu/Implies
+rename to sysdeps/unix/sysv/linux/alpha/fpu/Implies
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fraiseexcpt.S b/sysdeps/unix/sysv/linux/alpha/fraiseexcpt.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fraiseexcpt.S
+rename to sysdeps/unix/sysv/linux/alpha/fraiseexcpt.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fstatfs64.c b/sysdeps/unix/sysv/linux/alpha/fstatfs64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fstatfs64.c
+rename to sysdeps/unix/sysv/linux/alpha/fstatfs64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fstatvfs.c b/sysdeps/unix/sysv/linux/alpha/fstatvfs.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fstatvfs.c
+rename to sysdeps/unix/sysv/linux/alpha/fstatvfs.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fstatvfs64.c b/sysdeps/unix/sysv/linux/alpha/fstatvfs64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fstatvfs64.c
+rename to sysdeps/unix/sysv/linux/alpha/fstatvfs64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fxstat.c b/sysdeps/unix/sysv/linux/alpha/fxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fxstat.c
+rename to sysdeps/unix/sysv/linux/alpha/fxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/fxstatat.c b/sysdeps/unix/sysv/linux/alpha/fxstatat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/fxstatat.c
+rename to sysdeps/unix/sysv/linux/alpha/fxstatat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/getclktck.c b/sysdeps/unix/sysv/linux/alpha/getclktck.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/getclktck.c
+rename to sysdeps/unix/sysv/linux/alpha/getclktck.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/getcontext.S b/sysdeps/unix/sysv/linux/alpha/getcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/getcontext.S
+rename to sysdeps/unix/sysv/linux/alpha/getcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/getdents.c b/sysdeps/unix/sysv/linux/alpha/getdents.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/getdents.c
+rename to sysdeps/unix/sysv/linux/alpha/getdents.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/getdents64.c b/sysdeps/unix/sysv/linux/alpha/getdents64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/getdents64.c
+rename to sysdeps/unix/sysv/linux/alpha/getdents64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/gethostname.c b/sysdeps/unix/sysv/linux/alpha/gethostname.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/gethostname.c
+rename to sysdeps/unix/sysv/linux/alpha/gethostname.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/getsysstats.c b/sysdeps/unix/sysv/linux/alpha/getsysstats.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/getsysstats.c
+rename to sysdeps/unix/sysv/linux/alpha/getsysstats.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/glob.c b/sysdeps/unix/sysv/linux/alpha/glob.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/glob.c
+rename to sysdeps/unix/sysv/linux/alpha/glob.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/ieee_get_fp_control.S b/sysdeps/unix/sysv/linux/alpha/ieee_get_fp_control.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/ieee_get_fp_control.S
+rename to sysdeps/unix/sysv/linux/alpha/ieee_get_fp_control.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/ieee_set_fp_control.S b/sysdeps/unix/sysv/linux/alpha/ieee_set_fp_control.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/ieee_set_fp_control.S
+rename to sysdeps/unix/sysv/linux/alpha/ieee_set_fp_control.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/internal_statvfs64.c b/sysdeps/unix/sysv/linux/alpha/internal_statvfs64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/internal_statvfs64.c
+rename to sysdeps/unix/sysv/linux/alpha/internal_statvfs64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/ioperm.c b/sysdeps/unix/sysv/linux/alpha/ioperm.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/ioperm.c
+rename to sysdeps/unix/sysv/linux/alpha/ioperm.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/ipc_priv.h b/sysdeps/unix/sysv/linux/alpha/ipc_priv.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/ipc_priv.h
+rename to sysdeps/unix/sysv/linux/alpha/ipc_priv.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/kernel-features.h b/sysdeps/unix/sysv/linux/alpha/kernel-features.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/kernel-features.h
+rename to sysdeps/unix/sysv/linux/alpha/kernel-features.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/kernel_sigaction.h b/sysdeps/unix/sysv/linux/alpha/kernel_sigaction.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/kernel_sigaction.h
+rename to sysdeps/unix/sysv/linux/alpha/kernel_sigaction.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/kernel_stat.h b/sysdeps/unix/sysv/linux/alpha/kernel_stat.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/kernel_stat.h
+rename to sysdeps/unix/sysv/linux/alpha/kernel_stat.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/kernel_sysinfo.h b/sysdeps/unix/sysv/linux/alpha/kernel_sysinfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/kernel_sysinfo.h
+rename to sysdeps/unix/sysv/linux/alpha/kernel_sysinfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/kernel_termios.h b/sysdeps/unix/sysv/linux/alpha/kernel_termios.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/kernel_termios.h
+rename to sysdeps/unix/sysv/linux/alpha/kernel_termios.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/lxstat.c b/sysdeps/unix/sysv/linux/alpha/lxstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/lxstat.c
+rename to sysdeps/unix/sysv/linux/alpha/lxstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/makecontext.S b/sysdeps/unix/sysv/linux/alpha/makecontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/makecontext.S
+rename to sysdeps/unix/sysv/linux/alpha/makecontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/msgctl.c b/sysdeps/unix/sysv/linux/alpha/msgctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/msgctl.c
+rename to sysdeps/unix/sysv/linux/alpha/msgctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nldbl-abi.h b/sysdeps/unix/sysv/linux/alpha/nldbl-abi.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nldbl-abi.h
+rename to sysdeps/unix/sysv/linux/alpha/nldbl-abi.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/Makefile b/sysdeps/unix/sysv/linux/alpha/nptl/Makefile
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/Makefile
+rename to sysdeps/unix/sysv/linux/alpha/nptl/Makefile
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/Versions b/sysdeps/unix/sysv/linux/alpha/nptl/Versions
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/Versions
+rename to sysdeps/unix/sysv/linux/alpha/nptl/Versions
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/aio_cancel.c b/sysdeps/unix/sysv/linux/alpha/nptl/aio_cancel.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/aio_cancel.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/aio_cancel.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/bits/local_lim.h b/sysdeps/unix/sysv/linux/alpha/nptl/bits/local_lim.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/bits/local_lim.h
+rename to sysdeps/unix/sysv/linux/alpha/nptl/bits/local_lim.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/bits/pthreadtypes.h b/sysdeps/unix/sysv/linux/alpha/nptl/bits/pthreadtypes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/bits/pthreadtypes.h
+rename to sysdeps/unix/sysv/linux/alpha/nptl/bits/pthreadtypes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/bits/semaphore.h b/sysdeps/unix/sysv/linux/alpha/nptl/bits/semaphore.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/bits/semaphore.h
+rename to sysdeps/unix/sysv/linux/alpha/nptl/bits/semaphore.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/c++-types.data b/sysdeps/unix/sysv/linux/alpha/nptl/c++-types.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/c++-types.data
+rename to sysdeps/unix/sysv/linux/alpha/nptl/c++-types.data
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/clone.S b/sysdeps/unix/sysv/linux/alpha/nptl/clone.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/clone.S
+rename to sysdeps/unix/sysv/linux/alpha/nptl/clone.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/createthread.c b/sysdeps/unix/sysv/linux/alpha/nptl/createthread.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/createthread.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/createthread.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/fork.c b/sysdeps/unix/sysv/linux/alpha/nptl/fork.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/fork.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/fork.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/ld.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/ld.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/ld.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/ld.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libBrokenLocale.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libBrokenLocale.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libBrokenLocale.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libBrokenLocale.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libanl.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libanl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libanl.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libanl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libc.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libc.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libc.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libc.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libcrypt.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libcrypt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libcrypt.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libcrypt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libdl.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libdl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libdl.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libdl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libm.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libm.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libm.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libm.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libnsl.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libnsl.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libnsl.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libnsl.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libpthread.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libpthread.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libpthread.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libpthread.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libresolv.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libresolv.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libresolv.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libresolv.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/librt.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/librt.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/librt.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/librt.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libthread_db.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libthread_db.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libthread_db.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libthread_db.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/libutil.abilist b/sysdeps/unix/sysv/linux/alpha/nptl/libutil.abilist
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/libutil.abilist
+rename to sysdeps/unix/sysv/linux/alpha/nptl/libutil.abilist
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/localplt.data b/sysdeps/unix/sysv/linux/alpha/nptl/localplt.data
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/localplt.data
+rename to sysdeps/unix/sysv/linux/alpha/nptl/localplt.data
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/lowlevellock.h b/sysdeps/unix/sysv/linux/alpha/nptl/lowlevellock.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/lowlevellock.h
+rename to sysdeps/unix/sysv/linux/alpha/nptl/lowlevellock.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/pt-vfork.S b/sysdeps/unix/sysv/linux/alpha/nptl/pt-vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/pt-vfork.S
+rename to sysdeps/unix/sysv/linux/alpha/nptl/pt-vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c b/sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/pthread_once.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/sysdep-cancel.h b/sysdeps/unix/sysv/linux/alpha/nptl/sysdep-cancel.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/sysdep-cancel.h
+rename to sysdeps/unix/sysv/linux/alpha/nptl/sysdep-cancel.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_create.c b/sysdeps/unix/sysv/linux/alpha/nptl/timer_create.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_create.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/timer_create.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_delete.c b/sysdeps/unix/sysv/linux/alpha/nptl/timer_delete.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_delete.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/timer_delete.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_getoverr.c b/sysdeps/unix/sysv/linux/alpha/nptl/timer_getoverr.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_getoverr.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/timer_getoverr.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_gettime.c b/sysdeps/unix/sysv/linux/alpha/nptl/timer_gettime.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_gettime.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/timer_gettime.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_settime.c b/sysdeps/unix/sysv/linux/alpha/nptl/timer_settime.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/timer_settime.c
+rename to sysdeps/unix/sysv/linux/alpha/nptl/timer_settime.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/nptl/vfork.S b/sysdeps/unix/sysv/linux/alpha/nptl/vfork.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/nptl/vfork.S
+rename to sysdeps/unix/sysv/linux/alpha/nptl/vfork.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/oldglob.c b/sysdeps/unix/sysv/linux/alpha/oldglob.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/oldglob.c
+rename to sysdeps/unix/sysv/linux/alpha/oldglob.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/pipe.S b/sysdeps/unix/sysv/linux/alpha/pipe.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/pipe.S
+rename to sysdeps/unix/sysv/linux/alpha/pipe.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/register-dump.h b/sysdeps/unix/sysv/linux/alpha/register-dump.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/register-dump.h
+rename to sysdeps/unix/sysv/linux/alpha/register-dump.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/rt_sigaction.S b/sysdeps/unix/sysv/linux/alpha/rt_sigaction.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/rt_sigaction.S
+rename to sysdeps/unix/sysv/linux/alpha/rt_sigaction.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/semctl.c b/sysdeps/unix/sysv/linux/alpha/semctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/semctl.c
+rename to sysdeps/unix/sysv/linux/alpha/semctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/setcontext.S b/sysdeps/unix/sysv/linux/alpha/setcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/setcontext.S
+rename to sysdeps/unix/sysv/linux/alpha/setcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/setfpucw.c b/sysdeps/unix/sysv/linux/alpha/setfpucw.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/setfpucw.c
+rename to sysdeps/unix/sysv/linux/alpha/setfpucw.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/shmctl.c b/sysdeps/unix/sysv/linux/alpha/shmctl.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/shmctl.c
+rename to sysdeps/unix/sysv/linux/alpha/shmctl.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sigaction.c b/sysdeps/unix/sysv/linux/alpha/sigaction.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sigaction.c
+rename to sysdeps/unix/sysv/linux/alpha/sigaction.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sigcontextinfo.h b/sysdeps/unix/sysv/linux/alpha/sigcontextinfo.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sigcontextinfo.h
+rename to sysdeps/unix/sysv/linux/alpha/sigcontextinfo.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sigprocmask.c b/sysdeps/unix/sysv/linux/alpha/sigprocmask.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sigprocmask.c
+rename to sysdeps/unix/sysv/linux/alpha/sigprocmask.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sigsuspend.S b/sysdeps/unix/sysv/linux/alpha/sigsuspend.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sigsuspend.S
+rename to sysdeps/unix/sysv/linux/alpha/sigsuspend.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sizes.h b/sysdeps/unix/sysv/linux/alpha/sizes.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sizes.h
+rename to sysdeps/unix/sysv/linux/alpha/sizes.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/statfs64.c b/sysdeps/unix/sysv/linux/alpha/statfs64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/statfs64.c
+rename to sysdeps/unix/sysv/linux/alpha/statfs64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/statvfs.c b/sysdeps/unix/sysv/linux/alpha/statvfs.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/statvfs.c
+rename to sysdeps/unix/sysv/linux/alpha/statvfs.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/statvfs64.c b/sysdeps/unix/sysv/linux/alpha/statvfs64.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/statvfs64.c
+rename to sysdeps/unix/sysv/linux/alpha/statvfs64.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/swapcontext.S b/sysdeps/unix/sysv/linux/alpha/swapcontext.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/swapcontext.S
+rename to sysdeps/unix/sysv/linux/alpha/swapcontext.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sys/acct.h b/sysdeps/unix/sysv/linux/alpha/sys/acct.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sys/acct.h
+rename to sysdeps/unix/sysv/linux/alpha/sys/acct.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sys/io.h b/sysdeps/unix/sysv/linux/alpha/sys/io.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sys/io.h
+rename to sysdeps/unix/sysv/linux/alpha/sys/io.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sys/procfs.h b/sysdeps/unix/sysv/linux/alpha/sys/procfs.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sys/procfs.h
+rename to sysdeps/unix/sysv/linux/alpha/sys/procfs.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sys/ucontext.h b/sysdeps/unix/sysv/linux/alpha/sys/ucontext.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sys/ucontext.h
+rename to sysdeps/unix/sysv/linux/alpha/sys/ucontext.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sys/user.h b/sysdeps/unix/sysv/linux/alpha/sys/user.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sys/user.h
+rename to sysdeps/unix/sysv/linux/alpha/sys/user.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/syscall.S b/sysdeps/unix/sysv/linux/alpha/syscall.S
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/syscall.S
+rename to sysdeps/unix/sysv/linux/alpha/syscall.S
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/syscalls.list b/sysdeps/unix/sysv/linux/alpha/syscalls.list
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/syscalls.list
+rename to sysdeps/unix/sysv/linux/alpha/syscalls.list
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sysconf.c b/sysdeps/unix/sysv/linux/alpha/sysconf.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sysconf.c
+rename to sysdeps/unix/sysv/linux/alpha/sysconf.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sysdep.h b/sysdeps/unix/sysv/linux/alpha/sysdep.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/sysdep.h
+rename to sysdeps/unix/sysv/linux/alpha/sysdep.h
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/ucontext-offsets.sym b/sysdeps/unix/sysv/linux/alpha/ucontext-offsets.sym
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/ucontext-offsets.sym
+rename to sysdeps/unix/sysv/linux/alpha/ucontext-offsets.sym
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/wordexp.c b/sysdeps/unix/sysv/linux/alpha/wordexp.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/wordexp.c
+rename to sysdeps/unix/sysv/linux/alpha/wordexp.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/xstat.c b/sysdeps/unix/sysv/linux/alpha/xstat.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/xstat.c
+rename to sysdeps/unix/sysv/linux/alpha/xstat.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/xstatconv.c b/sysdeps/unix/sysv/linux/alpha/xstatconv.c
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/xstatconv.c
+rename to sysdeps/unix/sysv/linux/alpha/xstatconv.c
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/xstatconv.h b/sysdeps/unix/sysv/linux/alpha/xstatconv.h
+similarity index 100%
+rename from ports/sysdeps/unix/sysv/linux/alpha/xstatconv.h
+rename to sysdeps/unix/sysv/linux/alpha/xstatconv.h

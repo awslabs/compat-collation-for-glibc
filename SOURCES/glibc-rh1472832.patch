@@ -1,0 +1,38 @@
+commit c1f86a33ca32e26a9d6e29fc961e5ecb5e2e5eb4
+Author: Daniel Alvarez <dalvarez@redhat.com>
+Date:   Fri Jun 29 09:44:55 2018 +0200
+
+    getifaddrs: Don't return ifa entries with NULL names [BZ #21812]
+    
+    A lookup operation in map_newlink could turn into an insert because of
+    holes in the interface part of the map.  This leads to incorrectly set
+    the name of the interface to NULL when the interface is not present
+    for the address being processed (most likely because the interface was
+    added between the RTM_GETLINK and RTM_GETADDR calls to the kernel).
+    When such changes are detected by the kernel, it'll mark the dump as
+    "inconsistent" by setting NLM_F_DUMP_INTR flag on the next netlink
+    message.
+    
+    This patch checks this condition and retries the whole operation.
+    Hopes are that next time the interface corresponding to the address
+    entry is present in the list and correct name is returned.
+
+diff --git a/sysdeps/unix/sysv/linux/ifaddrs.c b/sysdeps/unix/sysv/linux/ifaddrs.c
+index c87e594e30a314fe..b1329dc4d4c63529 100644
+--- a/sysdeps/unix/sysv/linux/ifaddrs.c
++++ b/sysdeps/unix/sysv/linux/ifaddrs.c
+@@ -369,6 +369,14 @@ getifaddrs_internal (struct ifaddrs **ifap)
+ 	  if ((pid_t) nlh->nlmsg_pid != nh.pid || nlh->nlmsg_seq != nlp->seq)
+ 	    continue;
+ 
++	  /* If the dump got interrupted, we can't rely on the results
++	     so try again. */
++	  if (nlh->nlmsg_flags & NLM_F_DUMP_INTR)
++	    {
++	      result = -EAGAIN;
++	      goto exit_free;
++	    }
++
+ 	  if (nlh->nlmsg_type == NLMSG_DONE)
+ 	    break;		/* ok */
+ 

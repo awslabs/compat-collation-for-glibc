@@ -1,0 +1,26 @@
+commit 05598a0907cad1350962e89b781215209a785d92
+Author: Patsy Franklin <pfrankli@redhat.com>
+Date:   Tue Jun 26 10:35:03 2018 -0400
+
+    In sem_open.c,  pad was not initialized when __HAVE_64B_ATOMICS was
+    true.  On some arches this caused valgrind to warn about uninitialized
+    bytes when the struct was written to the file system.
+    
+    This patch moves the initialization of pad outside of the
+    conditional.
+
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+diff -Nrup a/nptl/sem_open.c b/nptl/sem_open.c
+--- a/nptl/sem_open.c	2018-06-20 10:27:01.110844222 -0400
++++ b/nptl/sem_open.c	2018-06-27 11:15:33.677892273 -0400
+@@ -313,6 +313,9 @@ sem_open (const char *name, int oflag, .
+       sem.newsem.value = value << SEM_VALUE_SHIFT;
+       sem.newsem.nwaiters = 0;
+ #endif
++      /* pad is used as a mutex on pre-v9 sparc and ignored otherwise.  */
++      sem.newsem.pad = 0;
++
+       /* This always is a shared semaphore.  */
+       sem.newsem.private = LLL_SHARED;
+ 

@@ -1,0 +1,35 @@
+Related upstream commit:
+
+commit c5c2b7c3fd823fc5c4a52506292a90eba60b0c62
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sat Dec 6 23:40:48 2014 +0000
+
+    Fix pthreads getrlimit, gettimeofday namespace (bug 17682).
+
+--- glibc-2.17-c758a686/include/sys/resource.h
++++ glibc-2.17-c758a686/include/sys/resource.h
+@@ -14,5 +14,6 @@ extern int __getrusage (enum __rusage_who __who, struct rusage *__usage)
+ 
+ extern int __setrlimit (enum __rlimit_resource __resource,
+ 			const struct rlimit *__rlimits);
++libc_hidden_proto (__getrlimit)
+ #endif
+ #endif
+--- glibc-2.17-c758a686/resource/getrlimit.c
++++ glibc-2.17-c758a686/resource/getrlimit.c
+@@ -27,6 +27,7 @@ __getrlimit (enum __rlimit_resource resource, struct rlimit *rlimits)
+   __set_errno (ENOSYS);
+   return -1;
+ }
++libc_hidden_def (__getrlimit)
+ weak_alias (__getrlimit, getrlimit)
+ 
+ stub_warning (getrlimit)
+--- glibc-2.17-c758a686/sysdeps/mach/hurd/getrlimit.c
++++ glibc-2.17-c758a686/sysdeps/mach/hurd/getrlimit.c
+@@ -43,4 +43,5 @@ __getrlimit (enum __rlimit_resource resource, struct rlimit *rlimits)
+ 
+   return 0;
+ }
++libc_hidden_def (__getrlimit)
+ weak_alias (__getrlimit, getrlimit)

@@ -1,0 +1,425 @@
+commit 4a6aca7bf8a70f1dc66a07c04aba2d7fd837602d
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Mon Dec 29 17:37:54 2014 +0530
+
+    Remove Wundef warnings for specification macros
+    
+    This patch adds a file posix-conf-vars.list that is used to generate
+    macros to determine if a macro is defined as set, unset or not
+    defined.  gen-posix-conf-vars.awk processes this file and generates a
+    header (posix-conf-vars-def.h) with these macros.  A new header
+    posix-conf-vars.h includes this generated header and defines accessor
+    macros for the generated macros.
+    
+    Tested on x86_64.
+    
+            * posix/Makefile (before-compile): Add posix-conf-vars-def.h.
+            ($(objpfx)posix-conf-vars-def.h): New target.
+            * posix/posix-conf-vars.list: New file.
+            * posix/posix-conf-vars.h: New file.
+            * posix/confstr.c: Include posix-conf-vars.h.
+            (confstr): Use CONF_IS_* macros.
+            * posix/posix-envs.def: Include posix-conf-vars.h.  Use
+            CONF_IS_* macros.
+            * scripts/gen-posix-conf-vars.awk: New file.
+
+diff --git a/posix/Makefile b/posix/Makefile
+index 4034282866139aaa..c272e87a480f5254 100644
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -96,7 +96,7 @@ others		:= getconf
+ install-bin	:= getconf
+ install-others-programs	:= $(inst_libexecdir)/getconf
+ 
+-before-compile	+= testcases.h ptestcases.h
++before-compile	+= testcases.h ptestcases.h posix-conf-vars-def.h
+ 
+ # So they get cleaned up.
+ generated := $(addprefix wordexp-test-result, 1 2 3 4 5 6 7 8 9 10) \
+@@ -288,3 +288,9 @@ $(objpfx)getconf.speclist: getconf-speclist.c posix-envs.def
+ # be built both makes it available for eyeball inspection and avoids the
+ # surprise of things that look like compilation being done by 'make install'.
+ others: $(objpfx)getconf.speclist
++
++$(objpfx)posix-conf-vars-def.h: $(..)scripts/gen-posix-conf-vars.awk \
++				posix-conf-vars.list Makefile
++	$(make-target-directory)
++	$(AWK) -f $(filter-out Makefile, $^) > $@.tmp
++	mv -f $@.tmp $@
+diff --git a/posix/confstr.c b/posix/confstr.c
+index 7d86d60bc177c32d..5b03986a3678e007 100644
+--- a/posix/confstr.c
++++ b/posix/confstr.c
+@@ -21,6 +21,7 @@
+ #include <string.h>
+ #include <confstr.h>
+ #include "../version.h"
++#include <posix-conf-vars.h>
+ 
+ /* If BUF is not NULL and LEN > 0, fill in at most LEN - 1 bytes
+    of BUF with the value corresponding to NAME and zero-terminate BUF.
+@@ -100,9 +101,9 @@ confstr (name, buf, len)
+     case _CS_POSIX_V6_ILP32_OFF32_CFLAGS:
+     case _CS_POSIX_V7_ILP32_OFF32_CFLAGS:
+ #ifdef __ILP32_OFF32_CFLAGS
+-# if _POSIX_V7_ILP32_OFF32 == -1
++# if CONF_IS_DEFINED_UNSET (_POSIX_V7_ILP32_OFF32)
+ #  error "__ILP32_OFF32_CFLAGS should not be defined"
+-# elif !defined _POSIX_V7_ILP32_OFF32
++# elif CONF_IS_UNDEFINED (_POSIX_V7_ILP32_OFF32)
+       if (__sysconf (_SC_V7_ILP32_OFF32) < 0)
+ 	break;
+ # endif
+@@ -115,9 +116,9 @@ confstr (name, buf, len)
+     case _CS_POSIX_V6_ILP32_OFFBIG_CFLAGS:
+     case _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS:
+ #ifdef __ILP32_OFFBIG_CFLAGS
+-# if _POSIX_V7_ILP32_OFFBIG == -1
++# if CONF_IS_DEFINED_UNSET (_POSIX_V7_ILP32_OFFBIG)
+ #  error "__ILP32_OFFBIG_CFLAGS should not be defined"
+-# elif !defined _POSIX_V7_ILP32_OFFBIG
++# elif CONF_IS_UNDEFINED (_POSIX_V7_ILP32_OFFBIG)
+       if (__sysconf (_SC_V7_ILP32_OFFBIG) < 0)
+ 	break;
+ # endif
+@@ -130,9 +131,9 @@ confstr (name, buf, len)
+     case _CS_POSIX_V6_LP64_OFF64_CFLAGS:
+     case _CS_POSIX_V7_LP64_OFF64_CFLAGS:
+ #ifdef __LP64_OFF64_CFLAGS
+-# if _POSIX_V7_LP64_OFF64 == -1
++# if CONF_IS_DEFINED_UNSET (_POSIX_V7_LP64_OFF64)
+ #  error "__LP64_OFF64_CFLAGS should not be defined"
+-# elif !defined _POSIX_V7_LP64_OFF64
++# elif CONF_IS_UNDEFINED (_POSIX_V7_LP64_OFF64)
+       if (__sysconf (_SC_V7_LP64_OFF64) < 0)
+ 	break;
+ # endif
+@@ -145,9 +146,9 @@ confstr (name, buf, len)
+     case _CS_POSIX_V6_ILP32_OFF32_LDFLAGS:
+     case _CS_POSIX_V7_ILP32_OFF32_LDFLAGS:
+ #ifdef __ILP32_OFF32_LDFLAGS
+-# if _POSIX_V7_ILP32_OFF32 == -1
++# if CONF_IS_DEFINED_UNSET (_POSIX_V7_ILP32_OFF32 )
+ #  error "__ILP32_OFF32_LDFLAGS should not be defined"
+-# elif !defined _POSIX_V7_ILP32_OFF32
++# elif CONF_IS_UNDEFINED (_POSIX_V7_ILP32_OFF32)
+       if (__sysconf (_SC_V7_ILP32_OFF32) < 0)
+ 	break;
+ # endif
+@@ -160,9 +161,9 @@ confstr (name, buf, len)
+     case _CS_POSIX_V6_ILP32_OFFBIG_LDFLAGS:
+     case _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS:
+ #ifdef __ILP32_OFFBIG_LDFLAGS
+-# if _POSIX_V7_ILP32_OFFBIG == -1
++# if CONF_IS_DEFINED_UNSET (_POSIX_V7_ILP32_OFFBIG)
+ #  error "__ILP32_OFFBIG_LDFLAGS should not be defined"
+-# elif !defined _POSIX_V7_ILP32_OFFBIG
++# elif CONF_IS_UNDEFINED (_POSIX_V7_ILP32_OFFBIG)
+       if (__sysconf (_SC_V7_ILP32_OFFBIG) < 0)
+ 	break;
+ # endif
+@@ -175,9 +176,9 @@ confstr (name, buf, len)
+     case _CS_POSIX_V6_LP64_OFF64_LDFLAGS:
+     case _CS_POSIX_V7_LP64_OFF64_LDFLAGS:
+ #ifdef __LP64_OFF64_LDFLAGS
+-# if _POSIX_V7_LP64_OFF64 == -1
++# if CONF_IS_DEFINED_UNSET (_POSIX_V7_LP64_OFF64)
+ #  error "__LP64_OFF64_LDFLAGS should not be defined"
+-# elif !defined _POSIX_V7_LP64_OFF64
++# elif CONF_IS_UNDEFINED (_POSIX_V7_LP64_OFF64)
+       if (__sysconf (_SC_V7_LP64_OFF64) < 0)
+ 	break;
+ # endif
+@@ -188,7 +189,8 @@ confstr (name, buf, len)
+ 
+     case _CS_LFS_CFLAGS:
+     case _CS_LFS_LINTFLAGS:
+-#if _POSIX_V6_ILP32_OFF32 == 1 && _POSIX_V6_ILP32_OFFBIG == 1
++#if (CONF_IS_DEFINED_SET (_POSIX_V6_ILP32_OFF32) \
++     && CONF_IS_DEFINED_SET (_POSIX_V6_ILP32_OFFBIG))
+ # define __LFS_CFLAGS "-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+       /* Signal that we want the new ABI.  */
+       string = __LFS_CFLAGS;
+diff --git a/posix/posix-conf-vars.h b/posix/posix-conf-vars.h
+new file mode 100644
+index 0000000000000000..6faf29f56b55b7e8
+--- /dev/null
++++ b/posix/posix-conf-vars.h
+@@ -0,0 +1,48 @@
++/* Macros to check if a POSIX configuration variable is defined or set.
++
++   Copyright (C) 1991-2014 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#ifndef _POSIX_CONF_VARS_H
++#define _POSIX_CONF_VARS_H
++
++/* The script gen-posix-conf-vars.awk generates the header
++   posix-conf-vars-def.h from the list file posix-conf-vars.list and defines
++   CONF_DEF_* macros for each entry in the list file set to either of
++   CONF_DEF_UNDEFINED, CONF_DEF_DEFINED_SET or CONF_DEF_DEFINED_UNSET.  To
++   check configuration variables within glibc code, use the configuration macro
++   functions instead of checking for definitions of the macros.  */
++
++#include <posix-conf-vars-def.h>
++
++#define CONF_DEF_UNDEFINED	1
++#define CONF_DEF_DEFINED_SET	2
++#define CONF_DEF_DEFINED_UNSET	3
++
++/* The configuration variable is not defined.  */
++#define CONF_IS_UNDEFINED(conf) (CONF_DEF##conf == CONF_DEF_UNDEFINED)
++
++/* The configuration variable is defined.  It may or may not be set.  */
++#define CONF_IS_DEFINED(conf) (CONF_DEF##conf != CONF_DEF_UNDEFINED)
++
++/* The configuration variable is defined and set.  */
++#define CONF_IS_DEFINED_SET(conf) (CONF_DEF##conf == CONF_DEF_DEFINED_SET)
++
++/* The configuration variable is defined but not set.  */
++#define CONF_IS_DEFINED_UNSET(conf) (CONF_DEF##conf == CONF_DEF_DEFINED_UNSET)
++
++#endif
+diff --git a/posix/posix-conf-vars.list b/posix/posix-conf-vars.list
+new file mode 100644
+index 0000000000000000..8f308c216626c59c
+--- /dev/null
++++ b/posix/posix-conf-vars.list
+@@ -0,0 +1,22 @@
++# Configuration variables identified by getconf.  The heading of each section
++# is of the format TYPE PREFIX with the opening curly brace on the same line.
++# TYPE can either be SYSCONF, PATHCONF, CONFSTR or SPEC.  Variable names are
++# put one on each line with a curly brace on its own line ending the section.
++
++SPEC POSIX {
++  V6_ILP32_OFF32
++  V6_ILP32_OFFBIG
++  V6_LP64_OFF64
++  V6_LPBIG_OFFBIG
++  V7_ILP32_OFF32
++  V7_ILP32_OFFBIG
++  V7_LP64_OFF64
++  V7_LPBIG_OFFBIG
++}
++
++SPEC XBS5 {
++  ILP32_OFF32
++  ILP32_OFFBIG
++  LP64_OFF64
++  LPBIG_OFFBIG
++}
+diff --git a/posix/posix-envs.def b/posix/posix-envs.def
+index c32ea8acfcfebb78..e820e6dbe3fa3b61 100644
+--- a/posix/posix-envs.def
++++ b/posix/posix-envs.def
+@@ -42,35 +42,37 @@
+    defined.  These are called with arguments V5, V6, V7 before and
+    after the relevant groups of environments.  */
+ 
++#include <posix-conf-vars.h>
++
+ START_ENV_GROUP (V7)
+ 
+-#if _POSIX_V7_ILP32_OFF32 > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V7_ILP32_OFF32)
+ KNOWN_PRESENT_ENVIRONMENT (V7, POSIX_V7, ILP32_OFF32)
+-#elif defined _POSIX_V7_ILP32_OFF32
++#elif CONF_IS_DEFINED (_POSIX_V7_ILP32_OFF32)
+ KNOWN_ABSENT_ENVIRONMENT (V7, POSIX_V7, ILP32_OFF32)
+ #else
+ UNKNOWN_ENVIRONMENT (V7, POSIX_V7, ILP32_OFF32)
+ #endif
+ 
+-#if _POSIX_V7_ILP32_OFFBIG > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V7_ILP32_OFFBIG)
+ KNOWN_PRESENT_ENVIRONMENT (V7, POSIX_V7, ILP32_OFFBIG)
+-#elif defined _POSIX_V7_ILP32_OFFBIG
++#elif CONF_IS_DEFINED (_POSIX_V7_ILP32_OFFBIG)
+ KNOWN_ABSENT_ENVIRONMENT (V7, POSIX_V7, ILP32_OFFBIG)
+ #else
+ UNKNOWN_ENVIRONMENT (V7, POSIX_V7, ILP32_OFFBIG)
+ #endif
+ 
+-#if _POSIX_V7_LP64_OFF64 > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V7_LP64_OFF64)
+ KNOWN_PRESENT_ENVIRONMENT (V7, POSIX_V7, LP64_OFF64)
+-#elif defined _POSIX_V7_LP64_OFF64
++#elif CONF_IS_DEFINED (_POSIX_V7_LP64_OFF64)
+ KNOWN_ABSENT_ENVIRONMENT (V7, POSIX_V7, LP64_OFF64)
+ #else
+ UNKNOWN_ENVIRONMENT (V7, POSIX_V7, LP64_OFF64)
+ #endif
+ 
+-#if _POSIX_V7_LPBIG_OFFBIG > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V7_LPBIG_OFFBIG)
+ KNOWN_PRESENT_ENVIRONMENT (V7, POSIX_V7, LPBIG_OFFBIG)
+-#elif defined _POSIX_V7_LPBIG_OFFBIG
++#elif CONF_IS_DEFINED (_POSIX_V7_LPBIG_OFFBIG)
+ KNOWN_ABSENT_ENVIRONMENT (V7, POSIX_V7, LPBIG_OFFBIG)
+ #else
+ UNKNOWN_ENVIRONMENT (V7, POSIX_V7, LPBIG_OFFBIG)
+@@ -80,33 +82,33 @@ END_ENV_GROUP (V7)
+ 
+ START_ENV_GROUP (V6)
+ 
+-#if _POSIX_V6_ILP32_OFF32 > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V6_ILP32_OFF32)
+ KNOWN_PRESENT_ENVIRONMENT (V6, POSIX_V6, ILP32_OFF32)
+-#elif defined _POSIX_V6_ILP32_OFF32
++#elif CONF_IS_DEFINED (_POSIX_V6_ILP32_OFF32)
+ KNOWN_ABSENT_ENVIRONMENT (V6, POSIX_V6, ILP32_OFF32)
+ #else
+ UNKNOWN_ENVIRONMENT (V6, POSIX_V6, ILP32_OFF32)
+ #endif
+ 
+-#if _POSIX_V6_ILP32_OFFBIG > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V6_ILP32_OFFBIG)
+ KNOWN_PRESENT_ENVIRONMENT (V6, POSIX_V6, ILP32_OFFBIG)
+-#elif defined _POSIX_V6_ILP32_OFFBIG
++#elif CONF_IS_DEFINED (_POSIX_V6_ILP32_OFFBIG)
+ KNOWN_ABSENT_ENVIRONMENT (V6, POSIX_V6, ILP32_OFFBIG)
+ #else
+ UNKNOWN_ENVIRONMENT (V6, POSIX_V6, ILP32_OFFBIG)
+ #endif
+ 
+-#if _POSIX_V6_LP64_OFF64 > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V6_LP64_OFF64)
+ KNOWN_PRESENT_ENVIRONMENT (V6, POSIX_V6, LP64_OFF64)
+-#elif defined _POSIX_V6_LP64_OFF64
++#elif CONF_IS_DEFINED (_POSIX_V6_LP64_OFF64)
+ KNOWN_ABSENT_ENVIRONMENT (V6, POSIX_V6, LP64_OFF64)
+ #else
+ UNKNOWN_ENVIRONMENT (V6, POSIX_V6, LP64_OFF64)
+ #endif
+ 
+-#if _POSIX_V6_LPBIG_OFFBIG > 0
++#if CONF_IS_DEFINED_SET (_POSIX_V6_LPBIG_OFFBIG)
+ KNOWN_PRESENT_ENVIRONMENT (V6, POSIX_V6, LPBIG_OFFBIG)
+-#elif defined _POSIX_V6_LPBIG_OFFBIG
++#elif CONF_IS_DEFINED (_POSIX_V6_LPBIG_OFFBIG)
+ KNOWN_ABSENT_ENVIRONMENT (V6, POSIX_V6, LPBIG_OFFBIG)
+ #else
+ UNKNOWN_ENVIRONMENT (V6, POSIX_V6, LPBIG_OFFBIG)
+@@ -116,33 +118,33 @@ END_ENV_GROUP (V6)
+ 
+ START_ENV_GROUP (V5)
+ 
+-#if _XBS5_ILP32_OFF32 > 0
++#if CONF_IS_DEFINED_SET (_XBS5_ILP32_OFF32)
+ KNOWN_PRESENT_ENVIRONMENT (XBS5, XBS5, ILP32_OFF32)
+-#elif defined _XBS5_ILP32_OFF32
++#elif CONF_IS_DEFINED (_XBS5_ILP32_OFF32)
+ KNOWN_ABSENT_ENVIRONMENT (XBS5, XBS5, ILP32_OFF32)
+ #else
+ UNKNOWN_ENVIRONMENT (XBS5, XBS5, ILP32_OFF32)
+ #endif
+ 
+-#if _XBS5_ILP32_OFFBIG > 0
++#if CONF_IS_DEFINED_SET (_XBS5_ILP32_OFFBIG)
+ KNOWN_PRESENT_ENVIRONMENT (XBS5, XBS5, ILP32_OFFBIG)
+-#elif defined _XBS5_ILP32_OFFBIG
++#elif CONF_IS_DEFINED (_XBS5_ILP32_OFFBIG)
+ KNOWN_ABSENT_ENVIRONMENT (XBS5, XBS5, ILP32_OFFBIG)
+ #else
+ UNKNOWN_ENVIRONMENT (XBS5, XBS5, ILP32_OFFBIG)
+ #endif
+ 
+-#if _XBS5_LP64_OFF64 > 0
++#if CONF_IS_DEFINED_SET (_XBS5_LP64_OFF64)
+ KNOWN_PRESENT_ENVIRONMENT (XBS5, XBS5, LP64_OFF64)
+-#elif defined _XBS5_LP64_OFF64
++#elif CONF_IS_DEFINED (_XBS5_LP64_OFF64)
+ KNOWN_ABSENT_ENVIRONMENT (XBS5, XBS5, LP64_OFF64)
+ #else
+ UNKNOWN_ENVIRONMENT (XBS5, XBS5, LP64_OFF64)
+ #endif
+ 
+-#if _XBS5_LPBIG_OFFBIG > 0
++#if CONF_IS_DEFINED_SET (_XBS5_LPBIG_OFFBIG)
+ KNOWN_PRESENT_ENVIRONMENT (XBS5, XBS5, LPBIG_OFFBIG)
+-#elif defined _XBS5_LPBIG_OFFBIG
++#elif CONF_IS_DEFINED (_XBS5_LPBIG_OFFBIG)
+ KNOWN_ABSENT_ENVIRONMENT (XBS5, XBS5, LPBIG_OFFBIG)
+ #else
+ UNKNOWN_ENVIRONMENT (XBS5, XBS5, LPBIG_OFFBIG)
+diff --git a/scripts/gen-posix-conf-vars.awk b/scripts/gen-posix-conf-vars.awk
+new file mode 100644
+index 0000000000000000..16e20fc1007bd2f5
+--- /dev/null
++++ b/scripts/gen-posix-conf-vars.awk
+@@ -0,0 +1,61 @@
++# Generate posix-conf-vars-def.h with definitions for CONF_DEF{CONF} for each
++# configuration variable that getconf or sysconf may use.  Currently it is
++# equipped only to generate such macros for specification macros and for
++# SYSCONF macros in the _POSIX namespace.
++
++BEGIN {
++  prefix = ""
++}
++
++$1 ~ /^#/ || $0 ~ /^\s*$/ {
++  next
++}
++
++# Begin a new prefix.
++$NF == "{" {
++  type = $1
++  prefix = $2
++  next
++}
++
++$1 == "}" {
++  prefix = ""
++  type = ""
++  next
++}
++
++{
++  if (prefix == "" && type == "" && sc_prefix == "") {
++    printf ("Syntax error at %s:%d\n", FILENAME, FNR) > "/dev/stderr"
++    exit 1
++  }
++
++  # The prefix and variable names are indices and the value indicates what type
++  # of variable it is.  The possible options are:
++  # CONFSTR: A configuration string
++  # SYSCONF: A numeric value
++  # SPEC: A specification
++  conf[prefix][$1] = type
++}
++
++END {
++  print "/* AUTOGENERATED by gen-posix-conf-vars.awk.  DO NOT EDIT.  */\n"
++
++  # Generate macros that specify if a sysconf macro is defined and/or set.
++  for (p in conf) {
++    for (c in conf[p]) {
++      printf "#ifndef _%s_%s\n", p, c
++      printf "# define CONF_DEF_%s_%s CONF_DEF_UNDEFINED\n", p, c
++      # CONFSTR have string values and they are not set or unset.
++      if (conf[p][c] != "CONFSTR") {
++	printf "#else\n"
++	printf "# if _%s_%s > 0\n", p, c
++	printf "#  define CONF_DEF_%s_%s CONF_DEF_DEFINED_SET\n", p, c
++	printf "# else\n"
++	printf "#  define CONF_DEF_%s_%s CONF_DEF_DEFINED_UNSET\n", p, c
++	printf "# endif\n"
++      }
++      printf "#endif\n\n"
++    }
++  }
++}

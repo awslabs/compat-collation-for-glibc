@@ -1,0 +1,3761 @@
+Recreation of this upstream commit:
+
+commit 464263cc00549d2597b6d25309d55b1e4a6b1aac
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sat Feb 8 00:16:57 2014 +0000
+
+    Remove am33 port.
+    
+    This patch removes the am33 port (no other port #includes any files
+    from it), as previously discussed (see
+    <https://sourceware.org/ml/libc-ports/2014-01/msg00046.html>).
+
+Git commands used:
+
+git rm -r ports/sysdeps/am33
+git rm -r ports/sysdeps/unix/am33
+git rm -r ports/sysdeps/unix/sysv/linux/am33
+
+diff --git a/ports/sysdeps/am33/Implies b/ports/sysdeps/am33/Implies
+deleted file mode 100644
+index 780c4e2467693939..0000000000000000
+--- a/ports/sysdeps/am33/Implies
++++ /dev/null
+@@ -1,3 +0,0 @@
+-wordsize-32
+-ieee754/flt-32
+-ieee754/dbl-64
+diff --git a/ports/sysdeps/am33/__longjmp.S b/ports/sysdeps/am33/__longjmp.S
+deleted file mode 100644
+index 1d6c29e99f0099f5..0000000000000000
+--- a/ports/sysdeps/am33/__longjmp.S
++++ /dev/null
+@@ -1,60 +0,0 @@
+-/* longjmp for AM33.
+-   Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#define _ASM
+-#define _SETJMP_H
+-#include <bits/setjmp.h>
+-#include <asm-syntax.h>
+-
+-ENTRY (__longjmp)
+-	mov d0,a0
+-	mov (8,a0),d2
+-	mov d2,mdr
+-	mov (0,a0),d2
+-	mov (4,a0),d3
+-	mov (12,a0),a2
+-	mov (16,a0),a3
+-	mov (20,a0),a1
+-	mov a1,sp
+-	add 24,a0
+-	mov (a0+),r4
+-	mov (a0+),r5
+-	mov (a0+),r6
+-	mov (a0+),r7
+-#ifdef __AM33_2__
+-	fmov (a0+),fs4
+-	fmov (a0+),fs5
+-	fmov (a0+),fs6
+-	fmov (a0+),fs7
+-	fmov (a0+),fs8
+-	fmov (a0+),fs9
+-	fmov (a0+),fs10
+-	fmov (a0+),fs11
+-	fmov (a0+),fs12
+-	fmov (a0+),fs13
+-	fmov (a0+),fs14
+-	fmov (a0+),fs15
+-	fmov (a0+),fs16
+-	fmov (a0+),fs17
+-	fmov (a0+),fs18
+-	fmov (a0+),fs19
+-#endif
+-	mov d1,d0
+-	retf [],0
+-END (__longjmp)
+diff --git a/ports/sysdeps/am33/atomicity.h b/ports/sysdeps/am33/atomicity.h
+deleted file mode 100644
+index b0ba43db4b71a7fc..0000000000000000
+--- a/ports/sysdeps/am33/atomicity.h
++++ /dev/null
+@@ -1,86 +0,0 @@
+-/* Low-level functions for atomic operations.  AM33 version.
+-   Copyright 1999, 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../sparc/sparc32/atomicity.h
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _ATOMICITY_H
+-#define _ATOMICITY_H	1
+-
+-#include <inttypes.h>
+-
+-#define __acquire_lock(lock) \
+-  __asm__ __volatile__("1:	bset	%1, (%0)\n\t"		\
+-		       "	beq	1b"			\
+-		       : : "a" (&(lock)), "d" (1)		\
+-		       : "memory")
+-
+-#define __release_lock(lock) lock = 0
+-
+-static int
+-__attribute__ ((unused))
+-exchange_and_add (volatile uint32_t *mem, int val)
+-{
+-  static unsigned char lock;
+-  int result;
+-
+-  __acquire_lock (lock);
+-
+-  result = *mem;
+-  *mem += val;
+-
+-  __release_lock (lock);
+-
+-  return result;
+-}
+-
+-static void
+-__attribute__ ((unused))
+-atomic_add (volatile uint32_t *mem, int val)
+-{
+-  static unsigned char lock;
+-
+-  __acquire_lock (lock);
+-
+-  *mem += val;
+-
+-  __release_lock (lock);
+-}
+-
+-static int
+-__attribute__ ((unused))
+-compare_and_swap (volatile long int *p, long int oldval, long int newval)
+-{
+-  static unsigned char lock;
+-  int ret;
+-
+-  __acquire_lock (lock);
+-
+-  if (*p != oldval)
+-    ret = 0;
+-  else
+-    {
+-      *p = newval;
+-      ret = 1;
+-    }
+-
+-  __release_lock (lock);
+-
+-  return ret;
+-}
+-
+-#endif /* atomicity.h */
+diff --git a/ports/sysdeps/am33/bits/endian.h b/ports/sysdeps/am33/bits/endian.h
+deleted file mode 100644
+index 7423f09570ac1650..0000000000000000
+--- a/ports/sysdeps/am33/bits/endian.h
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/* AM33 is little-endian.  */
+-
+-#ifndef _ENDIAN_H
+-# error "Never use <bits/endian.h> directly; include <endian.h> instead."
+-#endif
+-
+-#define __BYTE_ORDER __LITTLE_ENDIAN
+diff --git a/ports/sysdeps/am33/bits/setjmp.h b/ports/sysdeps/am33/bits/setjmp.h
+deleted file mode 100644
+index 6dd87cb65546ad11..0000000000000000
+--- a/ports/sysdeps/am33/bits/setjmp.h
++++ /dev/null
+@@ -1,26 +0,0 @@
+-/* Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-/* Define the machine-dependent type `jmp_buf'.  AM33 version. */
+-
+-#ifndef _SETJMP_H
+-# error "Never include <bits/setjmp.h> directly; use <setjmp.h> instead."
+-#endif
+-
+-#ifndef _ASM
+-typedef int __jmp_buf[26];
+-#endif
+diff --git a/ports/sysdeps/am33/bsd-_setjmp.S b/ports/sysdeps/am33/bsd-_setjmp.S
+deleted file mode 100644
+index 9bbfcbbba793502b..0000000000000000
+--- a/ports/sysdeps/am33/bsd-_setjmp.S
++++ /dev/null
+@@ -1 +0,0 @@
+-/* _setjmp is in setjmp.S */
+diff --git a/ports/sysdeps/am33/bsd-setjmp.S b/ports/sysdeps/am33/bsd-setjmp.S
+deleted file mode 100644
+index b6b239e67db2864c..0000000000000000
+--- a/ports/sysdeps/am33/bsd-setjmp.S
++++ /dev/null
+@@ -1 +0,0 @@
+-/* setjmp is in setjmp.S */
+diff --git a/ports/sysdeps/am33/dl-machine.h b/ports/sysdeps/am33/dl-machine.h
+deleted file mode 100644
+index d4b321aca094863e..0000000000000000
+--- a/ports/sysdeps/am33/dl-machine.h
++++ /dev/null
+@@ -1,479 +0,0 @@
+-/* Machine-dependent ELF dynamic relocation inline functions.  AM33 version.
+-   Copyright (C) 1995,96,97,98,99,2000,2001, 2004, 2011
+-   Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef dl_machine_h
+-#define dl_machine_h
+-
+-#define ELF_MACHINE_NAME "mn10300"
+-
+-#include <sys/param.h>
+-
+-/* Return nonzero iff ELF header is compatible with the running host.  */
+-static inline int __attribute__ ((unused))
+-elf_machine_matches_host (const Elf32_Ehdr *ehdr)
+-{
+-  return ehdr->e_machine == EM_MN10300;
+-}
+-
+-
+-/* Return the link-time address of _DYNAMIC.  Conveniently, this is the
+-   first element of the GOT.  This must be inlined in a function which
+-   uses global data.  */
+-static inline Elf32_Addr __attribute__ ((unused))
+-elf_machine_dynamic (void)
+-{
+-  register Elf32_Addr *got asm ("a2");
+-  return *got;
+-}
+-
+-
+-/* Return the run-time load address of the shared object.  */
+-static inline Elf32_Addr __attribute__ ((unused))
+-elf_machine_load_address (void)
+-{
+-  register Elf32_Addr gotaddr asm ("a2");
+-  Elf32_Addr off, gotval;
+-
+-  asm ("mov _dl_start@GOTOFF,%0" : "=r" (off));
+-  asm ("mov (_dl_start@GOT,%1),%0" : "=r" (gotval) : "r" (gotaddr));
+-
+-  return off + gotaddr - gotval;
+-}
+-
+-#ifndef PROF
+-/* We add a declaration of this function here so that in dl-runtime.c
+-   the ELF_MACHINE_RUNTIME_TRAMPOLINE macro really can pass the parameters
+-   in registers.
+-
+-   We cannot use this scheme for profiling because the _mcount call
+-   destroys the passed register information.  */
+-static ElfW(Addr) fixup (struct link_map *l, ElfW(Word) reloc_offset)
+-     __attribute__ ((unused));
+-static ElfW(Addr) profile_fixup (struct link_map *l, ElfW(Word) reloc_offset,
+-				 ElfW(Addr) retaddr)
+-     __attribute__ ((unused));
+-#endif
+-
+-/* Set up the loaded object described by L so its unrelocated PLT
+-   entries will jump to the on-demand fixup code in dl-runtime.c.  */
+-
+-static inline int __attribute__ ((unused))
+-elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+-{
+-  Elf32_Addr *got;
+-  extern void _dl_runtime_resolve (Elf32_Word) attribute_hidden;
+-  extern void _dl_runtime_profile (Elf32_Word) attribute_hidden;
+-
+-  if (l->l_info[DT_JMPREL] && lazy)
+-    {
+-      /* The GOT entries for functions in the PLT have not yet been filled
+-	 in.  Their initial contents will arrange when called to push an
+-	 offset into the .rel.plt section, push _GLOBAL_OFFSET_TABLE_[1],
+-	 and then jump to _GLOBAL_OFFSET_TABLE[2].  */
+-      got = (Elf32_Addr *) D_PTR (l, l_info[DT_PLTGOT]);
+-      got[1] = (Elf32_Addr) l;	/* Identify this shared object.  */
+-
+-      /* The got[2] entry contains the address of a function which gets
+-	 called to get the address of a so far unresolved function and
+-	 jump to it.  The profiling extension of the dynamic linker allows
+-	 to intercept the calls to collect information.  In this case we
+-	 don't store the address in the GOT so that all future calls also
+-	 end in this function.  */
+-      if (__builtin_expect (profile, 0))
+-	{
+-	  got[2] = (Elf32_Addr) &_dl_runtime_profile;
+-
+-	  if (_dl_name_match_p (GLRO(dl_profile), l))
+-	    /* This is the object we are looking for.  Say that we really
+-	       want profiling and the timers are started.  */
+-	    GL(dl_profile_map) = l;
+-	}
+-      else
+-	/* This function will get called to fix up the GOT entry indicated by
+-	   the offset on the stack, and then jump to the resolved address.  */
+-	got[2] = (Elf32_Addr) &_dl_runtime_resolve;
+-    }
+-
+-  return lazy;
+-}
+-
+-/* This code is used in dl-runtime.c to call the `fixup' function
+-   and then redirect to the address it returns.  */
+-#ifndef PROF
+-# define ELF_MACHINE_RUNTIME_TRAMPOLINE asm ("\
+-	.text\n\
+-	.globl _dl_runtime_resolve\n\
+-	.type _dl_runtime_resolve, @function\n\
+-_dl_runtime_resolve:\n\
+-	add -12,sp		# Preserve registers otherwise clobbered.\n\
+-	mov d1,(20,sp)\n\
+-	mov d0,(16,sp)\n\
+-	mov r1,d0\n\
+-	mov r0,d1\n\
+-	call fixup,[],0		# Call resolver.\n\
+-	mov d0,a0\n\
+-	mov (12,sp),d1		# Copy return address back to mdr,\n\
+-	mov d1,mdr		# in case the callee returns with retf\n\
+-	mov (16,sp),d0		# Get register content back.\n\
+-	mov (20,sp),d1\n\
+-	add 12,sp\n\
+-	jmp (a0)\n\
+-	.size _dl_runtime_resolve, .-_dl_runtime_resolve\n\
+-\n\
+-	.globl _dl_runtime_profile\n\
+-	.type _dl_runtime_profile, @function\n\
+-_dl_runtime_profile:\n\
+-	add -12,sp		# Preserve registers otherwise clobbered.\n\
+-	mov d1,(20,sp)\n\
+-	mov d0,(16,sp)\n\
+-	mov r1,d0\n\
+-	mov r0,d1\n\
+-	call profile_fixup,[],0		# Call resolver.\n\
+-	mov d0,a0\n\
+-	mov (12,sp),d1		# Copy return address back to mdr,\n\
+-	mov d1,mdr		# in case the callee returns with retf\n\
+-	mov (16,sp),d0		# Get register content back.\n\
+-	mov (20,sp),d1\n\
+-	add 12,sp\n\
+-	jmp (a0)\n\
+-	.size _dl_runtime_profile, .-_dl_runtime_profile\n\
+-	.previous\n\
+-");
+-#else
+-# define ELF_MACHINE_RUNTIME_TRAMPOLINE asm ("\n\
+-	.text\n\
+-	.globl _dl_runtime_resolve\n\
+-	.globl _dl_runtime_profile\n\
+-	.type _dl_runtime_resolve, @function\n\
+-	.type _dl_runtime_profile, @function\n\
+-_dl_runtime_resolve:\n\
+-_dl_runtime_profile:\n\
+-	add -12,sp		# Preserve registers otherwise clobbered.\n\
+-	mov d1,(20,sp)\n\
+-	mov d0,(16,sp)\n\
+-	mov r1,d0\n\
+-	mov r0,d1\n\
+-	call profile_fixup,[],0		# Call resolver.\n\
+-	mov d0,a0\n\
+-	mov (12,sp),d1		# Copy return address back to mdr,\n\
+-	mov d1,mdr		# in case the callee returns with retf\n\
+-	mov (16,sp),d0		# Get register content back.\n\
+-	mov (20,sp),d1\n\
+-	add 12,sp\n\
+-	jmp (a0)\n\
+-	.size _dl_runtime_resolve, .-_dl_runtime_resolve\n\
+-	.size _dl_runtime_profile, .-_dl_runtime_profile\n\
+-	.previous\n\
+-");
+-#endif
+-
+-/* Mask identifying addresses reserved for the user program,
+-   where the dynamic linker should not map anything.  */
+-#define ELF_MACHINE_USER_ADDRESS_MASK	0xf8000000UL
+-
+-/* Initial entry point code for the dynamic linker.
+-   The C function `_dl_start' is the real entry point;
+-   its return value is the user program's entry point.  */
+-#define RTLD_START asm ("\n\
+-	.text\n\
+-.globl _start\n\
+-.globl _dl_start_user\n\
+-_start:\n\
+-	mov 0,a3	# Mark the top of the stack\n\
+-	mov sp,a1\n\
+-	add -20,sp	# Prepare for function call\n\
+-	mov a1,d0\n\
+-	call _dl_start,[],0\n\
+-_dl_start_user:\n\
+-	# Save the user entry point address in d2.\n\
+-	mov d0,d2\n\
+-	# Point a2 at the GOT.\n\
+-0:	mov pc,a2\n\
+-	add _GLOBAL_OFFSET_TABLE_ - (0b-.),a2\n\
+-	# Store the highest stack address\n\
+-	mov (__libc_stack_end@GOT,a2),a0\n\
+-	mov a1,(a0)\n\
+-	# See if we were run as a command with the executable file\n\
+-	# name as an extra leading argument.\n\
+-	mov (_dl_skip_args@GOT,a2),a0\n\
+-	mov (a0),d0\n\
+-	# Pop the original argument count.\n\
+-	mov (20,sp),d3\n\
+-	# Subtract _dl_skip_args from it.\n\
+-	sub d0,d3\n\
+-	# Adjust the stack pointer to skip _dl_skip_args words.\n\
+-	asl2 d0\n\
+-	mov sp,a0\n\
+-	add d0,a0\n\
+-	mov a0,sp\n\
+-	# Push argc back on the stack.\n\
+-	mov d3,(20,sp)\n\
+-	# The special initializer gets called with the stack just\n\
+-	# as the application's entry point will see it; it can\n\
+-	# switch stacks if it moves these contents over.\n\
+-" RTLD_START_SPECIAL_INIT "\n\
+-	# Load the parameters again.\n\
+-	# (d0, d1, (12,sp), (16,sp)) = (_dl_loaded, argc, argv, envp)\n\
+-	add 24,a0\n\
+-	mov a0,(12,sp)	# a0 is 24+sp\n\
+-	mov d3,d1	# d3 contained argc\n\
+-	inc d3\n\
+-	asl2 d3		# d3 is now (argc+1)*4,\n\
+-	add d3,a0	# the offset between argv and envp\n\
+-	mov a0,(16,sp)\n\
+-	mov (_rtld_local@GOTOFF,a2),d0\n\
+-	# Call the function to run the initializers.\n\
+-	call _dl_init@PLT,[],0\n\
+-	# Pass our finalizer function to the user in d0, as per ELF ABI.\n\
+-	mov (_dl_fini@GOT,a2),d0\n\
+-	add 20,sp\n\
+-	# Jump to the user's entry point.\n\
+-	mov d2,a1\n\
+-	jmp (a1)\n\
+-	.previous\n\
+-");
+-
+-#ifndef RTLD_START_SPECIAL_INIT
+-#define RTLD_START_SPECIAL_INIT /* nothing */
+-#endif
+-
+-/* ELF_RTYPE_CLASS_PLT iff TYPE describes relocation of a PLT entry, so
+-   PLT entries should not be allowed to define the value.
+-   ELF_RTYPE_CLASS_NOCOPY iff TYPE should not be allowed to resolve to one
+-   of the main executable's symbols, as for a COPY reloc.  */
+-#define elf_machine_type_class(type) \
+-  ((((type) == R_MN10300_JMP_SLOT) * ELF_RTYPE_CLASS_PLT)	\
+-   | (((type) == R_MN10300_COPY) * ELF_RTYPE_CLASS_COPY))
+-
+-/* A reloc type used for ld.so cmdline arg lookups to reject PLT entries.  */
+-#define ELF_MACHINE_JMP_SLOT	R_MN10300_JMP_SLOT
+-
+-static inline Elf32_Addr
+-elf_machine_fixup_plt (struct link_map *map, lookup_t t,
+-		       const Elf32_Rela *reloc,
+-		       Elf32_Addr *reloc_addr, Elf32_Addr value)
+-{
+-  return *reloc_addr = value;
+-}
+-
+-/* Return the final value of a plt relocation.  */
+-static inline Elf32_Addr
+-elf_machine_plt_value (struct link_map *map, const Elf32_Rela *reloc,
+-		       Elf32_Addr value)
+-{
+-  return value + reloc->r_addend;
+-}
+-
+-#endif /* !dl_machine_h */
+-
+-#ifdef RESOLVE
+-
+-/* The mn10300 never uses Elf32_Rel relocations.  */
+-#define ELF_MACHINE_NO_REL 1
+-
+-/* Perform the relocation specified by RELOC and SYM (which is fully resolved).
+-   MAP is the object containing the reloc.  */
+-
+-static inline void
+-elf_machine_rela (struct link_map *map, const Elf32_Rela *reloc,
+-		  const Elf32_Sym *sym, const struct r_found_version *version,
+-		  void *const reloc_addr_arg, int skip_ifunc)
+-{
+-  const unsigned int r_type = ELF32_R_TYPE (reloc->r_info);
+-  Elf32_Addr value, *reloc_addr;
+-
+-  /* Make sure we drop any previous alignment assumptions.  */
+-  asm ("" : "=r" (reloc_addr) : "0" (reloc_addr_arg));
+-
+-#define COPY_UNALIGNED_WORD(sw, tw, align) \
+-  { \
+-    unsigned long *__sl = (void*)&(sw), *__tl = (void*)&(tw); \
+-    unsigned short *__ss = (void*)&(sw), *__ts = (void*)&(tw); \
+-    unsigned char *__sc = (void*)&(sw), *__tc = (void*)&(tw); \
+-    switch ((align)) \
+-    { \
+-    case 0: \
+-      *__tl = *__sl; \
+-      break; \
+-    case 2: \
+-      *__ts++ = *__ss++; \
+-      *__ts = *__ss; \
+-      break; \
+-    default: \
+-      *__tc++ = *__sc++; \
+-      *__tc++ = *__sc++; \
+-      *__tc++ = *__sc++; \
+-      *__tc = *__sc; \
+-      break; \
+-    } \
+-  }
+-
+-#define COPY_UNALIGNED_HALFWORD(sw, tw, align) \
+-  { \
+-    unsigned short *__ss = (void*)&(sw), *__ts = (void*)&(tw); \
+-    unsigned char *__sc = (void*)&(sw), *__tc = (void*)&(tw); \
+-    switch ((align)) \
+-    { \
+-    case 0: \
+-      *__ts = *__ss; \
+-      break; \
+-    default: \
+-      *__tc++ = *__sc++; \
+-      *__tc = *__sc; \
+-      break; \
+-    } \
+-  }
+-
+-#if !defined RTLD_BOOTSTRAP || !defined HAVE_Z_COMBRELOC
+-  if (__builtin_expect (r_type == R_MN10300_RELATIVE, 0))
+-    {
+-# if !defined RTLD_BOOTSTRAP && !defined HAVE_Z_COMBRELOC
+-      /* This is defined in rtld.c, but nowhere in the static libc.a;
+-	 make the reference weak so static programs can still link.
+-	 This declaration cannot be done when compiling rtld.c (i.e.
+-	 #ifdef RTLD_BOOTSTRAP) because rtld.c contains the common
+-	 defn for _dl_rtld_map, which is incompatible with a weak decl
+-	 in the same file.  */
+-      weak_extern (_dl_rtld_map);
+-      if (map != &_dl_rtld_map) /* Already done in rtld itself. */
+-# endif
+-	{
+-	  COPY_UNALIGNED_WORD (*reloc_addr, value, (int) reloc_addr & 3);
+-	  value += map->l_addr;
+-	  COPY_UNALIGNED_WORD (value, *reloc_addr, (int) reloc_addr & 3);
+-	}
+-    }
+-# ifndef RTLD_BOOTSTRAP
+-  else if (__builtin_expect (r_type == R_MN10300_NONE, 0))
+-    return;
+-# endif
+-  else
+-#endif
+-    {
+-#ifndef RTLD_BOOTSTRAP
+-      const Elf32_Sym *const refsym = sym;
+-#endif
+-
+-      value = RESOLVE (&sym, version, ELF32_R_TYPE (reloc->r_info));
+-      if (sym)
+-	value += sym->st_value;
+-      value += reloc->r_addend;	/* Assume copy relocs have zero addend.  */
+-
+-      switch (r_type)
+-	{
+-#ifndef RTLD_BOOTSTRAP
+-	case R_MN10300_COPY:
+-	  if (sym == NULL)
+-	    /* This can happen in trace mode if an object could not be
+-	       found.  */
+-	    break;
+-	  if (sym->st_size > refsym->st_size
+-	      || (GLRO(dl_verbose) && sym->st_size < refsym->st_size))
+-	    {
+-	      extern char **_dl_argv;
+-	      const char *strtab;
+-
+-	      strtab = (const void *) D_PTR (map, l_info[DT_STRTAB]);
+-	      _dl_error_printf ("\
+-%s: Symbol `%s' has different size in shared object, consider re-linking\n",
+-				_dl_argv[0] ?: "<program name unknown>",
+-				strtab + refsym->st_name);
+-	    }
+-	  memcpy (reloc_addr, (void *) value, MIN (sym->st_size,
+-						   refsym->st_size));
+-	  break;
+-#endif
+-	case R_MN10300_GLOB_DAT:
+-	case R_MN10300_JMP_SLOT:
+-	  /* These addresses are always aligned.  */
+-	  *reloc_addr = value;
+-	  break;
+-	case R_MN10300_32:
+-	  COPY_UNALIGNED_WORD (value, *reloc_addr, (int) reloc_addr & 3);
+-	  break;
+-#ifndef RTLD_BOOTSTRAP
+-	case R_MN10300_16:
+-	  COPY_UNALIGNED_HALFWORD (value, *reloc_addr, (int) reloc_addr & 1);
+-	  break;
+-	case R_MN10300_8:
+-	  *(char *) reloc_addr = value;
+-	  break;
+-	case R_MN10300_PCREL32:
+-	  value -= (Elf32_Addr) reloc_addr;
+-	  COPY_UNALIGNED_WORD (value, *reloc_addr, (int) reloc_addr & 3);
+-	  break;
+-	case R_MN10300_PCREL16:
+-	  value -= (Elf32_Addr) reloc_addr;
+-	  COPY_UNALIGNED_HALFWORD (value, *reloc_addr, (int) reloc_addr & 1);
+-	  break;
+-	case R_MN10300_PCREL8:
+-	  value -= (Elf32_Addr) reloc_addr;
+-	  *(char *) reloc_addr = (value - (Elf32_Addr) reloc_addr);
+-	  break;
+-#endif
+-	case R_MN10300_NONE:		/* Alright, Wilbur.  */
+-	  break;
+-#if !defined RTLD_BOOTSTRAP || defined _NDEBUG
+-	default:
+-	  _dl_reloc_bad_type (map, ELFW(R_TYPE) (reloc->r_info), 0);
+-	  break;
+-#endif
+-	}
+-
+-    }
+-}
+-
+-static inline void
+-elf_machine_rela_relative (Elf32_Addr l_addr, const Elf32_Rela *reloc,
+-			   void *const reloc_addr_arg)
+-{
+-  Elf32_Addr value, *reloc_addr;
+-
+-  asm ("" : "=r" (reloc_addr) : "0" (reloc_addr_arg));
+-
+-  COPY_UNALIGNED_WORD (*reloc_addr, value, (int)reloc_addr & 3);
+-  value += l_addr;
+-  COPY_UNALIGNED_WORD (value, *reloc_addr, (int)reloc_addr & 3);
+-}
+-
+-static inline void
+-elf_machine_lazy_rel (struct link_map *map,
+-		      Elf32_Addr l_addr, const Elf32_Rela *reloc,
+-		      int skip_ifunc)
+-{
+-  unsigned long int const r_type = ELF32_R_TYPE (reloc->r_info);
+-
+-  /* Check for unexpected PLT reloc type.  */
+-  if (__builtin_expect (r_type, R_MN10300_JMP_SLOT) == R_MN10300_JMP_SLOT)
+-    {
+-      Elf32_Addr* const reloc_addr = (void *)(l_addr + reloc->r_offset);
+-      Elf32_Addr value;
+-
+-      /* Perform a RELATIVE reloc on the .got entry that transfers
+-	 to the .plt.  */
+-      COPY_UNALIGNED_WORD (*reloc_addr, value, (int)reloc_addr & 3);
+-      value += l_addr;
+-      COPY_UNALIGNED_WORD (value, *reloc_addr, (int)reloc_addr & 3);
+-    }
+-  else if (__builtin_expect (r_type, R_MN10300_NONE) != R_MN10300_NONE)
+-    _dl_reloc_bad_type (map, ELFW(R_TYPE) (reloc->r_info), 1);
+-
+-}
+-
+-#endif /* RESOLVE */
+diff --git a/ports/sysdeps/am33/elf/start.S b/ports/sysdeps/am33/elf/start.S
+deleted file mode 100644
+index 518e75e478bbeb78..0000000000000000
+--- a/ports/sysdeps/am33/elf/start.S
++++ /dev/null
+@@ -1,80 +0,0 @@
+-/* Startup code compliant to the ELF MN10300 ABI.
+-   Copyright (C) 1995,1996,1997,1998,2000,2001 Free Software Foundation, Inc.
+-   Contributed by Alexandre Oliva  <aoliva@redhat.com>
+-   Based on ../../i386/elf/start.S.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-/* This is the canonical entry point, usually the first thing in the text
+-   segment.  The SVR4/i386 ABI (pages 3-31, 3-32) says that when the entry
+-   point runs, most registers' values are unspecified, except for:
+-
+-   a0		Contains a function pointer to be registered with `atexit'.
+-		This is how the dynamic linker arranges to have DT_FINI
+-		functions called for shared libraries that have been loaded
+-		before this code runs.
+-
+-   sp		The stack contains the arguments and environment:
+-		(4,sp)			argc
+-		(8,sp)			argv[0]
+-		...
+-		(4*(argc+1),sp)		NULL
+-		(4*(argc+2),sp)		envp[0]
+-		...
+-					NULL
+-*/
+-
+-#include "bp-sym.h"
+-
+-	.text
+-	.globl _start
+-	.type _start,@function
+-_start:
+-	/* Extract the arguments as encoded on the stack and set up
+-	   the arguments for `main': argc, argv.  envp will be determined
+-	   later in __libc_start_main.  */
+-	mov sp,a3
+-	add -32,sp
+-	
+-	mov a3,(28,sp)		/* stack_end.  */	
+-	mov d0,(24,sp)		/* rtld_fini.  */
+-	mov _fini, d3
+-	mov d3,(20,sp)		/* fini.  */
+-	mov _init, d2
+-	mov d2,(16,sp)		/* init.  */
+-	inc4 a3
+-	mov a3,(12,sp)		/* argv.  */
+-	
+-	/* Set the initial frame pointer as 0, so that the bottom of
+-	   the stack is clearly marked.  */
+-	mov 0,a3
+-
+-	mov (32,sp), d1		/* argc.  */
+-	mov BP_SYM (main), d0	/* main.  */
+-
+-	/* Call the user's main function, and exit with its value.
+-	   But let the libc call main.    */
+-	call BP_SYM (__libc_start_main),[],0
+-
+-	call BP_SYM (abort),[],0 /* Crash if somehow `exit' does return.  */
+-
+-/* Define a symbol for the first piece of initialized data.  */
+-	.data
+-	.globl __data_start
+-__data_start:
+-	.long 0
+-	.weak data_start
+-	data_start = __data_start
+diff --git a/ports/sysdeps/am33/fpu/bits/fenv.h b/ports/sysdeps/am33/fpu/bits/fenv.h
+deleted file mode 100644
+index b0e60e9312f135b2..0000000000000000
+--- a/ports/sysdeps/am33/fpu/bits/fenv.h
++++ /dev/null
+@@ -1,72 +0,0 @@
+-/* Copyright (C) 1998-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on the corresponding file in the mips port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _FENV_H
+-# error "Never use <bits/fenv.h> directly; include <fenv.h> instead."
+-#endif
+-
+-
+-/* Define bits representing the exception.  We use the EF bit
+-   positions of the appropriate bits in the FPCR register.  */
+-enum
+-  {
+-    FE_INEXACT =
+-#define FE_INEXACT	0x01
+-      FE_INEXACT,
+-    FE_UNDERFLOW =
+-#define FE_UNDERFLOW	0x02
+-      FE_UNDERFLOW,
+-    FE_OVERFLOW =
+-#define FE_OVERFLOW	0x04
+-      FE_OVERFLOW,
+-    FE_DIVBYZERO =
+-#define FE_DIVBYZERO	0x08
+-      FE_DIVBYZERO,
+-    FE_INVALID =
+-#define FE_INVALID	0x10
+-      FE_INVALID,
+-  };
+-
+-#define FE_ALL_EXCEPT \
+-	(FE_INEXACT | FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID)
+-
+-/* The AM33/2.0 FPU supports only Round to nearest.  Bits 3<<16 are
+-   reserved to represent other rounding modes.  */
+-enum
+-  {
+-    FE_TONEAREST =
+-#define FE_TONEAREST	0x00000
+-      FE_TONEAREST,
+-  };
+-
+-
+-/* Type representing exception flags.  */
+-typedef unsigned int fexcept_t;
+-
+-
+-/* Type representing floating-point environment.  */
+-typedef unsigned int fenv_t;
+-
+-/* If the default argument is used we use this value.  */
+-#define FE_DFL_ENV	((__const fenv_t *) -1)
+-
+-#ifdef __USE_GNU
+-/* Floating-point environment where none of the exception is masked.  */
+-# define FE_NOMASK_ENV  ((__const fenv_t *) -2)
+-#endif
+diff --git a/ports/sysdeps/am33/fpu/fclrexcpt.c b/ports/sysdeps/am33/fpu/fclrexcpt.c
+deleted file mode 100644
+index 492ea38ba39bf061..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fclrexcpt.c
++++ /dev/null
+@@ -1,52 +0,0 @@
+-/* Clear given exceptions in current floating-point environment.
+-   Copyright (C) 1998-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fenv_libc.h>
+-#include <fpu_control.h>
+-#include <shlib-compat.h>
+-
+-int
+-__feclearexcept (int excepts)
+-{
+-  fpu_control_t cw;
+-
+-  /* Mask out unsupported bits/exceptions.  */
+-  excepts &= FE_ALL_EXCEPT;
+-
+-  /* Read the complete control word.  */
+-  _FPU_GETCW (cw);
+-
+-  /* Clear exception flag bits and cause bits.  EF bits are cleared by
+-     assigning 1 to them (and there's no way to set them); other bits
+-     are copied normally.  */
+-
+-  cw &= ~((excepts << CAUSE_SHIFT) | FE_ALL_EXCEPT);
+-  cw |= excepts;
+-
+-  /* Put the new data in effect.  */
+-  _FPU_SETFCW (cw);
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-libm_hidden_ver (__feclearexcept, feclearexcept)
+-versioned_symbol (libm, __feclearexcept, feclearexcept, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/fedisblxcpt.c b/ports/sysdeps/am33/fpu/fedisblxcpt.c
+deleted file mode 100644
+index 170f8200ed1224fa..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fedisblxcpt.c
++++ /dev/null
+@@ -1,41 +0,0 @@
+-/* Disable floating-point exceptions.
+-   Copyright (C) 2000, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fenv_libc.h>
+-#include <fpu_control.h>
+-
+-int
+-fedisableexcept (int excepts)
+-{
+-  fpu_control_t new_exc, old_exc;
+-
+-  /* Get the current control word.  */
+-  _FPU_GETCW (new_exc);
+-
+-  old_exc = (new_exc & ENABLE_MASK) >> ENABLE_SHIFT;
+-
+-  excepts &= FE_ALL_EXCEPT;
+-
+-  new_exc &= ~(excepts << ENABLE_SHIFT);
+-  _FPU_SETCW (new_exc);
+-
+-  return old_exc;
+-}
+diff --git a/ports/sysdeps/am33/fpu/feenablxcpt.c b/ports/sysdeps/am33/fpu/feenablxcpt.c
+deleted file mode 100644
+index fe6d880c2192fd7c..0000000000000000
+--- a/ports/sysdeps/am33/fpu/feenablxcpt.c
++++ /dev/null
+@@ -1,41 +0,0 @@
+-/* Enable floating-point exceptions.
+-   Copyright (C) 2000, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fenv_libc.h>
+-#include <fpu_control.h>
+-
+-int
+-feenableexcept (int excepts)
+-{
+-  fpu_control_t new_exc, old_exc;
+-
+-  /* Get the current control word.  */
+-  _FPU_GETCW (new_exc);
+-
+-  old_exc = (new_exc & ENABLE_MASK) >> ENABLE_SHIFT;
+-
+-  excepts &= FE_ALL_EXCEPT;
+-
+-  new_exc |= excepts << ENABLE_SHIFT;
+-  _FPU_SETCW (new_exc);
+-
+-  return old_exc;
+-}
+diff --git a/ports/sysdeps/am33/fpu/fegetenv.c b/ports/sysdeps/am33/fpu/fegetenv.c
+deleted file mode 100644
+index 6da6eeb91357d2d5..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fegetenv.c
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/* Store current floating-point environment.
+-   Copyright (C) 1998, 1999, 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-#include <shlib-compat.h>
+-
+-int
+-__fegetenv (fenv_t *envp)
+-{
+-  _FPU_GETCW (*envp);
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-versioned_symbol (libm, __fegetenv, fegetenv, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/fegetexcept.c b/ports/sysdeps/am33/fpu/fegetexcept.c
+deleted file mode 100644
+index 13e5306af994302c..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fegetexcept.c
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/* Get enabled floating-point exceptions.
+-   Copyright (C) 2000, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fenv_libc.h>
+-#include <fpu_control.h>
+-
+-int
+-fegetexcept (void)
+-{
+-  unsigned int exc;
+-
+-  /* Get the current control word.  */
+-  _FPU_GETCW (exc);
+-
+-  return (exc & ENABLE_MASK) >> ENABLE_SHIFT;
+-}
+diff --git a/ports/sysdeps/am33/fpu/fegetround.c b/ports/sysdeps/am33/fpu/fegetround.c
+deleted file mode 100644
+index d649f18bf7c8ffe2..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fegetround.c
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/* Return current rounding direction.
+-   Copyright (C) 1998, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fenv_libc.h>
+-#include <fpu_control.h>
+-
+-int
+-fegetround (void)
+-{
+-  int cw;
+-
+-  /* Get control word.  */
+-  _FPU_GETCW (cw);
+-
+-  return (cw & ROUND_MASK);
+-}
+diff --git a/ports/sysdeps/am33/fpu/feholdexcpt.c b/ports/sysdeps/am33/fpu/feholdexcpt.c
+deleted file mode 100644
+index 1c002d8d9490364d..0000000000000000
+--- a/ports/sysdeps/am33/fpu/feholdexcpt.c
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/* Store current floating-point environment and clear exceptions.
+-   Copyright (C) 2000, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-
+-int
+-feholdexcept (fenv_t *envp)
+-{
+-  fpu_control_t cw;
+-
+-  /* Save the current state.  */
+-  _FPU_GETCW (cw);
+-  *envp = cw;
+-
+-  /* Clear all exception enable bits and flags.  */
+-  cw &= ~(_FPU_MASK_V|_FPU_MASK_Z|_FPU_MASK_O|_FPU_MASK_U|_FPU_MASK_I);
+-  _FPU_SETFCW (cw);
+-
+-  return 0;
+-}
+diff --git a/ports/sysdeps/am33/fpu/fenv_libc.h b/ports/sysdeps/am33/fpu/fenv_libc.h
+deleted file mode 100644
+index 40d57259bdc3e702..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fenv_libc.h
++++ /dev/null
+@@ -1,32 +0,0 @@
+-/* Copyright (C) 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on the corresponding file in the mips port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _FENV_LIBC_H
+-#define _FENV_LIBC_H    1
+-
+-/* Mask for enabling exceptions and for the CAUSE bits.  */
+-#define ENABLE_MASK	0x003E0U
+-#define CAUSE_MASK	0x07C00U
+-#define ROUND_MASK	0x30000U
+-
+-/* Shift for FE_* flags to get up to the ENABLE bits and the CAUSE bits.  */
+-#define	ENABLE_SHIFT	5
+-#define	CAUSE_SHIFT	10
+-
+-#endif /* _FENV_LIBC_H */
+diff --git a/ports/sysdeps/am33/fpu/fesetenv.c b/ports/sysdeps/am33/fpu/fesetenv.c
+deleted file mode 100644
+index 110c49c9f8fd780a..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fesetenv.c
++++ /dev/null
+@@ -1,59 +0,0 @@
+-/* Install given floating-point environment.
+-   Copyright (C) 1998, 1999, 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-#include <shlib-compat.h>
+-
+-int
+-__fesetenv (const fenv_t *envp)
+-{
+-  fpu_control_t cw;
+-
+-  /* We want to clear all EF bits for the default end IEEE.  */
+-
+-  if (envp == FE_DFL_ENV)
+-    _FPU_SETFCW (_FPU_DEFAULT|FE_ALL_EXCEPT);
+-  else if (envp == FE_NOMASK_ENV)
+-    _FPU_SETFCW (_FPU_IEEE|FE_ALL_EXCEPT);
+-  else
+-    {
+-      fpu_control_t temp;
+-
+-      _FPU_GETCW (temp);
+-      cw = *envp;
+-
+-      /* If EF bits are cleared and the user requests them to be set,
+-	 we have to fail, because there's no way to do it.  */
+-      if (~temp & cw & FE_ALL_EXCEPT)
+-	return -1;
+-
+-      /* We clear EF bits by storing a 1 in them, so flip the
+-	 FE_ALL_EXCEPT bits.  */
+-      cw = (cw & ~FE_ALL_EXCEPT) | (~cw & FE_ALL_EXCEPT);
+-      _FPU_SETFCW (cw);
+-    }
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-libm_hidden_ver (__fesetenv, fesetenv)
+-versioned_symbol (libm, __fesetenv, fesetenv, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/fesetround.c b/ports/sysdeps/am33/fpu/fesetround.c
+deleted file mode 100644
+index e77dc7684f93163b..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fesetround.c
++++ /dev/null
+@@ -1,28 +0,0 @@
+-/* Set current rounding direction.
+-   Copyright (C) 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-
+-int
+-fesetround (int round)
+-{
+-  /* The only supported rounding mode is to-nearest.  Just check
+-     whether we're switching to it.  */
+-  return (round != FE_TONEAREST);
+-}
+diff --git a/ports/sysdeps/am33/fpu/feupdateenv.c b/ports/sysdeps/am33/fpu/feupdateenv.c
+deleted file mode 100644
+index 70951a36753f62b7..0000000000000000
+--- a/ports/sysdeps/am33/fpu/feupdateenv.c
++++ /dev/null
+@@ -1,46 +0,0 @@
+-/* Install given floating-point environment and raise exceptions.
+-   Copyright (C) 1998, 1999, 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-#include <shlib-compat.h>
+-
+-int
+-__feupdateenv (const fenv_t *envp)
+-{
+-  int temp;
+-
+-  /* Save current exceptions.  */
+-  _FPU_GETCW (temp);
+-  temp &= FE_ALL_EXCEPT;
+-
+-  /* Install new environment.  */
+-  fesetenv (envp);
+-
+-  /* Raise the safed exception.  Incidently for us the implementation
+-     defined format of the values in objects of type fexcept_t is the
+-     same as the ones specified using the FE_* constants.  */
+-  feraiseexcept (temp);
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-versioned_symbol (libm, __feupdateenv, feupdateenv, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/fgetexcptflg.c b/ports/sysdeps/am33/fpu/fgetexcptflg.c
+deleted file mode 100644
+index d5828e6011a71881..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fgetexcptflg.c
++++ /dev/null
+@@ -1,43 +0,0 @@
+-/* Store current representation for exceptions.
+-   Copyright (C) 1998, 1999, 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-#include <shlib-compat.h>
+-
+-int
+-__fegetexceptflag (fexcept_t *flagp, int excepts)
+-{
+-  fexcept_t temp;
+-
+-  /* Get the current exceptions.  */
+-  _FPU_GETCW (temp);
+-
+-  /* We only save the relevant bits here. In particular, care has to be 
+-     taken with the CAUSE bits, as an inadvertent restore later on could
+-     generate unexpected exceptions.  */
+-
+-  *flagp = temp & excepts & FE_ALL_EXCEPT;
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-versioned_symbol (libm, __fegetexceptflag, fegetexceptflag, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/fpu_control.h b/ports/sysdeps/am33/fpu/fpu_control.h
+deleted file mode 100644
+index de28228e7182627e..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fpu_control.h
++++ /dev/null
+@@ -1,74 +0,0 @@
+-/* FPU control word bits.  AM33/2.0 version.
+-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004
+-   Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on the corresponding file in the mips port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _FPU_CONTROL_H
+-#define _FPU_CONTROL_H
+-
+-/* AM33/2.0 FPU floating point control register bits.
+- *
+- * 31-22  -> reserved
+- * 21-18  -> floating-point condition codes (L, G, E, U)
+- * 17-16  -> rounding modes (00 is to-nearest; other values are reserved
+- * 15     -> reserved (read as 0, write with 0)
+- * 14-10  -> Exception Cause (inValid, divZero, Overflow, Underflow, Inexact)
+- *  9- 5  -> Exception Enable
+- *  4- 0  -> Exception Flag, cleared when exception cause is set
+- */
+-
+-#include <features.h>
+-#include <fenv.h>
+-
+-/* masking of interrupts */
+-#define _FPU_MASK_V     0x0200  /* Invalid operation */
+-#define _FPU_MASK_Z     0x0100  /* Division by zero  */
+-#define _FPU_MASK_O     0x0080  /* Overflow          */
+-#define _FPU_MASK_U     0x0040  /* Underflow         */
+-#define _FPU_MASK_I     0x0020  /* Inexact operation */
+-
+-/* rounding control */
+-#define _FPU_RC_NEAREST 0x0     /* Only available mode */
+-
+-#define _FPU_RESERVED 0xffc08000  /* Reserved bits in fpcr */
+-
+-
+-/* The fdlibm code requires strict IEEE double precision arithmetic,
+-   and no interrupts for exceptions, rounding to nearest.  */
+-
+-#define _FPU_DEFAULT  0x0000001f
+-
+-/* IEEE:  same as above, but exceptions */
+-#define _FPU_IEEE     0x000003ff
+-
+-/* Type of the control word.  */
+-typedef unsigned int fpu_control_t;
+-
+-/* Macros for accessing the hardware control word.  _FPU_SETCW is
+-   defined such that it won't modify the EF bits, that are cleared
+-   when assigned bits that are set.  Use SETFCW to get them actually
+-   reset.  */
+-#define _FPU_SETFCW(cw) __asm__ ("fmov %0,fpcr" : : "ri" (cw))
+-#define _FPU_SETCW(cw) _FPU_SETFCW((cw) & ~FE_ALL_EXCEPT)
+-#define _FPU_GETCW(cw) __asm__ ("fmov fpcr,%0" : "=r" (cw))
+-
+-/* Default control word set at startup.  */
+-extern fpu_control_t __fpu_control;
+-
+-#endif	/* fpu_control.h */
+diff --git a/ports/sysdeps/am33/fpu/fraiseexcpt.c b/ports/sysdeps/am33/fpu/fraiseexcpt.c
+deleted file mode 100644
+index 628ad56e9be78034..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fraiseexcpt.c
++++ /dev/null
+@@ -1,78 +0,0 @@
+-/* Raise given exceptions.
+-   Copyright (C) 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the M68K port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <float.h>
+-#include <math.h>
+-#include <shlib-compat.h>
+-
+-int
+-__feraiseexcept (int excepts)
+-{
+-  /* Raise exceptions represented by EXCEPTS.  But we must raise only one
+-     signal at a time.  It is important that if the overflow/underflow
+-     exception and the divide by zero exception are given at the same
+-     time, the overflow/underflow exception follows the divide by zero
+-     exception.  */
+-
+-  /* First: invalid exception.  */
+-  if (excepts & FE_INVALID)
+-    {
+-      /* One example of a invalid operation is 0 * Infinity.  */
+-      float x = HUGE_VALF, y = 0.0f;
+-      __asm__ __volatile__ ("fmul %1,%0" : "+f" (x) : "f" (y));
+-    }
+-
+-  /* Next: division by zero.  */
+-  if (excepts & FE_DIVBYZERO)
+-    {
+-      float x = 1.0f, y = 0.0f;
+-      __asm__ __volatile__ ("fdiv %1,%0" : "+f" (x) : "f" (y));
+-    }
+-
+-  /* Next: overflow.  */
+-  if (excepts & FE_OVERFLOW)
+-    {
+-      float x = FLT_MAX;
+-
+-      __asm__ __volatile__ ("fmul %0,%0" : "+f" (x));
+-    }
+-
+-  /* Next: underflow.  */
+-  if (excepts & FE_UNDERFLOW)
+-    {
+-      float x = -FLT_MIN;
+-
+-      __asm__ __volatile__ ("fmul %0,%0" : "+f" (x));
+-    }
+-
+-  /* Last: inexact.  */
+-  if (excepts & FE_INEXACT)
+-    {
+-      float x = 1.0f, y = 3.0f;
+-      __asm__ __volatile__ ("fdiv %1,%0" : "=f" (x) : "f" (y));
+-    }
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-libm_hidden_ver (__feraiseexcept, feraiseexcept)
+-versioned_symbol (libm, __feraiseexcept, feraiseexcept, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/fsetexcptflg.c b/ports/sysdeps/am33/fpu/fsetexcptflg.c
+deleted file mode 100644
+index a5bde4020096076b..0000000000000000
+--- a/ports/sysdeps/am33/fpu/fsetexcptflg.c
++++ /dev/null
+@@ -1,56 +0,0 @@
+-/* Set floating-point environment exception handling.
+-   Copyright (C) 1998, 1999, 2000, 2002, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-#include <shlib-compat.h>
+-
+-int
+-__fesetexceptflag (const fexcept_t *flagp, int excepts)
+-{
+-  fpu_control_t cw, temp;
+-
+-  /* Get the current exceptions.  */
+-  _FPU_GETCW (cw);
+-
+-  /* Make sure the flags we want restored are legal.  */
+-  excepts &= FE_ALL_EXCEPT;
+-  temp = *flagp & excepts;
+-
+-  /* If EF bits are clear and the user requests them to be set,
+-     we have to fail, because there's no way to do it.  */
+-  if (~(cw & excepts) & temp)
+-    return -1;
+-
+-  /* We clear EF bits by storing a 1 in them, so flip the
+-     FE_ALL_EXCEPT bits.  */
+-  temp = (~temp & FE_ALL_EXCEPT);
+-
+-  /* Now clear the bits called for, and copy them in from flagp. Note that
+-     we ignore all non-flag bits from *flagp, so they don't matter.  */
+-  cw = (cw & ~FE_ALL_EXCEPT) | temp;
+-
+-  _FPU_SETFCW (cw);
+-
+-  /* Success.  */
+-  return 0;
+-}
+-
+-versioned_symbol (libm, __fesetexceptflag, fesetexceptflag, GLIBC_2_2);
+diff --git a/ports/sysdeps/am33/fpu/ftestexcept.c b/ports/sysdeps/am33/fpu/ftestexcept.c
+deleted file mode 100644
+index ef3e761fcc110dd6..0000000000000000
+--- a/ports/sysdeps/am33/fpu/ftestexcept.c
++++ /dev/null
+@@ -1,33 +0,0 @@
+-/* Test exception in current environment.
+-   Copyright (C) 1998, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   based on corresponding file in the MIPS port.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <fenv.h>
+-#include <fpu_control.h>
+-
+-int
+-fetestexcept (int excepts)
+-{
+-  int cw;
+-
+-  /* Get current control word.  */
+-  _FPU_GETCW (cw);
+-
+-  return cw & excepts & FE_ALL_EXCEPT;
+-}
+diff --git a/ports/sysdeps/am33/jmpbuf-offsets.h b/ports/sysdeps/am33/jmpbuf-offsets.h
+deleted file mode 100644
+index 9884f2e3c099aeb8..0000000000000000
+--- a/ports/sysdeps/am33/jmpbuf-offsets.h
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/* Private macros for accessing __jmp_buf contents.  AM33 version.
+-   Copyright (C) 2006 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#define __JMP_BUF_SP		20
+diff --git a/ports/sysdeps/am33/jmpbuf-unwind.h b/ports/sysdeps/am33/jmpbuf-unwind.h
+deleted file mode 100644
+index d5c01e27978d6ab4..0000000000000000
+--- a/ports/sysdeps/am33/jmpbuf-unwind.h
++++ /dev/null
+@@ -1,25 +0,0 @@
+-/* Examine __jmp_buf for unwinding frames.  AM33 version.
+-   Copyright (C) 2006 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <setjmp.h>
+-#include <jmpbuf-offsets.h>
+-
+-/* Test if longjmp to JMPBUF would unwind the frame
+-   containing a local variable at ADDRESS.  */
+-#define _JMPBUF_UNWINDS(jmpbuf, address, demangle)			\
+-  ((void *) (address) < (void *) demangle (jmpbuf[__JMP_BUF_SP]))
+diff --git a/ports/sysdeps/am33/linuxthreads/pspinlock.c b/ports/sysdeps/am33/linuxthreads/pspinlock.c
+deleted file mode 100644
+index a1674974abfb749b..0000000000000000
+--- a/ports/sysdeps/am33/linuxthreads/pspinlock.c
++++ /dev/null
+@@ -1,73 +0,0 @@
+-/* POSIX spinlock implementation.  AM33 version.
+-   Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <errno.h>
+-#include <pthread.h>
+-#include "internals.h"
+-
+-int
+-__pthread_spin_lock (pthread_spinlock_t *lock)
+-{
+-  __asm__ __volatile__("1: bset %1, (%0); beq 1b"
+-		       : : "a" (lock), "d" (1) : "memory");
+-  return 0;
+-}
+-weak_alias (__pthread_spin_lock, pthread_spin_lock)
+-
+-
+-int
+-__pthread_spin_trylock (pthread_spinlock_t *lock)
+-{
+-  int oldval = 1;
+-
+-  __asm__ __volatile__ ("bset %0, (%1); beq 1f; clr %0; 1:" :
+-			"+d" (oldval) : "a" (lock) : "memory");
+-
+-  return oldval ? EBUSY : 0;
+-}
+-weak_alias (__pthread_spin_trylock, pthread_spin_trylock)
+-
+-
+-int
+-__pthread_spin_unlock (pthread_spinlock_t *lock)
+-{
+-  *lock = 0;
+-  return 0;
+-}
+-weak_alias (__pthread_spin_unlock, pthread_spin_unlock)
+-
+-
+-int
+-__pthread_spin_init (pthread_spinlock_t *lock, int pshared)
+-{
+-  /* We can ignore the `pshared' parameter.  Since we are busy-waiting
+-     all processes which can access the memory location `lock' points
+-     to can use the spinlock.  */
+-  *lock = 0;
+-  return 0;
+-}
+-weak_alias (__pthread_spin_init, pthread_spin_init)
+-
+-
+-int
+-__pthread_spin_destroy (pthread_spinlock_t *lock)
+-{
+-  /* Nothing to do.  */
+-  return 0;
+-}
+-weak_alias (__pthread_spin_destroy, pthread_spin_destroy)
+diff --git a/ports/sysdeps/am33/linuxthreads/pt-machine.h b/ports/sysdeps/am33/linuxthreads/pt-machine.h
+deleted file mode 100644
+index 86d0f8b1e1cb0e01..0000000000000000
+--- a/ports/sysdeps/am33/linuxthreads/pt-machine.h
++++ /dev/null
+@@ -1,67 +0,0 @@
+-/* Machine-dependent pthreads configuration and inline functions.
+-   am33 version.
+-   Copyright (C) 1996,1997,1998,1999,2000,2001, 2004
+-   Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-   Based on ../i386/pt-machine.h.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _PT_MACHINE_H
+-#define _PT_MACHINE_H	1
+-
+-#ifndef __ASSEMBLER__
+-#ifndef PT_EI
+-# define PT_EI extern inline
+-#endif
+-
+-/* Get some notion of the current stack.  Need not be exactly the top
+-   of the stack, just something somewhere in the current frame.  */
+-#define CURRENT_STACK_FRAME  __builtin_frame_address (0)
+-
+-/* Spinlock implementation; required.  */
+-PT_EI long int
+-testandset (int *spinlock)
+-{
+-  long int ret = 1;
+-
+-  /* This won't test&set the entire int, only the least significant
+-     byte.  I hope this doesn't matter, since we can't do better.  */
+-  __asm__ __volatile__ ("bset %0, %1; bne 1f; clr %0; 1:" :
+-			"+d" (ret), "+m" (*(volatile int *)spinlock));
+-
+-  return ret;
+-}
+-
+-
+-PT_EI int
+-get_eflags (void)
+-{
+-  int res;
+-  __asm__ __volatile__ ("mov psw,%0" : "=d" (res));
+-  return res;
+-}
+-
+-
+-PT_EI void
+-set_eflags (int newflags)
+-{
+-  __asm__ __volatile__ ("mov %0,psw" : : "d" (newflags) : "cc");
+-}
+-
+-#endif /* __ASSEMBLER__ */
+-
+-#endif /* pt-machine.h */
+diff --git a/ports/sysdeps/am33/memusage.h b/ports/sysdeps/am33/memusage.h
+deleted file mode 100644
+index 19d7a732ca41c078..0000000000000000
+--- a/ports/sysdeps/am33/memusage.h
++++ /dev/null
+@@ -1,22 +0,0 @@
+-/* Copyright 2000, 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#define GETSP() ({ uintptr_t stack_ptr; \
+-		   asm ("mov sp,%0" : "=a" (stack_ptr)); \
+-		   stack_ptr; })
+-
+-#include <sysdeps/generic/memusage.h>
+diff --git a/ports/sysdeps/am33/preconfigure b/ports/sysdeps/am33/preconfigure
+deleted file mode 100644
+index 9495465389764b09..0000000000000000
+--- a/ports/sysdeps/am33/preconfigure
++++ /dev/null
+@@ -1,5 +0,0 @@
+-case "$machine" in
+-am33*)
+-  base_machine=am33 machine=am33
+-  ;;
+-esac
+diff --git a/ports/sysdeps/am33/setjmp.S b/ports/sysdeps/am33/setjmp.S
+deleted file mode 100644
+index 54b239d65c3a4f3a..0000000000000000
+--- a/ports/sysdeps/am33/setjmp.S
++++ /dev/null
+@@ -1,79 +0,0 @@
+-/* setjmp for am33.
+-   Copyright (C) 2001, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#define _ASM
+-#define _SETJMP_H
+-#include <bits/setjmp.h>
+-#include <asm-syntax.h>
+-
+-
+-ENTRY (__sigsetjmp)
+-.Lsigsetjmp:
+-	/* Save registers.  */
+-	mov d0,a0
+-	mov d2,(0,a0)
+-	mov d3,(4,a0)
+-	mov mdr,d0
+-	mov d0,(8,a0)
+-	/* Restore d0 for __sigjmp_save.  */
+-	mov a0,d0
+-	mov a2,(12,a0)
+-	mov a3,(16,a0)
+-	mov sp,a1
+-	mov a1,(20,a0)
+-	add 24,a0
+-	mov r4,(a0+)
+-	mov r5,(a0+)
+-	mov r6,(a0+)
+-	mov r7,(a0+)
+-#ifdef __AM33_2__
+-	fmov fs4,(a0+)
+-	fmov fs5,(a0+)
+-	fmov fs6,(a0+)
+-	fmov fs7,(a0+)
+-	fmov fs8,(a0+)
+-	fmov fs9,(a0+)
+-	fmov fs10,(a0+)
+-	fmov fs11,(a0+)
+-	fmov fs12,(a0+)
+-	fmov fs13,(a0+)
+-	fmov fs14,(a0+)
+-	fmov fs15,(a0+)
+-	fmov fs16,(a0+)
+-	fmov fs17,(a0+)
+-	fmov fs18,(a0+)
+-	fmov fs19,(a0+)
+-#endif
+-	/* Make a tail call to __sigjmp_save; it takes the same args.  */
+-	jmp __sigjmp_save
+-END (__sigsetjmp)
+-
+-/* BSD `_setjmp' entry point to `sigsetjmp (..., 1)'.  */
+-ENTRY (setjmp)
+-	/* Tail-call setsetjmp with savesigs==1.  */
+-	mov 1,d1
+-	bra .Lsigsetjmp
+-END (setjmp)
+-
+-/* BSD `_setjmp' entry point to `sigsetjmp (..., 0)'.  */
+-ENTRY (_setjmp)
+-	/* Tail-call setsetjmp with savesigs==0.  */
+-	clr d1
+-	bra .Lsigsetjmp
+-END (_setjmp)
+diff --git a/ports/sysdeps/am33/shlib-versions b/ports/sysdeps/am33/shlib-versions
+deleted file mode 100644
+index ad6ded9dc4d755eb..0000000000000000
+--- a/ports/sysdeps/am33/shlib-versions
++++ /dev/null
+@@ -1 +0,0 @@
+-am33.*-.*-linux.*	DEFAULT			GLIBC_2.2.5
+diff --git a/ports/sysdeps/am33/stackinfo.h b/ports/sysdeps/am33/stackinfo.h
+deleted file mode 100644
+index c7a7977773458663..0000000000000000
+--- a/ports/sysdeps/am33/stackinfo.h
++++ /dev/null
+@@ -1,27 +0,0 @@
+-/* Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-/* This file contains a bit of information about the stack allocation
+-   of the processor.  */
+-
+-#ifndef _STACKINFO_H
+-#define _STACKINFO_H	1
+-
+-/* On am33 the stack grows down.  */
+-#define _STACK_GROWS_DOWN	1
+-
+-#endif	/* stackinfo.h */
+diff --git a/ports/sysdeps/am33/sys/ucontext.h b/ports/sysdeps/am33/sys/ucontext.h
+deleted file mode 100644
+index 1615b6368c9530c0..0000000000000000
+--- a/ports/sysdeps/am33/sys/ucontext.h
++++ /dev/null
+@@ -1,122 +0,0 @@
+-/* Copyright 1997, 1999, 2000, 2002 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-/* AM33/2.0 context switching support.  */
+-
+-#ifndef _SYS_UCONTEXT_H
+-#define _SYS_UCONTEXT_H	1
+-
+-#include <features.h>
+-#include <signal.h>
+-
+-/* Type for general register.  */
+-typedef int greg_t;
+-
+-/* Number of general registers.  */
+-#define NGREG	28
+-
+-/* Container for all general registers.  */
+-typedef greg_t gregset_t[NGREG];
+-
+-/* Number of each register is the `gregset_t' array.  */
+-enum
+-{
+-  REG_D0 = 0,
+-#define REG_D0	REG_D0
+-  REG_D1,
+-#define REG_D1	REG_D1
+-  REG_D2,
+-#define REG_D2	REG_D2
+-  REG_D3,
+-#define REG_D3	REG_D3
+-  REG_A0,
+-#define REG_A0	REG_A0
+-  REG_A1,
+-#define REG_A1	REG_A1
+-  REG_A2,
+-#define REG_A2	REG_A2
+-  REG_A3,
+-#define REG_A3	REG_A3
+-  REG_E0,
+-#define REG_E0	REG_E0
+-  REG_E1,
+-#define REG_E1	REG_E1
+-  REG_E2,
+-#define REG_E2	REG_E2
+-  REG_E3,
+-#define REG_E3	REG_E3
+-  REG_E4,
+-#define REG_E4	REG_E4
+-  REG_E5,
+-#define REG_E5	REG_E5
+-  REG_E6,
+-#define REG_E6	REG_E6
+-  REG_E7,
+-#define REG_E7	REG_E7
+-  REG_LAR,
+-#define REG_LAR	REG_LAR
+-  REG_LIR,
+-#define REG_LIR	REG_LIR
+-  REG_MDR,
+-#define REG_MDR	REG_MDR
+-  REG_MCVF,
+-#define REG_MCVF	REG_MCVF
+-  REG_MCRL,
+-#define REG_MCRL	REG_MCRL
+-  REG_MCRH,
+-#define REG_MCRH	REG_MCRH
+-  REG_MDRQ,
+-#define REG_MDRQ	REG_MDRQ
+-  REG_SP,
+-#define REG_SP	REG_SP
+-  REG_EPSW,
+-#define REG_EPSW	REG_EPSW
+-  REG_PC,
+-#define REG_PC	REG_PC
+-};
+-
+-typedef int freg_t;
+-
+-/* Structure to describe FPU registers.  */
+-typedef struct {
+-  union {
+-    double fp_dregs[16];
+-    float fp_fregs[32];
+-    freg_t fp_regs[32];
+-  } regs;
+-  freg_t fpcr;
+-} fpregset_t;
+-
+-/* Context to describe whole processor state.  */
+-typedef struct
+-  {
+-    gregset_t gregs;
+-    fpregset_t fpregs;
+-  } mcontext_t;
+-
+-/* Userlevel context.  */
+-typedef struct ucontext
+-  {
+-    unsigned long int uc_flags;
+-    struct ucontext *uc_link;
+-    __sigset_t uc_sigmask;
+-    stack_t uc_stack;
+-    mcontext_t uc_mcontext;
+-    long int uc_filler[5];
+-  } ucontext_t;
+-
+-#endif /* sys/ucontext.h */
+diff --git a/ports/sysdeps/am33/sysdep.h b/ports/sysdeps/am33/sysdep.h
+deleted file mode 100644
+index 2ddb656957b5bc8f..0000000000000000
+--- a/ports/sysdeps/am33/sysdep.h
++++ /dev/null
+@@ -1,81 +0,0 @@
+-/* Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/sysdep.h.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdeps/generic/sysdep.h>
+-
+-#ifdef	__ASSEMBLER__
+-
+-/* Syntactic details of assembler.  */
+-
+-#ifdef HAVE_ELF
+-/* For ELF we need the `.type' directive to make shared libs work right.  */
+-#define ASM_TYPE_DIRECTIVE(name,typearg) .type name,typearg;
+-#define ASM_SIZE_DIRECTIVE(name) .size name,.-name;
+-
+-/* In ELF C symbols are asm symbols.  */
+-#undef	NO_UNDERSCORES
+-#define NO_UNDERSCORES
+-#else
+-#define ASM_TYPE_DIRECTIVE(name,type)	/* Nothing is specified.  */
+-#define ASM_SIZE_DIRECTIVE(name)	/* Nothing is specified.  */
+-#endif
+-
+-/* Define an entry point visible from C.  */
+-#define	ENTRY(name)							      \
+-  ASM_GLOBAL_DIRECTIVE C_SYMBOL_NAME(name);				      \
+-  ASM_TYPE_DIRECTIVE (C_SYMBOL_NAME(name),@function)			      \
+-  C_LABEL(name)								      \
+-  CALL_MCOUNT
+-
+-#undef	END
+-#define END(name)							      \
+-  ASM_SIZE_DIRECTIVE(name)						      \
+-
+-/* If compiled for profiling, call `mcount' at the start of each function.  */
+-#ifdef	PROF
+-/* The mcount code relies on a normal frame pointer being on the stack
+-   to locate our caller, so push one just for its benefit.  */
+-#define CALL_MCOUNT \
+-  movm [a3],(sp); mov sp,a3; add -12,sp; \
+-  call JUMPTARGET(mcount),[],0; add 12,sp; movm (sp),[a3];
+-#else
+-#define CALL_MCOUNT		/* Do nothing.  */
+-#endif
+-
+-#ifdef	NO_UNDERSCORES
+-/* Since C identifiers are not normally prefixed with an underscore
+-   on this system, the asm identifier `syscall_error' intrudes on the
+-   C name space.  Make sure we use an innocuous name.  */
+-#define	syscall_error	__syscall_error
+-#define mcount		_mcount
+-#endif
+-
+-#undef JUMPTARGET
+-#ifdef PIC
+-#define JUMPTARGET(name)	name##@PLT
+-#else
+-#define JUMPTARGET(name)	name
+-#endif
+-
+-/* Local label name for asm code. */
+-#ifndef L
+-#define L(name)		name
+-#endif
+-
+-#endif	/* __ASSEMBLER__ */
+diff --git a/ports/sysdeps/am33/tininess.h b/ports/sysdeps/am33/tininess.h
+deleted file mode 100644
+index 1db37790f881a73f..0000000000000000
+--- a/ports/sysdeps/am33/tininess.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#define TININESS_AFTER_ROUNDING	1
+diff --git a/ports/sysdeps/unix/am33/sysdep.S b/ports/sysdeps/unix/am33/sysdep.S
+deleted file mode 100644
+index 26740c2404d6f00d..0000000000000000
+--- a/ports/sysdeps/unix/am33/sysdep.S
++++ /dev/null
+@@ -1,63 +0,0 @@
+-/* Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 2000, 2001
+-   Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/sysdep.S.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#define _ERRNO_H
+-#include <bits/errno.h>
+-
+-.globl C_SYMBOL_NAME(errno)
+-.globl syscall_error
+-
+-#undef syscall_error
+-#ifdef NO_UNDERSCORES
+-__syscall_error:
+-#else
+-syscall_error:
+-#endif
+-#if defined (EWOULDBLOCK_sys) && EWOULDBLOCK_sys != EAGAIN
+-	/* We translate the system's EWOULDBLOCK error into EAGAIN.
+-	   The GNU C library always defines EWOULDBLOCK==EAGAIN.
+-	   EWOULDBLOCK_sys is the original number.  */
+-	cmp EWOULDBLOCK_sys,d0	/* Is it the old EWOULDBLOCK?  */
+-	bne .Lnotb		/* Branch if not.  */
+-	mov EAGAIN,d0		/* Yes; translate it to EAGAIN.  */
+-.Lnotb:
+-#endif
+-#ifndef	PIC
+-# ifndef _LIBC_REENTRANT
+-	mov d0,(C_SYMBOL_NAME (errno))
+-# else
+-	movm [d2],(sp)
+-	add -12,sp
+-	mov d0,d2
+-	call __errno_location,[],0
+-	mov d2,(a0)
+-	add 12,sp
+-	movm (sp),[d2]
+-# endif
+-#else
+-# error "This shouldn't be assembled for PIC"
+-#endif
+-	mov -1,d0
+-	mov d0,a0
+-	ret
+-
+-#undef	__syscall_error
+-END (__syscall_error)
+diff --git a/ports/sysdeps/unix/am33/sysdep.h b/ports/sysdeps/unix/am33/sysdep.h
+deleted file mode 100644
+index dff1baebf4667ed6..0000000000000000
+--- a/ports/sysdeps/unix/am33/sysdep.h
++++ /dev/null
+@@ -1,32 +0,0 @@
+-/* Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/sysdep.h.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdeps/unix/sysdep.h>
+-#include "../../am33/sysdep.h"
+-
+-#ifdef	__ASSEMBLER__
+-
+-#define	r0		d0	/* Normal return-value register.  */
+-#define	r1		!!!!	/* Secondary return-value register.  */
+-#define scratch 	d1	/* Call-clobbered register for random use.  */
+-#define MOVE(x,y)	mov x, y
+-
+-#define ret		ret [],0
+-
+-#endif	/* __ASSEMBLER__ */
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/Makefile b/ports/sysdeps/unix/sysv/linux/am33/Makefile
+deleted file mode 100644
+index ece39e8a4cee3f3e..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/Makefile
++++ /dev/null
+@@ -1,3 +0,0 @@
+-ifeq ($(subdir),misc)
+-sysdep_routines += setfsgid setfsuid
+-endif
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/bits/fcntl.h b/ports/sysdeps/unix/sysv/linux/am33/bits/fcntl.h
+deleted file mode 100644
+index 33b8bcd37e149f3c..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/bits/fcntl.h
++++ /dev/null
+@@ -1,180 +0,0 @@
+-/* O_*, F_*, FD_* bit values for Linux.
+-   Copyright (C) 1995, 1996, 1997, 1998, 2000, Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef	_FCNTL_H
+-# error "Never use <bits/fcntl.h> directly; include <fcntl.h> instead."
+-#endif
+-
+-
+-#include <sys/types.h>
+-
+-/* open/fcntl - O_SYNC is only implemented on blocks devices and on files
+-   located on an ext2 file system */
+-#define O_ACCMODE	   0003
+-#define O_RDONLY	     00
+-#define O_WRONLY	     01
+-#define O_RDWR		     02
+-#define O_CREAT		   0100	/* not fcntl */
+-#define O_EXCL		   0200	/* not fcntl */
+-#define O_NOCTTY	   0400	/* not fcntl */
+-#define O_TRUNC		  01000	/* not fcntl */
+-#define O_APPEND	  02000
+-#define O_NONBLOCK	  04000
+-#define O_NDELAY	O_NONBLOCK
+-#define O_SYNC		 010000
+-#define O_FSYNC		 O_SYNC
+-#define O_ASYNC		 020000
+-
+-#ifdef __USE_GNU
+-# define O_DIRECT	 040000	/* Direct disk access.	*/
+-# define O_DIRECTORY	0200000	/* Must be a directory.	 */
+-# define O_NOFOLLOW	0400000	/* Do not follow links.	 */
+-#endif
+-
+-/* For now Linux has synchronisity options for data and read operations.
+-   We define the symbols here but let them do the same as O_SYNC since
+-   this is a superset.	*/
+-#if defined __USE_POSIX199309 || defined __USE_UNIX98
+-# define O_DSYNC	O_SYNC	/* Synchronize data.  */
+-# define O_RSYNC	O_SYNC	/* Synchronize read operations.	 */
+-#endif
+-
+-#ifdef __USE_LARGEFILE64
+-# define O_LARGEFILE	0100000
+-#endif
+-
+-/* Values for the second argument to `fcntl'.  */
+-#define F_DUPFD		0	/* Duplicate file descriptor.  */
+-#define F_GETFD		1	/* Get file descriptor flags.  */
+-#define F_SETFD		2	/* Set file descriptor flags.  */
+-#define F_GETFL		3	/* Get file status flags.  */
+-#define F_SETFL		4	/* Set file status flags.  */
+-#ifndef __USE_FILE_OFFSET64
+-# define F_GETLK	5	/* Get record locking info.  */
+-# define F_SETLK	6	/* Set record locking info (non-blocking).  */
+-# define F_SETLKW	7	/* Set record locking info (blocking).	*/
+-#else
+-# define F_GETLK	F_GETLK64  /* Get record locking info.	*/
+-# define F_SETLK	F_SETLK64  /* Set record locking info (non-blocking).*/
+-# define F_SETLKW	F_SETLKW64 /* Set record locking info (blocking).  */
+-#endif
+-#define F_GETLK64	12	/* Get record locking info.  */
+-#define F_SETLK64	13	/* Set record locking info (non-blocking).  */
+-#define F_SETLKW64	14	/* Set record locking info (blocking).	*/
+-
+-#if defined __USE_BSD || defined __USE_XOPEN2K
+-# define F_SETOWN	8	/* Get owner of socket (receiver of SIGIO).  */
+-# define F_GETOWN	9	/* Set owner of socket (receiver of SIGIO).  */
+-#endif
+-
+-#ifdef __USE_GNU
+-# define F_SETSIG	10	/* Set number of signal to be sent.  */
+-# define F_GETSIG	11	/* Get number of signal to be sent.  */
+-#endif
+-
+-#ifdef __USE_GNU
+-# define F_SETLEASE	1024	/* Set a lease.	 */
+-# define F_GETLEASE	1025	/* Enquire what lease is active.  */
+-# define F_NOTIFY	1026	/* Request notfications on a directory.	 */
+-# define F_DUPFD_CLOEXEC 1030	/* Duplicate file descriptor with
+-				   close-on-exit set.  */
+-#endif
+-
+-/* For F_[GET|SET]FD.  */
+-#define FD_CLOEXEC	1	/* actually anything with low bit set goes */
+-
+-/* For posix fcntl() and `l_type' field of a `struct flock' for lockf().  */
+-#define F_RDLCK		0	/* Read lock.  */
+-#define F_WRLCK		1	/* Write lock.	*/
+-#define F_UNLCK		2	/* Remove lock.	 */
+-
+-/* For old implementation of bsd flock().  */
+-#define F_EXLCK		4	/* or 3 */
+-#define F_SHLCK		8	/* or 4 */
+-
+-#ifdef __USE_BSD
+-/* Operations for bsd flock(), also used by the kernel implementation.	*/
+-# define LOCK_SH	1	/* shared lock */
+-# define LOCK_EX	2	/* exclusive lock */
+-# define LOCK_NB	4	/* or'd with one of the above to prevent
+-				   blocking */
+-# define LOCK_UN	8	/* remove lock */
+-#endif
+-
+-#ifdef __USE_GNU
+-# define LOCK_MAND	32	/* This is a mandatory flock:	*/
+-# define LOCK_READ	64	/* ... which allows concurrent read operations.	 */
+-# define LOCK_WRITE	128	/* ... which allows concurrent write operations.  */
+-# define LOCK_RW	192	/* ... Which allows concurrent read & write operations.	 */
+-#endif
+-
+-#ifdef __USE_GNU
+-/* Types of directory notifications that may be requested with F_NOTIFY.  */
+-# define DN_ACCESS	0x00000001	/* File accessed.  */
+-# define DN_MODIFY	0x00000002	/* File modified.  */
+-# define DN_CREATE	0x00000004	/* File created.  */
+-# define DN_DELETE	0x00000008	/* File removed.  */
+-# define DN_RENAME	0x00000010	/* File renamed.  */
+-# define DN_ATTRIB	0x00000020	/* File changed attibutes.  */
+-# define DN_MULTISHOT	0x80000000	/* Don't remove notifier.  */
+-#endif
+-
+-struct flock
+-  {
+-    short int l_type;	/* Type of lock: F_RDLCK, F_WRLCK, or F_UNLCK.	*/
+-    short int l_whence;	/* Where `l_start' is relative to (like `lseek').  */
+-#ifndef __USE_FILE_OFFSET64
+-    __off_t l_start;	/* Offset where the lock begins.  */
+-    __off_t l_len;	/* Size of the locked area; zero means until EOF.  */
+-#else
+-    __off64_t l_start;	/* Offset where the lock begins.  */
+-    __off64_t l_len;	/* Size of the locked area; zero means until EOF.  */
+-#endif
+-    __pid_t l_pid;	/* Process holding the lock.  */
+-  };
+-
+-#ifdef __USE_LARGEFILE64
+-struct flock64
+-  {
+-    short int l_type;	/* Type of lock: F_RDLCK, F_WRLCK, or F_UNLCK.	*/
+-    short int l_whence;	/* Where `l_start' is relative to (like `lseek').  */
+-    __off64_t l_start;	/* Offset where the lock begins.  */
+-    __off64_t l_len;	/* Size of the locked area; zero means until EOF.  */
+-    __pid_t l_pid;	/* Process holding the lock.  */
+-  };
+-#endif
+-
+-/* Define some more compatibility macros to be backward compatible with
+-   BSD systems which did not managed to hide these kernel macros.  */
+-#ifdef	__USE_BSD
+-# define FAPPEND	O_APPEND
+-# define FFSYNC		O_FSYNC
+-# define FASYNC		O_ASYNC
+-# define FNONBLOCK	O_NONBLOCK
+-# define FNDELAY	O_NDELAY
+-#endif /* Use BSD.  */
+-
+-/* Advise to `posix_fadvise'.  */
+-#ifdef __USE_XOPEN2K
+-# define POSIX_FADV_NORMAL	0 /* No further special treatment.  */
+-# define POSIX_FADV_RANDOM	1 /* Expect random page references.  */
+-# define POSIX_FADV_SEQUENTIAL	2 /* Expect sequential page references.	 */
+-# define POSIX_FADV_WILLNEED	3 /* Will need these pages.  */
+-# define POSIX_FADV_DONTNEED	4 /* Don't need these pages.  */
+-# define POSIX_FADV_NOREUSE	5 /* Data will be accessed once.  */
+-#endif
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/bits/mman.h b/ports/sysdeps/unix/sysv/linux/am33/bits/mman.h
+deleted file mode 100644
+index 763b060e667097c6..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/bits/mman.h
++++ /dev/null
+@@ -1,96 +0,0 @@
+-/* Definitions for POSIX memory map interface.  Linux/AM33 version.
+-   Copyright (C) 1997, 2000, 2001, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _SYS_MMAN_H
+-# error "Never use <bits/mman.h> directly; include <sys/mman.h> instead."
+-#endif
+-
+-/* The following definitions basically come from the kernel headers.
+-   But the kernel header is not namespace clean.  */
+-
+-
+-/* Protections are chosen from these bits, OR'd together.  The
+-   implementation does not necessarily support PROT_EXEC or PROT_WRITE
+-   without PROT_READ.  The only guarantees are that no writing will be
+-   allowed without PROT_WRITE and no access will be allowed for PROT_NONE. */
+-
+-#define PROT_READ	0x1		/* Page can be read.  */
+-#define PROT_WRITE	0x2		/* Page can be written.  */
+-#define PROT_EXEC	0x4		/* Page can be executed.  */
+-#define PROT_NONE	0x0		/* Page can not be accessed.  */
+-#define PROT_GROWSDOWN	  0x01000000	/* Extend change to start of
+-					   growsdown vma (mprotect only).  */
+-#define PROT_GROWSUP	  0x02000000	/* Extend change to start of
+-					   growsup vma (mprotect only).  */
+-
+-/* Sharing types (must choose one and only one of these).  */
+-#define MAP_SHARED	0x01		/* Share changes.  */
+-#define MAP_PRIVATE	0x02		/* Changes are private.  */
+-#ifdef __USE_MISC
+-# define MAP_TYPE	0x0f		/* Mask for type of mapping.  */
+-#endif
+-
+-/* Other flags.  */
+-#define MAP_FIXED	0x10		/* Interpret addr exactly.  */
+-#ifdef __USE_MISC
+-# define MAP_FILE	0
+-# define MAP_ANONYMOUS	0x20		/* Don't use a file.  */
+-# define MAP_ANON	MAP_ANONYMOUS
+-#endif
+-
+-/* These are Linux-specific.  */
+-#ifdef __USE_MISC
+-# define MAP_GROWSDOWN	0x0100		/* Stack-like segment.  */
+-# define MAP_DENYWRITE	0x0800		/* ETXTBSY */
+-# define MAP_EXECUTABLE	0x1000		/* Mark it as an executable.  */
+-# define MAP_LOCKED	0x2000		/* Lock the mapping.  */
+-# define MAP_NORESERVE	0x4000		/* Don't check for reservations.  */
+-#endif
+-
+-/* Flags to `msync'.  */
+-#define MS_ASYNC	1		/* Sync memory asynchronously.  */
+-#define MS_SYNC		4		/* Synchronous memory sync.  */
+-#define MS_INVALIDATE	2		/* Invalidate the caches.  */
+-
+-/* Flags for `mlockall'.  */
+-#define MCL_CURRENT	1		/* Lock all currently mapped pages.  */
+-#define MCL_FUTURE	2		/* Lock all additions to address
+-					   space.  */
+-
+-/* Flags for `mremap'.  */
+-#ifdef __USE_GNU
+-# define MREMAP_MAYMOVE	1
+-#endif
+-
+-/* Advice to `madvise'.  */
+-#ifdef __USE_BSD
+-# define MADV_NORMAL	 0	/* No further special treatment.  */
+-# define MADV_RANDOM	 1	/* Expect random page references.  */
+-# define MADV_SEQUENTIAL 2	/* Expect sequential page references.  */
+-# define MADV_WILLNEED	 3	/* Will need these pages.  */
+-# define MADV_DONTNEED	 4	/* Don't need these pages.  */
+-#endif
+-
+-/* The POSIX people had to invent similar names for the same things.  */
+-#ifdef __USE_XOPEN2K
+-# define POSIX_MADV_NORMAL	0 /* No further special treatment.  */
+-# define POSIX_MADV_RANDOM	1 /* Expect random page references.  */
+-# define POSIX_MADV_SEQUENTIAL	2 /* Expect sequential page references.  */
+-# define POSIX_MADV_WILLNEED	3 /* Will need these pages.  */
+-# define POSIX_MADV_DONTNEED	4 /* Don't need these pages.  */
+-#endif
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/brk.c b/ports/sysdeps/unix/sysv/linux/am33/brk.c
+deleted file mode 100644
+index dc7ec639b3a558c0..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/brk.c
++++ /dev/null
+@@ -1,45 +0,0 @@
+-/* brk system call for Linux/am33.
+-   Copyright (C) 1995, 1996, 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/brk.c.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <errno.h>
+-#include <unistd.h>
+-#include <sysdep.h>
+-
+-/* This must be initialized data because commons can't have aliases.  */
+-void *__curbrk = 0;
+-
+-int
+-__brk (void *addr)
+-{
+-  void *newbrk;
+-
+-  newbrk = INLINE_SYSCALL (brk, 1, addr);
+-
+-  __curbrk = newbrk;
+-
+-  if (newbrk < addr)
+-    {
+-      __set_errno (ENOMEM);
+-      return -1;
+-    }
+-
+-  return 0;
+-}
+-weak_alias (__brk, brk)
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/chown.c b/ports/sysdeps/unix/sysv/linux/am33/chown.c
+deleted file mode 100644
+index 819923eb4971ad16..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/chown.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/chown.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/clone.S b/ports/sysdeps/unix/sysv/linux/am33/clone.S
+deleted file mode 100644
+index e014c4ace94b71b6..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/clone.S
++++ /dev/null
+@@ -1,80 +0,0 @@
+-/* Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/clone.S.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-/* clone() is even more special than fork() as it mucks with stacks
+-   and invokes a function in the right context after its all over.  */
+-
+-#include <sysdep.h>
+-#define _ERRNO_H	1
+-#include <bits/errno.h>
+-#include <asm-syntax.h>
+-#include <bp-sym.h>
+-
+-/* int clone(int (*fn)(void *arg), void *child_stack, int flags, void *arg); */
+-
+-        .text
+-ENTRY (BP_SYM (__clone))
+-	/* Sanity check arguments.  */
+-	cmp	0,d0	/* no NULL function pointers */
+-	beq	L(error_inval)
+-	cmp	0,d1	/* no NULL stack pointers */
+-	beq	L(error_inval)
+-
+-	/* Allocate room for a function call in the new stack, and
+-	   store fn and arg in it.  They will be read back in
+-	   thread_start.  */
+-	mov	d1,a0
+-	sub	12,a0
+-	mov	d0,(a0)
+-	mov	(16,sp),d1
+-	mov	d1,(4,a0)
+-
+-	/* Do the system call */
+-	mov	a0,d1
+-	mov	(12,sp),a0
+-	mov	SYS_ify(clone),d0
+-	syscall	0
+-
+-	cmp	0,d0
+-	beq	thread_start
+-	blt	L(to_SYSCALL_ERROR_LABEL)
+-
+-L(pseudo_end):
+-	ret
+-
+-L(error_inval):
+-	mov	-EINVAL,d0
+-L(to_SYSCALL_ERROR_LABEL):
+-	jmp	SYSCALL_ERROR_LABEL
+-
+-thread_start:
+-	mov	0,a3	/* terminate the stack frame */
+-	mov	(4,sp),d0
+-	mov	(sp),a0
+-	calls	(a0)
+-#ifdef PIC
+-L(here):
+-	mov	pc,a2
+-	add	_GLOBAL_OFFSET_TABLE_-(L(here) - .),a2
+-#endif
+-	call	JUMPTARGET (_exit),[],0
+-
+-PSEUDO_END (BP_SYM (__clone))
+-
+-weak_alias (BP_SYM (__clone), BP_SYM (clone))
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/configure b/ports/sysdeps/unix/sysv/linux/am33/configure
+deleted file mode 100644
+index 870c6a79299f161e..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/configure
++++ /dev/null
+@@ -1,4 +0,0 @@
+-# This file is generated from configure.in by Autoconf.  DO NOT EDIT!
+- # Local configure fragment for am33/sysdeps/unix/sysv/linux/am33
+-
+-arch_minimum_kernel=2.6.25
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/configure.in b/ports/sysdeps/unix/sysv/linux/am33/configure.in
+deleted file mode 100644
+index 43e33f74ca823331..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/configure.in
++++ /dev/null
+@@ -1,4 +0,0 @@
+-GLIBC_PROVIDES dnl See aclocal.m4 in the top level source directory.
+-# Local configure fragment for am33/sysdeps/unix/sysv/linux/am33
+-
+-arch_minimum_kernel=2.6.25
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/fchown.c b/ports/sysdeps/unix/sysv/linux/am33/fchown.c
+deleted file mode 100644
+index 3a69ecc9e7dec0d4..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/fchown.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/fchown.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/fcntl.c b/ports/sysdeps/unix/sysv/linux/am33/fcntl.c
+deleted file mode 100644
+index ea951bc4f931fad3..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/fcntl.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/fcntl.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/fxstat.c b/ports/sysdeps/unix/sysv/linux/am33/fxstat.c
+deleted file mode 100644
+index 4f219f0b9dfa95de..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/fxstat.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/fxstat.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getegid.c b/ports/sysdeps/unix/sysv/linux/am33/getegid.c
+deleted file mode 100644
+index 37b4b4a530503613..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getegid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getegid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/geteuid.c b/ports/sysdeps/unix/sysv/linux/am33/geteuid.c
+deleted file mode 100644
+index ebcb555b5e321b50..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/geteuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/geteuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getgid.c b/ports/sysdeps/unix/sysv/linux/am33/getgid.c
+deleted file mode 100644
+index 0a4d6061f08b9a02..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getgid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getgid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getgroups.c b/ports/sysdeps/unix/sysv/linux/am33/getgroups.c
+deleted file mode 100644
+index 20a7166103ad24e4..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getgroups.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getgroups.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getmsg.c b/ports/sysdeps/unix/sysv/linux/am33/getmsg.c
+deleted file mode 100644
+index 3a1fa0852504b0ce..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getmsg.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getmsg.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getresgid.c b/ports/sysdeps/unix/sysv/linux/am33/getresgid.c
+deleted file mode 100644
+index b703a414cc2a2b07..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getresgid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getresgid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getresuid.c b/ports/sysdeps/unix/sysv/linux/am33/getresuid.c
+deleted file mode 100644
+index 0b14cefe34668cd6..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getresuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getresuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/getuid.c b/ports/sysdeps/unix/sysv/linux/am33/getuid.c
+deleted file mode 100644
+index d682c79a49289efb..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/getuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/getuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/lchown.c b/ports/sysdeps/unix/sysv/linux/am33/lchown.c
+deleted file mode 100644
+index c89de99ba235bf45..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/lchown.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/lchown.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/linuxthreads/sysdep-cancel.h b/ports/sysdeps/unix/sysv/linux/am33/linuxthreads/sysdep-cancel.h
+deleted file mode 100644
+index 101cab0b17170d07..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/linuxthreads/sysdep-cancel.h
++++ /dev/null
+@@ -1,158 +0,0 @@
+-/* Copyright (C) 2002, 2003, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#include <tls.h>
+-#include <pt-machine.h>
+-#ifndef __ASSEMBLER__
+-# include <linuxthreads/internals.h>
+-#endif
+-
+-#if IS_IN (libc) || IS_IN (libpthread) || IS_IN (librt)
+-
+-# undef PSEUDO
+-# define PSEUDO(name, syscall_name, args)				\
+-  .text	;								\
+- ENTRY (name)								\
+-  PUSHARGS_##args							\
+-  DOARGS_##args								\
+-  SINGLE_THREAD_P;							\
+-  bne L(pseudo_cancel);							\
+-  mov SYS_ify (syscall_name),d0;					\
+-  syscall 0								\
+-  POPARGS_##args ;							\
+-  cmp -126,d0;								\
+-  bls L(pseudo_end);							\
+-  jmp SYSCALL_ERROR_LABEL;						\
+- L(pseudo_cancel):							\
+-  add -(16+STACK_SPACE (args)),sp;					\
+-  SAVE_ARGS_##args							\
+-  CENABLE								\
+-  mov d0,r0;								\
+-  LOAD_ARGS_##args							\
+-  mov SYS_ify (syscall_name),d0;					\
+-  syscall 0;								\
+-  mov d0,(12,sp);							\
+-  mov r0,d0;								\
+-  CDISABLE								\
+-  mov (12,sp),d0;							\
+-  add +16+STACK_SPACE (args),sp						\
+-  POPARGS_##args ;							\
+-  cmp -126,d0;								\
+-  bls L(pseudo_end);							\
+-  jmp SYSCALL_ERROR_LABEL;						\
+- L(pseudo_end):								\
+-  mov d0,a0
+-
+-/* Reserve up to 2 stack slots for a0 and d1, but fewer than that if
+-   we don't have that many arguments.  */
+-# define STACK_SPACE(n) (((((n) < 3) * (2 - (n))) + 2) * 4)
+-
+-# define SAVE_ARGS_0
+-# define SAVE_ARGS_1	mov a0,(20,sp) ;
+-# define SAVE_ARGS_2	SAVE_ARGS_1 mov d1,(24,sp) ;
+-# define SAVE_ARGS_3	SAVE_ARGS_2
+-# define SAVE_ARGS_4	SAVE_ARGS_3
+-# define SAVE_ARGS_5	SAVE_ARGS_4
+-# define SAVE_ARGS_6	SAVE_ARGS_5
+-
+-# define LOAD_ARGS_0
+-# define LOAD_ARGS_1	mov (20,sp),a0 ;
+-# define LOAD_ARGS_2	LOAD_ARGS_1 mov (24,sp),d1 ;
+-# define LOAD_ARGS_3	LOAD_ARGS_2
+-# define LOAD_ARGS_4	LOAD_ARGS_3
+-# define LOAD_ARGS_5	LOAD_ARGS_4
+-# define LOAD_ARGS_6	LOAD_ARGS_5
+-
+-# if IS_IN (libpthread)
+-#  define CENABLE	call __pthread_enable_asynccancel,[],0;
+-#  define CDISABLE	call __pthread_disable_asynccancel,[],0;
+-# elif IS_IN (librt)
+-#  ifdef PIC
+-#   define CENABLE	movm [a2],(sp); \
+-			1: mov pc,a2; \
+-			add _GLOBAL_OFFSET_TABLE_-(1b-.),a2; \
+-			call +__librt_enable_asynccancel@PLT,[],0; \
+-			movm (sp),[a2];
+-#   define CENABLE	movm [a2],(sp); \
+-			1: mov pc,a2; \
+-			add _GLOBAL_OFFSET_TABLE_-(1b-.),a2; \
+-			call +__librt_disable_asynccancel@PLT,[],0; \
+-			movm (sp),[a2];
+-#  else
+-#   define CENABLE	call +__librt_enable_asynccancel,[],0;
+-#   define CDISABLE	call +__librt_disable_asynccancel,[],0;
+-#  endif
+-# else
+-#  define CENABLE	call +__libc_enable_asynccancel,[],0;
+-#  define CDISABLE	call +__libc_disable_asynccancel,[],0;
+-# endif
+-
+-#if IS_IN (libc)
+-# define __local_multiple_threads __libc_multiple_threads
+-#elif IS_IN (libpthread)
+-# define __local_multiple_threads __pthread_multiple_threads
+-#else
+-# define __local_multiple_threads __librt_multiple_threads
+-#endif
+-
+-# ifndef __ASSEMBLER__
+-#  if defined FLOATING_STACKS && USE___THREAD && defined PIC
+-#   define SINGLE_THREAD_P \
+-  __builtin_expect (THREAD_GETMEM (THREAD_SELF,				      \
+-				   p_header.data.multiple_threads) == 0, 1)
+-#  else
+-extern int __local_multiple_threads
+-#   if IS_IN (libc) || IS_IN (libpthread)
+-  attribute_hidden;
+-#   else
+-  ;
+-#   endif
+-#   define SINGLE_THREAD_P __builtin_expect (__local_multiple_threads == 0, 1)
+-#  endif
+-# else
+-#  if !defined PIC
+-#   define SINGLE_THREAD_P \
+-	mov (+__local_multiple_threads),d0; \
+-	cmp 0,d0
+-#  elif IS_IN (libc) || IS_IN (libpthread)
+-#   define SINGLE_THREAD_P \
+-	movm [a2],(sp); \
+-     1: mov pc,a2; \
+-	add _GLOBAL_OFFSET_TABLE_-(1b-.),a2; \
+-	mov (+__local_multiple_threads@GOTOFF,a2),d0; \
+-	movm (sp),[a2]; \
+-	cmp 0,d0
+-#  else
+-#   define SINGLE_THREAD_P \
+-	movm [a2],(sp); \
+-     1: mov pc,a2; \
+-	add _GLOBAL_OFFSET_TABLE_-(1b-.),a2; \
+-	mov (+__local_multiple_threads@GOT,a2),a2; \
+-	mov (a2),d0; \
+-	movm (sp),[a2]; \
+-	cmp 0,d0
+-#  endif
+-# endif
+-
+-#elif !defined __ASSEMBLER__
+-
+-/* This code should never be used but we define it anyhow.  */
+-# define SINGLE_THREAD_P (1)
+-
+-#endif
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/lockf64.c b/ports/sysdeps/unix/sysv/linux/am33/lockf64.c
+deleted file mode 100644
+index a88f5a784a544f0a..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/lockf64.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/lockf64.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/lxstat.c b/ports/sysdeps/unix/sysv/linux/am33/lxstat.c
+deleted file mode 100644
+index 0efa0aea491950a6..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/lxstat.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/lxstat.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/profil-counter.h b/ports/sysdeps/unix/sysv/linux/am33/profil-counter.h
+deleted file mode 100644
+index f4b7eaae76da4cf5..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/profil-counter.h
++++ /dev/null
+@@ -1,26 +0,0 @@
+-/* Low-level statistical profiling support function.  Linux/am33 version.
+-   Copyright (C) 1996, 1997, 1998, 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <signal.h>
+-#include <sigcontextinfo.h>
+-
+-static void
+-profil_counter (int signo, SIGCONTEXT scp)
+-{
+-  profil_count ((void *) GET_PC (scp));
+-}
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/putmsg.c b/ports/sysdeps/unix/sysv/linux/am33/putmsg.c
+deleted file mode 100644
+index ebc1680ca7d1f2b5..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/putmsg.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/putmsg.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setegid.c b/ports/sysdeps/unix/sysv/linux/am33/setegid.c
+deleted file mode 100644
+index 2e3a54c893448c3d..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setegid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setegid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/seteuid.c b/ports/sysdeps/unix/sysv/linux/am33/seteuid.c
+deleted file mode 100644
+index 18e41d08c1b7821f..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/seteuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/seteuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setfsgid.c b/ports/sysdeps/unix/sysv/linux/am33/setfsgid.c
+deleted file mode 100644
+index 0886712569e3e055..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setfsgid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setfsgid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setfsuid.c b/ports/sysdeps/unix/sysv/linux/am33/setfsuid.c
+deleted file mode 100644
+index a9f22eb8ab823deb..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setfsuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setfsuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setgid.c b/ports/sysdeps/unix/sysv/linux/am33/setgid.c
+deleted file mode 100644
+index 377021d9ec8f9cea..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setgid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setgid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setgroups.c b/ports/sysdeps/unix/sysv/linux/am33/setgroups.c
+deleted file mode 100644
+index cb9a7708e38ebc68..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setgroups.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setgroups.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setregid.c b/ports/sysdeps/unix/sysv/linux/am33/setregid.c
+deleted file mode 100644
+index 99c57ad20f1ddb0c..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setregid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setregid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setresgid.c b/ports/sysdeps/unix/sysv/linux/am33/setresgid.c
+deleted file mode 100644
+index daca1a48332e49d6..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setresgid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setresgid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setresuid.c b/ports/sysdeps/unix/sysv/linux/am33/setresuid.c
+deleted file mode 100644
+index 3aeabe9ad708c454..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setresuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setresuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setreuid.c b/ports/sysdeps/unix/sysv/linux/am33/setreuid.c
+deleted file mode 100644
+index 8ad61226e979db47..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setreuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setreuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setrlimit.c b/ports/sysdeps/unix/sysv/linux/am33/setrlimit.c
+deleted file mode 100644
+index bfaef74c387f91c0..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setrlimit.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setrlimit.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/setuid.c b/ports/sysdeps/unix/sysv/linux/am33/setuid.c
+deleted file mode 100644
+index de394379be6f9f90..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/setuid.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/setuid.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/socket.S b/ports/sysdeps/unix/sysv/linux/am33/socket.S
+deleted file mode 100644
+index b4d3caab8a6506d8..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/socket.S
++++ /dev/null
+@@ -1,72 +0,0 @@
+-/* Copyright 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/socket.S.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#include <socketcall.h>
+-
+-#define P(a, b) P2(a, b)
+-#define P2(a, b) a##b
+-
+-	.text
+-/* The socket-oriented system calls are handled unusally in Linux.
+-   They are all gated through the single `socketcall' system call number.
+-   `socketcall' takes two arguments: the first is the subcode, specifying
+-   which socket function is being called; and the second is a pointer to
+-   the arguments to the specific function.
+-
+-   The .S files for the other calls just #define socket and #include this.  */
+-
+-#ifndef __socket
+-#ifndef NO_WEAK_ALIAS
+-#define __socket P(__,socket)
+-#else
+-#define __socket socket
+-#endif
+-#endif
+-
+-.globl __socket
+-ENTRY (__socket)
+-
+-	mov d0,(4,sp)
+-	mov d1,(8,sp)
+-
+-	mov SYS_ify(socketcall),d0	/* System call number in d0.  */
+-
+-	/* Use ## so `socket' is a separate token that might be #define'd.  */
+-	mov P(SOCKOP_,socket),a0	/* Subcode is first arg to syscall.  */
+-	mov sp,d1
+-	add 4,d1			/* Address of args is 2nd arg.  */
+-
+-        /* Do the system call trap.  */
+-	syscall 0
+-
+-	/* d0 is < 0 if there was an error.  */
+-	cmp -126,d0
+-	bls L(pseudo_end)
+-	jmp SYSCALL_ERROR_LABEL
+-
+-	/* Successful; return the syscall's value.  */
+-L(pseudo_end):
+-	ret
+-
+-PSEUDO_END (__socket)
+-
+-#ifndef NO_WEAK_ALIAS
+-weak_alias (__socket, socket)
+-#endif
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/syscall.S b/ports/sysdeps/unix/sysv/linux/am33/syscall.S
+deleted file mode 100644
+index 63fa6ddcd4f670ae..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/syscall.S
++++ /dev/null
+@@ -1,42 +0,0 @@
+-/* Copyright (C) 1995, 1996, 1998, 2001 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/syscall.S.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-
+-/* Please consult the file sysdeps/unix/sysv/linux/am33/sysdep.h for
+-   more information about the value -126 used below.*/
+-
+-	.text
+-ENTRY (syscall)
+-	movm [d2,d3,a2,a3],(sp)	/* Save register contents.  */
+-	mov d1,a0
+-	mov (28,sp),d1
+-	mov (32,sp),a3
+-	mov (36,sp),a2
+-	mov (40,sp),d3
+-	mov (44,sp),d2
+-	syscall 0			/* Do the system call.  */
+-	movm (sp),[d2,d3,a2,a3]	/* Restore register contents.  */
+-	cmp -126,d0			/* Check for error.  */
+-	bls L(pseudo_end)
+-	jmp SYSCALL_ERROR_LABEL		/* Jump to error handler if error.  */
+-L(pseudo_end):
+-	ret				/* Return to caller.  */
+-
+-PSEUDO_END (syscall)
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/sysdep.S b/ports/sysdeps/unix/sysv/linux/am33/sysdep.S
+deleted file mode 100644
+index 877fd1e0823af3dd..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/sysdep.S
++++ /dev/null
+@@ -1,41 +0,0 @@
+-/* Copyright (C) 1995, 1996, 1997, 1998, 2001, 2004
+-	Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/sysdep.S.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-
+-/* The following code is only used in the shared library when we
+-   compile the reentrant version.  Otherwise each system call defines
+-   each own version.  */
+-
+-#ifndef PIC
+-
+-#undef CALL_MCOUNT
+-#define CALL_MCOUNT /* Don't insert the profiling call, it clobbers %eax.  */
+-
+-	.text
+-ENTRY (__syscall_error)
+-	mov d0,d1
+-	clr d0
+-	sub d1,d0
+-
+-#define __syscall_error __syscall_error_1
+-#include <../../../am33/sysdep.S>
+-
+-#endif	/* !PIC */
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/sysdep.h b/ports/sysdeps/unix/sysv/linux/am33/sysdep.h
+deleted file mode 100644
+index 68f93f8003e2dc07..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/sysdep.h
++++ /dev/null
+@@ -1,316 +0,0 @@
+-/* Copyright 2001, 2004 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Alexandre Oliva <aoliva@redhat.com>.
+-   Based on ../i386/sysdep.h.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Library General Public License as
+-   published by the Free Software Foundation; either version 2 of the
+-   License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Library General Public License for more details.
+-
+-   You should have received a copy of the GNU Library General Public
+-   License along with the GNU C Library.  If not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#ifndef _LINUX_AM33_SYSDEP_H
+-#define _LINUX_AM33_SYSDEP_H 1
+-
+-/* There is some commonality.  */
+-#include "../../../am33/sysdep.h"
+-
+-/* For Linux we can use the system call table in the header file
+-	/usr/include/asm/unistd.h
+-   of the kernel.  But these symbols do not follow the SYS_* syntax
+-   so we have to redefine the `SYS_ify' macro here.  */
+-#undef SYS_ify
+-#define SYS_ify(syscall_name)	__NR_##syscall_name
+-
+-/* ELF-like local names start with `.L'.  */
+-#undef L
+-#define L(name)	.L##name
+-
+-#ifdef __ASSEMBLER__
+-
+-/* Linux uses a negative return value to indicate syscall errors,
+-   unlike most Unices, which use the condition codes' carry flag.
+-
+-   Since version 2.1 the return value of a system call might be
+-   negative even if the call succeeded.  E.g., the `lseek' system call
+-   might return a large offset.  Therefore we must not anymore test
+-   for < 0, but test for a real error by making sure the value in %eax
+-   is a real error number.  Linus said he will make sure the no syscall
+-   returns a value in -1 .. -4095 as a valid result so we can savely
+-   test with -4095.  */
+-
+-/* We don't want the label for the error handle to be global when we define
+-   it here.  */
+-#ifdef PIC
+-# define SYSCALL_ERROR_LABEL 0f
+-#else
+-# define SYSCALL_ERROR_LABEL syscall_error
+-#endif
+-
+-#undef	PSEUDO
+-#define	PSEUDO(name, syscall_name, args)				      \
+-  .text;								      \
+-  ENTRY (name)								      \
+-    DO_CALL (syscall_name, args);					      \
+-    cmp -126,d0;							      \
+-    bls L(pseudo_end);							      \
+-    jmp SYSCALL_ERROR_LABEL;						      \
+-  L(pseudo_end):							      \
+-    mov d0,a0;
+-
+-#undef	PSEUDO_END
+-#define	PSEUDO_END(name)						      \
+-  SYSCALL_ERROR_HANDLER							      \
+-  END (name)
+-
+-#undef  PSEUDO_NOERROR
+-#define	PSEUDO_NOERRNO(name, syscall_name, args)			      \
+-  .text;								      \
+-  ENTRY (name)								      \
+-    DO_CALL (syscall_name, args)
+-
+-#undef	PSEUDO_END_NOERRNO
+-#define	PSEUDO_END_NOERRNO(name)					      \
+-  END (name)
+-
+-#define ret_NOERRNO ret
+-
+-/* The function has to return the error code.  */
+-#undef	PSEUDO_ERRVAL
+-#define	PSEUDO_ERRVAL(name, syscall_name, args) \
+-  .text;								      \
+-  ENTRY (name)								      \
+-    DO_CALL (syscall_name, args);					      \
+-    clr d1;								      \
+-    sub d0,d1,d0
+-
+-#undef	PSEUDO_END_ERRVAL
+-#define	PSEUDO_END_ERRVAL(name) \
+-  END (name)
+-
+-#define ret_ERRVAL ret
+-
+-#ifndef PIC
+-#define SYSCALL_ERROR_HANDLER	/* Nothing here; code in sysdep.S is used.  */
+-#else
+-/* Store (- d0) into errno through the GOT.  */
+-#ifdef _LIBC_REENTRANT
+-#define SYSCALL_ERROR_HANDLER						      \
+-0:movm [d2,a2],(sp);							      \
+-  add -12,sp;								      \
+-1:mov pc,a2;								      \
+-  add _GLOBAL_OFFSET_TABLE_-(1b-.),a2;					      \
+-  clr d2;								      \
+-  sub d0,d2;								      \
+-  call __errno_location@PLT,[],0;					      \
+-  mov d2,(a0);								      \
+-  add 12,sp;								      \
+-  movm (sp),[d2,a2];							      \
+-  mov -1,d0;								      \
+-  mov d0,a0;								      \
+-  jmp L(pseudo_end);
+-/* A quick note: it is assumed that the call to `__errno_location' does
+-   not modify the stack!  */
+-#else
+-#define SYSCALL_ERROR_HANDLER						      \
+-0:mov pc,a0;								      \
+-  add _GLOBAL_OFFSET_TABLE_-(0b-.),a0;					      \
+-  clr d1;								      \
+-  sub d0,d1;								      \
+-  mov (errno@GOT,a0),a1;						      \
+-  mov d1,(a0);								      \
+-  mov -1,d0;								      \
+-  mov d0,a0;								      \
+-  jmp L(pseudo_end);
+-#endif	/* _LIBC_REENTRANT */
+-#endif	/* PIC */
+-
+-/* Linux takes system call arguments in registers:
+-
+-	syscall number	d0	     call-clobbered
+-	arg 1		a0	     call-clobbered
+-	arg 2		d1	     call-clobbered
+-	arg 3		a3	     call-saved
+-	arg 4		a2	     call-saved
+-	arg 5		d3	     call-saved
+-	arg 6		d2	     call-saved
+-
+-   The stack layout upon entering the function is:
+-
+-	 (24,sp)	Arg# 6
+-	 (20,sp)	Arg# 5
+-	 (16,sp)	Arg# 4
+-	 (12,sp)	Arg# 3
+-	  d1		Arg# 2
+-	  d0		Arg# 1
+-	  (sp)		Return address
+-
+-   (Of course a function with say 3 arguments does not have entries for
+-   arguments 4, 5 and 6.)  */
+-
+-#undef	DO_CALL
+-#define DO_CALL(syscall_name, args)			      		      \
+-    PUSHARGS_##args							      \
+-    DOARGS_##args							      \
+-    mov SYS_ify (syscall_name),d0;					      \
+-    syscall 0								      \
+-    POPARGS_##args
+-
+-#define PUSHARGS_0	/* No arguments to push.  */
+-#define	_DOARGS_0(N)	/* No arguments to frob.  */
+-#define	DOARGS_0	/* No arguments to frob.  */
+-#define	POPARGS_0	/* No arguments to pop.  */
+-
+-#define PUSHARGS_1	/* No arguments to push.  */
+-#define	_DOARGS_1(N)	_DOARGS_0 (N-4) mov d0,a0;
+-#define	DOARGS_1	_DOARGS_1 (4)
+-#define	POPARGS_1	/* No arguments to pop.  */
+-
+-#define PUSHARGS_2	/* No arguments to push.  */
+-#define	_DOARGS_2(N)	_DOARGS_1 (N-4) /* Argument already in d1.  */
+-#define	DOARGS_2	_DOARGS_2 (8)
+-#define	POPARGS_2	/* No arguments to pop.  */
+-
+-#define PUSHARGS_3	movm [a3],(sp);
+-#define	_DOARGS_3(N)	_DOARGS_2 (N-4) mov (N,sp),a3;
+-#define DOARGS_3	_DOARGS_3 (16)
+-#define POPARGS_3	; movm (sp),[a3]
+-
+-#define PUSHARGS_4	movm [a2,a3],(sp);
+-#define	_DOARGS_4(N)	_DOARGS_3 (N-4) mov (N,sp),a2;
+-#define DOARGS_4	_DOARGS_4 (24)
+-#define POPARGS_4	; movm (sp),[a2,a3]
+-
+-#define PUSHARGS_5	movm [d3,a2,a3],(sp);
+-#define	_DOARGS_5(N)	_DOARGS_4 (N-4) mov (N,sp),d3;
+-#define DOARGS_5	_DOARGS_5 (32)
+-#define POPARGS_5	; movm (sp),[d3,a2,a3]
+-
+-#define PUSHARGS_6	movm [d2,d3,a2,a3],(sp);
+-#define	_DOARGS_6(N)	_DOARGS_5 (N-4) mov (N,sp),d2;
+-#define DOARGS_6	_DOARGS_6 (40)
+-#define POPARGS_6	; movm (sp),[d2,d3,a2,a3]
+-
+-#else	/* !__ASSEMBLER__ */
+-
+-/* Define a macro which expands inline into the wrapper code for a system
+-   call.  */
+-#undef INLINE_SYSCALL
+-#define INLINE_SYSCALL(name, nr, args...) \
+-  ({									\
+-    unsigned int resultvar = INTERNAL_SYSCALL (name, , nr, args);	\
+-    if (__builtin_expect (INTERNAL_SYSCALL_ERROR_P (resultvar, ), 0))	\
+-      {									\
+-	__set_errno (INTERNAL_SYSCALL_ERRNO (resultvar, ));		\
+-	resultvar = 0xffffffff;						\
+-      }									\
+-    (int) resultvar; })
+-
+-#define INTERNAL_SYSCALL(name, err, nr, args...)			\
+-({									\
+-	register long __sc0 asm ("d0") = __NR_##name; 			\
+-	inline_syscall##nr(name, ## args);				\
+-	__sc0;								\
+-})
+-
+-#undef INTERNAL_SYSCALL_DECL
+-#define INTERNAL_SYSCALL_DECL(err) do { } while (0)
+-
+-#undef INTERNAL_SYSCALL_ERROR_P
+-#define INTERNAL_SYSCALL_ERROR_P(val, err) \
+-  ((unsigned int) (val) >= (unsigned long)-125)
+-
+-#undef INTERNAL_SYSCALL_ERRNO
+-#define INTERNAL_SYSCALL_ERRNO(val, err) (-(val))
+-
+-#define inline_syscall0(name,dummy...) \
+-__asm__ __volatile__ ("syscall 0" \
+-	              : "+d" (__sc0) \
+-	              : : "memory")
+-
+-#define inline_syscall1(name,arg1) \
+-register long __sc1 asm ("a0") = (long) (arg1); \
+-inline_syscall0 (name); \
+-__asm__ __volatile__ ("" : : "r" (__sc1))
+-
+-#define inline_syscall2(name,arg1,arg2) \
+-register long __sc2 asm ("d1") = (long) (arg2); \
+-inline_syscall1 (name,(arg1)); \
+-__asm__ __volatile__ ("" : : "r" (__sc2))
+-
+-/* We can't tell whether a3 is going to be eliminated in the enclosing
+-   function, so we have to assume it isn't.  We first load the value
+-   of any arguments into their registers, except for a3 itself, that
+-   may be needed to load the value of the other arguments.  Then, we
+-   save a3's value in some other register, and load the argument value
+-   into a3.  We have to force both a3 and its copy to be live in
+-   different registers at the same time, to avoid having the copy
+-   spilled and the value reloaded into the same register, in which
+-   case we'd be unable to get the value of a3 back, should the stack
+-   slot reference be (offset,a3).  */
+-#define inline_syscall3(name,arg1,arg2,arg3) \
+-long __sc3v = (long) (arg3); \
+-register long __sc1 asm ("a0") = (long) (arg1); \
+-register long __sc2 asm ("d1") = (long) (arg2); \
+-register long __sc3 asm ("a3") = __sc3;	\
+-register long __sc3c; \
+-__asm__ __volatile__ ("mov %1,%0" : "=&r" (__sc3c) : "r" (__sc3)); \
+-__sc3 = __sc3v; \
+-__asm__ __volatile__ ("" : : "r" (__sc3c), "r" (__sc3)); \
+-inline_syscall0 (name); \
+-__sc3 = __sc3c; \
+-__asm__ __volatile__ ("" : : "r" (__sc3), "r" (__sc2), "r" (__sc1))
+-
+-#ifdef PIC
+-/* Since a2 is the PIC register, it requires similar handling as a3
+-   when we're generating PIC, as a2's value may be needed to load
+-   arguments whose values live in global variables.  The difference is
+-   that we don't need to require its value to be live in a register;
+-   it may well be in a stack slot, as long as we save it before
+-   clobbering a3 and restore it after restoring a3.  */
+-#define inline_syscall4(name,arg1,arg2,arg3,arg4) \
+-long __sc4v = (long) (arg4); \
+-long __sc3v = (long) (arg3); \
+-register long __sc1 asm ("a0") = (long) (arg1); \
+-register long __sc2 asm ("d1") = (long) (arg2); \
+-register long __sc3 asm ("a3") = __sc3;	\
+-register long __sc3c; \
+-register long __sc4 asm ("a2") = __sc4;	\
+-long __sc4c = __sc4; \
+-__sc4 = __sc4v; \
+-__asm__ __volatile__ ("mov %1,%0" : "=&r" (__sc3c) : "r" (__sc3)); \
+-__sc3 = __sc3v; \
+-__asm__ __volatile__ ("" : : "r" (__sc3c), "r" (__sc3), "r" (__sc4)); \
+-inline_syscall0 (name); \
+-__sc3 = __sc3c; \
+-__sc4 = __sc4c; \
+-__asm__ __volatile__ ("" : : "r" (__sc4), "r" (__sc3), \
+-			     "r" (__sc2), "r" (__sc1))
+-#else
+-#define inline_syscall4(name,arg1,arg2,arg3,arg4) \
+-register long __sc4 asm ("a2") = (long) (arg4); \
+-inline_syscall3 (name,(arg1),(arg2),(arg3)); \
+-__asm__ __volatile__ ("" : : "r" (__sc4))
+-#endif
+-
+-#define inline_syscall5(name,arg1,arg2,arg3,arg4,arg5) \
+-register long __sc5 asm ("d3") = (long) (arg5); \
+-inline_syscall4 (name,(arg1),(arg2),(arg3),(arg4)); \
+-__asm__ __volatile__ ("" : : "r" (__sc5))
+-
+-#define inline_syscall6(name,arg1,arg2,arg3,arg4,arg5,arg6) \
+-register long __sc6 asm ("d2") = (long) (arg6); \
+-inline_syscall5 (name,(arg1),(arg2),(arg3),(arg4),(arg5)); \
+-__asm__ __volatile__ ("" : : "r" (__sc6))
+-
+-#endif	/* __ASSEMBLER__ */
+-
+-#endif /* linux/am33/sysdep.h */
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/xstat.c b/ports/sysdeps/unix/sysv/linux/am33/xstat.c
+deleted file mode 100644
+index e9869f550892e9a2..0000000000000000
+--- a/ports/sysdeps/unix/sysv/linux/am33/xstat.c
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <sysdeps/unix/sysv/linux/i386/xstat.c>

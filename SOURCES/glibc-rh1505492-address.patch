@@ -1,0 +1,75 @@
+commit 4e0b901601038c863b97e68b18ae50a82e10a157
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Dec 2 22:33:57 2014 +0000
+
+    Fix -Waddress warnings in nptl/tst-mutex1.c.
+    
+    This patch fixes -Waddress warnings in nptl/tst-mutex1.c from
+    comparing the address of an object with NULL (ATTR may either be NULL,
+    or the address of an object when included from other tests, and the
+    warning arises in the latter case).  A macro ATTR_NULL is defined
+    alongside ATTR and used for the tests.
+    
+    Tested for x86_64.
+    
+            * nptl/tst-mutex1.c: Include <stdbool.h>.
+            [!ATTR] (ATTR_NULL): New macro.
+            (do_test): Test !ATTR_NULL instead of ATTR != NULL.
+            * nptl/tst-mutexpi1.c (ATTR_NULL): New macro.
+            * nptl/tst-mutexpp1.c (ATTR_NULL): New macro.
+
+diff --git a/nptl/tst-mutex1.c b/nptl/tst-mutex1.c
+index 830c9d1f74076c5d..0f2ae0bf67cfa414 100644
+--- a/nptl/tst-mutex1.c
++++ b/nptl/tst-mutex1.c
+@@ -19,10 +19,12 @@
+ #include <pthread.h>
+ #include <stdio.h>
+ #include <errno.h>
++#include <stdbool.h>
+ 
+ 
+ #ifndef ATTR
+ # define ATTR NULL
++# define ATTR_NULL true
+ #endif
+ 
+ 
+@@ -32,7 +34,7 @@ do_test (void)
+   pthread_mutex_t m;
+ 
+   int e = pthread_mutex_init (&m, ATTR);
+-  if (ATTR != NULL && e == ENOTSUP)
++  if (!ATTR_NULL && e == ENOTSUP)
+     {
+       puts ("cannot support selected type of mutexes");
+       return 0;
+@@ -43,7 +45,7 @@ do_test (void)
+       return 1;
+     }
+ 
+-  if (ATTR != NULL && pthread_mutexattr_destroy (ATTR) != 0)
++  if (!ATTR_NULL && pthread_mutexattr_destroy (ATTR) != 0)
+     {
+       puts ("mutexattr_destroy failed");
+       return 1;
+diff --git a/nptl/tst-mutexpi1.c b/nptl/tst-mutexpi1.c
+index 623ede9fa5a2f1ca..d768664d026b047f 100644
+--- a/nptl/tst-mutexpi1.c
++++ b/nptl/tst-mutexpi1.c
+@@ -24,4 +24,5 @@ prepare (void)
+ 
+ 
+ #define ATTR &a
++#define ATTR_NULL false
+ #include "tst-mutex1.c"
+diff --git a/nptl/tst-mutexpp1.c b/nptl/tst-mutexpp1.c
+index 9b7d7fe2634a8337..8ec4673f1a8c81fe 100644
+--- a/nptl/tst-mutexpp1.c
++++ b/nptl/tst-mutexpp1.c
+@@ -42,4 +42,5 @@ do_test_wrapper (void)
+ #define TEST_FUNCTION do_test_wrapper ()
+ 
+ #define ATTR &a
++#define ATTR_NULL false
+ #include "tst-mutex1.c"

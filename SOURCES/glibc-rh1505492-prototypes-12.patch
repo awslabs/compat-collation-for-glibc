@@ -1,0 +1,3646 @@
+commit bd2260a2069993cdb14cffcbb2b0dc04b9888aee
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Mon Oct 19 12:04:33 2015 +0000
+
+    Convert 231 sysdeps function definitions to prototype style.
+    
+    This mostly automatically-generated patch converts 231 sysdeps
+    function definitions in glibc from old-style K&R to prototype-style.
+    
+    For __aio_sigqueue and __gai_sigqueue I had to add internal_function
+    to the definitions as noted by Florian in
+    <https://sourceware.org/ml/libc-alpha/2015-10/msg00595.html> to keep
+    the functions compiling on x86 after conversion to prototype
+    definitions.  Otherwise, the patch is automatically generated with all
+    the same exclusions and caveats as in
+    <https://sourceware.org/ml/libc-alpha/2015-10/msg00594.html> except
+    that it's a patch for sysdeps files.
+    
+    Tested for x86_64 and x86 (testsuite, and that installed stripped
+    shared libraries are unchanged by the patch).  Also tested for arm,
+    mips64 and powerpc32 that installed stripped shared libraries are
+    unchanged by the patch.
+    
+            * sysdeps/arm/backtrace.c (__backtrace): Convert to
+            prototype-style function definition.
+            * sysdeps/i386/backtrace.c (__backtrace): Likewise.
+            * sysdeps/i386/ffs.c (__ffs): Likewise.
+            * sysdeps/i386/i686/ffs.c (__ffs): Likewise.
+            * sysdeps/ia64/nptl/pthread_spin_lock.c (pthread_spin_lock):
+            Likewise.
+            * sysdeps/ia64/nptl/pthread_spin_trylock.c (pthread_spin_trylock):
+            Likewise.
+            * sysdeps/ieee754/ldbl-128/e_log2l.c (__ieee754_log2l): Likewise.
+            * sysdeps/ieee754/ldbl-128ibm/e_log2l.c (__ieee754_log2l):
+            Likewise.
+            * sysdeps/m68k/ffs.c (__ffs): Likewise.
+            * sysdeps/m68k/m680x0/fpu/e_acos.c (FUNC): Likewise.
+            * sysdeps/m68k/m680x0/fpu/e_fmod.c (FUNC): Likewise.
+            * sysdeps/mach/adjtime.c (__adjtime): Likewise.
+            * sysdeps/mach/gettimeofday.c (__gettimeofday): Likewise.
+            * sysdeps/mach/hurd/_exit.c (_exit): Likewise.
+            * sysdeps/mach/hurd/access.c (__access): Likewise.
+            * sysdeps/mach/hurd/adjtime.c (__adjtime): Likewise.
+            * sysdeps/mach/hurd/chdir.c (__chdir): Likewise.
+            * sysdeps/mach/hurd/chmod.c (__chmod): Likewise.
+            * sysdeps/mach/hurd/chown.c (__chown): Likewise.
+            * sysdeps/mach/hurd/cthreads.c (cthread_keycreate): Likewise.
+            (cthread_getspecific): Likewise.
+            (cthread_setspecific): Likewise.
+            (__libc_getspecific): Likewise.
+            * sysdeps/mach/hurd/euidaccess.c (__euidaccess): Likewise.
+            * sysdeps/mach/hurd/faccessat.c (faccessat): Likewise.
+            * sysdeps/mach/hurd/fchdir.c (__fchdir): Likewise.
+            * sysdeps/mach/hurd/fchmod.c (__fchmod): Likewise.
+            * sysdeps/mach/hurd/fchmodat.c (fchmodat): Likewise.
+            * sysdeps/mach/hurd/fchown.c (__fchown): Likewise.
+            * sysdeps/mach/hurd/fchownat.c (fchownat): Likewise.
+            * sysdeps/mach/hurd/flock.c (__flock): Likewise.
+            * sysdeps/mach/hurd/fsync.c (fsync): Likewise.
+            * sysdeps/mach/hurd/ftruncate.c (__ftruncate): Likewise.
+            * sysdeps/mach/hurd/getgroups.c (__getgroups): Likewise.
+            * sysdeps/mach/hurd/gethostname.c (__gethostname): Likewise.
+            * sysdeps/mach/hurd/getitimer.c (__getitimer): Likewise.
+            * sysdeps/mach/hurd/getlogin_r.c (__getlogin_r): Likewise.
+            * sysdeps/mach/hurd/getpgid.c (__getpgid): Likewise.
+            * sysdeps/mach/hurd/getrusage.c (__getrusage): Likewise.
+            * sysdeps/mach/hurd/getsockname.c (__getsockname): Likewise.
+            * sysdeps/mach/hurd/group_member.c (__group_member): Likewise.
+            * sysdeps/mach/hurd/isatty.c (__isatty): Likewise.
+            * sysdeps/mach/hurd/lchown.c (__lchown): Likewise.
+            * sysdeps/mach/hurd/link.c (__link): Likewise.
+            * sysdeps/mach/hurd/linkat.c (linkat): Likewise.
+            * sysdeps/mach/hurd/listen.c (__listen): Likewise.
+            * sysdeps/mach/hurd/mkdir.c (__mkdir): Likewise.
+            * sysdeps/mach/hurd/mkdirat.c (mkdirat): Likewise.
+            * sysdeps/mach/hurd/openat.c (__openat): Likewise.
+            * sysdeps/mach/hurd/poll.c (__poll): Likewise.
+            * sysdeps/mach/hurd/readlink.c (__readlink): Likewise.
+            * sysdeps/mach/hurd/readlinkat.c (readlinkat): Likewise.
+            * sysdeps/mach/hurd/recv.c (__recv): Likewise.
+            * sysdeps/mach/hurd/rename.c (rename): Likewise.
+            * sysdeps/mach/hurd/renameat.c (renameat): Likewise.
+            * sysdeps/mach/hurd/revoke.c (revoke): Likewise.
+            * sysdeps/mach/hurd/rewinddir.c (__rewinddir): Likewise.
+            * sysdeps/mach/hurd/rmdir.c (__rmdir): Likewise.
+            * sysdeps/mach/hurd/seekdir.c (seekdir): Likewise.
+            * sysdeps/mach/hurd/send.c (__send): Likewise.
+            * sysdeps/mach/hurd/setdomain.c (setdomainname): Likewise.
+            * sysdeps/mach/hurd/setegid.c (setegid): Likewise.
+            * sysdeps/mach/hurd/seteuid.c (seteuid): Likewise.
+            * sysdeps/mach/hurd/setgid.c (__setgid): Likewise.
+            * sysdeps/mach/hurd/setgroups.c (setgroups): Likewise.
+            * sysdeps/mach/hurd/sethostid.c (sethostid): Likewise.
+            * sysdeps/mach/hurd/sethostname.c (sethostname): Likewise.
+            * sysdeps/mach/hurd/setlogin.c (setlogin): Likewise.
+            * sysdeps/mach/hurd/setpgid.c (__setpgid): Likewise.
+            * sysdeps/mach/hurd/setregid.c (__setregid): Likewise.
+            * sysdeps/mach/hurd/setreuid.c (__setreuid): Likewise.
+            * sysdeps/mach/hurd/settimeofday.c (__settimeofday): Likewise.
+            * sysdeps/mach/hurd/setuid.c (__setuid): Likewise.
+            * sysdeps/mach/hurd/shutdown.c (shutdown): Likewise.
+            * sysdeps/mach/hurd/sigaction.c (__sigaction): Likewise.
+            * sysdeps/mach/hurd/sigaltstack.c (__sigaltstack): Likewise.
+            * sysdeps/mach/hurd/sigpending.c (sigpending): Likewise.
+            * sysdeps/mach/hurd/sigprocmask.c (__sigprocmask): Likewise.
+            * sysdeps/mach/hurd/sigsuspend.c (__sigsuspend): Likewise.
+            * sysdeps/mach/hurd/socket.c (__socket): Likewise.
+            * sysdeps/mach/hurd/symlink.c (__symlink): Likewise.
+            * sysdeps/mach/hurd/symlinkat.c (symlinkat): Likewise.
+            * sysdeps/mach/hurd/telldir.c (telldir): Likewise.
+            * sysdeps/mach/hurd/truncate.c (__truncate): Likewise.
+            * sysdeps/mach/hurd/umask.c (__umask): Likewise.
+            * sysdeps/mach/hurd/unlink.c (__unlink): Likewise.
+            * sysdeps/mach/hurd/unlinkat.c (unlinkat): Likewise.
+            * sysdeps/mips/mips64/__longjmp.c (__longjmp): Likewise.
+            * sysdeps/posix/alarm.c (alarm): Likewise.
+            * sysdeps/posix/cuserid.c (cuserid): Likewise.
+            * sysdeps/posix/dirfd.c (dirfd): Likewise.
+            * sysdeps/posix/dup.c (__dup): Likewise.
+            * sysdeps/posix/dup2.c (__dup2): Likewise.
+            * sysdeps/posix/euidaccess.c (euidaccess): Likewise.
+            (main): Likewise.
+            * sysdeps/posix/flock.c (__flock): Likewise.
+            * sysdeps/posix/fpathconf.c (__fpathconf): Likewise.
+            * sysdeps/posix/getcwd.c (__getcwd): Likewise.
+            * sysdeps/posix/gethostname.c (__gethostname): Likewise.
+            * sysdeps/posix/gettimeofday.c (__gettimeofday): Likewise.
+            * sysdeps/posix/isatty.c (__isatty): Likewise.
+            * sysdeps/posix/killpg.c (killpg): Likewise.
+            * sysdeps/posix/libc_fatal.c (__libc_fatal): Likewise.
+            * sysdeps/posix/mkfifoat.c (mkfifoat): Likewise.
+            * sysdeps/posix/raise.c (raise): Likewise.
+            * sysdeps/posix/remove.c (remove): Likewise.
+            * sysdeps/posix/rename.c (rename): Likewise.
+            * sysdeps/posix/rewinddir.c (__rewinddir): Likewise.
+            * sysdeps/posix/seekdir.c (seekdir): Likewise.
+            * sysdeps/posix/sigblock.c (__sigblock): Likewise.
+            * sysdeps/posix/sigignore.c (sigignore): Likewise.
+            * sysdeps/posix/sigintr.c (siginterrupt): Likewise.
+            * sysdeps/posix/signal.c (__bsd_signal): Likewise.
+            * sysdeps/posix/sigset.c (sigset): Likewise.
+            * sysdeps/posix/sigsuspend.c (__sigsuspend): Likewise.
+            * sysdeps/posix/sysconf.c (__sysconf): Likewise.
+            * sysdeps/posix/sysv_signal.c (__sysv_signal): Likewise.
+            * sysdeps/posix/time.c (time): Likewise.
+            * sysdeps/posix/ttyname.c (getttyname): Likewise.
+            (ttyname): Likewise.
+            * sysdeps/posix/ttyname_r.c (__ttyname_r): Likewise.
+            * sysdeps/posix/utime.c (utime): Likewise.
+            * sysdeps/powerpc/fpu/s_isnan.c (__isnan): Likewise.
+            * sysdeps/powerpc/nptl/pthread_spin_lock.c (pthread_spin_lock):
+            Likewise.
+            * sysdeps/powerpc/nptl/pthread_spin_trylock.c
+            (pthread_spin_trylock): Likewise.
+            * sysdeps/pthread/aio_error.c (aio_error): Likewise.
+            * sysdeps/pthread/aio_read.c (aio_read): Likewise.
+            * sysdeps/pthread/aio_read64.c (aio_read64): Likewise.
+            * sysdeps/pthread/aio_write.c (aio_write): Likewise.
+            * sysdeps/pthread/aio_write64.c (aio_write64): Likewise.
+            * sysdeps/pthread/flockfile.c (__flockfile): Likewise.
+            * sysdeps/pthread/ftrylockfile.c (__ftrylockfile): Likewise.
+            * sysdeps/pthread/funlockfile.c (__funlockfile): Likewise.
+            * sysdeps/pthread/timer_create.c (timer_create): Likewise.
+            * sysdeps/pthread/timer_getoverr.c (timer_getoverrun): Likewise.
+            * sysdeps/pthread/timer_gettime.c (timer_gettime): Likewise.
+            * sysdeps/s390/ffs.c (__ffs): Likewise.
+            * sysdeps/s390/nptl/pthread_spin_lock.c (pthread_spin_lock):
+            Likewise.
+            * sysdeps/s390/nptl/pthread_spin_trylock.c (pthread_spin_trylock):
+            Likewise.
+            * sysdeps/sh/nptl/pthread_spin_lock.c (pthread_spin_lock):
+            Likewise.
+            * sysdeps/sparc/nptl/pthread_barrier_destroy.c
+            (pthread_barrier_destroy): Likewise.
+            * sysdeps/sparc/nptl/pthread_barrier_wait.c
+            (__pthread_barrier_wait): Likewise.
+            * sysdeps/sparc/sparc32/e_sqrt.c (__ieee754_sqrt): Likewise.
+            * sysdeps/sparc/sparc32/pthread_barrier_wait.c
+            (__pthread_barrier_wait): Likewise.
+            * sysdeps/sparc/sparc32/sem_init.c (__old_sem_init): Likewise.
+            * sysdeps/tile/memcmp.c (memcmp_common_alignment): Likewise.
+            (memcmp_not_common_alignment): Likewise.
+            (MEMCMP): Likewise.
+            * sysdeps/tile/wordcopy.c (_wordcopy_fwd_aligned): Likewise.
+            (_wordcopy_fwd_dest_aligned): Likewise.
+            (_wordcopy_bwd_aligned): Likewise.
+            (_wordcopy_bwd_dest_aligned): Likewise.
+            * sysdeps/unix/bsd/ftime.c (ftime): Likewise.
+            * sysdeps/unix/bsd/gtty.c (gtty): Likewise.
+            * sysdeps/unix/bsd/stty.c (stty): Likewise.
+            * sysdeps/unix/bsd/tcflow.c (tcflow): Likewise.
+            * sysdeps/unix/bsd/tcflush.c (tcflush): Likewise.
+            * sysdeps/unix/bsd/tcgetattr.c (__tcgetattr): Likewise.
+            * sysdeps/unix/bsd/tcgetpgrp.c (tcgetpgrp): Likewise.
+            * sysdeps/unix/bsd/tcsendbrk.c (tcsendbreak): Likewise.
+            * sysdeps/unix/bsd/tcsetattr.c (tcsetattr): Likewise.
+            * sysdeps/unix/bsd/tcsetpgrp.c (tcsetpgrp): Likewise.
+            * sysdeps/unix/bsd/ualarm.c (ualarm): Likewise.
+            * sysdeps/unix/bsd/wait3.c (__wait3): Likewise.
+            * sysdeps/unix/getlogin_r.c (__getlogin_r): Likewise.
+            * sysdeps/unix/sockatmark.c (sockatmark): Likewise.
+            * sysdeps/unix/stime.c (stime): Likewise.
+            * sysdeps/unix/sysv/linux/_exit.c (_exit): Likewise.
+            * sysdeps/unix/sysv/linux/aio_sigqueue.c (__aio_sigqueue):
+            Likewise.  Use internal_function.
+            * sysdeps/unix/sysv/linux/arm/sigaction.c (__libc_sigaction):
+            Convert to prototype-style function definition.
+            * sysdeps/unix/sysv/linux/faccessat.c (faccessat): Likewise.
+            * sysdeps/unix/sysv/linux/fchmodat.c (fchmodat): Likewise.
+            * sysdeps/unix/sysv/linux/fpathconf.c (__fpathconf): Likewise.
+            * sysdeps/unix/sysv/linux/gai_sigqueue.c (__gai_sigqueue):
+            Likewise.  Use internal_function.
+            * sysdeps/unix/sysv/linux/gethostid.c (sethostid): Convert to
+            prototype-style function definition
+            * sysdeps/unix/sysv/linux/getlogin_r.c (__getlogin_r_loginuid):
+            Likewise.
+            (__getlogin_r): Likewise.
+            * sysdeps/unix/sysv/linux/getpt.c (__posix_openpt): Likewise.
+            * sysdeps/unix/sysv/linux/hppa/pthread_cond_broadcast.c
+            (__pthread_cond_broadcast): Likewise.
+            * sysdeps/unix/sysv/linux/hppa/pthread_cond_destroy.c
+            (__pthread_cond_destroy): Likewise.
+            * sysdeps/unix/sysv/linux/hppa/pthread_cond_init.c
+            (__pthread_cond_init): Likewise.
+            * sysdeps/unix/sysv/linux/hppa/pthread_cond_signal.c
+            (__pthread_cond_signal): Likewise.
+            * sysdeps/unix/sysv/linux/hppa/pthread_cond_wait.c
+            (__pthread_cond_wait): Likewise.
+            * sysdeps/unix/sysv/linux/i386/getmsg.c (getmsg): Likewise.
+            * sysdeps/unix/sysv/linux/i386/setegid.c (setegid): Likewise.
+            * sysdeps/unix/sysv/linux/ia64/sigaction.c (__libc_sigaction):
+            Likewise.
+            * sysdeps/unix/sysv/linux/ia64/sigpending.c (sigpending):
+            Likewise.
+            * sysdeps/unix/sysv/linux/ia64/sigprocmask.c (__sigprocmask):
+            Likewise.
+            * sysdeps/unix/sysv/linux/mips/sigaction.c (__libc_sigaction):
+            Likewise.
+            * sysdeps/unix/sysv/linux/msgget.c (msgget): Likewise.
+            * sysdeps/unix/sysv/linux/powerpc/powerpc32/ftruncate64.c
+            (__ftruncate64): Likewise.
+            * sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
+            (truncate64): Likewise.
+            * sysdeps/unix/sysv/linux/pt-raise.c (raise): Likewise.
+            * sysdeps/unix/sysv/linux/pthread_getcpuclockid.c
+            (pthread_getcpuclockid): Likewise.
+            * sysdeps/unix/sysv/linux/pthread_getname.c (pthread_getname_np):
+            Likewise.
+            * sysdeps/unix/sysv/linux/pthread_setname.c (pthread_setname_np):
+            Likewise.
+            * sysdeps/unix/sysv/linux/pthread_sigmask.c (pthread_sigmask):
+            Likewise.
+            * sysdeps/unix/sysv/linux/pthread_sigqueue.c (pthread_sigqueue):
+            Likewise.
+            * sysdeps/unix/sysv/linux/raise.c (raise): Likewise.
+            * sysdeps/unix/sysv/linux/s390/s390-64/sigaction.c
+            (__libc_sigaction): Likewise.
+            * sysdeps/unix/sysv/linux/s390/s390-64/sigpending.c (sigpending):
+            Likewise.
+            * sysdeps/unix/sysv/linux/s390/s390-64/sigprocmask.c
+            (__sigprocmask): Likewise.
+            * sysdeps/unix/sysv/linux/semget.c (semget): Likewise.
+            * sysdeps/unix/sysv/linux/semop.c (semop): Likewise.
+            * sysdeps/unix/sysv/linux/setrlimit64.c (setrlimit64): Likewise.
+            * sysdeps/unix/sysv/linux/shmat.c (shmat): Likewise.
+            * sysdeps/unix/sysv/linux/shmdt.c (shmdt): Likewise.
+            * sysdeps/unix/sysv/linux/shmget.c (shmget): Likewise.
+            * sysdeps/unix/sysv/linux/sigaction.c (__libc_sigaction):
+            Likewise.
+            * sysdeps/unix/sysv/linux/sigpending.c (sigpending): Likewise.
+            * sysdeps/unix/sysv/linux/sigprocmask.c (__sigprocmask): Likewise.
+            * sysdeps/unix/sysv/linux/sigqueue.c (__sigqueue): Likewise.
+            * sysdeps/unix/sysv/linux/sigstack.c (sigstack): Likewise.
+            * sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c (sigpending):
+            Likewise.
+            * sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
+            (__sigprocmask): Likewise.
+            * sysdeps/unix/sysv/linux/speed.c (cfgetospeed): Likewise.
+            (cfgetispeed): Likewise.
+            (cfsetospeed): Likewise.
+            (cfsetispeed): Likewise.
+            * sysdeps/unix/sysv/linux/tcflow.c (tcflow): Likewise.
+            * sysdeps/unix/sysv/linux/tcflush.c (tcflush): Likewise.
+            * sysdeps/unix/sysv/linux/tcgetattr.c (__tcgetattr): Likewise.
+            * sysdeps/unix/sysv/linux/tcsetattr.c (tcsetattr): Likewise.
+            * sysdeps/unix/sysv/linux/time.c (time): Likewise.
+            * sysdeps/unix/sysv/linux/timer_create.c (timer_create): Likewise.
+            * sysdeps/unix/sysv/linux/timer_delete.c (timer_delete): Likewise.
+            * sysdeps/unix/sysv/linux/timer_getoverr.c (timer_getoverrun):
+            Likewise.
+            * sysdeps/unix/sysv/linux/timer_gettime.c (timer_gettime):
+            Likewise.
+            * sysdeps/unix/sysv/linux/x86_64/sigpending.c (sigpending):
+            Likewise.
+            * sysdeps/unix/sysv/linux/x86_64/sigprocmask.c (__sigprocmask):
+            Likewise.
+            * sysdeps/x86_64/backtrace.c (__backtrace): Likewise.
+
+Conflicts:
+	sysdeps/mach/hurd/getlogin_r.c
+	  (Missing backport of fix for swbz#18527.)
+	sysdeps/mach/hurd/rewinddir.c
+	sysdeps/posix/rewinddir.c
+	  (Missing backport of fix for swbz#17584.)
+	sysdeps/powerpc/nptl/pthread_spin_lock.c
+	  (Applied to nptl/sysdeps/powerpc/pthread_spin_lock.c.)
+	sysdeps/powerpc/nptl/pthread_spin_trylock.c
+	  (Applied to nptl/sysdeps/powerpc/pthread_spin_trylock.c.)
+	sysdeps/pthread/aio_error.c
+	  (Missing backport of 1cdf2ea1fa44bae7d400b602399e30d490173bf3,
+	  Fix aio_error thread-safety.)
+	sysdeps/pthread/flockfile.c
+	  (Applied to nptl/sysdeps/pthread/flockfile.c.)
+	sysdeps/pthread/ftrylockfile.c
+	  (Applied to nptl/sysdeps/pthread/ftrylockfile.c.)
+	sysdeps/pthread/funlockfile.c
+	  (Applied to nptl/sysdeps/pthread/funlockfile.c.)
+	sysdeps/pthread/timer_create.c
+	  (Applied to nptl/sysdeps/pthread/timer_create.c.)
+	sysdeps/pthread/timer_getoverr.c
+	  (Applied to nptl/sysdeps/pthread/timer_getoverr.c.)
+	sysdeps/pthread/timer_gettime.c
+	  (Applied to nptl/sysdeps/pthread/timer_gettime.c.)
+	sysdeps/s390/nptl/pthread_spin_lock.c
+	  (Applied to nptl/sysdeps/s390/pthread_spin_lock.c.)
+	sysdeps/s390/nptl/pthread_spin_trylock.c
+	  (Applied to nptl/sysdeps/s390/pthread_spin_trylock.c.)
+	sysdeps/sh/nptl/pthread_spin_lock.c
+	  (Applied to nptl/sysdeps/sh/pthread_spin_lock.c.)
+	sysdeps/sparc/nptl/pthread_barrier_destroy.c
+	  (Applied to
+	  nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_destroy.c.)
+	sysdeps/sparc/nptl/pthread_barrier_wait.c
+	  (Applied to
+	  nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_wait.c.)
+	sysdeps/sparc/sparc32/pthread_barrier_wait.c
+	  (Applied to
+	  nptl/sysdeps/unix/sysv/linux/sparc/sparc32/pthread_barrier_wait.c.)
+	sysdeps/sparc/sparc32/sem_init.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/sparc/sem_init.)
+	sysdeps/tile/memcmp.c
+	  (Missing backport of d9cd52e64d7b6b0fd56566de87c826cb6fe3677d,
+	  tile: optimize memcmp; file removed manually.)
+	sysdeps/unix/getlogin_r.c
+	sysdeps/unix/sysv/linux/getlogin_r.c
+          (Missing backport of fix for swbz#18527.)
+	sysdeps/unix/sysv/linux/hppa/pthread_cond_broadcast.c
+	sysdeps/unix/sysv/linux/hppa/pthread_cond_destroy.c
+	sysdeps/unix/sysv/linux/hppa/pthread_cond_init.c
+	sysdeps/unix/sysv/linux/hppa/pthread_cond_signal.c
+	sysdeps/unix/sysv/linux/hppa/pthread_cond_wait.c
+	  (Missing backport of d83f0734e1522a5e5ea2494565f4dcd25a86d6a0,
+	  HPPA: Transition to new non-addon NPTL; files removed manually.)
+	sysdeps/unix/sysv/linux/pt-raise.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/pt-raise.c.)
+	sysdeps/unix/sysv/linux/pthread_getcpuclockid.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/pthread_getcpuclockid.c.)
+	sysdeps/unix/sysv/linux/pthread_getname.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/pthread_getname.c.)
+	sysdeps/unix/sysv/linux/pthread_setname.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/pthread_setname.c.)
+	sysdeps/unix/sysv/linux/pthread_sigmask.c
+	  (Applied to nptl/sysdeps/pthread/pthread_sigmask.c.)
+	sysdeps/unix/sysv/linux/pthread_sigqueue.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/pthread_sigqueue.c.)
+	sysdeps/unix/sysv/linux/raise.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/raise.c.)
+	sysdeps/unix/sysv/linux/timer_create.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/timer_create.c.)
+	sysdeps/unix/sysv/linux/timer_delete.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/timer_delete.c.)
+	sysdeps/unix/sysv/linux/timer_getoverr.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/timer_getoverr.c.)
+	sysdeps/unix/sysv/linux/timer_gettime.c
+	  (Applied to nptl/sysdeps/unix/sysv/linux/timer_gettime.c.)
+
+diff --git a/nptl/sysdeps/powerpc/pthread_spin_lock.c b/nptl/sysdeps/powerpc/pthread_spin_lock.c
+index 629dad50cdb753a1..f684325c8e09e06e 100644
+--- a/nptl/sysdeps/powerpc/pthread_spin_lock.c
++++ b/nptl/sysdeps/powerpc/pthread_spin_lock.c
+@@ -19,8 +19,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_lock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_lock (pthread_spinlock_t *lock)
+ {
+   unsigned int __tmp;
+ 
+diff --git a/nptl/sysdeps/powerpc/pthread_spin_trylock.c b/nptl/sysdeps/powerpc/pthread_spin_trylock.c
+index a7956f8fce4109aa..aeb13416db48440e 100644
+--- a/nptl/sysdeps/powerpc/pthread_spin_trylock.c
++++ b/nptl/sysdeps/powerpc/pthread_spin_trylock.c
+@@ -20,8 +20,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_trylock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_trylock (pthread_spinlock_t *lock)
+ {
+   unsigned int old;
+   int err = EBUSY;
+diff --git a/nptl/sysdeps/pthread/flockfile.c b/nptl/sysdeps/pthread/flockfile.c
+index 538e368a082dcec5..1e7d1f0133ed4f40 100644
+--- a/nptl/sysdeps/pthread/flockfile.c
++++ b/nptl/sysdeps/pthread/flockfile.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ void
+-__flockfile (stream)
+-     FILE *stream;
++__flockfile (FILE *stream)
+ {
+   _IO_lock_lock (*stream->_lock);
+ }
+diff --git a/nptl/sysdeps/pthread/ftrylockfile.c b/nptl/sysdeps/pthread/ftrylockfile.c
+index d814258d893afd85..cd78c2812800b223 100644
+--- a/nptl/sysdeps/pthread/ftrylockfile.c
++++ b/nptl/sysdeps/pthread/ftrylockfile.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ int
+-__ftrylockfile (stream)
+-     FILE *stream;
++__ftrylockfile (FILE *stream)
+ {
+   return _IO_lock_trylock (*stream->_lock);
+ }
+diff --git a/nptl/sysdeps/pthread/funlockfile.c b/nptl/sysdeps/pthread/funlockfile.c
+index f45479936741a3ea..51530863671da481 100644
+--- a/nptl/sysdeps/pthread/funlockfile.c
++++ b/nptl/sysdeps/pthread/funlockfile.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ void
+-__funlockfile (stream)
+-     FILE *stream;
++__funlockfile (FILE *stream)
+ {
+   _IO_lock_unlock (*stream->_lock);
+ }
+diff --git a/nptl/sysdeps/pthread/pthread_sigmask.c b/nptl/sysdeps/pthread/pthread_sigmask.c
+index 8db7d18f4d9c2f3f..83d7d881e98d6af3 100644
+--- a/nptl/sysdeps/pthread/pthread_sigmask.c
++++ b/nptl/sysdeps/pthread/pthread_sigmask.c
+@@ -23,10 +23,7 @@
+ 
+ 
+ int
+-pthread_sigmask (how, newmask, oldmask)
+-     int how;
+-     const sigset_t *newmask;
+-     sigset_t *oldmask;
++pthread_sigmask (int how, const sigset_t *newmask, sigset_t *oldmask)
+ {
+   sigset_t local_newmask;
+ 
+diff --git a/nptl/sysdeps/pthread/timer_create.c b/nptl/sysdeps/pthread/timer_create.c
+index f61c5a3eb6d391b7..90770f121fc2c0fc 100644
+--- a/nptl/sysdeps/pthread/timer_create.c
++++ b/nptl/sysdeps/pthread/timer_create.c
+@@ -27,10 +27,7 @@
+ 
+ /* Create new per-process timer using CLOCK.  */
+ int
+-timer_create (clock_id, evp, timerid)
+-     clockid_t clock_id;
+-     struct sigevent *evp;
+-     timer_t *timerid;
++timer_create (clockid_t clock_id, struct sigevent *evp, timer_t *timerid)
+ {
+   int retval = -1;
+   struct timer_node *newtimer = NULL;
+diff --git a/nptl/sysdeps/pthread/timer_getoverr.c b/nptl/sysdeps/pthread/timer_getoverr.c
+index 6d753e30d6839165..010fa73539bae653 100644
+--- a/nptl/sysdeps/pthread/timer_getoverr.c
++++ b/nptl/sysdeps/pthread/timer_getoverr.c
+@@ -25,8 +25,7 @@
+ 
+ /* Get expiration overrun for timer TIMERID.  */
+ int
+-timer_getoverrun (timerid)
+-     timer_t timerid;
++timer_getoverrun (timer_t timerid)
+ {
+   struct timer_node *timer;
+   int retval = -1;
+diff --git a/nptl/sysdeps/pthread/timer_gettime.c b/nptl/sysdeps/pthread/timer_gettime.c
+index 6bd2b84e2d89f069..b48cc8ebf615bf8c 100644
+--- a/nptl/sysdeps/pthread/timer_gettime.c
++++ b/nptl/sysdeps/pthread/timer_gettime.c
+@@ -25,9 +25,7 @@
+ 
+ /* Get current value of timer TIMERID and store it in VLAUE.  */
+ int
+-timer_gettime (timerid, value)
+-     timer_t timerid;
+-     struct itimerspec *value;
++timer_gettime (timer_t timerid, struct itimerspec *value)
+ {
+   struct timer_node *timer;
+   struct timespec now, expiry;
+diff --git a/nptl/sysdeps/s390/pthread_spin_lock.c b/nptl/sysdeps/s390/pthread_spin_lock.c
+index 17c405a4cce18651..e3d5c1153f387475 100644
+--- a/nptl/sysdeps/s390/pthread_spin_lock.c
++++ b/nptl/sysdeps/s390/pthread_spin_lock.c
+@@ -19,8 +19,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_lock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_lock (pthread_spinlock_t *lock)
+ {
+   int oldval;
+ 
+diff --git a/nptl/sysdeps/s390/pthread_spin_trylock.c b/nptl/sysdeps/s390/pthread_spin_trylock.c
+index 4a4e2cb1e7b73f65..f9e307882ab75651 100644
+--- a/nptl/sysdeps/s390/pthread_spin_trylock.c
++++ b/nptl/sysdeps/s390/pthread_spin_trylock.c
+@@ -20,8 +20,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_trylock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_trylock (pthread_spinlock_t *lock)
+ {
+   int old;
+ 
+diff --git a/nptl/sysdeps/sh/pthread_spin_lock.c b/nptl/sysdeps/sh/pthread_spin_lock.c
+index 798c124ebbee8a98..48d3fc7eb495ea98 100644
+--- a/nptl/sysdeps/sh/pthread_spin_lock.c
++++ b/nptl/sysdeps/sh/pthread_spin_lock.c
+@@ -18,8 +18,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_lock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_lock (pthread_spinlock_t *lock)
+ {
+   unsigned int val;
+ 
+diff --git a/nptl/sysdeps/unix/sysv/linux/pt-raise.c b/nptl/sysdeps/unix/sysv/linux/pt-raise.c
+index 71face45acaacc52..519916a438c96874 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pt-raise.c
++++ b/nptl/sysdeps/unix/sysv/linux/pt-raise.c
+@@ -24,8 +24,7 @@
+ 
+ 
+ int
+-raise (sig)
+-     int sig;
++raise (int sig)
+ {
+   /* raise is an async-safe function.  It could be called while the
+      fork function temporarily invalidated the PID field.  Adjust for
+diff --git a/nptl/sysdeps/unix/sysv/linux/pthread_getcpuclockid.c b/nptl/sysdeps/unix/sysv/linux/pthread_getcpuclockid.c
+index 368f2c460517db4f..f2321e056f51e39a 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pthread_getcpuclockid.c
++++ b/nptl/sysdeps/unix/sysv/linux/pthread_getcpuclockid.c
+@@ -25,9 +25,7 @@
+ 
+ 
+ int
+-pthread_getcpuclockid (threadid, clockid)
+-     pthread_t threadid;
+-     clockid_t *clockid;
++pthread_getcpuclockid (pthread_t threadid, clockid_t *clockid)
+ {
+   struct pthread *pd = (struct pthread *) threadid;
+ 
+diff --git a/nptl/sysdeps/unix/sysv/linux/pthread_getname.c b/nptl/sysdeps/unix/sysv/linux/pthread_getname.c
+index 2a41e1f94a422cc0..60ed6bf170804cdd 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pthread_getname.c
++++ b/nptl/sysdeps/unix/sysv/linux/pthread_getname.c
+@@ -28,10 +28,7 @@
+ 
+ 
+ int
+-pthread_getname_np (th, buf, len)
+-     pthread_t th;
+-     char *buf;
+-     size_t len;
++pthread_getname_np (pthread_t th, char *buf, size_t len)
+ {
+   const struct pthread *pd = (const struct pthread *) th;
+ 
+diff --git a/nptl/sysdeps/unix/sysv/linux/pthread_setname.c b/nptl/sysdeps/unix/sysv/linux/pthread_setname.c
+index 6ea406329bc6b6c1..7c945ac79da5491c 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pthread_setname.c
++++ b/nptl/sysdeps/unix/sysv/linux/pthread_setname.c
+@@ -28,9 +28,7 @@
+ 
+ 
+ int
+-pthread_setname_np (th, name)
+-     pthread_t th;
+-     const char *name;
++pthread_setname_np (pthread_t th, const char *name)
+ {
+   const struct pthread *pd = (const struct pthread *) th;
+ 
+diff --git a/nptl/sysdeps/unix/sysv/linux/pthread_sigqueue.c b/nptl/sysdeps/unix/sysv/linux/pthread_sigqueue.c
+index 2c0c25773733935f..dc12bb3749333ebc 100644
+--- a/nptl/sysdeps/unix/sysv/linux/pthread_sigqueue.c
++++ b/nptl/sysdeps/unix/sysv/linux/pthread_sigqueue.c
+@@ -27,10 +27,7 @@
+ 
+ 
+ int
+-pthread_sigqueue (threadid, signo, value)
+-     pthread_t threadid;
+-     int signo;
+-     const union sigval value;
++pthread_sigqueue (pthread_t threadid, int signo, const union sigval value)
+ {
+ #ifdef __NR_rt_tgsigqueueinfo
+   struct pthread *pd = (struct pthread *) threadid;
+diff --git a/nptl/sysdeps/unix/sysv/linux/raise.c b/nptl/sysdeps/unix/sysv/linux/raise.c
+index 268ab46d3f3805b8..378f03c7f2fc0195 100644
+--- a/nptl/sysdeps/unix/sysv/linux/raise.c
++++ b/nptl/sysdeps/unix/sysv/linux/raise.c
+@@ -25,8 +25,7 @@
+ 
+ 
+ int
+-raise (sig)
+-     int sig;
++raise (int sig)
+ {
+   struct pthread *pd = THREAD_SELF;
+   pid_t pid = THREAD_GETMEM (pd, pid);
+diff --git a/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_destroy.c b/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_destroy.c
+index c260d2aa0e6fc366..d0c07b939013d417 100644
+--- a/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_destroy.c
++++ b/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_destroy.c
+@@ -21,8 +21,7 @@
+ #include <lowlevellock.h>
+ 
+ int
+-pthread_barrier_destroy (barrier)
+-     pthread_barrier_t *barrier;
++pthread_barrier_destroy (pthread_barrier_t *barrier)
+ {
+   union sparc_pthread_barrier *ibarrier;
+   int result = EBUSY;
+diff --git a/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_wait.c b/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_wait.c
+index 8c5d9a9837360cdd..6ad85d7e232d5701 100644
+--- a/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_wait.c
++++ b/nptl/sysdeps/unix/sysv/linux/sparc/pthread_barrier_wait.c
+@@ -23,8 +23,7 @@
+ 
+ /* Wait on barrier.  */
+ int
+-pthread_barrier_wait (barrier)
+-     pthread_barrier_t *barrier;
++pthread_barrier_wait (pthread_barrier_t *barrier)
+ {
+   union sparc_pthread_barrier *ibarrier
+     = (union sparc_pthread_barrier *) barrier;
+diff --git a/nptl/sysdeps/unix/sysv/linux/sparc/sem_init.c b/nptl/sysdeps/unix/sysv/linux/sparc/sem_init.c
+index aef2cc52c0daf0ad..ebbcca15cd7a476a 100644
+--- a/nptl/sysdeps/unix/sysv/linux/sparc/sem_init.c
++++ b/nptl/sysdeps/unix/sysv/linux/sparc/sem_init.c
+@@ -60,10 +60,7 @@ versioned_symbol (libpthread, __new_sem_init, sem_init, GLIBC_2_1);
+ #if SHLIB_COMPAT(libpthread, GLIBC_2_0, GLIBC_2_1)
+ int
+ attribute_compat_text_section
+-__old_sem_init (sem, pshared, value)
+-     sem_t *sem;
+-     int pshared;
+-     unsigned int value;
++__old_sem_init (sem_t *sem, int pshared, unsigned int value)
+ {
+   /* Parameter sanity check.  */
+   if (__builtin_expect (value > SEM_VALUE_MAX, 0))
+diff --git a/nptl/sysdeps/unix/sysv/linux/sparc/sparc32/pthread_barrier_wait.c b/nptl/sysdeps/unix/sysv/linux/sparc/sparc32/pthread_barrier_wait.c
+index 157f34973984a4eb..9e8d993ad7f1d5a0 100644
+--- a/nptl/sysdeps/unix/sysv/linux/sparc/sparc32/pthread_barrier_wait.c
++++ b/nptl/sysdeps/unix/sysv/linux/sparc/sparc32/pthread_barrier_wait.c
+@@ -23,8 +23,7 @@
+ 
+ /* Wait on barrier.  */
+ int
+-pthread_barrier_wait (barrier)
+-     pthread_barrier_t *barrier;
++pthread_barrier_wait (pthread_barrier_t *barrier)
+ {
+   union sparc_pthread_barrier *ibarrier
+     = (union sparc_pthread_barrier *) barrier;
+diff --git a/nptl/sysdeps/unix/sysv/linux/timer_create.c b/nptl/sysdeps/unix/sysv/linux/timer_create.c
+index c2865fb4f3f1729e..5a2cacb73c34bd4f 100644
+--- a/nptl/sysdeps/unix/sysv/linux/timer_create.c
++++ b/nptl/sysdeps/unix/sysv/linux/timer_create.c
+@@ -36,10 +36,7 @@
+ 
+ 
+ int
+-timer_create (clock_id, evp, timerid)
+-     clockid_t clock_id;
+-     struct sigevent *evp;
+-     timer_t *timerid;
++timer_create (clockid_t clock_id, struct sigevent *evp, timer_t *timerid)
+ {
+ #undef timer_create
+   {
+diff --git a/nptl/sysdeps/unix/sysv/linux/timer_delete.c b/nptl/sysdeps/unix/sysv/linux/timer_delete.c
+index 598be8343ef6edf1..f76d9eadd7d13a0a 100644
+--- a/nptl/sysdeps/unix/sysv/linux/timer_delete.c
++++ b/nptl/sysdeps/unix/sysv/linux/timer_delete.c
+@@ -30,8 +30,7 @@
+ 
+ 
+ int
+-timer_delete (timerid)
+-     timer_t timerid;
++timer_delete (timer_t timerid)
+ {
+ #undef timer_delete
+   struct timer *kt = (struct timer *) timerid;
+diff --git a/nptl/sysdeps/unix/sysv/linux/timer_getoverr.c b/nptl/sysdeps/unix/sysv/linux/timer_getoverr.c
+index 6d48d4c14df23d6c..b80715e995918868 100644
+--- a/nptl/sysdeps/unix/sysv/linux/timer_getoverr.c
++++ b/nptl/sysdeps/unix/sysv/linux/timer_getoverr.c
+@@ -29,8 +29,7 @@
+ 
+ 
+ int
+-timer_getoverrun (timerid)
+-     timer_t timerid;
++timer_getoverrun (timer_t timerid)
+ {
+ #undef timer_getoverrun
+   struct timer *kt = (struct timer *) timerid;
+diff --git a/nptl/sysdeps/unix/sysv/linux/timer_gettime.c b/nptl/sysdeps/unix/sysv/linux/timer_gettime.c
+index 6d9933a99c2ccb2b..deee74a238e91aca 100644
+--- a/nptl/sysdeps/unix/sysv/linux/timer_gettime.c
++++ b/nptl/sysdeps/unix/sysv/linux/timer_gettime.c
+@@ -30,9 +30,7 @@
+ 
+ 
+ int
+-timer_gettime (timerid, value)
+-     timer_t timerid;
+-     struct itimerspec *value;
++timer_gettime (timer_t timerid, struct itimerspec *value)
+ {
+ #undef timer_gettime
+   struct timer *kt = (struct timer *) timerid;
+diff --git a/sysdeps/arm/backtrace.c b/sysdeps/arm/backtrace.c
+index 3d839e628c1ff89b..ce7a0ceda42486e5 100644
+--- a/sysdeps/arm/backtrace.c
++++ b/sysdeps/arm/backtrace.c
+@@ -87,9 +87,7 @@ backtrace_helper (struct _Unwind_Context *ctx, void *a)
+ }
+ 
+ int
+-__backtrace (array, size)
+-     void **array;
+-     int size;
++__backtrace (void **array, int size)
+ {
+   struct trace_arg arg = { .array = array, .size = size, .cnt = -1 };
+ #ifdef SHARED
+diff --git a/sysdeps/i386/backtrace.c b/sysdeps/i386/backtrace.c
+index 13c7856249a2a1ea..c226814c17790e31 100644
+--- a/sysdeps/i386/backtrace.c
++++ b/sysdeps/i386/backtrace.c
+@@ -109,9 +109,7 @@ struct layout
+ 
+ 
+ int
+-__backtrace (array, size)
+-     void **array;
+-     int size;
++__backtrace (void **array, int size)
+ {
+   struct trace_arg arg = { .array = array, .size = size, .cnt = -1 };
+ #ifdef SHARED
+diff --git a/sysdeps/i386/ffs.c b/sysdeps/i386/ffs.c
+index f53bdd1c160cd800..35fa6e91f0628269 100644
+--- a/sysdeps/i386/ffs.c
++++ b/sysdeps/i386/ffs.c
+@@ -26,8 +26,7 @@
+ #ifdef	__GNUC__
+ 
+ int
+-__ffs (x)
+-     int x;
++__ffs (int x)
+ {
+   int cnt;
+   int tmp;
+diff --git a/sysdeps/i386/i686/ffs.c b/sysdeps/i386/i686/ffs.c
+index 452adbf288bdd342..aca1c5b69402877a 100644
+--- a/sysdeps/i386/i686/ffs.c
++++ b/sysdeps/i386/i686/ffs.c
+@@ -26,8 +26,7 @@
+ #ifdef	__GNUC__
+ 
+ int
+-__ffs (x)
+-     int x;
++__ffs (int x)
+ {
+   int cnt;
+   int tmp;
+diff --git a/sysdeps/ia64/nptl/pthread_spin_lock.c b/sysdeps/ia64/nptl/pthread_spin_lock.c
+index 42b37882f5cb3da5..cfe71160c5716bf0 100644
+--- a/sysdeps/ia64/nptl/pthread_spin_lock.c
++++ b/sysdeps/ia64/nptl/pthread_spin_lock.c
+@@ -19,8 +19,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_lock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_lock (pthread_spinlock_t *lock)
+ {
+   int *p = (int *) lock;
+ 
+diff --git a/sysdeps/ia64/nptl/pthread_spin_trylock.c b/sysdeps/ia64/nptl/pthread_spin_trylock.c
+index 9efd3b586be3bbe2..020d79e4aae8788d 100644
+--- a/sysdeps/ia64/nptl/pthread_spin_trylock.c
++++ b/sysdeps/ia64/nptl/pthread_spin_trylock.c
+@@ -20,8 +20,7 @@
+ #include "pthreadP.h"
+ 
+ int
+-pthread_spin_trylock (lock)
+-     pthread_spinlock_t *lock;
++pthread_spin_trylock (pthread_spinlock_t *lock)
+ {
+   return __sync_val_compare_and_swap ((int *) lock, 0, 1) == 0 ? 0 : EBUSY;
+ }
+diff --git a/sysdeps/ieee754/ldbl-128/e_log2l.c b/sysdeps/ieee754/ldbl-128/e_log2l.c
+index 6c7da0e44b9e1997..ebb75a0754feed8b 100644
+--- a/sysdeps/ieee754/ldbl-128/e_log2l.c
++++ b/sysdeps/ieee754/ldbl-128/e_log2l.c
+@@ -171,8 +171,7 @@ deval (long double x, const long double *p, int n)
+ 
+ 
+ long double
+-__ieee754_log2l (x)
+-     long double x;
++__ieee754_log2l (long double x)
+ {
+   long double z;
+   long double y;
+diff --git a/sysdeps/ieee754/ldbl-128ibm/e_log2l.c b/sysdeps/ieee754/ldbl-128ibm/e_log2l.c
+index 323ded0c0fa5e2e1..ad05678057f9072b 100644
+--- a/sysdeps/ieee754/ldbl-128ibm/e_log2l.c
++++ b/sysdeps/ieee754/ldbl-128ibm/e_log2l.c
+@@ -171,8 +171,7 @@ deval (long double x, const long double *p, int n)
+ 
+ 
+ long double
+-__ieee754_log2l (x)
+-     long double x;
++__ieee754_log2l (long double x)
+ {
+   long double z;
+   long double y;
+diff --git a/sysdeps/m68k/ffs.c b/sysdeps/m68k/ffs.c
+index 3f45a03eaf624db1..2625596ed561feb6 100644
+--- a/sysdeps/m68k/ffs.c
++++ b/sysdeps/m68k/ffs.c
+@@ -26,8 +26,7 @@
+ #if	defined (__GNUC__) && defined (__mc68020__)
+ 
+ int
+-__ffs (x)
+-     int x;
++__ffs (int x)
+ {
+   int cnt;
+ 
+diff --git a/sysdeps/m68k/m680x0/fpu/e_acos.c b/sysdeps/m68k/m680x0/fpu/e_acos.c
+index f8a0a352a12260f0..94057e55be048a5b 100644
+--- a/sysdeps/m68k/m680x0/fpu/e_acos.c
++++ b/sysdeps/m68k/m680x0/fpu/e_acos.c
+@@ -28,8 +28,7 @@
+ #endif
+ 
+ float_type
+-FUNC (x)
+-     float_type x;
++FUNC (float_type x)
+ {
+   return __m81_u(FUNC)(x);
+ }
+diff --git a/sysdeps/m68k/m680x0/fpu/e_fmod.c b/sysdeps/m68k/m680x0/fpu/e_fmod.c
+index 671e3b83a404131d..db997ff08a88bded 100644
+--- a/sysdeps/m68k/m680x0/fpu/e_fmod.c
++++ b/sysdeps/m68k/m680x0/fpu/e_fmod.c
+@@ -28,9 +28,7 @@
+ #endif
+ 
+ float_type
+-FUNC (x, y)
+-     float_type x;
+-     float_type y;
++FUNC (float_type x, float_type y)
+ {
+   return __m81_u(FUNC)(x, y);
+ }
+diff --git a/sysdeps/mach/adjtime.c b/sysdeps/mach/adjtime.c
+index dc043bbe085689af..3f31861cf5849068 100644
+--- a/sysdeps/mach/adjtime.c
++++ b/sysdeps/mach/adjtime.c
+@@ -24,9 +24,7 @@
+    of time adjustment remaining to be done from the last `__adjtime' call.
+    This call is restricted to the super-user.  */
+ int
+-__adjtime (delta, olddelta)
+-     const struct timeval *delta;
+-     struct timeval *olddelta;
++__adjtime (const struct timeval *delta, struct timeval *olddelta)
+ {
+   error_t err;
+   mach_port_t hostpriv;
+diff --git a/sysdeps/mach/gettimeofday.c b/sysdeps/mach/gettimeofday.c
+index 293a77595b417dfa..f1d783c53dfce0b8 100644
+--- a/sysdeps/mach/gettimeofday.c
++++ b/sysdeps/mach/gettimeofday.c
+@@ -24,9 +24,7 @@
+    putting it into *TV and *TZ.  If TZ is NULL, *TZ is not filled.
+    Returns 0 on success, -1 on errors.  */
+ int
+-__gettimeofday (tv, tz)
+-     struct timeval *tv;
+-     struct timezone *tz;
++__gettimeofday (struct timeval *tv, struct timezone *tz)
+ {
+   kern_return_t err;
+ 
+diff --git a/sysdeps/mach/hurd/_exit.c b/sysdeps/mach/hurd/_exit.c
+index 667c57204877d7de..272dad329aaf9e6e 100644
+--- a/sysdeps/mach/hurd/_exit.c
++++ b/sysdeps/mach/hurd/_exit.c
+@@ -46,8 +46,7 @@ _hurd_exit (int status)
+ }
+ 
+ void
+-_exit (status)
+-     int status;
++_exit (int status)
+ {
+   _hurd_exit (W_EXITCODE (status, 0));
+ }
+diff --git a/sysdeps/mach/hurd/access.c b/sysdeps/mach/hurd/access.c
+index 0a5dfade9901fa04..0ff6b29a5afabd54 100644
+--- a/sysdeps/mach/hurd/access.c
++++ b/sysdeps/mach/hurd/access.c
+@@ -24,9 +24,7 @@
+ 
+ /* Test for access to FILE by our real user and group IDs.  */
+ int
+-__access (file, type)
+-     const char *file;
+-     int type;
++__access (const char *file, int type)
+ {
+   error_t err;
+   file_t rcrdir, rcwdir, io;
+diff --git a/sysdeps/mach/hurd/adjtime.c b/sysdeps/mach/hurd/adjtime.c
+index feaa2b7b7c4ea06e..f917ed3d579b7c4e 100644
+--- a/sysdeps/mach/hurd/adjtime.c
++++ b/sysdeps/mach/hurd/adjtime.c
+@@ -24,9 +24,7 @@
+    of time adjustment remaining to be done from the last `__adjtime' call.
+    This call is restricted to the super-user.  */
+ int
+-__adjtime (delta, olddelta)
+-     const struct timeval *delta;
+-     struct timeval *olddelta;
++__adjtime (const struct timeval *delta, struct timeval *olddelta)
+ {
+   error_t err;
+   mach_port_t hostpriv;
+diff --git a/sysdeps/mach/hurd/chdir.c b/sysdeps/mach/hurd/chdir.c
+index 0369d7eaf6ccd739..1eee39608135b615 100644
+--- a/sysdeps/mach/hurd/chdir.c
++++ b/sysdeps/mach/hurd/chdir.c
+@@ -22,8 +22,7 @@
+ 
+ /* Change the current directory to FILE_NAME.  */
+ int
+-__chdir (file_name)
+-     const char *file_name;
++__chdir (const char *file_name)
+ {
+   return _hurd_change_directory_port_from_name (&_hurd_ports[INIT_PORT_CWDIR],
+ 						file_name);
+diff --git a/sysdeps/mach/hurd/chmod.c b/sysdeps/mach/hurd/chmod.c
+index 053f244efe982348..a54a631dd741962a 100644
+--- a/sysdeps/mach/hurd/chmod.c
++++ b/sysdeps/mach/hurd/chmod.c
+@@ -22,9 +22,7 @@
+ 
+ /* Change the protections of FILE to MODE.  */
+ int
+-__chmod (file, mode)
+-     const char *file;
+-     mode_t mode;
++__chmod (const char *file, mode_t mode)
+ {
+   error_t err;
+   file_t port = __file_name_lookup (file, 0, 0);
+diff --git a/sysdeps/mach/hurd/chown.c b/sysdeps/mach/hurd/chown.c
+index b12a95972702da52..414a5f0a17d5b1e2 100644
+--- a/sysdeps/mach/hurd/chown.c
++++ b/sysdeps/mach/hurd/chown.c
+@@ -22,10 +22,7 @@
+ 
+ /* Change the owner and group of FILE.  */
+ int
+-__chown (file, owner, group)
+-     const char *file;
+-     uid_t owner;
+-     gid_t group;
++__chown (const char *file, uid_t owner, gid_t group)
+ {
+   error_t err;
+   file_t port = __file_name_lookup (file, 0, 0);
+diff --git a/sysdeps/mach/hurd/cthreads.c b/sysdeps/mach/hurd/cthreads.c
+index b9f8ab8b13409447..3831862b730aad76 100644
+--- a/sysdeps/mach/hurd/cthreads.c
++++ b/sysdeps/mach/hurd/cthreads.c
+@@ -22,8 +22,7 @@
+ /* Placeholder for key creation routine from Hurd cthreads library.  */
+ int
+ weak_function
+-cthread_keycreate (key)
+-     cthread_key_t *key;
++cthread_keycreate (cthread_key_t *key)
+ {
+   __set_errno (ENOSYS);
+  *key = -1;
+@@ -33,9 +32,7 @@ cthread_keycreate (key)
+ /* Placeholder for key retrieval routine from Hurd cthreads library.  */
+ int
+ weak_function
+-cthread_getspecific (key, pval)
+-     cthread_key_t key;
+-     void **pval;
++cthread_getspecific (cthread_key_t key, void **pval)
+ {
+   *pval = NULL;
+   __set_errno (ENOSYS);
+@@ -45,9 +42,7 @@ cthread_getspecific (key, pval)
+ /* Placeholder for key setting routine from Hurd cthreads library.  */
+ int
+ weak_function
+-cthread_setspecific (key, val)
+-     cthread_key_t key;
+-     void *val;
++cthread_setspecific (cthread_key_t key, void *val)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+@@ -56,8 +51,7 @@ cthread_setspecific (key, val)
+ /* Call cthread_getspecific which gets a pointer to the return value instead
+    of just returning it.  */
+ void *
+-__libc_getspecific (key)
+-     cthread_key_t key;
++__libc_getspecific (cthread_key_t key)
+ {
+   void *val;
+   cthread_getspecific (key, &val);
+diff --git a/sysdeps/mach/hurd/euidaccess.c b/sysdeps/mach/hurd/euidaccess.c
+index 79db43839906b83d..9e258840a89d8ea6 100644
+--- a/sysdeps/mach/hurd/euidaccess.c
++++ b/sysdeps/mach/hurd/euidaccess.c
+@@ -23,9 +23,7 @@
+ #include <hurd.h>
+ 
+ int
+-__euidaccess (file, type)
+-     const char *file;
+-     int type;
++__euidaccess (const char *file, int type)
+ {
+   error_t err;
+   file_t port;
+diff --git a/sysdeps/mach/hurd/faccessat.c b/sysdeps/mach/hurd/faccessat.c
+index 8c6be4b86fee954d..5f4626a8867207fd 100644
+--- a/sysdeps/mach/hurd/faccessat.c
++++ b/sysdeps/mach/hurd/faccessat.c
+@@ -25,11 +25,7 @@
+ #include <hurd/fd.h>
+ 
+ int
+-faccessat (fd, file, type, flag)
+-     int fd;
+-     const char *file;
+-     int type;
+-     int flag;
++faccessat (int fd, const char *file, int type, int flag)
+ {
+   error_t err;
+   file_t port;
+diff --git a/sysdeps/mach/hurd/fchdir.c b/sysdeps/mach/hurd/fchdir.c
+index cce9468f10b6b0ae..a5f2f2c16f6c4c35 100644
+--- a/sysdeps/mach/hurd/fchdir.c
++++ b/sysdeps/mach/hurd/fchdir.c
+@@ -24,8 +24,7 @@
+ /* Change the current directory to FD.  */
+ 
+ int
+-__fchdir (fd)
+-     int fd;
++__fchdir (int fd)
+ {
+   return _hurd_change_directory_port_from_fd (&_hurd_ports[INIT_PORT_CWDIR],
+ 					      fd);
+diff --git a/sysdeps/mach/hurd/fchmod.c b/sysdeps/mach/hurd/fchmod.c
+index f32105b9b2031277..ccf03dfa4aaa67c4 100644
+--- a/sysdeps/mach/hurd/fchmod.c
++++ b/sysdeps/mach/hurd/fchmod.c
+@@ -23,9 +23,7 @@
+ 
+ /* Change the permissions of the file referenced by FD to MODE.  */
+ int
+-__fchmod (fd, mode)
+-     int fd;
+-     mode_t mode;
++__fchmod (int fd, mode_t mode)
+ {
+   error_t err;
+ 
+diff --git a/sysdeps/mach/hurd/fchmodat.c b/sysdeps/mach/hurd/fchmodat.c
+index f3c048ff36da7170..4dc45c321a815d1e 100644
+--- a/sysdeps/mach/hurd/fchmodat.c
++++ b/sysdeps/mach/hurd/fchmodat.c
+@@ -25,11 +25,7 @@
+ #include <hurd/fd.h>
+ 
+ int
+-fchmodat (fd, file, mode, flag)
+-     int fd;
+-     const char *file;
+-     mode_t mode;
+-     int flag;
++fchmodat (int fd, const char *file, mode_t mode, int flag)
+ {
+   error_t err;
+   file_t port = __file_name_lookup_at (fd, flag, file, 0, 0);
+diff --git a/sysdeps/mach/hurd/fchown.c b/sysdeps/mach/hurd/fchown.c
+index 09fea4ec7ad93aff..b471604162a1f0c1 100644
+--- a/sysdeps/mach/hurd/fchown.c
++++ b/sysdeps/mach/hurd/fchown.c
+@@ -23,10 +23,7 @@
+ 
+ /* Change the owner and group of the file referred to by FD.  */
+ int
+-__fchown (fd, owner, group)
+-     int fd;
+-     uid_t owner;
+-     gid_t group;
++__fchown (int fd, uid_t owner, gid_t group)
+ {
+   error_t err;
+ 
+diff --git a/sysdeps/mach/hurd/fchownat.c b/sysdeps/mach/hurd/fchownat.c
+index 58546e46c9c89fcb..d0a0f5c8cbdd5be1 100644
+--- a/sysdeps/mach/hurd/fchownat.c
++++ b/sysdeps/mach/hurd/fchownat.c
+@@ -26,12 +26,7 @@
+ 
+ /* Change the owner and group of FILE.  */
+ int
+-fchownat (fd, file, owner, group, flag)
+-     int fd;
+-     const char *file;
+-     uid_t owner;
+-     gid_t group;
+-     int flag;
++fchownat (int fd, const char *file, uid_t owner, gid_t group, int flag)
+ {
+   error_t err;
+   file_t port = __file_name_lookup_at (fd, flag, file, 0, 0);
+diff --git a/sysdeps/mach/hurd/flock.c b/sysdeps/mach/hurd/flock.c
+index a9e70ac2740dbb55..39c298112323c499 100644
+--- a/sysdeps/mach/hurd/flock.c
++++ b/sysdeps/mach/hurd/flock.c
+@@ -23,9 +23,7 @@
+ /* Apply or remove an advisory lock, according to OPERATION,
+    on the file FD refers to.  */
+ int
+-__flock (fd, operation)
+-     int fd;
+-     int operation;
++__flock (int fd, int operation)
+ {
+   error_t err;
+ 
+diff --git a/sysdeps/mach/hurd/fsync.c b/sysdeps/mach/hurd/fsync.c
+index fe3e044a3aee5e83..e17e0142ea05d1e9 100644
+--- a/sysdeps/mach/hurd/fsync.c
++++ b/sysdeps/mach/hurd/fsync.c
+@@ -22,8 +22,7 @@
+ 
+ /* Make all changes done to FD actually appear on disk.  */
+ int
+-fsync (fd)
+-     int fd;
++fsync (int fd)
+ {
+   error_t err = HURD_DPORT_USE (fd, __file_sync (port, 1, 0));
+   if (err)
+diff --git a/sysdeps/mach/hurd/ftruncate.c b/sysdeps/mach/hurd/ftruncate.c
+index 51b65638a7c37d2a..4a3897faa6aa6ca6 100644
+--- a/sysdeps/mach/hurd/ftruncate.c
++++ b/sysdeps/mach/hurd/ftruncate.c
+@@ -23,9 +23,7 @@
+ 
+ /* Truncate the file referenced by FD to LENGTH bytes.  */
+ int
+-__ftruncate (fd, length)
+-     int fd;
+-     __off_t length;
++__ftruncate (int fd, __off_t length)
+ {
+   error_t err;
+   if (err = HURD_DPORT_USE (fd, __file_set_size (port, length)))
+diff --git a/sysdeps/mach/hurd/getgroups.c b/sysdeps/mach/hurd/getgroups.c
+index 35b219ef66c36606..8e2a580ced7f71e2 100644
+--- a/sysdeps/mach/hurd/getgroups.c
++++ b/sysdeps/mach/hurd/getgroups.c
+@@ -22,9 +22,7 @@
+ #include <string.h>
+ 
+ int
+-__getgroups (n, gidset)
+-     int n;
+-     gid_t *gidset;
++__getgroups (int n, gid_t *gidset)
+ {
+   error_t err;
+   int ngids;
+diff --git a/sysdeps/mach/hurd/gethostname.c b/sysdeps/mach/hurd/gethostname.c
+index fb03b7e8192820dc..dc32a47b7a1324eb 100644
+--- a/sysdeps/mach/hurd/gethostname.c
++++ b/sysdeps/mach/hurd/gethostname.c
+@@ -22,9 +22,7 @@
+    The result is null-terminated if LEN is large enough for the full
+    name and the terminator.  */
+ int
+-__gethostname (name, len)
+-     char *name;
+-     size_t len;
++__gethostname (char *name, size_t len)
+ {
+   /* The host name is just the contents of the file /etc/hostname.  */
+   ssize_t n = _hurd_get_host_config ("/etc/hostname", name, len);
+diff --git a/sysdeps/mach/hurd/getitimer.c b/sysdeps/mach/hurd/getitimer.c
+index 3a9b53b677eed78f..da0d78da22950c48 100644
+--- a/sysdeps/mach/hurd/getitimer.c
++++ b/sysdeps/mach/hurd/getitimer.c
+@@ -42,9 +42,7 @@ subtract_timeval (struct timeval *from, const struct timeval *subtract)
+ /* Set *VALUE to the current setting of timer WHICH.
+    Return 0 on success, -1 on errors.  */
+ int
+-__getitimer (which, value)
+-     enum __itimer_which which;
+-     struct itimerval *value;
++__getitimer (enum __itimer_which which, struct itimerval *value)
+ {
+   struct itimerval val;
+   struct timeval elapsed;
+diff --git a/sysdeps/mach/hurd/getlogin_r.c b/sysdeps/mach/hurd/getlogin_r.c
+index 5410709e71d59d79..bbae17b0380b3727 100644
+--- a/sysdeps/mach/hurd/getlogin_r.c
++++ b/sysdeps/mach/hurd/getlogin_r.c
+@@ -25,9 +25,7 @@
+    If it cannot be determined or some other error occurred, return the error
+    code.  Otherwise return 0.  */
+ int
+-getlogin_r (name, name_len)
+-     char *name;
+-     size_t name_len;
++getlogin_r (char *name, size_t name_len)
+ {
+   string_t login;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/getpgid.c b/sysdeps/mach/hurd/getpgid.c
+index 69b316abfe3e4421..4071c182ac341f52 100644
+--- a/sysdeps/mach/hurd/getpgid.c
++++ b/sysdeps/mach/hurd/getpgid.c
+@@ -22,8 +22,7 @@
+ 
+ /* Get the process group ID of process PID.  */
+ int
+-__getpgid (pid)
+-     pid_t pid;
++__getpgid (pid_t pid)
+ {
+   error_t err;
+   pid_t pgrp;
+diff --git a/sysdeps/mach/hurd/getrusage.c b/sysdeps/mach/hurd/getrusage.c
+index b2cc58969a1a6b08..2d5e41bf4ba15437 100644
+--- a/sysdeps/mach/hurd/getrusage.c
++++ b/sysdeps/mach/hurd/getrusage.c
+@@ -26,9 +26,7 @@
+ /* Return resource usage information on process indicated by WHO
+    and put it in *USAGE.  Returns 0 for success, -1 for failure.  */
+ int
+-__getrusage (who, usage)
+-     enum __rusage_who who;
+-     struct rusage *usage;
++__getrusage (enum __rusage_who who, struct rusage *usage)
+ {
+   struct task_basic_info bi;
+   struct task_events_info ei;
+diff --git a/sysdeps/mach/hurd/getsockname.c b/sysdeps/mach/hurd/getsockname.c
+index 65a69dfdb0833b9c..5d9fc6de3b02283c 100644
+--- a/sysdeps/mach/hurd/getsockname.c
++++ b/sysdeps/mach/hurd/getsockname.c
+@@ -24,10 +24,7 @@
+ 
+ /* Put the local address of FD into *ADDR and its length in *LEN.  */
+ int
+-__getsockname (fd, addrarg, len)
+-     int fd;
+-     __SOCKADDR_ARG addrarg;
+-     socklen_t *len;
++__getsockname (int fd, __SOCKADDR_ARG addrarg, socklen_t *len)
+ {
+   error_t err;
+   struct sockaddr *addr = addrarg.__sockaddr__;
+diff --git a/sysdeps/mach/hurd/group_member.c b/sysdeps/mach/hurd/group_member.c
+index 2021a98af79f6e7a..a6eafe944898a45b 100644
+--- a/sysdeps/mach/hurd/group_member.c
++++ b/sysdeps/mach/hurd/group_member.c
+@@ -22,8 +22,7 @@
+ #include <hurd/id.h>
+ 
+ int
+-__group_member (gid)
+-     gid_t gid;
++__group_member (gid_t gid)
+ {
+   int member = 0;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/isatty.c b/sysdeps/mach/hurd/isatty.c
+index 76cb971b130a8c4b..fc23a7fb069a727f 100644
+--- a/sysdeps/mach/hurd/isatty.c
++++ b/sysdeps/mach/hurd/isatty.c
+@@ -22,8 +22,7 @@
+ 
+ /* Return 1 if FD is a terminal, 0 if not.  */
+ int
+-__isatty (fd)
+-     int fd;
++__isatty (int fd)
+ {
+   error_t err;
+   mach_port_t id;
+diff --git a/sysdeps/mach/hurd/lchown.c b/sysdeps/mach/hurd/lchown.c
+index 93973ad64383755e..4bd22088917e59eb 100644
+--- a/sysdeps/mach/hurd/lchown.c
++++ b/sysdeps/mach/hurd/lchown.c
+@@ -24,10 +24,7 @@
+ /* Change the owner and group of FILE; if it's a link, do the link and
+    not the target.  */
+ int
+-__lchown (file, owner, group)
+-     const char *file;
+-     uid_t owner;
+-     gid_t group;
++__lchown (const char *file, uid_t owner, gid_t group)
+ {
+   error_t err;
+   file_t port = __file_name_lookup (file, O_NOLINK, 0);
+diff --git a/sysdeps/mach/hurd/link.c b/sysdeps/mach/hurd/link.c
+index 4a887694557a2840..26e71924364d5695 100644
+--- a/sysdeps/mach/hurd/link.c
++++ b/sysdeps/mach/hurd/link.c
+@@ -22,9 +22,7 @@
+ 
+ /* Make a link to FROM called TO.  */
+ int
+-__link (from, to)
+-     const char *from;
+-     const char *to;
++__link (const char *from, const char *to)
+ {
+   error_t err;
+   file_t oldfile, linknode, todir;
+diff --git a/sysdeps/mach/hurd/linkat.c b/sysdeps/mach/hurd/linkat.c
+index 48963abab7d6f3ec..5c8fc03f5a323593 100644
+--- a/sysdeps/mach/hurd/linkat.c
++++ b/sysdeps/mach/hurd/linkat.c
+@@ -26,12 +26,7 @@
+ 
+ /* Make a link to FROM relative to FROMFD called TO relative to TOFD.  */
+ int
+-linkat (fromfd, from, tofd, to, flags)
+-     int fromfd;
+-     const char *from;
+-     int tofd;
+-     const char *to;
+-     int flags;
++linkat (int fromfd, const char *from, int tofd, const char *to, int flags)
+ {
+   error_t err;
+   file_t oldfile, linknode, todir;
+diff --git a/sysdeps/mach/hurd/listen.c b/sysdeps/mach/hurd/listen.c
+index 86b39e9a74e9fdf8..b04042a9d53ab58b 100644
+--- a/sysdeps/mach/hurd/listen.c
++++ b/sysdeps/mach/hurd/listen.c
+@@ -26,9 +26,7 @@
+    Returns 0 on success, -1 for errors.  */
+ 
+ int
+-__listen (fd, n)
+-     int fd;
+-     int n;
++__listen (int fd, int n)
+ {
+   error_t err = HURD_DPORT_USE (fd, __socket_listen (port, n));
+   if (err)
+diff --git a/sysdeps/mach/hurd/mkdir.c b/sysdeps/mach/hurd/mkdir.c
+index 8ad648e0a3ebaa0f..9d4b52779523ae55 100644
+--- a/sysdeps/mach/hurd/mkdir.c
++++ b/sysdeps/mach/hurd/mkdir.c
+@@ -23,9 +23,7 @@
+ 
+ /* Create a directory named FILE_NAME with protections MODE.  */
+ int
+-__mkdir (file_name, mode)
+-     const char *file_name;
+-     mode_t mode;
++__mkdir (const char *file_name, mode_t mode)
+ {
+   error_t err;
+   const char *name;
+diff --git a/sysdeps/mach/hurd/mkdirat.c b/sysdeps/mach/hurd/mkdirat.c
+index d6d672ead91c3d21..f4227cd877c78d53 100644
+--- a/sysdeps/mach/hurd/mkdirat.c
++++ b/sysdeps/mach/hurd/mkdirat.c
+@@ -24,10 +24,7 @@
+ #include <string.h>
+ 
+ int
+-mkdirat (fd, path, mode)
+-     int fd;
+-     const char *path;
+-     mode_t mode;
++mkdirat (int fd, const char *path, mode_t mode)
+ {
+   error_t err;
+   const char *name;
+diff --git a/sysdeps/mach/hurd/openat.c b/sysdeps/mach/hurd/openat.c
+index 402b89e1f0726c08..36170eac08e4ff0a 100644
+--- a/sysdeps/mach/hurd/openat.c
++++ b/sysdeps/mach/hurd/openat.c
+@@ -29,10 +29,7 @@
+    the directory associated with FD.  If O_CREAT or O_TMPFILE is in OFLAG, a
+    third argument is the file protection.  */
+ int
+-__openat (fd, file, oflag)
+-     int fd;
+-     const char *file;
+-     int oflag;
++__openat (int fd, const char *file, int oflag)
+ {
+   mode_t mode;
+   io_t port;
+diff --git a/sysdeps/mach/hurd/poll.c b/sysdeps/mach/hurd/poll.c
+index a78d10db4269bca0..040d541204002651 100644
+--- a/sysdeps/mach/hurd/poll.c
++++ b/sysdeps/mach/hurd/poll.c
+@@ -28,10 +28,7 @@
+    or -1 for errors.  */
+ 
+ int
+-__poll (fds, nfds, timeout)
+-     struct pollfd *fds;
+-     nfds_t nfds;
+-     int timeout;
++__poll (struct pollfd *fds, nfds_t nfds, int timeout)
+ {
+   struct timespec ts, *to;
+ 
+diff --git a/sysdeps/mach/hurd/readlink.c b/sysdeps/mach/hurd/readlink.c
+index fec50acde112534e..4a9f990edc70922e 100644
+--- a/sysdeps/mach/hurd/readlink.c
++++ b/sysdeps/mach/hurd/readlink.c
+@@ -25,10 +25,7 @@
+    LEN bytes of BUF.  The contents are not null-terminated.
+    Returns the number of characters read, or -1 for errors.  */
+ ssize_t
+-__readlink (file_name, buf, len)
+-     const char *file_name;
+-     char *buf;
+-     size_t len;
++__readlink (const char *file_name, char *buf, size_t len)
+ {
+   error_t err;
+   file_t file;
+diff --git a/sysdeps/mach/hurd/readlinkat.c b/sysdeps/mach/hurd/readlinkat.c
+index c46522a48e1c5ceb..d4cdadec13330622 100644
+--- a/sysdeps/mach/hurd/readlinkat.c
++++ b/sysdeps/mach/hurd/readlinkat.c
+@@ -26,11 +26,7 @@
+    than LEN bytes of BUF.  The contents are not null-terminated.
+    Returns the number of characters read, or -1 for errors.  */
+ ssize_t
+-readlinkat (fd, file_name, buf, len)
+-     int fd;
+-     const char *file_name;
+-     char *buf;
+-     size_t len;
++readlinkat (int fd, const char *file_name, char *buf, size_t len)
+ {
+   error_t err;
+   file_t file;
+diff --git a/sysdeps/mach/hurd/recv.c b/sysdeps/mach/hurd/recv.c
+index 590f4c01dc93e80d..b6683394fa78595c 100644
+--- a/sysdeps/mach/hurd/recv.c
++++ b/sysdeps/mach/hurd/recv.c
+@@ -26,11 +26,7 @@
+    Returns the number read or -1 for errors.  */
+ 
+ ssize_t
+-__recv (fd, buf, n, flags)
+-     int fd;
+-     void *buf;
+-     size_t n;
+-     int flags;
++__recv (int fd, void *buf, size_t n, int flags)
+ {
+   error_t err;
+   mach_port_t addrport;
+diff --git a/sysdeps/mach/hurd/rename.c b/sysdeps/mach/hurd/rename.c
+index c34cbcc24a331d8e..2f7d2b65861614ed 100644
+--- a/sysdeps/mach/hurd/rename.c
++++ b/sysdeps/mach/hurd/rename.c
+@@ -20,9 +20,7 @@
+ 
+ /* Rename the file OLD to NEW.  */
+ int
+-rename (old, new)
+-     const char *old;
+-     const char *new;
++rename (const char *old, const char *new)
+ {
+   error_t err;
+   file_t olddir, newdir;
+diff --git a/sysdeps/mach/hurd/renameat.c b/sysdeps/mach/hurd/renameat.c
+index 8ab5906a6742f0a0..98082a7b9575e106 100644
+--- a/sysdeps/mach/hurd/renameat.c
++++ b/sysdeps/mach/hurd/renameat.c
+@@ -22,11 +22,7 @@
+ 
+ /* Rename the file OLD relative to OLDFD to NEW relative to NEWFD.  */
+ int
+-renameat (oldfd, old, newfd, new)
+-     int oldfd;
+-     const char *old;
+-     int newfd;
+-     const char *new;
++renameat (int oldfd, const char *old, int newfd, const char *new)
+ {
+   error_t err;
+   file_t olddir, newdir;
+diff --git a/sysdeps/mach/hurd/revoke.c b/sysdeps/mach/hurd/revoke.c
+index b80cb4a8146dc29b..ef60154e2fdc12d3 100644
+--- a/sysdeps/mach/hurd/revoke.c
++++ b/sysdeps/mach/hurd/revoke.c
+@@ -21,8 +21,7 @@
+ #include <hurd.h>
+ 
+ int
+-revoke (file_name)
+-     const char *file_name;
++revoke (const char *file_name)
+ {
+   error_t err;
+   file_t file = __file_name_lookup (file_name, 0, 0);
+diff --git a/sysdeps/mach/hurd/rewinddir.c b/sysdeps/mach/hurd/rewinddir.c
+index 30ceac5e5e208a7a..26adb0115845b64c 100644
+--- a/sysdeps/mach/hurd/rewinddir.c
++++ b/sysdeps/mach/hurd/rewinddir.c
+@@ -22,8 +22,7 @@
+ 
+ /* Rewind DIRP to the beginning of the directory.  */
+ void
+-rewinddir (dirp)
+-     DIR *dirp;
++rewinddir (DIR *dirp)
+ {
+   seekdir (dirp, (off_t) 0L);
+ }
+diff --git a/sysdeps/mach/hurd/rmdir.c b/sysdeps/mach/hurd/rmdir.c
+index 2a5d5f371fabfb93..09a6167a3e75f05f 100644
+--- a/sysdeps/mach/hurd/rmdir.c
++++ b/sysdeps/mach/hurd/rmdir.c
+@@ -22,8 +22,7 @@
+ 
+ /* Remove the directory FILE_NAME.  */
+ int
+-__rmdir (file_name)
+-     const char *file_name;
++__rmdir (const char *file_name)
+ {
+   error_t err;
+   const char *name;
+diff --git a/sysdeps/mach/hurd/seekdir.c b/sysdeps/mach/hurd/seekdir.c
+index 70c3a87432f2afae..1d07b7f929c06e5e 100644
+--- a/sysdeps/mach/hurd/seekdir.c
++++ b/sysdeps/mach/hurd/seekdir.c
+@@ -24,9 +24,7 @@
+ /* Seek to position POS in DIRP.  */
+ /* XXX should be __seekdir ? */
+ void
+-seekdir (dirp, pos)
+-     DIR *dirp;
+-     long int pos;
++seekdir (DIR *dirp, long int pos)
+ {
+   __libc_lock_lock (dirp->__lock);
+   /* Change our entry index pointer to POS and discard any data already
+diff --git a/sysdeps/mach/hurd/send.c b/sysdeps/mach/hurd/send.c
+index 500c6a26e5856b8a..3ef1b153fa5eb213 100644
+--- a/sysdeps/mach/hurd/send.c
++++ b/sysdeps/mach/hurd/send.c
+@@ -23,11 +23,7 @@
+ 
+ /* Send N bytes of BUF to socket FD.  Returns the number sent or -1.  */
+ ssize_t
+-__send (fd, buf, n, flags)
+-     int fd;
+-     const void *buf;
+-     size_t n;
+-     int flags;
++__send (int fd, const void *buf, size_t n, int flags)
+ {
+   error_t err;
+   size_t wrote;
+diff --git a/sysdeps/mach/hurd/setdomain.c b/sysdeps/mach/hurd/setdomain.c
+index f3b05172436ae9b0..e9db0ddd517b11de 100644
+--- a/sysdeps/mach/hurd/setdomain.c
++++ b/sysdeps/mach/hurd/setdomain.c
+@@ -21,9 +21,7 @@
+ /* Set the name of the current YP domain to NAME, which is LEN bytes long.
+    This call is restricted to the super-user.  */
+ int
+-setdomainname (name, len)
+-     const char *name;
+-     size_t len;
++setdomainname (const char *name, size_t len)
+ {
+   /* The NIS domain name is just the contents of the file /etc/nisdomain.  */
+   ssize_t n = _hurd_set_host_config ("/etc/nisdomain", name, len);
+diff --git a/sysdeps/mach/hurd/setegid.c b/sysdeps/mach/hurd/setegid.c
+index cff169f3f39bb754..6485be03a4879a8c 100644
+--- a/sysdeps/mach/hurd/setegid.c
++++ b/sysdeps/mach/hurd/setegid.c
+@@ -24,8 +24,7 @@
+ 
+ /* Set the effective user ID of the calling process to GID.  */
+ int
+-setegid (gid)
+-     gid_t gid;
++setegid (gid_t gid)
+ {
+   auth_t newauth;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/seteuid.c b/sysdeps/mach/hurd/seteuid.c
+index 200bbda8f487d134..47935fab59917de6 100644
+--- a/sysdeps/mach/hurd/seteuid.c
++++ b/sysdeps/mach/hurd/seteuid.c
+@@ -24,8 +24,7 @@
+ 
+ /* Set the effective user ID of the calling process to UID.  */
+ int
+-seteuid (uid)
+-     uid_t uid;
++seteuid (uid_t uid)
+ {
+   auth_t newauth;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/setgid.c b/sysdeps/mach/hurd/setgid.c
+index b4dcd142cc5f627f..0bd73ea8b2c32602 100644
+--- a/sysdeps/mach/hurd/setgid.c
++++ b/sysdeps/mach/hurd/setgid.c
+@@ -27,8 +27,7 @@
+    and effective group IDs, and the saved set-group-ID to UID;
+    if not, the effective group ID is set to GID.  */
+ int
+-__setgid (gid)
+-     gid_t gid;
++__setgid (gid_t gid)
+ {
+   auth_t newauth;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/setgroups.c b/sysdeps/mach/hurd/setgroups.c
+index 4b4b40eac6f8a67e..bdc8d052d8a8c3ff 100644
+--- a/sysdeps/mach/hurd/setgroups.c
++++ b/sysdeps/mach/hurd/setgroups.c
+@@ -23,9 +23,7 @@
+ 
+ /* Set the group set for the current user to GROUPS (N of them).  */
+ int
+-setgroups (n, groups)
+-     size_t n;
+-     const gid_t *groups;
++setgroups (size_t n, const gid_t *groups)
+ {
+   error_t err;
+   auth_t newauth;
+diff --git a/sysdeps/mach/hurd/sethostid.c b/sysdeps/mach/hurd/sethostid.c
+index 7fadf6aa8503876e..0a763f31e26e33fb 100644
+--- a/sysdeps/mach/hurd/sethostid.c
++++ b/sysdeps/mach/hurd/sethostid.c
+@@ -25,8 +25,7 @@
+ /* XXX should be __sethostid?
+        isn't hostid supposed to be hardwired and unchangeable? */
+ int
+-sethostid (id)
+-     long int id;
++sethostid (long int id)
+ {
+   char buf[8], *bp;
+   ssize_t n;
+diff --git a/sysdeps/mach/hurd/sethostname.c b/sysdeps/mach/hurd/sethostname.c
+index 433efa32f7125ce5..f0e63c7ea5175da5 100644
+--- a/sysdeps/mach/hurd/sethostname.c
++++ b/sysdeps/mach/hurd/sethostname.c
+@@ -22,9 +22,7 @@
+    This call is restricted to the super-user.  */
+ /* XXX should be __sethostname ? */
+ int
+-sethostname (name, len)
+-     const char *name;
+-     size_t len;
++sethostname (const char *name, size_t len)
+ {
+   /* The host name is just the contents of the file /etc/hostname.  */
+   ssize_t n = _hurd_set_host_config ("/etc/hostname", name, len);
+diff --git a/sysdeps/mach/hurd/setlogin.c b/sysdeps/mach/hurd/setlogin.c
+index 16c230685e91a411..48ab43b302c7dc2a 100644
+--- a/sysdeps/mach/hurd/setlogin.c
++++ b/sysdeps/mach/hurd/setlogin.c
+@@ -21,8 +21,7 @@
+ 
+ /* Set the login name returned by `getlogin'.  */
+ int
+-setlogin (name)
+-     const char *name;
++setlogin (const char *name)
+ {
+   error_t err;
+   if (err = __USEPORT (PROC, __proc_setlogin (port, name)))
+diff --git a/sysdeps/mach/hurd/setpgid.c b/sysdeps/mach/hurd/setpgid.c
+index f3696fc60c0d7cfe..ddce0b7229d1766e 100644
+--- a/sysdeps/mach/hurd/setpgid.c
++++ b/sysdeps/mach/hurd/setpgid.c
+@@ -24,9 +24,7 @@
+    If PID is zero, the current process's process group ID is set.
+    If PGID is zero, the process ID of the process is used.  */
+ int
+-__setpgid (pid, pgid)
+-     pid_t pid;
+-     pid_t pgid;
++__setpgid (pid_t pid, pid_t pgid)
+ {
+   error_t err;
+   unsigned int stamp;
+diff --git a/sysdeps/mach/hurd/setregid.c b/sysdeps/mach/hurd/setregid.c
+index f44685731e8aa185..f0f1eb9a383c3bba 100644
+--- a/sysdeps/mach/hurd/setregid.c
++++ b/sysdeps/mach/hurd/setregid.c
+@@ -23,9 +23,7 @@
+ #include <string.h>
+ 
+ int
+-__setregid (rgid, egid)
+-     gid_t rgid;
+-     gid_t egid;
++__setregid (gid_t rgid, gid_t egid)
+ {
+   auth_t newauth;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/setreuid.c b/sysdeps/mach/hurd/setreuid.c
+index 72d42c7e15289c18..b68e1e8d43ad44ca 100644
+--- a/sysdeps/mach/hurd/setreuid.c
++++ b/sysdeps/mach/hurd/setreuid.c
+@@ -23,9 +23,7 @@
+ #include <string.h>
+ 
+ int
+-__setreuid (ruid, euid)
+-     uid_t ruid;
+-     uid_t euid;
++__setreuid (uid_t ruid, uid_t euid)
+ {
+   auth_t newauth;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/settimeofday.c b/sysdeps/mach/hurd/settimeofday.c
+index ce9bfafa9002f388..6f7fa007b21ff67e 100644
+--- a/sysdeps/mach/hurd/settimeofday.c
++++ b/sysdeps/mach/hurd/settimeofday.c
+@@ -23,9 +23,7 @@
+ /* Set the current time of day and timezone information.
+    This call is restricted to the super-user.  */
+ int
+-__settimeofday (tv, tz)
+-     const struct timeval *tv;
+-     const struct timezone *tz;
++__settimeofday (const struct timeval *tv, const struct timezone *tz)
+ {
+   error_t err;
+   mach_port_t hostpriv;
+diff --git a/sysdeps/mach/hurd/setuid.c b/sysdeps/mach/hurd/setuid.c
+index b749159528988ee8..dcf98b6b48d34f01 100644
+--- a/sysdeps/mach/hurd/setuid.c
++++ b/sysdeps/mach/hurd/setuid.c
+@@ -27,8 +27,7 @@
+    and effective user IDs, and the saved set-user-ID to UID;
+    if not, the effective user ID is set to UID.  */
+ int
+-__setuid (uid)
+-     uid_t uid;
++__setuid (uid_t uid)
+ {
+   auth_t newauth;
+   error_t err;
+diff --git a/sysdeps/mach/hurd/shutdown.c b/sysdeps/mach/hurd/shutdown.c
+index 8cf9d2fbc21e68b8..c2b643896c5a62ab 100644
+--- a/sysdeps/mach/hurd/shutdown.c
++++ b/sysdeps/mach/hurd/shutdown.c
+@@ -29,9 +29,7 @@
+    Returns 0 on success, -1 for errors.  */
+ /* XXX should be __shutdown ? */
+ int
+-shutdown (fd, how)
+-     int fd;
+-     int how;
++shutdown (int fd, int how)
+ {
+   error_t err = HURD_DPORT_USE (fd, __socket_shutdown (port, how));
+   if (err)
+diff --git a/sysdeps/mach/hurd/sigaction.c b/sysdeps/mach/hurd/sigaction.c
+index 5e97dcdb13a8170b..6e2c738e8aa03c1c 100644
+--- a/sysdeps/mach/hurd/sigaction.c
++++ b/sysdeps/mach/hurd/sigaction.c
+@@ -25,10 +25,7 @@
+ /* If ACT is not NULL, change the action for SIG to *ACT.
+    If OACT is not NULL, put the old action for SIG in *OACT.  */
+ int
+-__sigaction (sig, act, oact)
+-     int sig;
+-     const struct sigaction *act;
+-     struct sigaction *oact;
++__sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+ {
+   struct hurd_sigstate *ss;
+   struct sigaction a, old;
+diff --git a/sysdeps/mach/hurd/sigaltstack.c b/sysdeps/mach/hurd/sigaltstack.c
+index cf87b0059021a5a5..6feea790903f9742 100644
+--- a/sysdeps/mach/hurd/sigaltstack.c
++++ b/sysdeps/mach/hurd/sigaltstack.c
+@@ -22,9 +22,7 @@
+ /* Run signals handlers on the stack specified by SS (if not NULL).
+    If OSS is not NULL, it is filled in with the old signal stack status.  */
+ int
+-__sigaltstack (argss, oss)
+-     const struct sigaltstack *argss;
+-     struct sigaltstack *oss;
++__sigaltstack (const struct sigaltstack *argss, struct sigaltstack *oss)
+ {
+   struct hurd_sigstate *s;
+   struct sigaltstack ss, old;
+diff --git a/sysdeps/mach/hurd/sigpending.c b/sysdeps/mach/hurd/sigpending.c
+index 59e5a8e69a8fddff..28c5e3590234db98 100644
+--- a/sysdeps/mach/hurd/sigpending.c
++++ b/sysdeps/mach/hurd/sigpending.c
+@@ -24,8 +24,7 @@
+ /* Store in SET all signals that are blocked and pending.  */
+ /* XXX should be __sigpending ? */
+ int
+-sigpending (set)
+-     sigset_t *set;
++sigpending (sigset_t *set)
+ {
+   struct hurd_sigstate *ss;
+   sigset_t pending;
+diff --git a/sysdeps/mach/hurd/sigprocmask.c b/sysdeps/mach/hurd/sigprocmask.c
+index e90a5f3ebbaa335f..ee62563f3a90bd73 100644
+--- a/sysdeps/mach/hurd/sigprocmask.c
++++ b/sysdeps/mach/hurd/sigprocmask.c
+@@ -25,10 +25,7 @@
+    according to HOW, which may be SIG_BLOCK, SIG_UNBLOCK or SIG_SETMASK.
+    If OSET is not NULL, store the old set of blocked signals in *OSET.  */
+ int
+-__sigprocmask (how, set, oset)
+-     int how;
+-     const sigset_t *set;
+-     sigset_t *oset;
++__sigprocmask (int how, const sigset_t *set, sigset_t *oset)
+ {
+   struct hurd_sigstate *ss;
+   sigset_t old, new;
+diff --git a/sysdeps/mach/hurd/sigsuspend.c b/sysdeps/mach/hurd/sigsuspend.c
+index 3e611f80afc4b662..10ff5ca6a97d5566 100644
+--- a/sysdeps/mach/hurd/sigsuspend.c
++++ b/sysdeps/mach/hurd/sigsuspend.c
+@@ -25,8 +25,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-__sigsuspend (set)
+-     const sigset_t *set;
++__sigsuspend (const sigset_t *set)
+ {
+   struct hurd_sigstate *ss;
+   sigset_t newmask, oldmask, pending;
+diff --git a/sysdeps/mach/hurd/socket.c b/sysdeps/mach/hurd/socket.c
+index 00f57b5fbeb9d006..1a0c1f94197b9da8 100644
+--- a/sysdeps/mach/hurd/socket.c
++++ b/sysdeps/mach/hurd/socket.c
+@@ -26,10 +26,7 @@
+    protocol PROTOCOL.  If PROTOCOL is zero, one is chosen automatically.
+    Returns a file descriptor for the new socket, or -1 for errors.  */
+ int
+-__socket (domain, type, protocol)
+-     int domain;
+-     int type;
+-     int protocol;
++__socket (int domain, int type, int protocol)
+ {
+   error_t err;
+   socket_t sock, server;
+diff --git a/sysdeps/mach/hurd/symlink.c b/sysdeps/mach/hurd/symlink.c
+index 0754b1893b03d839..eac5f5ba70d4d409 100644
+--- a/sysdeps/mach/hurd/symlink.c
++++ b/sysdeps/mach/hurd/symlink.c
+@@ -23,9 +23,7 @@
+ 
+ /* Make a link to FROM called TO.  */
+ int
+-__symlink (from, to)
+-     const char *from;
+-     const char *to;
++__symlink (const char *from, const char *to)
+ {
+   error_t err;
+   file_t dir, node;
+diff --git a/sysdeps/mach/hurd/symlinkat.c b/sysdeps/mach/hurd/symlinkat.c
+index ff11ecdc166bc1a3..5342444451ef71c7 100644
+--- a/sysdeps/mach/hurd/symlinkat.c
++++ b/sysdeps/mach/hurd/symlinkat.c
+@@ -28,10 +28,7 @@
+ 
+ /* Make a link to FROM called TO relative to FD.  */
+ int
+-symlinkat (from, fd, to)
+-     const char *from;
+-     int fd;
+-     const char *to;
++symlinkat (const char *from, int fd, const char *to)
+ {
+   error_t err;
+   file_t dir, node;
+diff --git a/sysdeps/mach/hurd/telldir.c b/sysdeps/mach/hurd/telldir.c
+index 983e1fc667e9d7ce..bae50b10b60050a5 100644
+--- a/sysdeps/mach/hurd/telldir.c
++++ b/sysdeps/mach/hurd/telldir.c
+@@ -25,8 +25,7 @@
+ /* Return the current position of DIRP.  */
+ /* XXX should be __telldir ? */
+ long int
+-telldir (dirp)
+-     DIR *dirp;
++telldir (DIR *dirp)
+ {
+   return dirp->__entry_ptr;
+ }
+diff --git a/sysdeps/mach/hurd/truncate.c b/sysdeps/mach/hurd/truncate.c
+index d93daffda751f6b1..6c530493ecc5ee07 100644
+--- a/sysdeps/mach/hurd/truncate.c
++++ b/sysdeps/mach/hurd/truncate.c
+@@ -23,9 +23,7 @@
+ 
+ /* Truncate FILE_NAME to LENGTH bytes.  */
+ int
+-__truncate (file_name, length)
+-     const char *file_name;
+-     off_t length;
++__truncate (const char *file_name, off_t length)
+ {
+   error_t err;
+   file_t file = __file_name_lookup (file_name, O_WRITE, 0);
+diff --git a/sysdeps/mach/hurd/umask.c b/sysdeps/mach/hurd/umask.c
+index 81d6d69f03ec172d..a7f0ca479a3d344f 100644
+--- a/sysdeps/mach/hurd/umask.c
++++ b/sysdeps/mach/hurd/umask.c
+@@ -20,8 +20,7 @@
+ 
+ /* Set the file creation mask to MASK, returning the old mask.  */
+ mode_t
+-__umask (mask)
+-     mode_t mask;
++__umask (mode_t mask)
+ {
+   mode_t omask;
+   mask &= 0777;
+diff --git a/sysdeps/mach/hurd/unlink.c b/sysdeps/mach/hurd/unlink.c
+index e3a0b419c41fdde1..fe6f092348b1954f 100644
+--- a/sysdeps/mach/hurd/unlink.c
++++ b/sysdeps/mach/hurd/unlink.c
+@@ -23,8 +23,7 @@
+ 
+ /* Remove the link named NAME.  */
+ int
+-__unlink (name)
+-     const char *name;
++__unlink (const char *name)
+ {
+   error_t err;
+   file_t dir;
+diff --git a/sysdeps/mach/hurd/unlinkat.c b/sysdeps/mach/hurd/unlinkat.c
+index 7ee4d37a64d0063b..a756446a9315789c 100644
+--- a/sysdeps/mach/hurd/unlinkat.c
++++ b/sysdeps/mach/hurd/unlinkat.c
+@@ -26,10 +26,7 @@
+ 
+ /* Remove the link named NAME.  */
+ int
+-unlinkat (fd, name, flag)
+-     int fd;
+-     const char *name;
+-     int flag;
++unlinkat (int fd, const char *name, int flag)
+ {
+   error_t err;
+   file_t dir;
+diff --git a/sysdeps/mips/mips64/__longjmp.c b/sysdeps/mips/mips64/__longjmp.c
+index a6f31cb5adfd8ff8..608dee8ab1eb16ea 100644
+--- a/sysdeps/mips/mips64/__longjmp.c
++++ b/sysdeps/mips/mips64/__longjmp.c
+@@ -26,9 +26,7 @@
+ #endif
+ 
+ void
+-__longjmp (env_arg, val_arg)
+-     __jmp_buf env_arg;
+-     int val_arg;
++__longjmp (__jmp_buf env_arg, int val_arg)
+ {
+   /* gcc 1.39.19 miscompiled the longjmp routine (as it did setjmp before
+      the hack around it); force it to use $a1 for the longjmp value.
+diff --git a/sysdeps/posix/alarm.c b/sysdeps/posix/alarm.c
+index 730f2c4c770baa61..2b731c9d73e18301 100644
+--- a/sysdeps/posix/alarm.c
++++ b/sysdeps/posix/alarm.c
+@@ -26,8 +26,7 @@
+    to 0 and check its value after calling `alarm', and this might tell you.
+    The signal may come late due to processor scheduling.  */
+ unsigned int
+-alarm (seconds)
+-     unsigned int seconds;
++alarm (unsigned int seconds)
+ {
+   struct itimerval old, new;
+   unsigned int retval;
+diff --git a/sysdeps/posix/cuserid.c b/sysdeps/posix/cuserid.c
+index 2134f6835282512e..891b5f53c4d5b298 100644
+--- a/sysdeps/posix/cuserid.c
++++ b/sysdeps/posix/cuserid.c
+@@ -25,8 +25,7 @@
+    If S is not NULL, it points to a buffer of at least L_cuserid bytes
+    into which the name is copied; otherwise, a static buffer is used.  */
+ char *
+-cuserid (s)
+-     char *s;
++cuserid (char *s)
+ {
+   static char name[L_cuserid];
+   char buf[NSS_BUFLEN_PASSWD];
+diff --git a/sysdeps/posix/dirfd.c b/sysdeps/posix/dirfd.c
+index 536c44e30e4bdd08..e841863e2e8fb81a 100644
+--- a/sysdeps/posix/dirfd.c
++++ b/sysdeps/posix/dirfd.c
+@@ -22,8 +22,7 @@
+ #undef dirfd
+ 
+ int
+-dirfd (dirp)
+-     DIR *dirp;
++dirfd (DIR *dirp)
+ {
+   return dirp->fd;
+ }
+diff --git a/sysdeps/posix/dup.c b/sysdeps/posix/dup.c
+index ff9eab3d27b16cbf..da65148ea9975903 100644
+--- a/sysdeps/posix/dup.c
++++ b/sysdeps/posix/dup.c
+@@ -22,8 +22,7 @@
+ 
+ /* Duplicate FD, returning a new file descriptor open on the same file.  */
+ int
+-__dup (fd)
+-     int fd;
++__dup (int fd)
+ {
+   return fcntl (fd, F_DUPFD, 0);
+ }
+diff --git a/sysdeps/posix/dup2.c b/sysdeps/posix/dup2.c
+index 3dafd83abcb47ac3..e4a009d7a286c689 100644
+--- a/sysdeps/posix/dup2.c
++++ b/sysdeps/posix/dup2.c
+@@ -23,9 +23,7 @@
+ /* Duplicate FD to FD2, closing the old FD2 and making FD2 be
+    open the same file as FD is.  Return FD2 or -1.  */
+ int
+-__dup2 (fd, fd2)
+-     int fd;
+-     int fd2;
++__dup2 (int fd, int fd2)
+ {
+   int save;
+ 
+diff --git a/sysdeps/posix/euidaccess.c b/sysdeps/posix/euidaccess.c
+index e7901866bddce39b..2250ec90e50746cb 100644
+--- a/sysdeps/posix/euidaccess.c
++++ b/sysdeps/posix/euidaccess.c
+@@ -117,9 +117,7 @@ int group_member ();
+    filesystem, text busy, etc. */
+ 
+ int
+-euidaccess (path, mode)
+-     const char *path;
+-     int mode;
++euidaccess (const char *path, int mode)
+ {
+   struct stat64 stats;
+   int granted;
+@@ -196,9 +194,7 @@ weak_alias (__euidaccess, eaccess)
+ char *program_name;
+ 
+ int
+-main (argc, argv)
+-     int argc;
+-     char **argv;
++main (int argc, char **argv)
+ {
+   char *file;
+   int mode;
+diff --git a/sysdeps/posix/flock.c b/sysdeps/posix/flock.c
+index 4b9b9ac9ce990922..39ccdeb1a2e24ba4 100644
+--- a/sysdeps/posix/flock.c
++++ b/sysdeps/posix/flock.c
+@@ -27,9 +27,7 @@
+ /* Apply or remove an advisory lock, according to OPERATION,
+    on the file FD refers to.  */
+ int
+-__flock (fd, operation)
+-     int fd;
+-     int operation;
++__flock (int fd, int operation)
+ {
+   struct flock lbuf;
+ 
+diff --git a/sysdeps/posix/fpathconf.c b/sysdeps/posix/fpathconf.c
+index 7b072fa3ca155929..f5b33d2361a31ec4 100644
+--- a/sysdeps/posix/fpathconf.c
++++ b/sysdeps/posix/fpathconf.c
+@@ -27,9 +27,7 @@
+ 
+ /* Get file-specific information about descriptor FD.  */
+ long int
+-__fpathconf (fd, name)
+-     int fd;
+-     int name;
++__fpathconf (int fd, int name)
+ {
+   if (fd < 0)
+     {
+diff --git a/sysdeps/posix/getcwd.c b/sysdeps/posix/getcwd.c
+index 366abb34575c5809..2df6e6e26efc566e 100644
+--- a/sysdeps/posix/getcwd.c
++++ b/sysdeps/posix/getcwd.c
+@@ -218,9 +218,7 @@ static int __rtld_have_atfcts;
+    unless SIZE == 0, in which case it is as big as necessary.  */
+ 
+ GETCWD_RETURN_TYPE
+-__getcwd (buf, size)
+-     char *buf;
+-     size_t size;
++__getcwd (char *buf, size_t size)
+ {
+ #ifndef __ASSUME_ATFCTS
+   static const char dots[]
+diff --git a/sysdeps/posix/gethostname.c b/sysdeps/posix/gethostname.c
+index a63845b02bd651f0..8510c58066a356e7 100644
+--- a/sysdeps/posix/gethostname.c
++++ b/sysdeps/posix/gethostname.c
+@@ -24,9 +24,7 @@
+    The result is null-terminated if LEN is large enough for the full
+    name and the terminator.  */
+ int
+-__gethostname (name, len)
+-     char *name;
+-     size_t len;
++__gethostname (char *name, size_t len)
+ {
+   struct utsname buf;
+   size_t node_len;
+diff --git a/sysdeps/posix/gettimeofday.c b/sysdeps/posix/gettimeofday.c
+index 1108ff016705d73d..6ee918585713a95a 100644
+--- a/sysdeps/posix/gettimeofday.c
++++ b/sysdeps/posix/gettimeofday.c
+@@ -23,9 +23,7 @@
+    putting it into *TV and *TZ.  If TZ is NULL, *TZ is not filled.
+    Returns 0 on success, -1 on errors.  */
+ int
+-__gettimeofday (tv, tz)
+-     struct timeval *tv;
+-     struct timezone *tz;
++__gettimeofday (struct timeval *tv, struct timezone *tz)
+ {
+   if (tv == NULL)
+     {
+diff --git a/sysdeps/posix/isatty.c b/sysdeps/posix/isatty.c
+index 0226bf4f7d447506..16ce14c0963bd40d 100644
+--- a/sysdeps/posix/isatty.c
++++ b/sysdeps/posix/isatty.c
+@@ -20,8 +20,7 @@
+ 
+ /* Return 1 if FD is a terminal, 0 if not.  */
+ int
+-__isatty (fd)
+-     int fd;
++__isatty (int fd)
+ {
+   struct termios term;
+ 
+diff --git a/sysdeps/posix/killpg.c b/sysdeps/posix/killpg.c
+index 570ac90b562da74b..7e4918621e293ba6 100644
+--- a/sysdeps/posix/killpg.c
++++ b/sysdeps/posix/killpg.c
+@@ -23,9 +23,7 @@
+    If PGRP is zero, send SIG to all processes in
+    the current process's process group.  */
+ int
+-killpg (pgrp, sig)
+-     __pid_t pgrp;
+-     int sig;
++killpg (__pid_t pgrp, int sig)
+ {
+   if (pgrp < 0)
+     {
+diff --git a/sysdeps/posix/libc_fatal.c b/sysdeps/posix/libc_fatal.c
+index 6b741297ce818235..c74bc5818cb33778 100644
+--- a/sysdeps/posix/libc_fatal.c
++++ b/sysdeps/posix/libc_fatal.c
+@@ -164,8 +164,7 @@ __libc_message (int do_abort, const char *fmt, ...)
+ 
+ 
+ void
+-__libc_fatal (message)
+-     const char *message;
++__libc_fatal (const char *message)
+ {
+   /* The loop is added only to keep gcc happy.  */
+   while (1)
+diff --git a/sysdeps/posix/mkfifoat.c b/sysdeps/posix/mkfifoat.c
+index 33fa6bde7118aa83..cc752e5a0891dd54 100644
+--- a/sysdeps/posix/mkfifoat.c
++++ b/sysdeps/posix/mkfifoat.c
+@@ -21,10 +21,7 @@
+ /* Create a new FIFO with permission bits MODE.  But interpret
+    relative PATH names relative to the directory associated with FD.  */
+ int
+-mkfifoat (fd, file, mode)
+-     int fd;
+-     const char *file;
+-     mode_t mode;
++mkfifoat (int fd, const char *file, mode_t mode)
+ {
+   dev_t dev = 0;
+   return __xmknodat (_MKNOD_VER, fd, file, mode | S_IFIFO, &dev);
+diff --git a/sysdeps/posix/raise.c b/sysdeps/posix/raise.c
+index 58d13fc194da5ed6..7d011bd0bdd90080 100644
+--- a/sysdeps/posix/raise.c
++++ b/sysdeps/posix/raise.c
+@@ -20,8 +20,7 @@
+ 
+ /* Raise the signal SIG.  */
+ int
+-raise (sig)
+-     int sig;
++raise (int sig)
+ {
+   return __kill (__getpid (), sig);
+ }
+diff --git a/sysdeps/posix/remove.c b/sysdeps/posix/remove.c
+index be0c5ad1280ef50d..135c6359f3c9d5e4 100644
+--- a/sysdeps/posix/remove.c
++++ b/sysdeps/posix/remove.c
+@@ -27,8 +27,7 @@
+ 
+ 
+ int
+-remove (file)
+-     const char *file;
++remove (const char *file)
+ {
+   /* First try to unlink since this is more frequently the necessary action. */
+   if (__unlink (file) != 0
+diff --git a/sysdeps/posix/rename.c b/sysdeps/posix/rename.c
+index 8bb6a04c17b15478..4cb2f20bd45ac8e4 100644
+--- a/sysdeps/posix/rename.c
++++ b/sysdeps/posix/rename.c
+@@ -21,9 +21,7 @@
+ 
+ /* Rename the file OLD to NEW.  */
+ int
+-rename (old, new)
+-     const char *old;
+-     const char *new;
++rename (const char *old, const char *new)
+ {
+   int save = errno;
+   if (__link (old, new) < 0)
+diff --git a/sysdeps/posix/rewinddir.c b/sysdeps/posix/rewinddir.c
+index f8f411e36af7b022..5b91982060c2a140 100644
+--- a/sysdeps/posix/rewinddir.c
++++ b/sysdeps/posix/rewinddir.c
+@@ -23,8 +23,7 @@
+ 
+ /* Rewind DIRP to the beginning of the directory.  */
+ void
+-rewinddir (dirp)
+-     DIR *dirp;
++rewinddir (DIR *dirp)
+ {
+ #if IS_IN (libc)
+   __libc_lock_lock (dirp->lock);
+diff --git a/sysdeps/posix/seekdir.c b/sysdeps/posix/seekdir.c
+index 88e34ee28ffa8273..691048137a15d5b4 100644
+--- a/sysdeps/posix/seekdir.c
++++ b/sysdeps/posix/seekdir.c
+@@ -24,9 +24,7 @@
+ /* Seek to position POS in DIRP.  */
+ /* XXX should be __seekdir ? */
+ void
+-seekdir (dirp, pos)
+-     DIR *dirp;
+-     long int pos;
++seekdir (DIR *dirp, long int pos)
+ {
+   __libc_lock_lock (dirp->lock);
+   (void) __lseek (dirp->fd, pos, SEEK_SET);
+diff --git a/sysdeps/posix/sigblock.c b/sysdeps/posix/sigblock.c
+index a5d01fe7456ede38..767bd491c4d04d63 100644
+--- a/sysdeps/posix/sigblock.c
++++ b/sysdeps/posix/sigblock.c
+@@ -22,8 +22,7 @@
+ 
+ /* Block signals in MASK, returning the old mask.  */
+ int
+-__sigblock (mask)
+-     int mask;
++__sigblock (int mask)
+ {
+   sigset_t set, oset;
+ 
+diff --git a/sysdeps/posix/sigignore.c b/sysdeps/posix/sigignore.c
+index 71e9d087fb5e74af..c0e848bec18912c6 100644
+--- a/sysdeps/posix/sigignore.c
++++ b/sysdeps/posix/sigignore.c
+@@ -25,8 +25,7 @@
+ 
+ 
+ int
+-sigignore (sig)
+-     int sig;
++sigignore (int sig)
+ {
+   struct sigaction act;
+ 
+diff --git a/sysdeps/posix/sigintr.c b/sysdeps/posix/sigintr.c
+index 86ae054d9dcbd828..5bafe610923b25d2 100644
+--- a/sysdeps/posix/sigintr.c
++++ b/sysdeps/posix/sigintr.c
+@@ -23,9 +23,7 @@
+    (causing them to fail with EINTR); if INTERRUPT is zero, make system
+    calls be restarted after signal SIG.  */
+ int
+-siginterrupt (sig, interrupt)
+-     int sig;
+-     int interrupt;
++siginterrupt (int sig, int interrupt)
+ {
+ #ifdef	SA_RESTART
+   extern sigset_t _sigintr attribute_hidden;	/* Defined in signal.c.  */
+diff --git a/sysdeps/posix/signal.c b/sysdeps/posix/signal.c
+index 33805be881729e72..6311cfcfa74749a7 100644
+--- a/sysdeps/posix/signal.c
++++ b/sysdeps/posix/signal.c
+@@ -27,9 +27,7 @@ sigset_t _sigintr attribute_hidden;		/* Set by siginterrupt.  */
+ /* Set the handler for the signal SIG to HANDLER,
+    returning the old handler, or SIG_ERR on error.  */
+ __sighandler_t
+-__bsd_signal (sig, handler)
+-     int sig;
+-     __sighandler_t handler;
++__bsd_signal (int sig, __sighandler_t handler)
+ {
+   struct sigaction act, oact;
+ 
+diff --git a/sysdeps/posix/sigset.c b/sysdeps/posix/sigset.c
+index a9c9e8174134828b..3b4b8049a6de9f2c 100644
+--- a/sysdeps/posix/sigset.c
++++ b/sysdeps/posix/sigset.c
+@@ -24,9 +24,7 @@
+ 
+ /* Set the disposition for SIG.  */
+ __sighandler_t
+-sigset (sig, disp)
+-     int sig;
+-     __sighandler_t disp;
++sigset (int sig, __sighandler_t disp)
+ {
+   struct sigaction act;
+   struct sigaction oact;
+diff --git a/sysdeps/posix/sigsuspend.c b/sysdeps/posix/sigsuspend.c
+index 6b84162525b571a3..63e7c08e48e8e73e 100644
+--- a/sysdeps/posix/sigsuspend.c
++++ b/sysdeps/posix/sigsuspend.c
+@@ -24,8 +24,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-__sigsuspend (set)
+-     const sigset_t *set;
++__sigsuspend (const sigset_t *set)
+ {
+   sigset_t oset;
+   int save;
+diff --git a/sysdeps/posix/sysconf.c b/sysdeps/posix/sysconf.c
+index 88aa151422dc56f9..4d74d57c8a65dc29 100644
+--- a/sysdeps/posix/sysconf.c
++++ b/sysdeps/posix/sysconf.c
+@@ -48,8 +48,7 @@ static long int __sysconf_check_spec (const char *spec);
+ 
+ /* Get the value of the system variable NAME.  */
+ long int
+-__sysconf (name)
+-     int name;
++__sysconf (int name)
+ {
+   switch (name)
+     {
+diff --git a/sysdeps/posix/sysv_signal.c b/sysdeps/posix/sysv_signal.c
+index f280696233042b09..a8fb2b157578e90a 100644
+--- a/sysdeps/posix/sysv_signal.c
++++ b/sysdeps/posix/sysv_signal.c
+@@ -34,9 +34,7 @@
+ /* Set the handler for the signal SIG to HANDLER,
+    returning the old handler, or SIG_ERR on error.  */
+ __sighandler_t
+-__sysv_signal (sig, handler)
+-     int sig;
+-     __sighandler_t handler;
++__sysv_signal (int sig, __sighandler_t handler)
+ {
+   struct sigaction act, oact;
+ 
+diff --git a/sysdeps/posix/time.c b/sysdeps/posix/time.c
+index e026a384df6fbd6d..39042030f20235b4 100644
+--- a/sysdeps/posix/time.c
++++ b/sysdeps/posix/time.c
+@@ -23,8 +23,7 @@
+ /* Return the current time as a `time_t' and also put it in *T if T is
+    not NULL.  Time is represented as seconds from Jan 1 00:00:00 1970.  */
+ time_t
+-time (t)
+-     time_t *t;
++time (time_t *t)
+ {
+   struct timeval tv;
+   time_t result;
+diff --git a/sysdeps/posix/ttyname.c b/sysdeps/posix/ttyname.c
+index 1fe985984591559f..16af52c5083bbd62 100644
+--- a/sysdeps/posix/ttyname.c
++++ b/sysdeps/posix/ttyname.c
+@@ -35,12 +35,7 @@ libc_freeres_ptr (static char *getttyname_name);
+ 
+ static char *
+ internal_function
+-getttyname (fd, mydev, myino, save, dostat)
+-     int fd;
+-     dev_t mydev;
+-     ino_t myino;
+-     int save;
+-     int *dostat;
++getttyname (int fd, dev_t mydev, ino_t myino, int save, int *dostat)
+ {
+   static const char dev[] = "/dev";
+   static size_t namelen;
+@@ -101,8 +96,7 @@ getttyname (fd, mydev, myino, save, dostat)
+ /* Return the pathname of the terminal FD is open on, or NULL on errors.
+    The returned storage is good only until the next call to this function.  */
+ char *
+-ttyname (fd)
+-     int fd;
++ttyname (int fd)
+ {
+   struct stat st;
+   int dostat = 0;
+diff --git a/sysdeps/posix/ttyname_r.c b/sysdeps/posix/ttyname_r.c
+index e8ef55fc19a3d3c8..bf8399d36d0e4541 100644
+--- a/sysdeps/posix/ttyname_r.c
++++ b/sysdeps/posix/ttyname_r.c
+@@ -101,10 +101,7 @@ getttyname_r (fd, buf, buflen, mydev, myino, save, dostat)
+ /* Store at most BUFLEN character of the pathname of the terminal FD is
+    open on in BUF.  Return 0 on success,  otherwise an error number.  */
+ int
+-__ttyname_r (fd, buf, buflen)
+-     int fd;
+-     char *buf;
+-     size_t buflen;
++__ttyname_r (int fd, char *buf, size_t buflen)
+ {
+   struct stat st;
+   int dostat = 0;
+diff --git a/sysdeps/posix/utime.c b/sysdeps/posix/utime.c
+index a750ecc290f6f678..a031fbe9da00f2be 100644
+--- a/sysdeps/posix/utime.c
++++ b/sysdeps/posix/utime.c
+@@ -26,9 +26,7 @@
+ /* Set the access and modification times of FILE to those given in TIMES.
+    If TIMES is NULL, set them to the current time.  */
+ int
+-utime (file, times)
+-     const char *file;
+-     const struct utimbuf *times;
++utime (const char *file, const struct utimbuf *times)
+ {
+   struct timeval timevals[2];
+   struct timeval *tvp;
+diff --git a/sysdeps/powerpc/fpu/s_isnan.c b/sysdeps/powerpc/fpu/s_isnan.c
+index 777d3518f6ec5afb..cd396eb7369ea1e4 100644
+--- a/sysdeps/powerpc/fpu/s_isnan.c
++++ b/sysdeps/powerpc/fpu/s_isnan.c
+@@ -36,8 +36,7 @@ hidden_proto (__isnanf)
+ 
+ 
+ int
+-__isnan (x)
+-     double x;
++__isnan (double x)
+ {
+   fenv_t savedstate;
+   int result;
+diff --git a/sysdeps/pthread/aio_read.c b/sysdeps/pthread/aio_read.c
+index d02eb7b855611492..7ffeb29abafb5257 100644
+--- a/sysdeps/pthread/aio_read.c
++++ b/sysdeps/pthread/aio_read.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ int
+-aio_read (aiocbp)
+-     struct aiocb *aiocbp;
++aio_read (struct aiocb *aiocbp)
+ {
+   return (__aio_enqueue_request ((aiocb_union *) aiocbp, LIO_READ) == NULL
+ 	  ? -1 : 0);
+diff --git a/sysdeps/pthread/aio_read64.c b/sysdeps/pthread/aio_read64.c
+index 2fcf39fb9156421c..d426a05c5a902eaa 100644
+--- a/sysdeps/pthread/aio_read64.c
++++ b/sysdeps/pthread/aio_read64.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ int
+-aio_read64 (aiocbp)
+-     struct aiocb64 *aiocbp;
++aio_read64 (struct aiocb64 *aiocbp)
+ {
+   return (__aio_enqueue_request ((aiocb_union *) aiocbp, LIO_READ64) == NULL
+ 	  ? -1 : 0);
+diff --git a/sysdeps/pthread/aio_write.c b/sysdeps/pthread/aio_write.c
+index 823e365c867ef251..0ad0fde8640016ed 100644
+--- a/sysdeps/pthread/aio_write.c
++++ b/sysdeps/pthread/aio_write.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ int
+-aio_write (aiocbp)
+-     struct aiocb *aiocbp;
++aio_write (struct aiocb *aiocbp)
+ {
+   return (__aio_enqueue_request ((aiocb_union *) aiocbp, LIO_WRITE) == NULL
+ 	  ? -1 : 0);
+diff --git a/sysdeps/pthread/aio_write64.c b/sysdeps/pthread/aio_write64.c
+index 0cec64d292d490b4..1d3905a4b6437ebe 100644
+--- a/sysdeps/pthread/aio_write64.c
++++ b/sysdeps/pthread/aio_write64.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ int
+-aio_write64 (aiocbp)
+-     struct aiocb64 *aiocbp;
++aio_write64 (struct aiocb64 *aiocbp)
+ {
+   return (__aio_enqueue_request ((aiocb_union *) aiocbp, LIO_WRITE64) == NULL
+ 	  ? -1 : 0);
+diff --git a/sysdeps/s390/ffs.c b/sysdeps/s390/ffs.c
+index 1e22f635939284c0..a01c5e3060badf81 100644
+--- a/sysdeps/s390/ffs.c
++++ b/sysdeps/s390/ffs.c
+@@ -29,8 +29,7 @@
+    differs in spirit from the above ffz (man ffs).  */
+ 
+ int
+-__ffs (x)
+-     int x;
++__ffs (int x)
+ {
+ 	int r;
+ 
+diff --git a/sysdeps/sparc/sparc32/e_sqrt.c b/sysdeps/sparc/sparc32/e_sqrt.c
+index 30165192c65854c6..f47e9601f00d0d2e 100644
+--- a/sysdeps/sparc/sparc32/e_sqrt.c
++++ b/sysdeps/sparc/sparc32/e_sqrt.c
+@@ -24,8 +24,7 @@
+ 
+ /* Return the square root of X.  */
+ double
+-__ieee754_sqrt (x)
+-     double x;
++__ieee754_sqrt (double x)
+ {
+   register double result;
+   asm ("fsqrtd %1, %0" : "=f" (result) : "f" (x));
+diff --git a/sysdeps/tile/wordcopy.c b/sysdeps/tile/wordcopy.c
+index f978d8fdcb14e73a..d939eaa09d0075a8 100644
+--- a/sysdeps/tile/wordcopy.c
++++ b/sysdeps/tile/wordcopy.c
+@@ -42,10 +42,7 @@
+    Both SRCP and DSTP should be aligned for memory operations on `op_t's.  */
+ 
+ void
+-_wordcopy_fwd_aligned (dstp, srcp, len)
+-     long int dstp;
+-     long int srcp;
+-     size_t len;
++_wordcopy_fwd_aligned (long int dstp, long int srcp, size_t len)
+ {
+   op_t a0, a1;
+ 
+@@ -156,10 +153,7 @@ _wordcopy_fwd_aligned (dstp, srcp, len)
+    *not* be aligned.  */
+ 
+ void
+-_wordcopy_fwd_dest_aligned (dstp, srcp, len)
+-     long int dstp;
+-     long int srcp;
+-     size_t len;
++_wordcopy_fwd_dest_aligned (long int dstp, long int srcp, size_t len)
+ {
+   void * srci;
+   op_t a0, a1, a2, a3;
+@@ -246,10 +240,7 @@ _wordcopy_fwd_dest_aligned (dstp, srcp, len)
+    operations on `op_t's.  */
+ 
+ void
+-_wordcopy_bwd_aligned (dstp, srcp, len)
+-     long int dstp;
+-     long int srcp;
+-     size_t len;
++_wordcopy_bwd_aligned (long int dstp, long int srcp, size_t len)
+ {
+   op_t a0, a1;
+   long int srcp1;
+@@ -357,10 +348,7 @@ _wordcopy_bwd_aligned (dstp, srcp, len)
+    operations on `op_t', but SRCP must *not* be aligned.  */
+ 
+ void
+-_wordcopy_bwd_dest_aligned (dstp, srcp, len)
+-     long int dstp;
+-     long int srcp;
+-     size_t len;
++_wordcopy_bwd_dest_aligned (long int dstp, long int srcp, size_t len)
+ {
+   void * srci;
+   op_t a0, a1, a2, a3;
+diff --git a/sysdeps/unix/bsd/ftime.c b/sysdeps/unix/bsd/ftime.c
+index 7c6dd29390dccff6..c7dda3fea71e96a9 100644
+--- a/sysdeps/unix/bsd/ftime.c
++++ b/sysdeps/unix/bsd/ftime.c
+@@ -19,8 +19,7 @@
+ #include <sys/time.h>
+ 
+ int
+-ftime (timebuf)
+-     struct timeb *timebuf;
++ftime (struct timeb *timebuf)
+ {
+   struct timeval tv;
+   struct timezone tz;
+diff --git a/sysdeps/unix/bsd/gtty.c b/sysdeps/unix/bsd/gtty.c
+index 4e1b7a2153e69578..8fd6e8a0e2742713 100644
+--- a/sysdeps/unix/bsd/gtty.c
++++ b/sysdeps/unix/bsd/gtty.c
+@@ -20,9 +20,7 @@
+ 
+ /* Fill in *PARAMS with terminal parameters associated with FD.  */
+ int
+-gtty (fd, params)
+-     int fd;
+-     struct sgttyb *params;
++gtty (int fd, struct sgttyb *params)
+ {
+   return ioctl (fd, TIOCGETP, (void *) params);
+ }
+diff --git a/sysdeps/unix/bsd/stty.c b/sysdeps/unix/bsd/stty.c
+index 1d630dc0b9ad365d..a13876028bf5d953 100644
+--- a/sysdeps/unix/bsd/stty.c
++++ b/sysdeps/unix/bsd/stty.c
+@@ -20,9 +20,7 @@
+ 
+ /* Set the terminal parameters associated with FD to *PARAMS.  */
+ int
+-stty (fd, params)
+-     int fd;
+-     const struct sgttyb *params;
++stty (int fd, const struct sgttyb *params)
+ {
+   return ioctl (fd, TIOCSETP, (void *) params);
+ }
+diff --git a/sysdeps/unix/bsd/tcflow.c b/sysdeps/unix/bsd/tcflow.c
+index dff63a5f28582165..4461395baa46836b 100644
+--- a/sysdeps/unix/bsd/tcflow.c
++++ b/sysdeps/unix/bsd/tcflow.c
+@@ -24,9 +24,7 @@
+ 
+ /* Suspend or restart transmission on FD.  */
+ int
+-tcflow (fd, action)
+-     int fd;
+-     int action;
++tcflow (int fd, int action)
+ {
+   switch (action)
+     {
+diff --git a/sysdeps/unix/bsd/tcflush.c b/sysdeps/unix/bsd/tcflush.c
+index 15d86e00541872fc..c87201222017d3d8 100644
+--- a/sysdeps/unix/bsd/tcflush.c
++++ b/sysdeps/unix/bsd/tcflush.c
+@@ -24,9 +24,7 @@
+ 
+ /* Flush pending data on FD.  */
+ int
+-tcflush (fd, queue_selector)
+-     int fd;
+-     int queue_selector;
++tcflush (int fd, int queue_selector)
+ {
+   int arg;
+ 
+diff --git a/sysdeps/unix/bsd/tcgetattr.c b/sysdeps/unix/bsd/tcgetattr.c
+index 140262f17d82fbdf..93b94e57d5d0752b 100644
+--- a/sysdeps/unix/bsd/tcgetattr.c
++++ b/sysdeps/unix/bsd/tcgetattr.c
+@@ -30,9 +30,7 @@
+ 
+ /* Put the state of FD into *TERMIOS_P.  */
+ int
+-__tcgetattr (fd, termios_p)
+-     int fd;
+-     struct termios *termios_p;
++__tcgetattr (int fd, struct termios *termios_p)
+ {
+   return __ioctl (fd, TIOCGETA, termios_p);
+ }
+diff --git a/sysdeps/unix/bsd/tcgetpgrp.c b/sysdeps/unix/bsd/tcgetpgrp.c
+index 6f675a89a86f62ba..3bfb74082963493e 100644
+--- a/sysdeps/unix/bsd/tcgetpgrp.c
++++ b/sysdeps/unix/bsd/tcgetpgrp.c
+@@ -22,8 +22,7 @@
+ 
+ /* Return the foreground process group ID of FD.  */
+ pid_t
+-tcgetpgrp (fd)
+-     int fd;
++tcgetpgrp (int fd)
+ {
+   int pgrp;
+ 
+diff --git a/sysdeps/unix/bsd/tcsendbrk.c b/sysdeps/unix/bsd/tcsendbrk.c
+index af6a71b34de0165c..61216f7442dfe468 100644
+--- a/sysdeps/unix/bsd/tcsendbrk.c
++++ b/sysdeps/unix/bsd/tcsendbrk.c
+@@ -27,9 +27,7 @@
+ 
+ /* Send zero bits on FD.  */
+ int
+-tcsendbreak (fd, duration)
+-     int fd;
+-     int duration;
++tcsendbreak (int fd, int duration)
+ {
+   struct timeval delay;
+ 
+diff --git a/sysdeps/unix/bsd/tcsetattr.c b/sysdeps/unix/bsd/tcsetattr.c
+index 8a5f71e713a2d17c..89b315a2e77aa314 100644
+--- a/sysdeps/unix/bsd/tcsetattr.c
++++ b/sysdeps/unix/bsd/tcsetattr.c
+@@ -32,10 +32,7 @@
+ 
+ /* Set the state of FD to *TERMIOS_P.  */
+ int
+-tcsetattr (fd, optional_actions, termios_p)
+-     int fd;
+-     int optional_actions;
+-     const struct termios *termios_p;
++tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
+ {
+   struct termios myt;
+ 
+diff --git a/sysdeps/unix/bsd/tcsetpgrp.c b/sysdeps/unix/bsd/tcsetpgrp.c
+index 25ffb7fc35d5fc70..3d3347ee7cf1e9ad 100644
+--- a/sysdeps/unix/bsd/tcsetpgrp.c
++++ b/sysdeps/unix/bsd/tcsetpgrp.c
+@@ -22,9 +22,7 @@
+ 
+ /* Set the foreground process group ID of FD set PGRP_ID.  */
+ int
+-tcsetpgrp (fd, pgrp_id)
+-     int fd;
+-     pid_t pgrp_id;
++tcsetpgrp (int fd, pid_t pgrp_id)
+ {
+   return __ioctl (fd, TIOCSPGRP, &pgrp_id);
+ }
+diff --git a/sysdeps/unix/bsd/ualarm.c b/sysdeps/unix/bsd/ualarm.c
+index 9505d214819d68d5..c2f899baa5c05b05 100644
+--- a/sysdeps/unix/bsd/ualarm.c
++++ b/sysdeps/unix/bsd/ualarm.c
+@@ -24,9 +24,7 @@
+ 
+    Returns the number of microseconds remaining before the alarm.  */
+ useconds_t
+-ualarm (value, interval)
+-     useconds_t value;
+-     useconds_t interval;
++ualarm (useconds_t value, useconds_t interval)
+ {
+   struct itimerval timer, otimer;
+ 
+diff --git a/sysdeps/unix/bsd/wait3.c b/sysdeps/unix/bsd/wait3.c
+index d3056c1fd700b3df..97170d15ad34a4d9 100644
+--- a/sysdeps/unix/bsd/wait3.c
++++ b/sysdeps/unix/bsd/wait3.c
+@@ -25,10 +25,7 @@
+    there.  If the WUNTRACED bit is set in OPTIONS, return status for stopped
+    children; otherwise don't.  */
+ pid_t
+-__wait3 (stat_loc, options, usage)
+-     __WAIT_STATUS stat_loc;
+-     int options;
+-     struct rusage *usage;
++__wait3 (__WAIT_STATUS stat_loc, int options, struct rusage *usage)
+ {
+   return __wait4 (WAIT_ANY, stat_loc, options, usage);
+ }
+diff --git a/sysdeps/unix/getlogin_r.c b/sysdeps/unix/getlogin_r.c
+index 84c019fe6af28150..1957db10b51b3721 100644
+--- a/sysdeps/unix/getlogin_r.c
++++ b/sysdeps/unix/getlogin_r.c
+@@ -34,9 +34,7 @@
+ STATIC
+ #endif
+ int
+-getlogin_r (name, name_len)
+-     char *name;
+-     size_t name_len;
++getlogin_r (char *name, size_t name_len)
+ {
+   char tty_pathname[2 + 2 * NAME_MAX];
+   char *real_tty_path = tty_pathname;
+diff --git a/sysdeps/unix/sockatmark.c b/sysdeps/unix/sockatmark.c
+index 94ae1384462fecdb..30f76c2d7a504cc9 100644
+--- a/sysdeps/unix/sockatmark.c
++++ b/sysdeps/unix/sockatmark.c
+@@ -20,8 +20,7 @@
+ 
+ /* Determine wheter socket is at a out-of-band mark.  */
+ int
+-sockatmark (fd)
+-     int fd;
++sockatmark (int fd)
+ {
+   int answ;
+ 
+diff --git a/sysdeps/unix/stime.c b/sysdeps/unix/stime.c
+index ca011c94d820f88f..77895a7cea558010 100644
+--- a/sysdeps/unix/stime.c
++++ b/sysdeps/unix/stime.c
+@@ -23,8 +23,7 @@
+ /* Set the system clock to *WHEN.  */
+ 
+ int
+-stime (when)
+-     const time_t *when;
++stime (const time_t *when)
+ {
+   struct timeval tv;
+ 
+diff --git a/sysdeps/unix/sysv/linux/_exit.c b/sysdeps/unix/sysv/linux/_exit.c
+index 18c4fce07d10f5cb..44773888ae6d702a 100644
+--- a/sysdeps/unix/sysv/linux/_exit.c
++++ b/sysdeps/unix/sysv/linux/_exit.c
+@@ -23,8 +23,7 @@
+ 
+ 
+ void
+-_exit (status)
+-     int status;
++_exit (int status)
+ {
+   while (1)
+     {
+diff --git a/sysdeps/unix/sysv/linux/aio_sigqueue.c b/sysdeps/unix/sysv/linux/aio_sigqueue.c
+index 9ad149fe32fb214b..2ae83f1c2e6f6673 100644
+--- a/sysdeps/unix/sysv/linux/aio_sigqueue.c
++++ b/sysdeps/unix/sysv/linux/aio_sigqueue.c
+@@ -31,10 +31,8 @@
+ 
+ /* Return any pending signal or wait for one for the given time.  */
+ int
+-__aio_sigqueue (sig, val, caller_pid)
+-     int sig;
+-     const union sigval val;
+-     pid_t caller_pid;
++internal_function
++__aio_sigqueue (int sig, const union sigval val, pid_t caller_pid)
+ {
+   siginfo_t info;
+ 
+diff --git a/sysdeps/unix/sysv/linux/arm/sigaction.c b/sysdeps/unix/sysv/linux/arm/sigaction.c
+index 02b47e79e2139e0e..5214b34289a74545 100644
+--- a/sysdeps/unix/sysv/linux/arm/sigaction.c
++++ b/sysdeps/unix/sysv/linux/arm/sigaction.c
+@@ -55,10 +55,7 @@ extern void __default_rt_sa_restorer_v2(void);
+ /* If ACT is not NULL, change the action for SIG to *ACT.
+    If OACT is not NULL, put the old action for SIG in *OACT.  */
+ int
+-__libc_sigaction (sig, act, oact)
+-     int sig;
+-     const struct sigaction *act;
+-     struct sigaction *oact;
++__libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/faccessat.c b/sysdeps/unix/sysv/linux/faccessat.c
+index b015d55cab193ccc..abacaed1eb4e00da 100644
+--- a/sysdeps/unix/sysv/linux/faccessat.c
++++ b/sysdeps/unix/sysv/linux/faccessat.c
+@@ -29,11 +29,7 @@
+ 
+ 
+ int
+-faccessat (fd, file, mode, flag)
+-     int fd;
+-     const char *file;
+-     int mode;
+-     int flag;
++faccessat (int fd, const char *file, int mode, int flag)
+ {
+   if (flag & ~(AT_SYMLINK_NOFOLLOW | AT_EACCESS))
+     {
+diff --git a/sysdeps/unix/sysv/linux/fchmodat.c b/sysdeps/unix/sysv/linux/fchmodat.c
+index b9a033b0736ce129..fc743fdfe116cf21 100644
+--- a/sysdeps/unix/sysv/linux/fchmodat.c
++++ b/sysdeps/unix/sysv/linux/fchmodat.c
+@@ -28,11 +28,7 @@
+ #include <sysdep.h>
+ 
+ int
+-fchmodat (fd, file, mode, flag)
+-     int fd;
+-     const char *file;
+-     mode_t mode;
+-     int flag;
++fchmodat (int fd, const char *file, mode_t mode, int flag)
+ {
+   if (flag & ~AT_SYMLINK_NOFOLLOW)
+     {
+diff --git a/sysdeps/unix/sysv/linux/fpathconf.c b/sysdeps/unix/sysv/linux/fpathconf.c
+index 1e840edfa687d667..378a42c3e0e8dd0d 100644
+--- a/sysdeps/unix/sysv/linux/fpathconf.c
++++ b/sysdeps/unix/sysv/linux/fpathconf.c
+@@ -29,9 +29,7 @@ static long int posix_fpathconf (int fd, int name);
+ 
+ /* Get file-specific information about descriptor FD.  */
+ long int
+-__fpathconf (fd, name)
+-     int fd;
+-     int name;
++__fpathconf (int fd, int name)
+ {
+   struct statfs fsbuf;
+ 
+diff --git a/sysdeps/unix/sysv/linux/gai_sigqueue.c b/sysdeps/unix/sysv/linux/gai_sigqueue.c
+index 3896df0cd345bc8b..4da7fbbef40f03e8 100644
+--- a/sysdeps/unix/sysv/linux/gai_sigqueue.c
++++ b/sysdeps/unix/sysv/linux/gai_sigqueue.c
+@@ -30,10 +30,8 @@
+ 
+ /* Return any pending signal or wait for one for the given time.  */
+ int
+-__gai_sigqueue (sig, val, caller_pid)
+-     int sig;
+-     const union sigval val;
+-     pid_t caller_pid;
++internal_function
++__gai_sigqueue (int sig, const union sigval val, pid_t caller_pid)
+ {
+   siginfo_t info;
+ 
+diff --git a/sysdeps/unix/sysv/linux/gethostid.c b/sysdeps/unix/sysv/linux/gethostid.c
+index c9f4b4cbcbad6bdb..64100abcc7ece115 100644
+--- a/sysdeps/unix/sysv/linux/gethostid.c
++++ b/sysdeps/unix/sysv/linux/gethostid.c
+@@ -27,8 +27,7 @@
+ 
+ #ifdef SET_PROCEDURE
+ int
+-sethostid (id)
+-     long int id;
++sethostid (long int id)
+ {
+   int fd;
+   ssize_t written;
+diff --git a/sysdeps/unix/sysv/linux/getlogin_r.c b/sysdeps/unix/sysv/linux/getlogin_r.c
+index 187a7a1dcf197a79..157f8a661a5d24ad 100644
+--- a/sysdeps/unix/sysv/linux/getlogin_r.c
++++ b/sysdeps/unix/sysv/linux/getlogin_r.c
+@@ -32,9 +32,7 @@ static int getlogin_r_fd0 (char *name, size_t namesize);
+ 
+ int
+ attribute_hidden
+-__getlogin_r_loginuid (name, namesize)
+-     char *name;
+-     size_t namesize;
++__getlogin_r_loginuid (char *name, size_t namesize)
+ {
+   int fd = open_not_cancel_2 ("/proc/self/loginuid", O_RDONLY);
+   if (fd == -1)
+@@ -109,9 +107,7 @@ __getlogin_r_loginuid (name, namesize)
+    code.  Otherwise return 0.  */
+ 
+ int
+-getlogin_r (name, namesize)
+-     char *name;
+-     size_t namesize;
++getlogin_r (char *name, size_t namesize)
+ {
+   int res = __getlogin_r_loginuid (name, namesize);
+   if (res >= 0)
+diff --git a/sysdeps/unix/sysv/linux/getpt.c b/sysdeps/unix/sysv/linux/getpt.c
+index 30b14067e8811b08..4b6be2e9520e2ef9 100644
+--- a/sysdeps/unix/sysv/linux/getpt.c
++++ b/sysdeps/unix/sysv/linux/getpt.c
+@@ -35,8 +35,7 @@ int __bsd_getpt (void);
+ 
+ /* Open a master pseudo terminal and return its file descriptor.  */
+ int
+-__posix_openpt (oflag)
+-     int oflag;
++__posix_openpt (int oflag)
+ {
+   static int have_no_dev_ptmx;
+   int fd;
+diff --git a/sysdeps/unix/sysv/linux/i386/getmsg.c b/sysdeps/unix/sysv/linux/i386/getmsg.c
+index 12881b25afd546fe..c9133c89c7053705 100644
+--- a/sysdeps/unix/sysv/linux/i386/getmsg.c
++++ b/sysdeps/unix/sysv/linux/i386/getmsg.c
+@@ -24,11 +24,7 @@
+ 
+ #ifdef __NR_getpmsg
+ int
+-getmsg (fildes, ctlptr, dataptr, flagsp)
+-     int fildes;
+-     struct strbuf *ctlptr;
+-     struct strbuf *dataptr;
+-     int *flagsp;
++getmsg (int fildes, struct strbuf *ctlptr, struct strbuf *dataptr, int *flagsp)
+ {
+   return INLINE_SYSCALL (getpmsg, 5, fildes, ctlptr, dataptr, NULL, flagsp);
+ }
+diff --git a/sysdeps/unix/sysv/linux/i386/setegid.c b/sysdeps/unix/sysv/linux/i386/setegid.c
+index 20170e327e2a631d..0d663fba929525e9 100644
+--- a/sysdeps/unix/sysv/linux/i386/setegid.c
++++ b/sysdeps/unix/sysv/linux/i386/setegid.c
+@@ -21,8 +21,7 @@
+ 
+ 
+ int
+-setegid (gid)
+-     gid_t gid;
++setegid (gid_t gid)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/ia64/sigaction.c b/sysdeps/unix/sysv/linux/ia64/sigaction.c
+index 403b6d8fd0c9b92f..cce54adabc1aa386 100644
+--- a/sysdeps/unix/sysv/linux/ia64/sigaction.c
++++ b/sysdeps/unix/sysv/linux/ia64/sigaction.c
+@@ -34,10 +34,7 @@
+ /* If ACT is not NULL, change the action for SIG to *ACT.
+    If OACT is not NULL, put the old action for SIG in *OACT.  */
+ int
+-__libc_sigaction (sig, act, oact)
+-     int sig;
+-     const struct sigaction *act;
+-     struct sigaction *oact;
++__libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/ia64/sigpending.c b/sysdeps/unix/sysv/linux/ia64/sigpending.c
+index c56147c97802108b..a281fe1bb5dbc9e9 100644
+--- a/sysdeps/unix/sysv/linux/ia64/sigpending.c
++++ b/sysdeps/unix/sysv/linux/ia64/sigpending.c
+@@ -28,8 +28,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-sigpending (set)
+-     sigset_t *set;
++sigpending (sigset_t *set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/ia64/sigprocmask.c b/sysdeps/unix/sysv/linux/ia64/sigprocmask.c
+index 97fd364073bfd4f4..7465c9f61bc1ec32 100644
+--- a/sysdeps/unix/sysv/linux/ia64/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/ia64/sigprocmask.c
+@@ -29,10 +29,7 @@
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+-__sigprocmask (how, set, oset)
+-     int how;
+-     const sigset_t *set;
+-     sigset_t *oset;
++__sigprocmask (int how, const sigset_t *set, sigset_t *oset)
+ {
+ 
+   /* XXX The size argument hopefully will have to be changed to the
+diff --git a/sysdeps/unix/sysv/linux/mips/sigaction.c b/sysdeps/unix/sysv/linux/mips/sigaction.c
+index b6e6811a271344a3..76eb278349808a32 100644
+--- a/sysdeps/unix/sysv/linux/mips/sigaction.c
++++ b/sysdeps/unix/sysv/linux/mips/sigaction.c
+@@ -45,10 +45,7 @@ static void restore (void) asm ("__restore");
+ /* If ACT is not NULL, change the action for SIG to *ACT.
+    If OACT is not NULL, put the old action for SIG in *OACT.  */
+ int
+-__libc_sigaction (sig, act, oact)
+-     int sig;
+-     const struct sigaction *act;
+-     struct sigaction *oact;
++__libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/msgget.c b/sysdeps/unix/sysv/linux/msgget.c
+index 6f32b4579bba8e06..183273e4f0f1af42 100644
+--- a/sysdeps/unix/sysv/linux/msgget.c
++++ b/sysdeps/unix/sysv/linux/msgget.c
+@@ -28,9 +28,7 @@
+    parameter describes how to proceed with clashing of key values.  */
+ 
+ int
+-msgget (key, msgflg)
+-     key_t key;
+-     int msgflg;
++msgget (key_t key, int msgflg)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_msgget, key, msgflg, 0, NULL);
+ }
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/ftruncate64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/ftruncate64.c
+index 494d898b2f07530a..d8d0214f9a1332a0 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/ftruncate64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/ftruncate64.c
+@@ -24,9 +24,7 @@
+ 
+ /* Truncate the file referenced by FD to LENGTH bytes.  */
+ int
+-__ftruncate64 (fd, length)
+-     int fd;
+-     off64_t length;
++__ftruncate64 (int fd, off64_t length)
+ {
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+   int result = INLINE_SYSCALL (ftruncate64, 4, fd, 0,
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
+index 6f416599e9ebdd1d..c97410f4076fa835 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
+@@ -24,9 +24,7 @@
+ 
+ /* Truncate the file referenced by FD to LENGTH bytes.  */
+ int
+-truncate64 (path, length)
+-     const char *path;
+-     off64_t length;
++truncate64 (const char *path, off64_t length)
+ {
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+   int result = INLINE_SYSCALL (truncate64, 4, path, 0,
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-64/sigaction.c b/sysdeps/unix/sysv/linux/s390/s390-64/sigaction.c
+index 58004063e4e044c3..ff4ae7d00dc1a137 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/sigaction.c
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/sigaction.c
+@@ -32,10 +32,7 @@
+ /* If ACT is not NULL, change the action for SIG to *ACT.
+    If OACT is not NULL, put the old action for SIG in *OACT.  */
+ int
+-__libc_sigaction (sig, act, oact)
+-     int sig;
+-     const struct sigaction *act;
+-     struct sigaction *oact;
++__libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-64/sigpending.c b/sysdeps/unix/sysv/linux/s390/s390-64/sigpending.c
+index e3bae5492d61923f..0e1a7852e41f1214 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/sigpending.c
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/sigpending.c
+@@ -28,8 +28,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-sigpending (set)
+-     sigset_t *set;
++sigpending (sigset_t *set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-64/sigprocmask.c b/sysdeps/unix/sysv/linux/s390/s390-64/sigprocmask.c
+index c96ee352323ae791..af30e9401eac5b92 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/sigprocmask.c
+@@ -27,10 +27,7 @@
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+-__sigprocmask (how, set, oset)
+-     int how;
+-     const sigset_t *set;
+-     sigset_t *oset;
++__sigprocmask (int how, const sigset_t *set, sigset_t *oset)
+ {
+ 
+   /* XXX The size argument hopefully will have to be changed to the
+diff --git a/sysdeps/unix/sysv/linux/semget.c b/sysdeps/unix/sysv/linux/semget.c
+index 8b69e64e136ad582..30c0e00b7d5f9cd2 100644
+--- a/sysdeps/unix/sysv/linux/semget.c
++++ b/sysdeps/unix/sysv/linux/semget.c
+@@ -28,10 +28,7 @@
+    KEY.  */
+ 
+ int
+-semget (key, nsems, semflg)
+-     key_t key;
+-     int nsems;
+-     int semflg;
++semget (key_t key, int nsems, int semflg)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semget, key, nsems, semflg, NULL);
+ }
+diff --git a/sysdeps/unix/sysv/linux/semop.c b/sysdeps/unix/sysv/linux/semop.c
+index 4cd6891976858cc2..9dd3519bb3a33918 100644
+--- a/sysdeps/unix/sysv/linux/semop.c
++++ b/sysdeps/unix/sysv/linux/semop.c
+@@ -26,10 +26,7 @@
+ /* Perform user-defined atomical operation of array of semaphores.  */
+ 
+ int
+-semop (semid, sops, nsops)
+-     int semid;
+-     struct sembuf *sops;
+-     size_t nsops;
++semop (int semid, struct sembuf *sops, size_t nsops)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_semop, semid, (int) nsops, 0, sops);
+ }
+diff --git a/sysdeps/unix/sysv/linux/setrlimit64.c b/sysdeps/unix/sysv/linux/setrlimit64.c
+index 5ab8068e50f59b4b..44aa2f452f8bc0d1 100644
+--- a/sysdeps/unix/sysv/linux/setrlimit64.c
++++ b/sysdeps/unix/sysv/linux/setrlimit64.c
+@@ -25,9 +25,7 @@
+    Only the super-user can increase hard limits.
+    Return 0 if successful, -1 if not (and sets errno).  */
+ int
+-setrlimit64 (resource, rlimits)
+-     enum __rlimit_resource resource;
+-     const struct rlimit64 *rlimits;
++setrlimit64 (enum __rlimit_resource resource, const struct rlimit64 *rlimits)
+ {
+ #ifdef __ASSUME_PRLIMIT64
+   return INLINE_SYSCALL (prlimit64, 4, 0, resource, rlimits, NULL);
+diff --git a/sysdeps/unix/sysv/linux/shmat.c b/sysdeps/unix/sysv/linux/shmat.c
+index 401f00b7c01a6a14..02ed357ffa1cbd12 100644
+--- a/sysdeps/unix/sysv/linux/shmat.c
++++ b/sysdeps/unix/sysv/linux/shmat.c
+@@ -29,10 +29,7 @@
+    and where the segment is attached.  */
+ 
+ void *
+-shmat (shmid, shmaddr, shmflg)
+-     int shmid;
+-     const void *shmaddr;
+-     int shmflg;
++shmat (int shmid, const void *shmaddr, int shmflg)
+ {
+   INTERNAL_SYSCALL_DECL(err);
+   unsigned long resultvar;
+diff --git a/sysdeps/unix/sysv/linux/shmdt.c b/sysdeps/unix/sysv/linux/shmdt.c
+index c7fd62d3c1c82ffb..fd503c5054133cb5 100644
+--- a/sysdeps/unix/sysv/linux/shmdt.c
++++ b/sysdeps/unix/sysv/linux/shmdt.c
+@@ -27,8 +27,7 @@
+    from the caller's data segment.  */
+ 
+ int
+-shmdt (shmaddr)
+-     const void *shmaddr;
++shmdt (const void *shmaddr)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_shmdt, 0, 0, 0, (void *) shmaddr);
+ }
+diff --git a/sysdeps/unix/sysv/linux/shmget.c b/sysdeps/unix/sysv/linux/shmget.c
+index 60d448a3bca43508..244321f35da55f95 100644
+--- a/sysdeps/unix/sysv/linux/shmget.c
++++ b/sysdeps/unix/sysv/linux/shmget.c
+@@ -28,10 +28,7 @@
+    which is associated with KEY.  */
+ 
+ int
+-shmget (key, size, shmflg)
+-     key_t key;
+-     size_t size;
+-     int shmflg;
++shmget (key_t key, size_t size, int shmflg)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_shmget, key, size, shmflg, NULL);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sigaction.c b/sysdeps/unix/sysv/linux/sigaction.c
+index 0eee8e6b0322399a..37bf4e85f892be81 100644
+--- a/sysdeps/unix/sysv/linux/sigaction.c
++++ b/sysdeps/unix/sysv/linux/sigaction.c
+@@ -33,10 +33,7 @@
+ /* If ACT is not NULL, change the action for SIG to *ACT.
+    If OACT is not NULL, put the old action for SIG in *OACT.  */
+ int
+-__libc_sigaction (sig, act, oact)
+-     int sig;
+-     const struct sigaction *act;
+-     struct sigaction *oact;
++__libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+ {
+   int result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sigpending.c b/sysdeps/unix/sysv/linux/sigpending.c
+index bd6126143923ab8e..312e71f603a50d59 100644
+--- a/sysdeps/unix/sysv/linux/sigpending.c
++++ b/sysdeps/unix/sysv/linux/sigpending.c
+@@ -28,8 +28,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-sigpending (set)
+-     sigset_t *set;
++sigpending (sigset_t *set)
+ {
+   return INLINE_SYSCALL (rt_sigpending, 2, set, _NSIG / 8);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sigprocmask.c b/sysdeps/unix/sysv/linux/sigprocmask.c
+index 8d69613049c9629c..4b171201b75a747e 100644
+--- a/sysdeps/unix/sysv/linux/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/sigprocmask.c
+@@ -28,10 +28,7 @@
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+-__sigprocmask (how, set, oset)
+-     int how;
+-     const sigset_t *set;
+-     sigset_t *oset;
++__sigprocmask (int how, const sigset_t *set, sigset_t *oset)
+ {
+ #ifdef SIGCANCEL
+   sigset_t local_newmask;
+diff --git a/sysdeps/unix/sysv/linux/sigqueue.c b/sysdeps/unix/sysv/linux/sigqueue.c
+index e4470d4ca660f9b8..703e60b28ae54321 100644
+--- a/sysdeps/unix/sysv/linux/sigqueue.c
++++ b/sysdeps/unix/sysv/linux/sigqueue.c
+@@ -26,10 +26,7 @@
+ #ifdef __NR_rt_sigqueueinfo
+ /* Return any pending signal or wait for one for the given time.  */
+ int
+-__sigqueue (pid, sig, val)
+-     pid_t pid;
+-     int sig;
+-     const union sigval val;
++__sigqueue (pid_t pid, int sig, const union sigval val)
+ {
+   siginfo_t info;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sigstack.c b/sysdeps/unix/sysv/linux/sigstack.c
+index 81e752bf4cbbfa35..13cb3552244a2879 100644
+--- a/sysdeps/unix/sysv/linux/sigstack.c
++++ b/sysdeps/unix/sysv/linux/sigstack.c
+@@ -24,9 +24,7 @@
+ 
+ #ifdef __NR_sigaltstack
+ int
+-sigstack (ss, oss)
+-     struct sigstack *ss;
+-     struct sigstack *oss;
++sigstack (struct sigstack *ss, struct sigstack *oss)
+ {
+   stack_t sas;
+   stack_t *sasp = NULL;
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c b/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c
+index 7548435ca29ae294..06a0d93ec1821173 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/sigpending.c
+@@ -25,8 +25,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-sigpending (set)
+-     sigset_t *set;
++sigpending (sigset_t *set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c b/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
+index 60f95b4f554d7966..2e8d3bed5a0a299e 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/sigprocmask.c
+@@ -24,10 +24,7 @@
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+-__sigprocmask (how, set, oset)
+-     int how;
+-     const sigset_t *set;
+-     sigset_t *oset;
++__sigprocmask (int how, const sigset_t *set, sigset_t *oset)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/speed.c b/sysdeps/unix/sysv/linux/speed.c
+index e41a9c0399c5c581..7be18dc3f7093a4c 100644
+--- a/sysdeps/unix/sysv/linux/speed.c
++++ b/sysdeps/unix/sysv/linux/speed.c
+@@ -35,8 +35,7 @@
+ 
+ /* Return the output baud rate stored in *TERMIOS_P.  */
+ speed_t
+-cfgetospeed (termios_p)
+-     const struct termios *termios_p;
++cfgetospeed (const struct termios *termios_p)
+ {
+   return termios_p->c_cflag & (CBAUD | CBAUDEX);
+ }
+@@ -46,8 +45,7 @@ cfgetospeed (termios_p)
+    speed, the numerical 0 is a special case for the input baud rate. It
+    should set the input baud rate to the output baud rate. */
+ speed_t
+-cfgetispeed (termios_p)
+-     const struct termios *termios_p;
++cfgetispeed (const struct termios *termios_p)
+ {
+   return ((termios_p->c_iflag & IBAUD0)
+ 	  ? 0 : termios_p->c_cflag & (CBAUD | CBAUDEX));
+@@ -55,9 +53,7 @@ cfgetispeed (termios_p)
+ 
+ /* Set the output baud rate stored in *TERMIOS_P to SPEED.  */
+ int
+-cfsetospeed  (termios_p, speed)
+-     struct termios *termios_p;
+-     speed_t speed;
++cfsetospeed (struct termios *termios_p, speed_t speed)
+ {
+   if ((speed & ~CBAUD) != 0
+       && (speed < B57600 || speed > __MAX_BAUD))
+@@ -82,9 +78,7 @@ libc_hidden_def (cfsetospeed)
+    speed, the numerical 0 is a special case for the input baud rate.  It
+    should set the input baud rate to the output baud rate.  */
+ int
+-cfsetispeed (termios_p, speed)
+-     struct termios *termios_p;
+-     speed_t speed;
++cfsetispeed (struct termios *termios_p, speed_t speed)
+ {
+   if ((speed & ~CBAUD) != 0
+       && (speed < B57600 || speed > __MAX_BAUD))
+diff --git a/sysdeps/unix/sysv/linux/tcflow.c b/sysdeps/unix/sysv/linux/tcflow.c
+index 6c0a2390b5852ed1..e494581da46466f6 100644
+--- a/sysdeps/unix/sysv/linux/tcflow.c
++++ b/sysdeps/unix/sysv/linux/tcflow.c
+@@ -22,9 +22,7 @@
+ 
+ /* Suspend or restart transmission on FD.  */
+ int
+-tcflow (fd, action)
+-     int fd;
+-     int action;
++tcflow (int fd, int action)
+ {
+   return __ioctl (fd, TCXONC, action);
+ }
+diff --git a/sysdeps/unix/sysv/linux/tcflush.c b/sysdeps/unix/sysv/linux/tcflush.c
+index 72b89e3c1431da6a..5eb5a31694fbc7d6 100644
+--- a/sysdeps/unix/sysv/linux/tcflush.c
++++ b/sysdeps/unix/sysv/linux/tcflush.c
+@@ -22,9 +22,7 @@
+ 
+ /* Flush pending data on FD.  */
+ int
+-tcflush (fd, queue_selector)
+-     int fd;
+-     int queue_selector;
++tcflush (int fd, int queue_selector)
+ {
+   return __ioctl (fd, TCFLSH, queue_selector);
+ }
+diff --git a/sysdeps/unix/sysv/linux/tcgetattr.c b/sysdeps/unix/sysv/linux/tcgetattr.c
+index d05b5f3a0693110c..a4f5e99b768c5116 100644
+--- a/sysdeps/unix/sysv/linux/tcgetattr.c
++++ b/sysdeps/unix/sysv/linux/tcgetattr.c
+@@ -30,9 +30,7 @@
+ 
+ /* Put the state of FD into *TERMIOS_P.  */
+ int
+-__tcgetattr (fd, termios_p)
+-      int fd;
+-      struct termios *termios_p;
++__tcgetattr (int fd, struct termios *termios_p)
+ {
+   struct __kernel_termios k_termios;
+   int retval;
+diff --git a/sysdeps/unix/sysv/linux/tcsetattr.c b/sysdeps/unix/sysv/linux/tcsetattr.c
+index 62ed93993f3ede81..7409e30270735c11 100644
+--- a/sysdeps/unix/sysv/linux/tcsetattr.c
++++ b/sysdeps/unix/sysv/linux/tcsetattr.c
+@@ -41,10 +41,7 @@
+ 
+ /* Set the state of FD to *TERMIOS_P.  */
+ int
+-tcsetattr (fd, optional_actions, termios_p)
+-     int fd;
+-     int optional_actions;
+-     const struct termios *termios_p;
++tcsetattr (int fd, int optional_actions, const struct termios *termios_p)
+ {
+   struct __kernel_termios k_termios;
+   unsigned long int cmd;
+diff --git a/sysdeps/unix/sysv/linux/time.c b/sysdeps/unix/sysv/linux/time.c
+index a73783e3629b3bbd..f3aa234bd2c5c9eb 100644
+--- a/sysdeps/unix/sysv/linux/time.c
++++ b/sysdeps/unix/sysv/linux/time.c
+@@ -23,8 +23,7 @@
+ #ifdef __NR_time
+ 
+ time_t
+-time (t)
+-     time_t *t;
++time (time_t *t)
+ {
+   INTERNAL_SYSCALL_DECL (err);
+   time_t res = INTERNAL_SYSCALL (time, err, 1, NULL);
+diff --git a/sysdeps/unix/sysv/linux/x86_64/sigpending.c b/sysdeps/unix/sysv/linux/x86_64/sigpending.c
+index 7e448c0327cbcd19..16dd2e72f83a6431 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/sigpending.c
++++ b/sysdeps/unix/sysv/linux/x86_64/sigpending.c
+@@ -28,8 +28,7 @@
+ /* Change the set of blocked signals to SET,
+    wait until a signal arrives, and restore the set of blocked signals.  */
+ int
+-sigpending (set)
+-     sigset_t *set;
++sigpending (sigset_t *set)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+diff --git a/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c b/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c
+index 210fd97f9f33521e..8e7e9ffa34077f56 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c
++++ b/sysdeps/unix/sysv/linux/x86_64/sigprocmask.c
+@@ -28,10 +28,7 @@
+ 
+ /* Get and/or change the set of blocked signals.  */
+ int
+-__sigprocmask (how, set, oset)
+-     int how;
+-     const sigset_t *set;
+-     sigset_t *oset;
++__sigprocmask (int how, const sigset_t *set, sigset_t *oset)
+ {
+ 
+   /* XXX The size argument hopefully will have to be changed to the
+diff --git a/sysdeps/x86_64/backtrace.c b/sysdeps/x86_64/backtrace.c
+index 8d6599ac1e3780ac..753a003f0368e10d 100644
+--- a/sysdeps/x86_64/backtrace.c
++++ b/sysdeps/x86_64/backtrace.c
+@@ -92,9 +92,7 @@ backtrace_helper (struct _Unwind_Context *ctx, void *a)
+ }
+ 
+ int
+-__backtrace (array, size)
+-     void **array;
+-     int size;
++__backtrace (void **array, int size)
+ {
+   struct trace_arg arg = { .array = array, .cfa = 0, .size = size, .cnt = -1 };
+ #ifdef SHARED

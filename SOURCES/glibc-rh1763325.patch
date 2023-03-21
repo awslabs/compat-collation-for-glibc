@@ -1,0 +1,123 @@
+commit 2c820533c61fed175390bc6058afbbe42d2edc37
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Aug 18 11:15:42 2016 +0200
+
+    argp: Do not override GCC keywords with macros [BZ #16907]
+    
+    glibc provides fallback definitions already.  It is not necessary to
+    suppress warnings for unknown attributes because GCC does this
+    automatically for system headers.
+    
+    This commit does not sync with gnulib because gnulib has started to use
+    _GL_* macros in the header file, which are arguably in the gnulib
+    implementation space and not suitable for an installed glibc header
+    file.
+
+diff --git a/argp/argp-fmtstream.h b/argp/argp-fmtstream.h
+index 61c45bf86b6bf8d5..b8e4e2406ff2784e 100644
+--- a/argp/argp-fmtstream.h
++++ b/argp/argp-fmtstream.h
+@@ -29,21 +29,6 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
+-#ifndef __attribute__
+-/* This feature is available in gcc versions 2.5 and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || \
+-  defined __STRICT_ANSI__
+-#  define __attribute__(Spec) /* empty */
+-# endif
+-/* The __-protected variants of `format' and `printf' attributes
+-   are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7) || \
+-  defined __STRICT_ANSI__
+-#  define __format__ format
+-#  define __printf__ printf
+-# endif
+-#endif
+-
+ #if defined (__GNU_LIBRARY__) && defined (HAVE_LINEWRAP_H)
+ /* line_wrap_stream is available, so use that.  */
+ #define ARGP_FMTSTREAM_USE_LINEWRAP
+@@ -111,6 +96,8 @@ struct argp_fmtstream
+ 
+ typedef struct argp_fmtstream *argp_fmtstream_t;
+ 
++__BEGIN_DECLS
++
+ /* Return an argp_fmtstream that outputs to STREAM, and which prefixes lines
+    written on it with LMARGIN spaces and limits them to RMARGIN columns
+    total.  If WMARGIN >= 0, words that extend past RMARGIN are wrapped by
+@@ -297,6 +284,8 @@ __argp_fmtstream_point (argp_fmtstream_t __fs)
+ 
+ #endif /* __OPTIMIZE__ */
+ 
++__END_DECLS
++
+ #endif /* ARGP_FMTSTREAM_USE_LINEWRAP */
+ 
+ #endif /* argp-fmtstream.h */
+diff --git a/argp/argp.h b/argp/argp.h
+index 37544fe44a102574..61b792909530aaac 100644
+--- a/argp/argp.h
++++ b/argp/argp.h
+@@ -29,48 +29,12 @@
+ #define __need_error_t
+ #include <errno.h>
+ 
+-#ifndef __THROW
+-# define __THROW
+-#endif
+-#ifndef __NTH
+-# define __NTH(fct) fct __THROW
+-#endif
+-
+-#ifndef __attribute__
+-/* This feature is available in gcc versions 2.5 and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || \
+-  defined __STRICT_ANSI__
+-#  define __attribute__(Spec) /* empty */
+-# endif
+-/* The __-protected variants of `format' and `printf' attributes
+-   are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
+-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7) || \
+-  defined __STRICT_ANSI__
+-#  define __format__ format
+-#  define __printf__ printf
+-# endif
+-#endif
+-
+-/* GCC 2.95 and later have "__restrict"; C99 compilers have
+-   "restrict", and "configure" may have defined "restrict".  */
+-#ifndef __restrict
+-# if ! (2 < __GNUC__ || (2 == __GNUC__ && 95 <= __GNUC_MINOR__))
+-#  if defined restrict || 199901L <= __STDC_VERSION__
+-#   define __restrict restrict
+-#  else
+-#   define __restrict
+-#  endif
+-# endif
+-#endif
+-
+ #ifndef __error_t_defined
+ typedef int error_t;
+ # define __error_t_defined
+ #endif
+ 
+-#ifdef  __cplusplus
+-extern "C" {
+-#endif
++__BEGIN_DECLS
+ 
+ /* A description of a particular option.  A pointer to an array of
+    these is passed in the OPTIONS field of an argp structure.  Each option
+@@ -591,8 +555,6 @@ __NTH (__option_is_end (const struct argp_option *__opt))
+ # endif
+ #endif /* Use extern inlines.  */
+ 
+-#ifdef  __cplusplus
+-}
+-#endif
++__END_DECLS
+ 
+ #endif /* argp.h */

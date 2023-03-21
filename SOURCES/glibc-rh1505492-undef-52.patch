@@ -1,0 +1,24 @@
+commit 6d6d7fde04c8ef830205a9900bf101597a2f4b18
+Author: Chris Metcalf <cmetcalf@ezchip.com>
+Date:   Mon Dec 29 23:14:38 2014 -0500
+
+    Fix a couple of -Wundef warnings.
+
+Conflicts:
+	sysdeps/unix/sysv/linux/tst-setgetname.c
+
+File removed manually; this test does not exist in our tree.
+
+diff --git a/stdlib/tst-limits.c b/stdlib/tst-limits.c
+index 6e51dcadb5baaabb..9aabc360f6b8c3f7 100644
+--- a/stdlib/tst-limits.c
++++ b/stdlib/tst-limits.c
+@@ -58,7 +58,7 @@ do_test (void)
+   /* Values from POSIX and Unix.  */
+ #ifdef PAGESIZE
+   TEST (PAGESIZE, "d", getpagesize ());
+-#elif PAGE_SIZE
++#elif defined (PAGE_SIZE)
+   TEST (PAGE_SIZE, "d", getpagesize ());
+ #endif
+ 

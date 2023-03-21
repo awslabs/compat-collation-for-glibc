@@ -1,0 +1,69 @@
+commit 8fb16a04e6be250fdae2ce85354aae3702151140
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Mon May 6 15:10:09 2013 -0700
+
+    Move getlogin, getlogin_r, setlogin to login/ subdir.
+
+diff --git a/login/Makefile b/login/Makefile
+index f7620ea0051b5ebb..575301460b58197e 100644
+--- a/login/Makefile
++++ b/login/Makefile
+@@ -24,7 +24,8 @@ subdir	:= login
+ 
+ headers	:= utmp.h bits/utmp.h lastlog.h pty.h
+ 
+-routines := getutent getutent_r getutid getutline getutid_r getutline_r \
++routines := getlogin getlogin_r setlogin \
++	    getutent getutent_r getutid getutline getutid_r getutline_r \
+ 	    utmp_file utmpname updwtmp getpt grantpt unlockpt ptsname
+ 
+ CFLAGS-grantpt.c = -DLIBEXECDIR='"$(libexecdir)"'
+diff --git a/login/Versions b/login/Versions
+index 401fc0ebd0715e0b..0c9e75a7efd295b6 100644
+--- a/login/Versions
++++ b/login/Versions
+@@ -11,6 +11,7 @@ libc {
+     pututline;
+ 
+     # s*
++    setlogin;
+     setutent;
+ 
+     # u*
+diff --git a/posix/getlogin.c b/login/getlogin.c
+similarity index 100%
+rename from posix/getlogin.c
+rename to login/getlogin.c
+diff --git a/posix/getlogin_r.c b/login/getlogin_r.c
+similarity index 100%
+rename from posix/getlogin_r.c
+rename to login/getlogin_r.c
+diff --git a/posix/setlogin.c b/login/setlogin.c
+similarity index 100%
+rename from posix/setlogin.c
+rename to login/setlogin.c
+diff --git a/posix/Makefile b/posix/Makefile
+index a68f0b7d041e65bd..683b6e4b272fdebb 100644
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -40,7 +40,6 @@ routines :=								      \
+ 	getuid geteuid getgid getegid getgroups setuid setgid group_member    \
+ 	getpgid setpgid getpgrp bsd-getpgrp setpgrp getsid setsid	      \
+ 	getresuid getresgid setresuid setresgid				      \
+-	getlogin getlogin_r setlogin					      \
+ 	pathconf sysconf fpathconf					      \
+ 	glob glob64 fnmatch regex					      \
+ 	confstr								      \
+diff --git a/posix/Versions b/posix/Versions
+index 686c446bcddeb696..5a5a05d036fbc6ba 100644
+--- a/posix/Versions
++++ b/posix/Versions
+@@ -52,7 +52,7 @@ libc {
+     # s*
+     sched_get_priority_max; sched_get_priority_min; sched_getparam;
+     sched_getscheduler; sched_rr_get_interval; sched_setparam;
+-    sched_setscheduler; sched_yield; setegid; seteuid; setgid; setlogin;
++    sched_setscheduler; sched_yield; setegid; seteuid; setgid;
+     setpgid; setpgrp; setsid; setuid; sleep; sysconf;
+ 
+     # t*

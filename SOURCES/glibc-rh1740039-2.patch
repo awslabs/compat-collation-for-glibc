@@ -1,0 +1,174 @@
+Partial backport of:
+
+commit 7d3db434f910c23591f748a6d0ac3548af1048bb
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Oct 17 08:51:21 2019 +0200
+
+    Rename and split elf/tst-dlopen-aout collection of tests
+    
+    From the beginning, elf/tst-dlopen-aout has exercised two different
+    bugs: (a) failure to report errors for a dlopen of the executable
+    itself in some cases (bug 24900) and (b) incorrect rollback of the
+    TLS modid allocation in case of a dlopen failure (bug 16634).
+    
+    This commit replaces the test with elf/tst-dlopen-self for (a) and
+    elf/tst-dlopen-tlsmodid for (b).  The latter tests use the
+    elf/tst-dlopen-self binaries (or iconv) with dlopen, so they are
+    no longer self-dlopen tests.
+    
+    Tested on x86_64-linux-gnu and i686-linux-gnu, with a toolchain that
+    does not default to PIE.
+
+Only the non-PIE, non-container test elf/tst-dlopen-tlsmodid is
+included.  The reason is that the self-dlopen fixes and the PIE TLS
+modid fix have not been backported, and that container testing support
+is missing downstream.  The test binary is adjusted to tst-tls10
+because tst-dlopen-self does not exist in the backport.
+
+diff --git a/elf/Makefile b/elf/Makefile
+index cfd039fc9dfb0be7..c22008b54afc91f5 100644
+--- a/elf/Makefile
++++ b/elf/Makefile
+@@ -153,7 +153,7 @@ tests += loadtest restest1 preloadtest loadfail multiload origtest resolvfail \
+ 	 tst-stackguard1 tst-addr1 tst-thrlock \
+ 	 tst-unique1 tst-unique2 tst-unique3 tst-unique4 \
+ 	 tst-initorder tst-initorder2 tst-relsort1 tst-ptrguard1 \
+-	 tst-big-note
++	 tst-big-note tst-dlopen-tlsmodid
+ #	 reldep9
+ test-srcs = tst-pathopt
+ selinux-enabled := $(shell cat /selinux/enforce 2> /dev/null)
+@@ -1101,6 +1101,9 @@ $(objpfx)tst-addr1: $(libdl)
+ 
+ $(objpfx)tst-thrlock: $(libdl) $(shared-thread-library)
+ 
++$(objpfx)tst-dlopen-tlsmodid: $(libdl) $(shared-thread-library)
++$(objpfx)tst-dlopen-tlsmodid.out: $(objpfx)tst-tls10
++
+ CFLAGS-ifuncmain1pic.c += $(pic-ccflag)
+ CFLAGS-ifuncmain1picstatic.c += $(pic-ccflag)
+ CFLAGS-ifuncmain1staticpic.c += $(pic-ccflag)
+diff --git a/elf/tst-dlopen-tlsmodid.c b/elf/tst-dlopen-tlsmodid.c
+new file mode 100644
+index 0000000000000000..c5b1c39369aa610c
+--- /dev/null
++++ b/elf/tst-dlopen-tlsmodid.c
+@@ -0,0 +1,25 @@
++/* Test case for BZ #16634.  Non-PIE version.
++
++   Verify that incorrectly dlopen()ing an executable without
++   __RTLD_OPENEXEC does not cause assertion in ld.so, and that it
++   actually results in an error.
++
++   Copyright (C) 2014-2019 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#define TST_DLOPEN_TLSMODID_PATH "tst-tls10"
++#include "tst-dlopen-tlsmodid.h"
+diff --git a/elf/tst-dlopen-tlsmodid.h b/elf/tst-dlopen-tlsmodid.h
+new file mode 100644
+index 0000000000000000..c747cb14911c72fa
+--- /dev/null
++++ b/elf/tst-dlopen-tlsmodid.h
+@@ -0,0 +1,87 @@
++/* Common code for tst-dlopen-tlsmodid, tst-dlopen-tlsmodid-pie,
++   tst-dlopen-tlsmodid-container.
++
++   Verify that incorrectly dlopen()ing an executable without
++   __RTLD_OPENEXEC does not cause assertion in ld.so, and that it
++   actually results in an error.
++
++   Copyright (C) 2014-2019 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++/* Before including this file, the macro TST_DLOPEN_TLSMODID_PATH must
++   be defined, to specify the path used for the open operation.  */
++
++#include <dlfcn.h>
++#include <pthread.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <support/check.h>
++#include <support/support.h>
++#include <support/xthread.h>
++
++__thread int x;
++
++void *
++fn (void *p)
++{
++  return p;
++}
++
++/* Call dlopen and check that fails with an error message indicating
++   an attempt to open an ET_EXEC or PIE object.  */
++static void
++check_dlopen_failure (void)
++{
++  void *handle = dlopen (TST_DLOPEN_TLSMODID_PATH, RTLD_LAZY);
++  if (handle != NULL)
++    FAIL_EXIT1 ("dlopen succeeded unexpectedly: %s", TST_DLOPEN_TLSMODID_PATH);
++
++  const char *message = dlerror ();
++  TEST_VERIFY_EXIT (message != NULL);
++  if ((strstr (message,
++	       "cannot dynamically load position-independent executable")
++       == NULL)
++      && strstr (message, "cannot dynamically load executable") == NULL)
++    FAIL_EXIT1 ("invalid dlopen error message: \"%s\"", message);
++}
++
++static int
++do_test (int argc, char *argv[])
++{
++  int j;
++
++  for (j = 0; j < 100; ++j)
++    {
++      pthread_t thr;
++
++      check_dlopen_failure ();
++
++      /* We create threads to force TLS allocation, which triggers
++	 the original bug i.e. running out of surplus slotinfo entries
++	 for TLS.  */
++      thr = xpthread_create (NULL, fn, NULL);
++      xpthread_join (thr);
++    }
++
++  check_dlopen_failure ();
++
++  return 0;
++}
++
++#define TEST_FUNCTION_ARGV do_test
++#include <support/test-driver.c>

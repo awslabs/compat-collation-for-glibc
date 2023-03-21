@@ -1,0 +1,33 @@
+commit 909e16d96064708b43170eeb01135315f540e6ff
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Dec 2 22:48:59 2014 +0000
+
+    Fix warning in nptl/tst-stack4.c.
+    
+    This patch fixes a warning in a test that was added since my recent
+    warning cleanup:
+    
+    tst-stack4.c: In function 'dso_process':
+    tst-stack4.c:64:7: warning: format '%i' expects argument of type 'int', but argument 3 has type 'uintptr_t' [-Wformat=]
+    
+    The original variable has type int then is cast to uintptr_t, and from
+    there to void *, to pass it to a thread, so reversing the process by
+    casting to uintptr_t and then to int is natural; this patch does so.
+    
+    Tested for x86_64.
+    
+            * nptl/tst-stack4.c (dso_process): Use int not uintptr_t for t.
+
+diff --git a/nptl/tst-stack4.c b/nptl/tst-stack4.c
+index d9c8df2c8d35e8a9..3b726936461408b3 100644
+--- a/nptl/tst-stack4.c
++++ b/nptl/tst-stack4.c
+@@ -56,7 +56,7 @@ dso_process (void * p)
+   function fun_vec[DSO_SHARED_FILES];
+   char dso_path[DSO_SHARED_FILES][100];
+   int dso;
+-  uintptr_t t = (uintptr_t) p;
++  int t = (int) (uintptr_t) p;
+ 
+   /* Open DSOs and get a function.  */
+   for (dso = 0; dso < DSO_SHARED_FILES; dso++)

@@ -1,0 +1,107 @@
+commit 353683a22ed8a493a6bd1d78d63e144bc3e85d2f
+Author: Torvald Riegel <triegel@redhat.com>
+Date:   Thu Dec 15 16:06:28 2016 +0100
+
+    Robust mutexes: Fix lost wake-up.
+    
+    Assume that Thread 1 waits to acquire a robust mutex using futexes to
+    block (and thus sets the FUTEX_WAITERS flag), and is unblocked when this
+    mutex is released.  If Thread 2 concurrently acquires the lock and is
+    killed, Thread 1 can recover from the died owner but fail to restore the
+    FUTEX_WAITERS flag.  This can lead to a Thread 3 that also blocked using
+    futexes at the same time as Thread 1 to not get woken up because
+    FUTEX_WAITERS is not set anymore.
+    
+    The fix for this is to ensure that we continue to preserve the
+    FUTEX_WAITERS flag whenever we may have set it or shared it with another
+    thread.  This is the same requirement as in the algorithm for normal
+    mutexes, only that the robust mutexes need additional handling for died
+    owners and thus preserving the FUTEX_WAITERS flag cannot be done just in
+    the futex slowpath code.
+    
+            [BZ #20973]
+            * nptl/pthread_mutex_lock.c (__pthread_mutex_lock_full): Fix lost
+            wake-up in robust mutexes.
+            * nptl/pthread_mutex_timedlock.c (pthread_mutex_timedlock): Likewise.
+
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_lock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+@@ -183,6 +183,11 @@ __pthread_mutex_lock_full (pthread_mutex
+ 		     &mutex->__data.__list.__next);
+ 
+       oldval = mutex->__data.__lock;
++      /* This is set to FUTEX_WAITERS iff we might have shared the
++	 FUTEX_WAITERS flag with other threads, and therefore need to keep it
++	 set to avoid lost wake-ups.  We have the same requirement in the
++	 simple mutex algorithm.  */
++      unsigned int assume_other_futex_waiters = 0;
+       do
+ 	{
+ 	again:
+@@ -191,9 +196,11 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	      /* The previous owner died.  Try locking the mutex.  */
+ 	      int newval = id;
+ #ifdef NO_INCR
++	      /* We are not taking assume_other_futex_waiters into accoount
++		 here simply because we'll set FUTEX_WAITERS anyway.  */
+ 	      newval |= FUTEX_WAITERS;
+ #else
+-	      newval |= (oldval & FUTEX_WAITERS);
++	      newval |= (oldval & FUTEX_WAITERS) | assume_other_futex_waiters;
+ #endif
+ 
+ 	      newval
+@@ -254,7 +261,11 @@ __pthread_mutex_lock_full (pthread_mutex
+ 		}
+ 	    }
+ 
+-	  oldval = LLL_ROBUST_MUTEX_LOCK (mutex, id);
++	  oldval = LLL_ROBUST_MUTEX_LOCK (mutex,
++					  id | assume_other_futex_waiters);
++	  /* See above.  We set FUTEX_WAITERS and might have shared this flag
++	     with other threads; thus, we need to preserve it.  */
++	  assume_other_futex_waiters = FUTEX_WAITERS;
+ 
+ 	  if (__builtin_expect (mutex->__data.__owner
+ 				== PTHREAD_MUTEX_NOTRECOVERABLE, 0))
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_timedlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+@@ -142,13 +142,19 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 		     &mutex->__data.__list.__next);
+ 
+       oldval = mutex->__data.__lock;
++      /* This is set to FUTEX_WAITERS iff we might have shared the
++	 FUTEX_WAITERS flag with other threads, and therefore need to keep it
++	 set to avoid lost wake-ups.  We have the same requirement in the
++	 simple mutex algorithm.  */
++      unsigned int assume_other_futex_waiters = 0;
+       do
+ 	{
+ 	again:
+ 	  if ((oldval & FUTEX_OWNER_DIED) != 0)
+ 	    {
+ 	      /* The previous owner died.  Try locking the mutex.  */
+-	      int newval = id | (oldval & FUTEX_WAITERS);
++	      int newval = id | (oldval & FUTEX_WAITERS)
++		  | assume_other_futex_waiters;
+ 
+ 	      newval
+ 		= atomic_compare_and_exchange_val_acq (&mutex->__data.__lock,
+@@ -203,8 +209,12 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 		}
+ 	    }
+ 
+-	  result = lll_robust_timedlock (mutex->__data.__lock, abstime, id,
++	  result = lll_robust_timedlock (mutex->__data.__lock, abstime,
++					 id | assume_other_futex_waiters,
+ 					 PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
++	  /* See above.  We set FUTEX_WAITERS and might have shared this flag
++	     with other threads; thus, we need to preserve it.  */
++	  assume_other_futex_waiters = FUTEX_WAITERS;
+ 
+ 	  if (__builtin_expect (mutex->__data.__owner
+ 				== PTHREAD_MUTEX_NOTRECOVERABLE, 0))

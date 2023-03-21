@@ -1,0 +1,1818 @@
+commit 2e09a79ada1f6d92809a037d41895e3d9302ad59
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Jun 7 22:24:35 2013 +0000
+
+    Avoid use of "register" as optimization hint.
+
+Conflicts:
+	hurd/hurdmalloc.c
+	  (Adjusted for missing previous backport.)
+	resolv/arpa/nameser.h
+	resolv/compat-gethnamaddr.c
+	resolv/ns_print.c
+	resolv/res_init.c
+	resolv/res_mkquery.c
+	  (Changes were already part of the stub resolver rebase
+ 	  in glibc-rh677316-resolv.patch.)
+	time/tzset.c
+	  (Changes were already part of the fix for rhbz#1234449.)
+	wcsmbs/wcsrchr.c
+	  (Resolve textual conflict due to glibc-rh731837-16.patch.)
+
+diff --git a/bits/byteswap.h b/bits/byteswap.h
+index 7e5daedb83e29a4c..068a824539a4a302 100644
+--- a/bits/byteswap.h
++++ b/bits/byteswap.h
+@@ -48,7 +48,7 @@ __bswap_32 (unsigned int __bsx)
+ # else
+ #  define __bswap_32(x) \
+   (__extension__							      \
+-   ({ register unsigned int __bsx = (x); __bswap_constant_32 (__bsx); }))
++   ({ unsigned int __bsx = (x); __bswap_constant_32 (__bsx); }))
+ # endif
+ #else
+ static __inline unsigned int
+diff --git a/crypt/crypt.c b/crypt/crypt.c
+index 3360639139715348..34b8f2e280263f7a 100644
+--- a/crypt/crypt.c
++++ b/crypt/crypt.c
+@@ -88,8 +88,8 @@ _ufc_doit_r(itr, __data, res)
+ {
+   int i;
+   long64 l, r, s, *k;
+-  register long64 *sb01 = (long64*)__data->sb0;
+-  register long64 *sb23 = (long64*)__data->sb2;
++  long64 *sb01 = (long64*)__data->sb0;
++  long64 *sb23 = (long64*)__data->sb2;
+ 
+   l = (((long64)res[0]) << 32) | ((long64)res[1]);
+   r = (((long64)res[2]) << 32) | ((long64)res[3]);
+diff --git a/debug/stpcpy_chk.c b/debug/stpcpy_chk.c
+index 2bb7b518447b8b66..3934d132d930093c 100644
+--- a/debug/stpcpy_chk.c
++++ b/debug/stpcpy_chk.c
+@@ -29,8 +29,8 @@ __stpcpy_chk (dest, src, destlen)
+      const char *src;
+      size_t destlen;
+ {
+-  register char *d = dest;
+-  register const char *s = src;
++  char *d = dest;
++  const char *s = src;
+ 
+   do
+     {
+diff --git a/debug/wcscat_chk.c b/debug/wcscat_chk.c
+index 27d9ee5f90853048..c2ac552c5fd34827 100644
+--- a/debug/wcscat_chk.c
++++ b/debug/wcscat_chk.c
+@@ -23,8 +23,8 @@
+ wchar_t *
+ __wcscat_chk (wchar_t *dest, const wchar_t *src, size_t destlen)
+ {
+-  register wchar_t *s1 = dest;
+-  register const wchar_t *s2 = src;
++  wchar_t *s1 = dest;
++  const wchar_t *s2 = src;
+   wchar_t c;
+ 
+   /* Find the end of the string.  */
+diff --git a/gmon/gmon.c b/gmon/gmon.c
+index 0d2ed0594e4baf1e..9774d57ccced2079 100644
+--- a/gmon/gmon.c
++++ b/gmon/gmon.c
+@@ -102,7 +102,7 @@ __monstartup (lowpc, highpc)
+      u_long lowpc;
+      u_long highpc;
+ {
+-  register int o;
++  int o;
+   char *cp;
+   struct gmonparam *p = &_gmonparam;
+ 
+diff --git a/gmon/mcount.c b/gmon/mcount.c
+index 5a4a2499d461acc7..0c2acd2890dd7ed9 100644
+--- a/gmon/mcount.c
++++ b/gmon/mcount.c
+@@ -58,10 +58,10 @@ static char sccsid[] = "@(#)mcount.c	8.1 (Berkeley) 6/4/93";
+  */
+ _MCOUNT_DECL(frompc, selfpc)	/* _mcount; may be static, inline, etc */
+ {
+-	register ARCINDEX *frompcindex;
+-	register struct tostruct *top, *prevtop;
+-	register struct gmonparam *p;
+-	register ARCINDEX toindex;
++	ARCINDEX *frompcindex;
++	struct tostruct *top, *prevtop;
++	struct gmonparam *p;
++	ARCINDEX toindex;
+ 	int i;
+ 
+ 	p = &_gmonparam;
+diff --git a/hurd/hurdmalloc.c b/hurd/hurdmalloc.c
+index 12da1f2abc50ef0a..886b40208da56866 100644
+--- a/hurd/hurdmalloc.c
++++ b/hurd/hurdmalloc.c
+@@ -171,10 +171,10 @@ malloc_init (void)
+ static void
+ more_memory(int size, free_list_t fl)
+ {
+-	register int amount;
+-	register int n;
++	int amount;
++	int n;
+ 	vm_address_t where;
+-	register header_t h;
++	header_t h;
+ 	kern_return_t r;
+ 
+ 	if (size <= vm_page_size) {
+@@ -203,11 +203,11 @@ more_memory(int size, free_list_t fl)
+ /* Declaration changed to standard one for GNU.  */
+ void *
+ malloc(size)
+-	register size_t size;
++	size_t size;
+ {
+-	register int i, n;
+-	register free_list_t fl;
+-	register header_t h;
++	int i, n;
++	free_list_t fl;
++	header_t h;
+ 
+ 	if ((int) size < 0)		/* sanity check */
+ 		return 0;
+@@ -272,9 +272,9 @@ void
+ free(base)
+ 	void *base;
+ {
+-	register header_t h;
+-	register free_list_t fl;
+-	register int i;
++	header_t h;
++	free_list_t fl;
++	int i;
+ 
+ 	if (base == 0)
+ 		return;
+@@ -322,9 +322,9 @@ realloc(old_base, new_size)
+         void *old_base;
+         size_t new_size;
+ {
+-	register header_t h;
+-	register free_list_t fl;
+-	register int i;
++	header_t h;
++	free_list_t fl;
++	int i;
+ 	unsigned int old_size;
+ 	char *new_base;
+ 
+@@ -382,10 +382,10 @@ realloc(old_base, new_size)
+ void
+ print_malloc_free_list()
+ {
+-  	register int i, size;
+-	register free_list_t fl;
+-	register int n;
+-  	register header_t h;
++  	int i, size;
++	free_list_t fl;
++	int n;
++  	header_t h;
+ 	int total_used = 0;
+ 	int total_free = 0;
+ 
+@@ -416,7 +416,7 @@ malloc_fork_prepare(void)
+  * malloc critical section.
+  */
+ {
+-    register int i;
++    int i;
+ 
+     for (i = 0; i < NBUCKETS; i++) {
+ 	spin_lock(&malloc_free_list[i].lock);
+@@ -429,7 +429,7 @@ malloc_fork_parent(void)
+  * Called in the parent process after a fork() to resume normal operation.
+  */
+ {
+-    register int i;
++    int i;
+ 
+     for (i = NBUCKETS-1; i >= 0; i--) {
+ 	spin_unlock(&malloc_free_list[i].lock);
+@@ -442,7 +442,7 @@ malloc_fork_child(void)
+  * Called in the child process after a fork() to resume normal operation.
+  */
+ {
+-    register int i;
++    int i;
+ 
+     for (i = NBUCKETS-1; i >= 0; i--) {
+ 	spin_unlock(&malloc_free_list[i].lock);
+diff --git a/include/rpc/auth_des.h b/include/rpc/auth_des.h
+index c14f069668810930..0e9db1a226f4df95 100644
+--- a/include/rpc/auth_des.h
++++ b/include/rpc/auth_des.h
+@@ -7,12 +7,12 @@ libc_hidden_proto (getsecretkey)
+ libc_hidden_proto (rtime)
+ 
+ extern bool_t xdr_authdes_cred (XDR *xdrs, struct authdes_cred *cred);
+-extern bool_t xdr_authdes_verf (register XDR *xdrs,
+-				register struct authdes_verf *verf);
++extern bool_t xdr_authdes_verf (XDR *xdrs,
++				struct authdes_verf *verf);
+ struct svc_req;
+ struct rpc_msg;
+-extern enum auth_stat _svcauth_des (register struct svc_req *rqst,
+-				    register struct rpc_msg *msg);
++extern enum auth_stat _svcauth_des (struct svc_req *rqst,
++				    struct rpc_msg *msg);
+ 
+ 
+ #define DECLARE_NSS_PROTOTYPES(service)					\
+diff --git a/inet/inet_lnaof.c b/inet/inet_lnaof.c
+index 0e115a4420920225..c993c8b8471f4215 100644
+--- a/inet/inet_lnaof.c
++++ b/inet/inet_lnaof.c
+@@ -44,7 +44,7 @@ in_addr_t
+ inet_lnaof(in)
+ 	struct in_addr in;
+ {
+-	register u_int32_t i = ntohl(in.s_addr);
++	u_int32_t i = ntohl(in.s_addr);
+ 
+ 	if (IN_CLASSA(i))
+ 		return ((i)&IN_CLASSA_HOST);
+diff --git a/inet/inet_net.c b/inet/inet_net.c
+index d58f1ae8e3d89bf5..68e232f3d3dc1e1d 100644
+--- a/inet/inet_net.c
++++ b/inet/inet_net.c
+@@ -43,10 +43,10 @@ static char sccsid[] = "@(#)inet_network.c	8.1 (Berkeley) 6/4/93";
+  */
+ u_int32_t
+ inet_network(cp)
+-	register const char *cp;
++	const char *cp;
+ {
+-	register u_int32_t val, base, n, i;
+-	register char c;
++	u_int32_t val, base, n, i;
++	char c;
+ 	u_int32_t parts[4], *pp = parts;
+ 	int digit;
+ 
+diff --git a/inet/inet_netof.c b/inet/inet_netof.c
+index e49177a0f4b79bbf..9b0aed992e9ba65f 100644
+--- a/inet/inet_netof.c
++++ b/inet/inet_netof.c
+@@ -43,7 +43,7 @@ in_addr_t
+ inet_netof(in)
+ 	struct in_addr in;
+ {
+-	register u_int32_t i = ntohl(in.s_addr);
++	u_int32_t i = ntohl(in.s_addr);
+ 
+ 	if (IN_CLASSA(i))
+ 		return (((i)&IN_CLASSA_NET) >> IN_CLASSA_NSHIFT);
+diff --git a/inet/rcmd.c b/inet/rcmd.c
+index af4fad34c95e9af7..7da79b0730d9ad3a 100644
+--- a/inet/rcmd.c
++++ b/inet/rcmd.c
+@@ -769,8 +769,8 @@ __validuser2_sa(hostf, ra, ralen, luser, ruser, rhost)
+ 	size_t ralen;
+ 	const char *luser, *ruser, *rhost;
+ {
+-    register const char *user;
+-    register char *p;
++    const char *user;
++    char *p;
+     int hcheck, ucheck;
+     char *buf = NULL;
+     size_t bufsize = 0;
+diff --git a/io/fts.c b/io/fts.c
+index 5ba202b8aa8b6669..c9c054d6d36ab20f 100644
+--- a/io/fts.c
++++ b/io/fts.c
+@@ -87,12 +87,12 @@ static int      fts_safe_changedir (FTS *, FTSENT *, int, const char *)
+ FTS *
+ fts_open(argv, options, compar)
+ 	char * const *argv;
+-	register int options;
++	int options;
+ 	int (*compar) (const FTSENT **, const FTSENT **);
+ {
+-	register FTS *sp;
+-	register FTSENT *p, *root;
+-	register int nitems;
++	FTS *sp;
++	FTSENT *p, *root;
++	int nitems;
+ 	FTSENT *parent = NULL;
+ 	FTSENT *tmp;
+ 
+@@ -204,10 +204,10 @@ static void
+ internal_function
+ fts_load(sp, p)
+ 	FTS *sp;
+-	register FTSENT *p;
++	FTSENT *p;
+ {
+-	register int len;
+-	register char *cp;
++	int len;
++	char *cp;
+ 
+ 	/*
+ 	 * Load the stream structure for the next traversal.  Since we don't
+@@ -231,7 +231,7 @@ int
+ fts_close(sp)
+ 	FTS *sp;
+ {
+-	register FTSENT *freep, *p;
++	FTSENT *freep, *p;
+ 	int saved_errno;
+ 
+ 	/*
+@@ -283,11 +283,11 @@ fts_close(sp)
+ 
+ FTSENT *
+ fts_read(sp)
+-	register FTS *sp;
++	FTS *sp;
+ {
+-	register FTSENT *p, *tmp;
+-	register int instr;
+-	register char *t;
++	FTSENT *p, *tmp;
++	int instr;
++	char *t;
+ 	int saved_errno;
+ 
+ 	/* If finished or unrecoverable error, return NULL. */
+@@ -495,10 +495,10 @@ fts_set(sp, p, instr)
+ 
+ FTSENT *
+ fts_children(sp, instr)
+-	register FTS *sp;
++	FTS *sp;
+ 	int instr;
+ {
+-	register FTSENT *p;
++	FTSENT *p;
+ 	int fd;
+ 
+ 	if (instr != 0 && instr != FTS_NAMEONLY) {
+@@ -578,12 +578,12 @@ fts_children(sp, instr)
+ static FTSENT *
+ internal_function
+ fts_build(sp, type)
+-	register FTS *sp;
++	FTS *sp;
+ 	int type;
+ {
+-	register struct dirent *dp;
+-	register FTSENT *p, *head;
+-	register int nitems;
++	struct dirent *dp;
++	FTSENT *p, *head;
++	int nitems;
+ 	FTSENT *cur, *tail;
+ 	DIR *dirp;
+ 	void *oldaddr;
+@@ -848,12 +848,12 @@ static u_short
+ internal_function
+ fts_stat(sp, p, follow)
+ 	FTS *sp;
+-	register FTSENT *p;
++	FTSENT *p;
+ 	int follow;
+ {
+-	register FTSENT *t;
+-	register dev_t dev;
+-	register ino_t ino;
++	FTSENT *t;
++	dev_t dev;
++	ino_t ino;
+ 	struct stat *sbp, sb;
+ 	int saved_errno;
+ 
+@@ -933,9 +933,9 @@ internal_function
+ fts_sort(sp, head, nitems)
+ 	FTS *sp;
+ 	FTSENT *head;
+-	register int nitems;
++	int nitems;
+ {
+-	register FTSENT **ap, *p;
++	FTSENT **ap, *p;
+ 
+ 	/*
+ 	 * Construct an array of pointers to the structures and call qsort(3).
+@@ -973,7 +973,7 @@ fts_alloc(sp, name, namelen)
+ 	const char *name;
+ 	size_t namelen;
+ {
+-	register FTSENT *p;
++	FTSENT *p;
+ 	size_t len;
+ 
+ 	/*
+@@ -1009,9 +1009,9 @@ fts_alloc(sp, name, namelen)
+ static void
+ internal_function
+ fts_lfree(head)
+-	register FTSENT *head;
++	FTSENT *head;
+ {
+-	register FTSENT *p;
++	FTSENT *p;
+ 
+ 	/* Free a linked list of structures. */
+ 	while ((p = head)) {
+diff --git a/libio/fileops.c b/libio/fileops.c
+index ff5941bd2f20b7de..ae56437168efc524 100644
+--- a/libio/fileops.c
++++ b/libio/fileops.c
+@@ -1327,7 +1327,7 @@ _IO_new_file_xsputn (f, data, n)
+      const void *data;
+      _IO_size_t n;
+ {
+-  register const char *s = (const char *) data;
++  const char *s = (const char *) data;
+   _IO_size_t to_do = n;
+   int must_flush = 0;
+   _IO_size_t count = 0;
+@@ -1344,7 +1344,7 @@ _IO_new_file_xsputn (f, data, n)
+       count = f->_IO_buf_end - f->_IO_write_ptr;
+       if (count >= n)
+ 	{
+-	  register const char *p;
++	  const char *p;
+ 	  for (p = s + n; p > s; )
+ 	    {
+ 	      if (*--p == '\n')
+@@ -1410,9 +1410,9 @@ _IO_file_xsgetn (fp, data, n)
+      void *data;
+      _IO_size_t n;
+ {
+-  register _IO_size_t want, have;
+-  register _IO_ssize_t count;
+-  register char *s = data;
++  _IO_size_t want, have;
++  _IO_ssize_t count;
++  char *s = data;
+ 
+   want = n;
+ 
+@@ -1512,9 +1512,9 @@ _IO_file_xsgetn_mmap (fp, data, n)
+      void *data;
+      _IO_size_t n;
+ {
+-  register _IO_size_t have;
++  _IO_size_t have;
+   char *read_ptr = fp->_IO_read_ptr;
+-  register char *s = (char *) data;
++  char *s = (char *) data;
+ 
+   have = fp->_IO_read_end - fp->_IO_read_ptr;
+ 
+diff --git a/libio/iofopncook.c b/libio/iofopncook.c
+index b1c0d7f6ccc4db15..8240601d4eec468b 100644
+--- a/libio/iofopncook.c
++++ b/libio/iofopncook.c
+@@ -30,9 +30,9 @@
+ #include <shlib-compat.h>
+ 
+ /* Prototyped for local functions.  */
+-static _IO_ssize_t _IO_cookie_read (register _IO_FILE* fp, void* buf,
++static _IO_ssize_t _IO_cookie_read (_IO_FILE* fp, void* buf,
+ 				    _IO_ssize_t size);
+-static _IO_ssize_t _IO_cookie_write (register _IO_FILE* fp,
++static _IO_ssize_t _IO_cookie_write (_IO_FILE* fp,
+ 				     const void* buf, _IO_ssize_t size);
+ static _IO_off64_t _IO_cookie_seek (_IO_FILE *fp, _IO_off64_t offset, int dir);
+ static _IO_off64_t _IO_cookie_seekoff (_IO_FILE *fp, _IO_off64_t offset,
+diff --git a/libio/oldfileops.c b/libio/oldfileops.c
+index 7060ea8c346d15cc..0d778fa253822171 100644
+--- a/libio/oldfileops.c
++++ b/libio/oldfileops.c
+@@ -697,7 +697,7 @@ _IO_old_file_xsputn (f, data, n)
+      const void *data;
+      _IO_size_t n;
+ {
+-  register const char *s = (char *) data;
++  const char *s = (char *) data;
+   _IO_size_t to_do = n;
+   int must_flush = 0;
+   _IO_size_t count = 0;
+@@ -714,7 +714,7 @@ _IO_old_file_xsputn (f, data, n)
+       count = f->_IO_buf_end - f->_IO_write_ptr;
+       if (count >= n)
+ 	{
+-	  register const char *p;
++	  const char *p;
+ 	  for (p = s + n; p > s; )
+ 	    {
+ 	      if (*--p == '\n')
+@@ -746,8 +746,8 @@ _IO_old_file_xsputn (f, data, n)
+ 	}
+       else
+ 	{
+-	  register char *p = f->_IO_write_ptr;
+-	  register int i = (int) count;
++	  char *p = f->_IO_write_ptr;
++	  int i = (int) count;
+ 	  while (--i >= 0)
+ 	    *p++ = *s++;
+ 	  f->_IO_write_ptr = p;
+diff --git a/libio/wfileops.c b/libio/wfileops.c
+index 1fe3439d21152fce..5ed1a922ae6ccbd0 100644
+--- a/libio/wfileops.c
++++ b/libio/wfileops.c
+@@ -966,7 +966,7 @@ _IO_wfile_xsputn (f, data, n)
+      const void *data;
+      _IO_size_t n;
+ {
+-  register const wchar_t *s = (const wchar_t *) data;
++  const wchar_t *s = (const wchar_t *) data;
+   _IO_size_t to_do = n;
+   int must_flush = 0;
+   _IO_size_t count;
+@@ -984,7 +984,7 @@ _IO_wfile_xsputn (f, data, n)
+       count = f->_wide_data->_IO_buf_end - f->_wide_data->_IO_write_ptr;
+       if (count >= n)
+ 	{
+-	  register const wchar_t *p;
++	  const wchar_t *p;
+ 	  for (p = s + n; p > s; )
+ 	    {
+ 	      if (*--p == L'\n')
+@@ -1014,8 +1014,8 @@ _IO_wfile_xsputn (f, data, n)
+ 	}
+       else
+ 	{
+-	  register wchar_t *p = f->_wide_data->_IO_write_ptr;
+-	  register int i = (int) count;
++	  wchar_t *p = f->_wide_data->_IO_write_ptr;
++	  int i = (int) count;
+ 	  while (--i >= 0)
+ 	    *p++ = *s++;
+ 	  f->_wide_data->_IO_write_ptr = p;
+diff --git a/mach/msgserver.c b/mach/msgserver.c
+index 915a08868a34378d..b087e7263511b554 100644
+--- a/mach/msgserver.c
++++ b/mach/msgserver.c
+@@ -78,8 +78,8 @@ __mach_msg_server_timeout (boolean_t (*demux) (mach_msg_header_t *request,
+ 			   mach_msg_option_t option,
+ 			   mach_msg_timeout_t timeout)
+ {
+-  register mig_reply_header_t *request, *reply;
+-  register mach_msg_return_t mr;
++  mig_reply_header_t *request, *reply;
++  mach_msg_return_t mr;
+ 
+   if (max_size == 0)
+     {
+diff --git a/malloc/obstack.c b/malloc/obstack.c
+index 5786da0aa4af81da..e3ce53f987727eca 100644
+--- a/malloc/obstack.c
++++ b/malloc/obstack.c
+@@ -155,7 +155,7 @@ _obstack_begin (struct obstack *h,
+ 		void *(*chunkfun) (long),
+ 		void (*freefun) (void *))
+ {
+-  register struct _obstack_chunk *chunk; /* points to new chunk */
++  struct _obstack_chunk *chunk; /* points to new chunk */
+ 
+   if (alignment == 0)
+     alignment = DEFAULT_ALIGNMENT;
+@@ -202,7 +202,7 @@ _obstack_begin_1 (struct obstack *h, int size, int alignment,
+ 		  void (*freefun) (void *, void *),
+ 		  void *arg)
+ {
+-  register struct _obstack_chunk *chunk; /* points to new chunk */
++  struct _obstack_chunk *chunk; /* points to new chunk */
+ 
+   if (alignment == 0)
+     alignment = DEFAULT_ALIGNMENT;
+@@ -253,11 +253,11 @@ _obstack_begin_1 (struct obstack *h, int size, int alignment,
+ void
+ _obstack_newchunk (struct obstack *h, int length)
+ {
+-  register struct _obstack_chunk *old_chunk = h->chunk;
+-  register struct _obstack_chunk *new_chunk;
+-  register long	new_size;
+-  register long obj_size = h->next_free - h->object_base;
+-  register long i;
++  struct _obstack_chunk *old_chunk = h->chunk;
++  struct _obstack_chunk *new_chunk;
++  long	new_size;
++  long obj_size = h->next_free - h->object_base;
++  long i;
+   long already;
+   char *object_base;
+ 
+@@ -330,8 +330,8 @@ int _obstack_allocated_p (struct obstack *h, void *obj);
+ int
+ _obstack_allocated_p (struct obstack *h, void *obj)
+ {
+-  register struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
+-  register struct _obstack_chunk *plp;	/* point to previous chunk if any */
++  struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
++  struct _obstack_chunk *plp;	/* point to previous chunk if any */
+ 
+   lp = (h)->chunk;
+   /* We use >= rather than > since the object cannot be exactly at
+@@ -353,8 +353,8 @@ _obstack_allocated_p (struct obstack *h, void *obj)
+ void
+ obstack_free (struct obstack *h, void *obj)
+ {
+-  register struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
+-  register struct _obstack_chunk *plp;	/* point to previous chunk if any */
++  struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
++  struct _obstack_chunk *plp;	/* point to previous chunk if any */
+ 
+   lp = h->chunk;
+   /* We use >= because there cannot be an object at the beginning of a chunk.
+@@ -389,8 +389,8 @@ strong_alias (obstack_free, _obstack_free)
+ int
+ _obstack_memory_used (struct obstack *h)
+ {
+-  register struct _obstack_chunk* lp;
+-  register int nbytes = 0;
++  struct _obstack_chunk* lp;
++  int nbytes = 0;
+ 
+   for (lp = h->chunk; lp != 0; lp = lp->prev)
+     {
+diff --git a/misc/getttyent.c b/misc/getttyent.c
+index b1e6376fb66dc260..18944e2b99150aea 100644
+--- a/misc/getttyent.c
++++ b/misc/getttyent.c
+@@ -47,7 +47,7 @@ struct ttyent *
+ getttynam(tty)
+ 	const char *tty;
+ {
+-	register struct ttyent *t;
++	struct ttyent *t;
+ 
+ 	setttyent();
+ 	while ((t = getttyent()))
+@@ -64,8 +64,8 @@ struct ttyent *
+ getttyent()
+ {
+ 	static struct ttyent tty;
+-	register int c;
+-	register char *p;
++	int c;
++	char *p;
+ #define	MAXLINELENGTH	100
+ 	static char line[MAXLINELENGTH];
+ 
+@@ -142,10 +142,10 @@ libc_hidden_def (getttyent)
+ static char *
+ internal_function
+ skip(p)
+-	register char *p;
++	char *p;
+ {
+-	register char *t;
+-	register int c, q;
++	char *t;
++	int c, q;
+ 
+ 	for (q = 0, t = p; (c = *p) != '\0'; p++) {
+ 		if (c == '"') {
+@@ -177,7 +177,7 @@ skip(p)
+ static char *
+ internal_function
+ value(p)
+-	register char *p;
++	char *p;
+ {
+ 
+ 	return ((p = index(p, '=')) ? ++p : NULL);
+diff --git a/misc/getusershell.c b/misc/getusershell.c
+index 2e8d97e65c77ec4a..677377c3f7fb9081 100644
+--- a/misc/getusershell.c
++++ b/misc/getusershell.c
+@@ -95,8 +95,8 @@ setusershell()
+ static char **
+ initshells()
+ {
+-	register char **sp, *cp;
+-	register FILE *fp;
++	char **sp, *cp;
++	FILE *fp;
+ 	struct stat64 statb;
+ 	size_t flen;
+ 
+diff --git a/misc/syslog.c b/misc/syslog.c
+index 748361fc8c44b81f..4976e89b6ea56364 100644
+--- a/misc/syslog.c
++++ b/misc/syslog.c
+@@ -229,7 +229,7 @@ __vsyslog_chk(int pri, int flag, const char *fmt, va_list ap)
+ 	/* Output to stderr if requested. */
+ 	if (LogStat & LOG_PERROR) {
+ 		struct iovec iov[2];
+-		register struct iovec *v = iov;
++		struct iovec *v = iov;
+ 
+ 		v->iov_base = buf + msgoff;
+ 		v->iov_len = bufsize - msgoff;
+diff --git a/misc/ttyslot.c b/misc/ttyslot.c
+index 5872f23fd0b6ffcb..75ca6a2d42d2c79d 100644
+--- a/misc/ttyslot.c
++++ b/misc/ttyslot.c
+@@ -40,9 +40,9 @@ static char sccsid[] = "@(#)ttyslot.c	8.1 (Berkeley) 6/4/93";
+ int
+ ttyslot()
+ {
+-	register struct ttyent *ttyp;
+-	register int slot;
+-	register char *p;
++	struct ttyent *ttyp;
++	int slot;
++	char *p;
+ 	int cnt;
+ 	size_t buflen = __sysconf (_SC_TTY_NAME_MAX) + 1;
+ 	char *name;
+diff --git a/nis/nis_hash.c b/nis/nis_hash.c
+index 19b744c73f7208c9..c36ed1d5cbf56457 100644
+--- a/nis/nis_hash.c
++++ b/nis/nis_hash.c
+@@ -29,11 +29,11 @@
+  * OZ's original sdbm hash
+  */
+ uint32_t
+-__nis_hash (const void *keyarg, register size_t len)
++__nis_hash (const void *keyarg, size_t len)
+ {
+-  register const u_char *key;
+-  register size_t loop;
+-  register uint32_t h;
++  const u_char *key;
++  size_t loop;
++  uint32_t h;
+ 
+ #define HASHC   h = *key++ + 65599 * h
+ 
+diff --git a/ports/sysdeps/ia64/bits/byteswap-16.h b/ports/sysdeps/ia64/bits/byteswap-16.h
+index 4a53ffaf6d7c5f92..8e71ac1a779bfca4 100644
+--- a/ports/sysdeps/ia64/bits/byteswap-16.h
++++ b/ports/sysdeps/ia64/bits/byteswap-16.h
+@@ -23,7 +23,7 @@
+ #if defined __GNUC__ && __GNUC__ >= 2
+ # define __bswap_16(x) \
+      (__extension__							      \
+-      ({ register unsigned short int __v, __x = (unsigned short int) (x);     \
++      ({ unsigned short int __v, __x = (unsigned short int) (x);	      \
+ 	 if (__builtin_constant_p (x))					      \
+ 	   __v = __bswap_constant_16 (__x);				      \
+ 	 else								      \
+diff --git a/ports/sysdeps/ia64/bits/byteswap.h b/ports/sysdeps/ia64/bits/byteswap.h
+index d363c3e1cf7ad2df..28646f11ae941606 100644
+--- a/ports/sysdeps/ia64/bits/byteswap.h
++++ b/ports/sysdeps/ia64/bits/byteswap.h
+@@ -38,7 +38,7 @@
+ #if defined __GNUC__ && __GNUC__ >= 2
+ # define __bswap_32(x) \
+      (__extension__							      \
+-      ({ register unsigned int __v, __x = (x);				      \
++      ({ unsigned int __v, __x = (x);					      \
+ 	 if (__builtin_constant_p (x))					      \
+ 	   __v = __bswap_constant_32 (__x);				      \
+ 	 else								      \
+@@ -70,7 +70,7 @@ __bswap_32 (unsigned int __bsx)
+ 
+ # define __bswap_64(x) \
+      (__extension__							      \
+-      ({ register unsigned long int __v, __x = (x);			      \
++      ({ unsigned long int __v, __x = (x);				      \
+ 	 if (__builtin_constant_p (x))					      \
+ 	   __v = __bswap_constant_64 (__x);				      \
+ 	 else								      \
+diff --git a/posix/fnmatch_loop.c b/posix/fnmatch_loop.c
+index 89901f15b303f6ce..7ffa3a9944630a0c 100644
+--- a/posix/fnmatch_loop.c
++++ b/posix/fnmatch_loop.c
+@@ -46,8 +46,8 @@ FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+      struct STRUCT *ends;
+      size_t alloca_used;
+ {
+-  register const CHAR *p = pattern, *n = string;
+-  register UCHAR c;
++  const CHAR *p = pattern, *n = string;
++  UCHAR c;
+ #ifdef _LIBC
+ # if WIDE_CHAR_VERSION
+   const char *collseq = (const char *)
+@@ -236,7 +236,7 @@ FCT (pattern, string, string_end, no_leading_period, flags, ends, alloca_used)
+ 	    /* Nonzero if the sense of the character class is inverted.  */
+ 	    const CHAR *p_init = p;
+ 	    const CHAR *n_init = n;
+-	    register int not;
++	    int not;
+ 	    CHAR cold;
+ 	    UCHAR fn;
+ 
+diff --git a/posix/getconf.c b/posix/getconf.c
+index aa0dd86afbb46904..9cb8f29be28466ff 100644
+--- a/posix/getconf.c
++++ b/posix/getconf.c
+@@ -1043,7 +1043,7 @@ usage (void)
+ static void
+ print_all (const char *path)
+ {
+-  register const struct conf *c;
++  const struct conf *c;
+   size_t clen;
+   long int value;
+   char *cvalue;
+@@ -1087,7 +1087,7 @@ print_all (const char *path)
+ int
+ main (int argc, char *argv[])
+ {
+-  register const struct conf *c;
++  const struct conf *c;
+ 
+   /* Set locale.  Do not set LC_ALL because the other categories must
+      not be affected (according to POSIX.2).  */
+diff --git a/posix/getopt.c b/posix/getopt.c
+index 537c97741fb37aef..dc2a000487c16225 100644
+--- a/posix/getopt.c
++++ b/posix/getopt.c
+@@ -228,7 +228,7 @@ exchange (char **argv, struct _getopt_data *d)
+ 	{
+ 	  /* Bottom segment is the short one.  */
+ 	  int len = middle - bottom;
+-	  register int i;
++	  int i;
+ 
+ 	  /* Swap it with the top part of the top segment.  */
+ 	  for (i = 0; i < len; i++)
+@@ -245,7 +245,7 @@ exchange (char **argv, struct _getopt_data *d)
+ 	{
+ 	  /* Top segment is the short one.  */
+ 	  int len = top - middle;
+-	  register int i;
++	  int i;
+ 
+ 	  /* Swap it with the bottom part of the bottom segment.  */
+ 	  for (i = 0; i < len; i++)
+diff --git a/posix/glob.c b/posix/glob.c
+index e09314712d68c1b8..8c7a80085128475a 100644
+--- a/posix/glob.c
++++ b/posix/glob.c
+@@ -1264,7 +1264,7 @@ libc_hidden_def (glob)
+ /* Free storage allocated in PGLOB by a previous `glob' call.  */
+ void
+ globfree (pglob)
+-     register glob_t *pglob;
++     glob_t *pglob;
+ {
+   if (pglob->gl_pathv != NULL)
+     {
+@@ -1304,7 +1304,7 @@ collated_compare (const void *a, const void *b)
+ static int
+ prefix_array (const char *dirname, char **array, size_t n)
+ {
+-  register size_t i;
++  size_t i;
+   size_t dirlen = strlen (dirname);
+ #if defined __MSDOS__ || defined WINDOWS32
+   int sep_char = '/';
+@@ -1363,7 +1363,7 @@ __glob_pattern_type (pattern, quote)
+      const char *pattern;
+      int quote;
+ {
+-  register const char *p;
++  const char *p;
+   int ret = 0;
+ 
+   for (p = pattern; *p != '\0'; ++p)
+diff --git a/stdio-common/printf_fp.c b/stdio-common/printf_fp.c
+index 90ab807390114749..7ffc72955323a555 100644
+--- a/stdio-common/printf_fp.c
++++ b/stdio-common/printf_fp.c
+@@ -72,7 +72,7 @@
+ #define outchar(ch)							      \
+   do									      \
+     {									      \
+-      register const int outc = (ch);					      \
++      const int outc = (ch);						      \
+       if (putc (outc, fp) == EOF)					      \
+ 	{								      \
+ 	  if (buffer_malloced)						      \
+@@ -85,7 +85,7 @@
+ #define PRINT(ptr, wptr, len)						      \
+   do									      \
+     {									      \
+-      register size_t outlen = (len);					      \
++      size_t outlen = (len);						      \
+       if (len > 20)							      \
+ 	{								      \
+ 	  if (PUT (fp, wide ? (const char *) wptr : ptr, outlen) != outlen)   \
+diff --git a/stdio-common/printf_fphex.c b/stdio-common/printf_fphex.c
+index 5d31f5f6204b612b..2310e02c8344997a 100644
+--- a/stdio-common/printf_fphex.c
++++ b/stdio-common/printf_fphex.c
+@@ -52,7 +52,7 @@
+ #define outchar(ch)							      \
+   do									      \
+     {									      \
+-      register const int outc = (ch);					      \
++      const int outc = (ch);						      \
+       if (putc (outc, fp) == EOF)					      \
+ 	return -1;							      \
+       ++done;								      \
+@@ -61,7 +61,7 @@
+ #define PRINT(ptr, wptr, len)						      \
+   do									      \
+     {									      \
+-      register size_t outlen = (len);					      \
++      size_t outlen = (len);						      \
+       if (wide)								      \
+ 	while (outlen-- > 0)						      \
+ 	  outchar (*wptr++);						      \
+diff --git a/stdio-common/printf_size.c b/stdio-common/printf_size.c
+index 0cdfeee7f2e4f7bb..f5acf87eda7ddb42 100644
+--- a/stdio-common/printf_size.c
++++ b/stdio-common/printf_size.c
+@@ -42,7 +42,7 @@
+ #define outchar(ch)							      \
+   do									      \
+     {									      \
+-      register const int outc = (ch);					      \
++      const int outc = (ch);						      \
+       if (putc (outc, fp) == EOF)					      \
+ 	return -1;							      \
+       ++done;								      \
+@@ -51,7 +51,7 @@
+ #define PRINT(ptr, wptr, len)						      \
+   do									      \
+     {									      \
+-      register size_t outlen = (len);					      \
++      size_t outlen = (len);						      \
+       if (len > 20)							      \
+ 	{								      \
+ 	  if (PUT (fp, wide ? (const char *) wptr : ptr, outlen) != outlen)   \
+diff --git a/stdio-common/test_rdwr.c b/stdio-common/test_rdwr.c
+index 6fa1e1ce2e6e24c7..ce3ad5aefb8d8ea7 100644
+--- a/stdio-common/test_rdwr.c
++++ b/stdio-common/test_rdwr.c
+@@ -78,7 +78,7 @@ main (int argc, char **argv)
+     long int where = ftell (f);
+     if (where == (long int) replace_from)
+       {
+-	register size_t i;
++	size_t i;
+ 	for (i = replace_from; i < replace_to; ++i)
+ 	  if (putc(replace[i], f) == EOF)
+ 	    {
+diff --git a/stdio-common/tfformat.c b/stdio-common/tfformat.c
+index 7704ddde39856221..5cb366dd48eef16a 100644
+--- a/stdio-common/tfformat.c
++++ b/stdio-common/tfformat.c
+@@ -4050,7 +4050,7 @@ sprint_double_type sprint_doubles[] =
+ int required_precision = 13;
+ 
+ static int
+-matches (register char *result, register const char *desired)
++matches (char *result, const char *desired)
+ {
+     int digits_seen = 0;
+     for (;; result++, desired++) {
+diff --git a/stdio-common/vfprintf.c b/stdio-common/vfprintf.c
+index 97805989f6db70bf..a52c8f8cb17eaf58 100644
+--- a/stdio-common/vfprintf.c
++++ b/stdio-common/vfprintf.c
+@@ -147,7 +147,7 @@
+ #define	outchar(Ch)							      \
+   do									      \
+     {									      \
+-      register const INT_T outc = (Ch);					      \
++      const INT_T outc = (Ch);						      \
+       if (PUTC (outc, s) == EOF || done == INT_MAX)			      \
+ 	{								      \
+ 	  done = -1;							      \
+@@ -2075,7 +2075,7 @@ printf_unknown (FILE *s, const struct printf_info *info,
+   CHAR_T work_buffer[MAX (sizeof (info->width), sizeof (info->prec)) * 3];
+   CHAR_T *const workend
+     = &work_buffer[sizeof (work_buffer) / sizeof (CHAR_T)];
+-  register CHAR_T *w;
++  CHAR_T *w;
+ 
+   outchar (L_('%'));
+ 
+@@ -2281,12 +2281,12 @@ static const struct _IO_jump_t _IO_helper_jumps libio_vtable =
+ 
+ static int
+ internal_function
+-buffered_vfprintf (register _IO_FILE *s, const CHAR_T *format,
++buffered_vfprintf (_IO_FILE *s, const CHAR_T *format,
+ 		   _IO_va_list args)
+ {
+   CHAR_T buf[_IO_BUFSIZ];
+   struct helper_file helper;
+-  register _IO_FILE *hp = (_IO_FILE *) &helper._f;
++  _IO_FILE *hp = (_IO_FILE *) &helper._f;
+   int result, to_flush;
+ 
+   /* Orient the stream.  */
+diff --git a/stdio-common/vfscanf.c b/stdio-common/vfscanf.c
+index d532bb54c31cdcb1..1db8487c1a133996 100644
+--- a/stdio-common/vfscanf.c
++++ b/stdio-common/vfscanf.c
+@@ -206,13 +206,13 @@ _IO_vfscanf_internal (_IO_FILE *s, const char *format, _IO_va_list argptr,
+ #endif
+ {
+   va_list arg;
+-  register const CHAR_T *f = format;
+-  register UCHAR_T fc;	/* Current character of the format.  */
+-  register WINT_T done = 0;	/* Assignments done.  */
+-  register size_t read_in = 0;	/* Chars read in.  */
+-  register WINT_T c = 0;	/* Last char read.  */
+-  register int width;		/* Maximum field width.  */
+-  register int flags;		/* Modifiers for current format element.  */
++  const CHAR_T *f = format;
++  UCHAR_T fc;	/* Current character of the format.  */
++  WINT_T done = 0;	/* Assignments done.  */
++  size_t read_in = 0;	/* Chars read in.  */
++  WINT_T c = 0;	/* Last char read.  */
++  int width;		/* Maximum field width.  */
++  int flags;		/* Modifiers for current format element.  */
+   int errval = 0;
+ #ifndef COMPILE_WSCANF
+   __locale_t loc = _NL_CURRENT_LOCALE;
+diff --git a/stdio-common/xbug.c b/stdio-common/xbug.c
+index 76a8c547268d4f26..64ba314cbefec6e6 100644
+--- a/stdio-common/xbug.c
++++ b/stdio-common/xbug.c
+@@ -9,8 +9,8 @@ typedef struct _Buffer {
+ } Buffer;
+ 
+ void InitBuffer (Buffer *b);
+-void AppendToBuffer (register Buffer *b, const char *str, register int len);
+-void ReadFile (register Buffer *buffer, FILE *input);
++void AppendToBuffer (Buffer *b, const char *str, int len);
++void ReadFile (Buffer *buffer, FILE *input);
+ 
+ #define INIT_BUFFER_SIZE 10000
+ 
+@@ -23,9 +23,9 @@ void InitBuffer(b)
+ }
+ 
+ void AppendToBuffer(b, str, len)
+-     register Buffer *b;
++     Buffer *b;
+      const char *str;
+-     register int len;
++     int len;
+ {
+   while (b->used + len > b->room) {
+     b->buff = (char *)realloc(b->buff, 2*b->room*(sizeof(char)));
+@@ -36,11 +36,11 @@ void AppendToBuffer(b, str, len)
+ }
+ 
+ void ReadFile(buffer, input)
+-     register Buffer *buffer;
++     Buffer *buffer;
+      FILE *input;
+ {
+   char       buf[BUFSIZ + 1];
+-  register int        bytes;
++  int        bytes;
+ 
+   buffer->used = 0;
+   while (!feof(input) && (bytes = fread(buf, 1, BUFSIZ, input)) > 0) {
+diff --git a/stdlib/qsort.c b/stdlib/qsort.c
+index 2fbe763bd52d2acf..8237bbb563748a5f 100644
+--- a/stdlib/qsort.c
++++ b/stdlib/qsort.c
+@@ -29,8 +29,8 @@
+ #define SWAP(a, b, size)						      \
+   do									      \
+     {									      \
+-      register size_t __size = (size);					      \
+-      register char *__a = (a), *__b = (b);				      \
++      size_t __size = (size);						      \
++      char *__a = (a), *__b = (b);					      \
+       do								      \
+ 	{								      \
+ 	  char __tmp = *__a;						      \
+@@ -89,7 +89,7 @@ void
+ _quicksort (void *const pbase, size_t total_elems, size_t size,
+ 	    __compar_d_fn_t cmp, void *arg)
+ {
+-  register char *base_ptr = (char *) pbase;
++  char *base_ptr = (char *) pbase;
+ 
+   const size_t max_thresh = MAX_THRESH * size;
+ 
+@@ -206,7 +206,7 @@ _quicksort (void *const pbase, size_t total_elems, size_t size,
+     char *const end_ptr = &base_ptr[size * (total_elems - 1)];
+     char *tmp_ptr = base_ptr;
+     char *thresh = min(end_ptr, base_ptr + max_thresh);
+-    register char *run_ptr;
++    char *run_ptr;
+ 
+     /* Find smallest element in first threshold and place it at the
+        array's beginning.  This is the smallest array element,
+diff --git a/stdlib/setenv.c b/stdlib/setenv.c
+index d1db356a81c0152b..6185c69243464623 100644
+--- a/stdlib/setenv.c
++++ b/stdlib/setenv.c
+@@ -112,8 +112,8 @@ __add_to_environ (name, value, combined, replace)
+      const char *combined;
+      int replace;
+ {
+-  register char **ep;
+-  register size_t size;
++  char **ep;
++  size_t size;
+   const size_t namelen = strlen (name);
+   const size_t vallen = value != NULL ? strlen (value) + 1 : 0;
+ 
+diff --git a/stdlib/strtod_l.c b/stdlib/strtod_l.c
+index 6360833c6b222f3c..2047203a4cee1111 100644
+--- a/stdlib/strtod_l.c
++++ b/stdlib/strtod_l.c
+@@ -1142,10 +1142,9 @@ ____STRTOF_INTERNAL (nptr, endptr, group, loc)
+      really integer digits or belong to the fractional part; i.e. we normalize
+      123e-2 to 1.23.  */
+   {
+-    register intmax_t incr = (exponent < 0
+-			      ? MAX (-(intmax_t) int_no, exponent)
+-			      : MIN ((intmax_t) dig_no - (intmax_t) int_no,
+-				     exponent));
++    intmax_t incr = (exponent < 0
++		     ? MAX (-(intmax_t) int_no, exponent)
++		     : MIN ((intmax_t) dig_no - (intmax_t) int_no, exponent));
+     int_no += incr;
+     exponent -= incr;
+   }
+@@ -1466,7 +1465,7 @@ ____STRTOF_INTERNAL (nptr, endptr, group, loc)
+ #define got_limb							      \
+ 	      if (bits == 0)						      \
+ 		{							      \
+-		  register int cnt;					      \
++		  int cnt;						      \
+ 		  if (quot == 0)					      \
+ 		    cnt = BITS_PER_MP_LIMB;				      \
+ 		  else							      \
+@@ -1618,7 +1617,7 @@ ____STRTOF_INTERNAL (nptr, endptr, group, loc)
+ 	  if (numsize < densize)
+ 	    {
+ 	      mp_size_t empty = densize - numsize;
+-	      register int i;
++	      int i;
+ 
+ 	      if (bits <= 0)
+ 		exponent -= empty * BITS_PER_MP_LIMB;
+@@ -1646,7 +1645,7 @@ ____STRTOF_INTERNAL (nptr, endptr, group, loc)
+ 		      used = MANT_DIG - bits;
+ 		      if (used >= BITS_PER_MP_LIMB)
+ 			{
+-			  register int i;
++			  int i;
+ 			  (void) __mpn_lshift (&retval[used
+ 						       / BITS_PER_MP_LIMB],
+ 					       retval,
+diff --git a/stdlib/strtol_l.c b/stdlib/strtol_l.c
+index 784641b2920f1948..615190821e24b41a 100644
+--- a/stdlib/strtol_l.c
++++ b/stdlib/strtol_l.c
+@@ -231,11 +231,11 @@ INTERNAL (__strtol_l) (nptr, endptr, base, group, loc)
+      __locale_t loc;
+ {
+   int negative;
+-  register unsigned LONG int cutoff;
+-  register unsigned int cutlim;
+-  register unsigned LONG int i;
+-  register const STRING_TYPE *s;
+-  register UCHAR_TYPE c;
++  unsigned LONG int cutoff;
++  unsigned int cutlim;
++  unsigned LONG int i;
++  const STRING_TYPE *s;
++  UCHAR_TYPE c;
+   const STRING_TYPE *save, *end;
+   int overflow;
+ #ifndef USE_WIDE_CHAR
+diff --git a/stdlib/tst-strtod.c b/stdlib/tst-strtod.c
+index 670beb1e4df0e0dc..1cfb1da8963d7155 100644
+--- a/stdlib/tst-strtod.c
++++ b/stdlib/tst-strtod.c
+@@ -85,7 +85,7 @@ int
+ main (int argc, char ** argv)
+ {
+   char buf[100];
+-  register const struct ltest *lt;
++  const struct ltest *lt;
+   char *ep;
+   int status = 0;
+   int save_errno;
+@@ -184,7 +184,7 @@ main (int argc, char ** argv)
+ static void
+ expand (dst, c)
+      char *dst;
+-     register int c;
++     int c;
+ {
+   if (isprint (c))
+     {
+diff --git a/stdlib/tst-strtol.c b/stdlib/tst-strtol.c
+index 99cd574107cfed1c..448102a2d9652ee3 100644
+--- a/stdlib/tst-strtol.c
++++ b/stdlib/tst-strtol.c
+@@ -537,14 +537,14 @@ static void expand (char *dst, int c);
+ static int
+ do_test (void)
+ {
+-  register const struct ltest *lt;
++  const struct ltest *lt;
+   char *ep;
+   int status = 0;
+   int save_errno;
+ 
+   for (lt = tests; lt->str != NULL; ++lt)
+     {
+-      register long int l;
++      long int l;
+ 
+       errno = 0;
+       l = strtol (lt->str, &ep, lt->base);
+@@ -577,7 +577,7 @@ do_test (void)
+ 
+   for (++lt; lt->str != NULL; lt++)
+     {
+-      register unsigned long int ul;
++      unsigned long int ul;
+ 
+       errno = 0;
+       ul = strtoul (lt->str, &ep, lt->base);
+diff --git a/stdlib/tst-strtoll.c b/stdlib/tst-strtoll.c
+index b5ae230b4e0267b0..93f1a56a56956bdb 100644
+--- a/stdlib/tst-strtoll.c
++++ b/stdlib/tst-strtoll.c
+@@ -312,14 +312,14 @@ static void expand (char *dst, int c);
+ static int
+ do_test (void)
+ {
+-  register const struct ltest *lt;
++  const struct ltest *lt;
+   char *ep;
+   int status = 0;
+   int save_errno;
+ 
+   for (lt = tests; lt->str != NULL; ++lt)
+     {
+-      register long long int l;
++      long long int l;
+ 
+       errno = 0;
+       l = strtoll (lt->str, &ep, lt->base);
+@@ -352,7 +352,7 @@ do_test (void)
+ 
+   for (++lt; lt->str != NULL; lt++)
+     {
+-      register unsigned long long int ul;
++      unsigned long long int ul;
+ 
+       errno = 0;
+       ul = strtoull (lt->str, &ep, lt->base);
+diff --git a/string/bits/string2.h b/string/bits/string2.h
+index acd0679e72b10fbf..c9bf59319e1c4892 100644
+--- a/string/bits/string2.h
++++ b/string/bits/string2.h
+@@ -839,7 +839,7 @@ __stpcpy_small (char *__dest,
+ # endif
+ 
+ # define __strcmp_cc(s1, s2, l) \
+-  (__extension__ ({ register int __result =				      \
++  (__extension__ ({ int __result =					      \
+ 		      (((const unsigned char *) (const char *) (s1))[0]	      \
+ 		       - ((const unsigned char *) (const char *)(s2))[0]);    \
+ 		    if (l > 0 && __result == 0)				      \
+@@ -868,7 +868,7 @@ __stpcpy_small (char *__dest,
+ # define __strcmp_cg(s1, s2, l1) \
+   (__extension__ ({ const unsigned char *__s2 =				      \
+ 		      (const unsigned char *) (const char *) (s2);	      \
+-		    register int __result =				      \
++		    int __result =					      \
+ 		      (((const unsigned char *) (const char *) (s1))[0]	      \
+ 		       - __s2[0]);					      \
+ 		    if (l1 > 0 && __result == 0)			      \
+@@ -969,7 +969,7 @@ __STRING_INLINE size_t __strcspn_c1 (const char *__s, int __reject);
+ __STRING_INLINE size_t
+ __strcspn_c1 (const char *__s, int __reject)
+ {
+-  register size_t __result = 0;
++  size_t __result = 0;
+   while (__s[__result] != '\0' && __s[__result] != __reject)
+     ++__result;
+   return __result;
+@@ -980,7 +980,7 @@ __STRING_INLINE size_t __strcspn_c2 (const char *__s, int __reject1,
+ __STRING_INLINE size_t
+ __strcspn_c2 (const char *__s, int __reject1, int __reject2)
+ {
+-  register size_t __result = 0;
++  size_t __result = 0;
+   while (__s[__result] != '\0' && __s[__result] != __reject1
+ 	 && __s[__result] != __reject2)
+     ++__result;
+@@ -993,7 +993,7 @@ __STRING_INLINE size_t
+ __strcspn_c3 (const char *__s, int __reject1, int __reject2,
+ 	      int __reject3)
+ {
+-  register size_t __result = 0;
++  size_t __result = 0;
+   while (__s[__result] != '\0' && __s[__result] != __reject1
+ 	 && __s[__result] != __reject2 && __s[__result] != __reject3)
+     ++__result;
+@@ -1045,7 +1045,7 @@ __STRING_INLINE size_t __strspn_c1 (const char *__s, int __accept);
+ __STRING_INLINE size_t
+ __strspn_c1 (const char *__s, int __accept)
+ {
+-  register size_t __result = 0;
++  size_t __result = 0;
+   /* Please note that __accept never can be '\0'.  */
+   while (__s[__result] == __accept)
+     ++__result;
+@@ -1057,7 +1057,7 @@ __STRING_INLINE size_t __strspn_c2 (const char *__s, int __accept1,
+ __STRING_INLINE size_t
+ __strspn_c2 (const char *__s, int __accept1, int __accept2)
+ {
+-  register size_t __result = 0;
++  size_t __result = 0;
+   /* Please note that __accept1 and __accept2 never can be '\0'.  */
+   while (__s[__result] == __accept1 || __s[__result] == __accept2)
+     ++__result;
+@@ -1069,7 +1069,7 @@ __STRING_INLINE size_t __strspn_c3 (const char *__s, int __accept1,
+ __STRING_INLINE size_t
+ __strspn_c3 (const char *__s, int __accept1, int __accept2, int __accept3)
+ {
+-  register size_t __result = 0;
++  size_t __result = 0;
+   /* Please note that __accept1 to __accept3 never can be '\0'.  */
+   while (__s[__result] == __accept1 || __s[__result] == __accept2
+ 	 || __s[__result] == __accept3)
+@@ -1221,7 +1221,7 @@ __STRING_INLINE char *__strsep_1c (char **__s, char __reject);
+ __STRING_INLINE char *
+ __strsep_1c (char **__s, char __reject)
+ {
+-  register char *__retval = *__s;
++  char *__retval = *__s;
+   if (__retval != NULL && (*__s = strchr (__retval, __reject)) != NULL)
+     *(*__s)++ = '\0';
+   return __retval;
+@@ -1231,10 +1231,10 @@ __STRING_INLINE char *__strsep_2c (char **__s, char __reject1, char __reject2);
+ __STRING_INLINE char *
+ __strsep_2c (char **__s, char __reject1, char __reject2)
+ {
+-  register char *__retval = *__s;
++  char *__retval = *__s;
+   if (__retval != NULL)
+     {
+-      register char *__cp = __retval;
++      char *__cp = __retval;
+       while (1)
+ 	{
+ 	  if (*__cp == '\0')
+@@ -1259,10 +1259,10 @@ __STRING_INLINE char *__strsep_3c (char **__s, char __reject1, char __reject2,
+ __STRING_INLINE char *
+ __strsep_3c (char **__s, char __reject1, char __reject2, char __reject3)
+ {
+-  register char *__retval = *__s;
++  char *__retval = *__s;
+   if (__retval != NULL)
+     {
+-      register char *__cp = __retval;
++      char *__cp = __retval;
+       while (1)
+ 	{
+ 	  if (*__cp == '\0')
+diff --git a/string/memccpy.c b/string/memccpy.c
+index 78c13b60bd1b276c..64c3c0196845f102 100644
+--- a/string/memccpy.c
++++ b/string/memccpy.c
+@@ -34,10 +34,10 @@ __memccpy (dest, src, c, n)
+       int c;
+       size_t n;
+ {
+-  register const char *s = src;
+-  register char *d = dest;
+-  register const char x = c;
+-  register size_t i = n;
++  const char *s = src;
++  char *d = dest;
++  const char x = c;
++  size_t i = n;
+ 
+   while (i-- > 0)
+     if ((*d++ = *s++) == x)
+diff --git a/string/stpcpy.c b/string/stpcpy.c
+index 69d150f0c8557087..b74f6e2b489e1f18 100644
+--- a/string/stpcpy.c
++++ b/string/stpcpy.c
+@@ -40,8 +40,8 @@ __stpcpy (dest, src)
+      char *dest;
+      const char *src;
+ {
+-  register char *d = dest;
+-  register const char *s = src;
++  char *d = dest;
++  const char *s = src;
+ 
+   do
+     *d++ = *s;
+diff --git a/string/strcmp.c b/string/strcmp.c
+index 5384db9b2031c161..47fd2827ad9d64cf 100644
+--- a/string/strcmp.c
++++ b/string/strcmp.c
+@@ -32,8 +32,8 @@ STRCMP (p1, p2)
+      const char *p1;
+      const char *p2;
+ {
+-  register const unsigned char *s1 = (const unsigned char *) p1;
+-  register const unsigned char *s2 = (const unsigned char *) p2;
++  const unsigned char *s1 = (const unsigned char *) p1;
++  const unsigned char *s2 = (const unsigned char *) p2;
+   unsigned char c1, c2;
+ 
+   do
+diff --git a/string/strrchr.c b/string/strrchr.c
+index 03f3957fe902c968..2cb833016235a1cf 100644
+--- a/string/strrchr.c
++++ b/string/strrchr.c
+@@ -27,7 +27,7 @@
+ char *
+ STRRCHR (const char *s, int c)
+ {
+-  register const char *found, *p;
++  const char *found, *p;
+ 
+   c = (unsigned char) c;
+ 
+diff --git a/sysdeps/generic/sigset-cvt-mask.h b/sysdeps/generic/sigset-cvt-mask.h
+index 366a7719b30c9c01..d7084c0b539aab08 100644
+--- a/sysdeps/generic/sigset-cvt-mask.h
++++ b/sysdeps/generic/sigset-cvt-mask.h
+@@ -29,7 +29,7 @@ sigset_set_old_mask (sigset_t *set, int mask)
+     *set = (unsigned int) mask;
+   else
+     {
+-      register unsigned int __sig;
++      unsigned int __sig;
+ 
+       if (__sigemptyset (set) < 0)
+ 	return -1;
+@@ -52,7 +52,7 @@ sigset_get_old_mask (const sigset_t *set)
+   else
+     {
+       unsigned int mask = 0;
+-      register unsigned int sig;
++      unsigned int sig;
+ 
+       for (sig = 1; sig < NSIG && sig <= sizeof (mask) * 8; sig++)
+ 	if (__sigismember (set, sig))
+diff --git a/sysdeps/mach/hurd/getcwd.c b/sysdeps/mach/hurd/getcwd.c
+index e4cea5c287d76fff..6945e4d1c5c12237 100644
+--- a/sysdeps/mach/hurd/getcwd.c
++++ b/sysdeps/mach/hurd/getcwd.c
+@@ -46,7 +46,7 @@ _hurd_canonicalize_directory_name_internal (file_t thisdir,
+   mach_port_t rootid, thisid, rootdevid, thisdevid;
+   ino64_t rootino, thisino;
+   char *file_name;
+-  register char *file_namep;
++  char *file_namep;
+   file_t parent;
+   char *dirbuf = NULL;
+   unsigned int dirbufsize = 0;
+diff --git a/sysdeps/mach/i386/sysdep.h b/sysdeps/mach/i386/sysdep.h
+index bafa4d6c8c0639e8..f87691d0264cfcdc 100644
+--- a/sysdeps/mach/i386/sysdep.h
++++ b/sysdeps/mach/i386/sysdep.h
+@@ -29,7 +29,7 @@
+ #define SNARF_ARGS(entry_sp, argc, argv, envp)				      \
+   do									      \
+     {									      \
+-      register char **p;						      \
++      char **p;								      \
+       argc = (int) *entry_sp;						      \
+       argv = (char **) (entry_sp + 1);					      \
+       p = argv;								      \
+diff --git a/sysdeps/powerpc/powerpc32/power6/wcschr.c b/sysdeps/powerpc/powerpc32/power6/wcschr.c
+index a981427f7298477d..3b4cca15face81da 100644
+--- a/sysdeps/powerpc/powerpc32/power6/wcschr.c
++++ b/sysdeps/powerpc/powerpc32/power6/wcschr.c
+@@ -22,10 +22,10 @@
+ /* Find the first occurrence of WC in WCS.  */
+ wchar_t *
+ wcschr (wcs, wc)
+-     register const wchar_t *wcs;
+-     register const wchar_t wc;
++     const wchar_t *wcs;
++     const wchar_t wc;
+ {
+-  register const wchar_t *wcs2 = wcs + 1;
++  const wchar_t *wcs2 = wcs + 1;
+ 
+   if (*wcs == wc)
+     return (wchar_t *) wcs;
+diff --git a/sysdeps/powerpc/powerpc32/power6/wcsrchr.c b/sysdeps/powerpc/powerpc32/power6/wcsrchr.c
+index f9db8f8b53fad7fc..333650190afff171 100644
+--- a/sysdeps/powerpc/powerpc32/power6/wcsrchr.c
++++ b/sysdeps/powerpc/powerpc32/power6/wcsrchr.c
+@@ -22,10 +22,10 @@
+ /* Find the last occurrence of WC in WCS.  */
+ wchar_t *
+ wcsrchr (wcs, wc)
+-     register const wchar_t *wcs;
+-     register const wchar_t wc;
++     const wchar_t *wcs;
++     const wchar_t wc;
+ {
+-  register const wchar_t *wcs2 = wcs + 1;
++  const wchar_t *wcs2 = wcs + 1;
+   const wchar_t *retval = NULL;
+ 
+   if (*wcs == wc)
+diff --git a/sysdeps/x86/bits/byteswap-16.h b/sysdeps/x86/bits/byteswap-16.h
+index 584eb86b74a80c33..2f619729a766ff4e 100644
+--- a/sysdeps/x86/bits/byteswap-16.h
++++ b/sysdeps/x86/bits/byteswap-16.h
+@@ -24,7 +24,7 @@
+ # if __GNUC__ >= 2
+ #  define __bswap_16(x) \
+      (__extension__							      \
+-      ({ register unsigned short int __v, __x = (unsigned short int) (x);     \
++      ({ unsigned short int __v, __x = (unsigned short int) (x);	      \
+ 	 if (__builtin_constant_p (__x))				      \
+ 	   __v = __bswap_constant_16 (__x);				      \
+ 	 else								      \
+@@ -37,7 +37,7 @@
+ /* This is better than nothing.  */
+ #  define __bswap_16(x) \
+      (__extension__							      \
+-      ({ register unsigned short int __x = (unsigned short int) (x);	      \
++      ({ unsigned short int __x = (unsigned short int) (x);		      \
+ 	 __bswap_constant_16 (__x); }))
+ # endif
+ #else
+diff --git a/sysdeps/x86/bits/byteswap.h b/sysdeps/x86/bits/byteswap.h
+index 581687c7f2631183..9bab0c7f4fcb532a 100644
+--- a/sysdeps/x86/bits/byteswap.h
++++ b/sysdeps/x86/bits/byteswap.h
+@@ -57,7 +57,7 @@ __bswap_32 (unsigned int __bsx)
+    `bswap' opcode.  On i386 we have to use three instructions.  */
+ #   define __bswap_32(x) \
+       (__extension__							      \
+-       ({ register unsigned int __v, __x = (x);				      \
++       ({ unsigned int __v, __x = (x);					      \
+ 	  if (__builtin_constant_p (__x))				      \
+ 	    __v = __bswap_constant_32 (__x);				      \
+ 	  else								      \
+@@ -66,7 +66,7 @@ __bswap_32 (unsigned int __bsx)
+ #  else
+ #   define __bswap_32(x)						      \
+       (__extension__							      \
+-       ({ register unsigned int __v, __x = (x);				      \
++       ({ unsigned int __v, __x = (x);					      \
+ 	  if (__builtin_constant_p (__x))				      \
+ 	    __v = __bswap_constant_32 (__x);				      \
+ 	  else								      \
+@@ -81,7 +81,7 @@ __bswap_32 (unsigned int __bsx)
+ # else
+ #  define __bswap_32(x) \
+      (__extension__							      \
+-      ({ register unsigned int __x = (x); __bswap_constant_32 (__x); }))
++      ({ unsigned int __x = (x); __bswap_constant_32 (__x); }))
+ # endif
+ #else
+ static __inline unsigned int
+@@ -113,7 +113,7 @@ __bswap_64 (__uint64_t __bsx)
+ # elif __WORDSIZE == 64
+ #  define __bswap_64(x) \
+      (__extension__							      \
+-      ({ register __uint64_t __v, __x = (x);				      \
++      ({ __uint64_t __v, __x = (x);					      \
+ 	 if (__builtin_constant_p (__x))				      \
+ 	   __v = __bswap_constant_64 (__x);				      \
+ 	 else								      \
+diff --git a/time/test_time.c b/time/test_time.c
+index b3573aa26ac34bf6..8d20ff935b9e8963 100644
+--- a/time/test_time.c
++++ b/time/test_time.c
+@@ -24,7 +24,7 @@ int
+ main (int argc, char **argv)
+ {
+   time_t t;
+-  register struct tm *tp;
++  struct tm *tp;
+   struct tm tbuf;
+   int lose = 0;
+ 
+diff --git a/time/tzfile.c b/time/tzfile.c
+index 38aa15cb16300e1c..d67262916f11eaf0 100644
+--- a/time/tzfile.c
++++ b/time/tzfile.c
+@@ -104,10 +104,10 @@ __tzfile_read (const char *file, size_t extra, char **extrap)
+ {
+   static const char default_tzdir[] = TZDIR;
+   size_t num_isstd, num_isgmt;
+-  register FILE *f;
++  FILE *f;
+   struct tzhead tzhead;
+   size_t chars;
+-  register size_t i;
++  size_t i;
+   size_t total_size;
+   size_t types_idx;
+   size_t leaps_idx;
+@@ -632,7 +632,7 @@ __tzfile_compute (time_t timer, int use_localtime,
+ 		  long int *leap_correct, int *leap_hit,
+ 		  struct tm *tp)
+ {
+-  register size_t i;
++  size_t i;
+ 
+   if (use_localtime)
+     {
+diff --git a/wcsmbs/wcscat.c b/wcsmbs/wcscat.c
+index 4eb2d936e76098b6..89366e1437465988 100644
+--- a/wcsmbs/wcscat.c
++++ b/wcsmbs/wcscat.c
+@@ -28,8 +28,8 @@ __wcscat (dest, src)
+      wchar_t *dest;
+      const wchar_t *src;
+ {
+-  register wchar_t *s1 = dest;
+-  register const wchar_t *s2 = src;
++  wchar_t *s1 = dest;
++  const wchar_t *s2 = src;
+   wchar_t c;
+ 
+   /* Find the end of the string.  */
+diff --git a/wcsmbs/wcschr.c b/wcsmbs/wcschr.c
+index cb0592bd425b6c4c..56511d88176fa1f0 100644
+--- a/wcsmbs/wcschr.c
++++ b/wcsmbs/wcschr.c
+@@ -24,8 +24,8 @@
+ 
+ wchar_t *
+ wcschr (wcs, wc)
+-     register const wchar_t *wcs;
+-     register const wchar_t wc;
++     const wchar_t *wcs;
++     const wchar_t wc;
+ {
+   do
+     if (*wcs == wc)
+diff --git a/wcsmbs/wcschrnul.c b/wcsmbs/wcschrnul.c
+index 1e4c44f80f77ef63..48eaf7b011e3a690 100644
+--- a/wcsmbs/wcschrnul.c
++++ b/wcsmbs/wcschrnul.c
+@@ -24,8 +24,8 @@
+ /* Find the first occurrence of WC in WCS.  */
+ wchar_t *
+ __wcschrnul (wcs, wc)
+-     register const wchar_t *wcs;
+-     register const wchar_t wc;
++     const wchar_t *wcs;
++     const wchar_t wc;
+ {
+   while (*wcs != L'\0')
+     if (*wcs == wc)
+diff --git a/wcsmbs/wcscspn.c b/wcsmbs/wcscspn.c
+index 9e84226cf5674ef8..cf4205fd5e56baee 100644
+--- a/wcsmbs/wcscspn.c
++++ b/wcsmbs/wcscspn.c
+@@ -29,7 +29,7 @@ wcscspn (wcs, reject)
+      const wchar_t *wcs;
+      const wchar_t *reject;
+ {
+-  register size_t count = 0;
++  size_t count = 0;
+ 
+   while (*wcs != L'\0')
+     if (wcschr (reject, *wcs++) == NULL)
+diff --git a/wcsmbs/wcspbrk.c b/wcsmbs/wcspbrk.c
+index b769a388d5e49301..ee880709d826fde8 100644
+--- a/wcsmbs/wcspbrk.c
++++ b/wcsmbs/wcspbrk.c
+@@ -25,8 +25,8 @@
+ /* Find the first occurrence in WCS of any wide-character in ACCEPT.  */
+ wchar_t *
+ wcspbrk (wcs, accept)
+-     register const wchar_t *wcs;
+-     register const wchar_t *accept;
++     const wchar_t *wcs;
++     const wchar_t *accept;
+ {
+   while (*wcs != L'\0')
+     if (wcschr (accept, *wcs) == NULL)
+diff --git a/wcsmbs/wcsrchr.c b/wcsmbs/wcsrchr.c
+index 27c94c5bb28cf9c5..b1771a7e8a7ee8a9 100644
+--- a/wcsmbs/wcsrchr.c
++++ b/wcsmbs/wcsrchr.c
+@@ -25,8 +25,8 @@
+ /* Find the last occurrence of WC in WCS.  */
+ wchar_t *
+ WCSRCHR (wcs, wc)
+-     register const wchar_t *wcs;
+-     register const wchar_t wc;
++     const wchar_t *wcs;
++     const wchar_t wc;
+ {
+   const wchar_t *retval = NULL;
+ 
+diff --git a/wcsmbs/wcsspn.c b/wcsmbs/wcsspn.c
+index 3e84726c6acb159c..4c2db0ffc360e906 100644
+--- a/wcsmbs/wcsspn.c
++++ b/wcsmbs/wcsspn.c
+@@ -29,9 +29,9 @@ wcsspn (wcs, accept)
+      const wchar_t *wcs;
+      const wchar_t *accept;
+ {
+-  register const wchar_t *p;
+-  register const wchar_t *a;
+-  register size_t count = 0;
++  const wchar_t *p;
++  const wchar_t *a;
++  size_t count = 0;
+ 
+   for (p = wcs; *p != L'\0'; ++p)
+     {
+diff --git a/wcsmbs/wcsstr.c b/wcsmbs/wcsstr.c
+index 932c74fe5e144ce9..d4a42df01ce1214c 100644
+--- a/wcsmbs/wcsstr.c
++++ b/wcsmbs/wcsstr.c
+@@ -33,7 +33,7 @@ wcsstr (haystack, needle)
+      const wchar_t *haystack;
+      const wchar_t *needle;
+ {
+-  register wchar_t b, c;
++  wchar_t b, c;
+ 
+   if ((b = *needle) != L'\0')
+     {
+@@ -50,8 +50,8 @@ wcsstr (haystack, needle)
+ 
+       for (;;)
+ 	{
+-	  register wchar_t a;
+-	  register const wchar_t *rhaystack, *rneedle;
++	  wchar_t a;
++	  const wchar_t *rhaystack, *rneedle;
+ 
+ 	  do
+ 	    {
+diff --git a/wcsmbs/wmemchr.c b/wcsmbs/wmemchr.c
+index 905a321fb24680f4..b8726838a2951d6e 100644
+--- a/wcsmbs/wmemchr.c
++++ b/wcsmbs/wmemchr.c
+@@ -24,9 +24,9 @@
+ 
+ wchar_t *
+ wmemchr (s, c, n)
+-     register const wchar_t *s;
+-     register wchar_t c;
+-     register size_t n;
++     const wchar_t *s;
++     wchar_t c;
++     size_t n;
+ {
+   /* For performance reasons unfold the loop four times.  */
+   while (n >= 4)
+diff --git a/wcsmbs/wmemcmp.c b/wcsmbs/wmemcmp.c
+index 2680b4bd078352bb..bb0a900dc8a5ec49 100644
+--- a/wcsmbs/wmemcmp.c
++++ b/wcsmbs/wmemcmp.c
+@@ -28,8 +28,8 @@ WMEMCMP (s1, s2, n)
+      const wchar_t *s2;
+      size_t n;
+ {
+-  register wchar_t c1;
+-  register wchar_t c2;
++  wchar_t c1;
++  wchar_t c2;
+ 
+   while (n >= 4)
+     {
+diff --git a/wcsmbs/wmemset.c b/wcsmbs/wmemset.c
+index 8049bb813075f000..afc26c7c48f34f3d 100644
+--- a/wcsmbs/wmemset.c
++++ b/wcsmbs/wmemset.c
+@@ -28,7 +28,7 @@ wmemset (s, c, n)
+      wchar_t c;
+      size_t n;
+ {
+-  register wchar_t *wp = s;
++  wchar_t *wp = s;
+ 
+   while (n >= 4)
+     {

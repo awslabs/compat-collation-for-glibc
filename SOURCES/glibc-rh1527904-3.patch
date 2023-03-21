@@ -1,0 +1,88 @@
+commit 630f4cc3aa019ede55976ea561f1a7af2f068639
+Author: Szabolcs Nagy <szabolcs.nagy@arm.com>
+Date:   Wed Dec 6 13:05:50 2017 +0000
+
+    [BZ #22637] Fix stack guard size accounting
+    
+    Previously if user requested S stack and G guard when creating a
+    thread, the total mapping was S and the actual available stack was
+    S - G - static_tls, which is not what the user requested.
+    
+    This patch fixes the guard size accounting by pretending the user
+    requested S+G stack.  This way all later logic works out except
+    when reporting the user requested stack size (pthread_getattr_np)
+    or when computing the minimal stack size (__pthread_get_minstack).
+    
+    Normally this will increase thread stack allocations by one page.
+    TLS accounting is not affected, that will require a separate fix.
+    
+            [BZ #22637]
+            * nptl/descr.h (stackblock, stackblock_size): Update comments.
+            * nptl/allocatestack.c (allocate_stack): Add guardsize to stacksize.
+            * nptl/nptl-init.c (__pthread_get_minstack): Remove guardsize from
+            stacksize.
+            * nptl/pthread_getattr_np.c (pthread_getattr_np): Likewise.
+
+Index: glibc-2.17-c758a686/nptl/allocatestack.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/allocatestack.c
++++ glibc-2.17-c758a686/nptl/allocatestack.c
+@@ -470,6 +470,10 @@ allocate_stack (const struct pthread_att
+       /* Make sure the size of the stack is enough for the guard and
+ 	 eventually the thread descriptor.  */
+       guardsize = (attr->guardsize + pagesize_m1) & ~pagesize_m1;
++      if (guardsize < attr->guardsize || size + guardsize < guardsize)
++	/* Arithmetic overflow.  */
++	return EINVAL;
++      size += guardsize;
+       if (__builtin_expect (size < ((guardsize + __static_tls_size
+ 				     + MINIMAL_REST_STACK + pagesize_m1)
+ 				    & ~pagesize_m1),
+Index: glibc-2.17-c758a686/nptl/descr.h
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/descr.h
++++ glibc-2.17-c758a686/nptl/descr.h
+@@ -366,9 +366,9 @@ struct pthread
+   struct _Unwind_Exception exc;
+ #endif
+ 
+-  /* If nonzero pointer to area allocated for the stack and its
+-     size.  */
++  /* If nonzero, pointer to the area allocated for the stack and guard. */
+   void *stackblock;
++  /* Size of the stackblock area including the guard.  */
+   size_t stackblock_size;
+   /* Size of the included guard area.  */
+   size_t guardsize;
+Index: glibc-2.17-c758a686/nptl/nptl-init.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/nptl-init.c
++++ glibc-2.17-c758a686/nptl/nptl-init.c
+@@ -500,8 +500,5 @@ strong_alias (__pthread_initialize_minim
+ size_t
+ __pthread_get_minstack (const pthread_attr_t *attr)
+ {
+-  struct pthread_attr *iattr = (struct pthread_attr *) attr;
+-
+-  return (GLRO(dl_pagesize) + __static_tls_size + PTHREAD_STACK_MIN
+-	  + iattr->guardsize);
++  return GLRO(dl_pagesize) + __static_tls_size + PTHREAD_STACK_MIN;
+ }
+Index: glibc-2.17-c758a686/nptl/pthread_getattr_np.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_getattr_np.c
++++ glibc-2.17-c758a686/nptl/pthread_getattr_np.c
+@@ -59,8 +59,11 @@ pthread_getattr_np (thread_id, attr)
+   /* The sizes are subject to alignment.  */
+   if (__builtin_expect (thread->stackblock != NULL, 1))
+     {
+-      iattr->stacksize = thread->stackblock_size;
+-      iattr->stackaddr = (char *) thread->stackblock + iattr->stacksize;
++      /* The stack size reported to the user should not include the
++	 guard size.  */
++      iattr->stacksize = thread->stackblock_size - thread->guardsize;
++      iattr->stackaddr = (char *) thread->stackblock
++       			 + thread->stackblock_size;
+     }
+   else
+     {

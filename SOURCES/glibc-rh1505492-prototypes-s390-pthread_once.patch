@@ -1,0 +1,24 @@
+Introduce protype-style function definition for S390 pthread_once.  The
+old-style function definition was removed upstream in:
+
+commit bc89c0fc70ba952f78fc27fc261ec209be0a6732
+Author: Torvald Riegel <triegel@redhat.com>
+Date:   Mon Dec 8 18:32:14 2014 +0100
+
+    Remove custom pthread_once implementation on s390.
+
+diff --git a/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c b/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c
+index cd53d77c163661c5..4bce7fec13ea3bb2 100644
+--- a/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c
++++ b/nptl/sysdeps/unix/sysv/linux/s390/pthread_once.c
+@@ -34,9 +34,7 @@ clear_once_control (void *arg)
+ 
+ 
+ int
+-__pthread_once (once_control, init_routine)
+-     pthread_once_t *once_control;
+-     void (*init_routine) (void);
++__pthread_once (pthread_once_t *once_control, void (*init_routine) (void))
+ {
+   while (1)
+     {

@@ -1,0 +1,41 @@
+Convert __stpcpy_chk and __strcpy_chk to prototype-style function
+definitions.  Upstream, this happened as part of:
+
+commit 0d0325ed4b1052f32069eb3a51f7e16485a73568
+Author: Ondřej Bílka <neleai@seznam.cz>
+Date:   Tue Aug 25 12:23:24 2015 +0200
+
+    Fix strcpy_chk and stpcpy_chk performance.
+
+diff --git a/debug/stpcpy_chk.c b/debug/stpcpy_chk.c
+index 3934d132d930093c..ba8058051857ef16 100644
+--- a/debug/stpcpy_chk.c
++++ b/debug/stpcpy_chk.c
+@@ -24,10 +24,7 @@
+ 
+ /* Copy SRC to DEST, returning the address of the terminating '\0' in DEST.  */
+ char *
+-__stpcpy_chk (dest, src, destlen)
+-     char *dest;
+-     const char *src;
+-     size_t destlen;
++__stpcpy_chk (char *dest, const char *src, size_t destlen)
+ {
+   char *d = dest;
+   const char *s = src;
+diff --git a/debug/strcpy_chk.c b/debug/strcpy_chk.c
+index ee22b11cd33afdde..7cbe14a327dc7992 100644
+--- a/debug/strcpy_chk.c
++++ b/debug/strcpy_chk.c
+@@ -23,10 +23,7 @@
+ 
+ /* Copy SRC to DEST with checking of destination buffer overflow.  */
+ char *
+-__strcpy_chk (dest, src, destlen)
+-     char *dest;
+-     const char *src;
+-     size_t destlen;
++__strcpy_chk (char *dest, const char *src, size_t destlen)
+ {
+   char c;
+   char *s = (char *) src;

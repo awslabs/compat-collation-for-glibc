@@ -1,0 +1,21 @@
+commit 180e0e4b29e4950cd411144c7b9dab1f850853d9
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Thu Jul 10 14:21:27 2014 +0530
+
+    Fix -Wundef warning for HAVE_LOCALTIME_R
+    
+    Define it to 0.  There is a gnulib copy for this, but it is out of
+    sync with our copy.
+
+diff --git a/time/strptime_l.c b/time/strptime_l.c
+index 7bc5ed3eb0a349ce..14d50a2e879a2c5c 100644
+--- a/time/strptime_l.c
++++ b/time/strptime_l.c
+@@ -28,6 +28,7 @@
+ #include <stdbool.h>
+ 
+ #ifdef _LIBC
++# define HAVE_LOCALTIME_R 0
+ # include "../locale/localeinfo.h"
+ #endif
+ 

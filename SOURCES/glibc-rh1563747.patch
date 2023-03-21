@@ -1,0 +1,81 @@
+commit a700e7cb3799316e1b23879b4cf0891f5703acb1
+Author: DJ Delorie <dj@delorie.com>
+Date:   Thu Apr 12 15:25:50 2018 -0400
+
+    Update kernel version in syscall-names.list to 4.16.
+    
+    Linux 4.16 does not add any new syscalls; this patch updates the
+    version number in syscall-names.list to reflect that it's still
+    current for 4.16.
+    
+    Tested for x86_64 (compilation with build-many-glibcs.py, using Linux
+    4.16).
+    
+    	* sysdeps/unix/sysv/linux/syscall-names.list: Update kernel
+    	version to 4.16.
+
+commit 39f898c69205ea4dc3ca2e817f797df95d928347
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Thu Feb 1 21:10:04 2018 +0000
+
+    Update syscall-names.list for 4.15.
+    
+    This patch updates sysdeps/unix/sysv/linux/syscall-names.list for
+    Linux 4.15.  There only appears to be one new syscall to add to the
+    list.  (The riscv_flush_icache syscall is *not* added because for
+    whatever reason it doesn't appear in the uapi asm/unistd.h; only in
+    arch/riscv/include/uapi/asm/syscalls.h, which is only included by the
+    non-uapi asm/unistd.h - and only syscalls whose __NR_* macros are
+    defined in the uapi asm/unistd.h are relevant for this list.)
+    
+    Tested for x86_64, and with build-many-glibcs.py.
+    
+    	* sysdeps/unix/sysv/linux/syscall-names.list: Update kernel
+    	version to 4.15.
+    	(s390_sthyi): New syscall.
+
+commit f97773d1e7cf65bbbfd8fa173096eb6144d9e47e
+Author: Joseph Myers <joseph@codesourcery.com>  2017-11-16 12:51:54
+Date:   Thu Nov 16 17:51:54 2017 +0000
+
+    Update kernel version in syscall-names.list to 4.14.
+    
+    Linux 4.14 does not add any new syscalls; this patch updates the
+    version number in syscall-names.list to reflect that it's still
+    current for 4.14.
+    
+    Tested for x86_64 (compilation with build-many-glibcs.py, using Linux
+    4.14).
+    
+    	* sysdeps/unix/sysv/linux/syscall-names.list: Update kernel
+    	version to 4.14.
+
+diff -rup a/sysdeps/unix/sysv/linux/syscall-names.list b/sysdeps/unix/sysv/linux/syscall-names.list
+--- a/sysdeps/unix/sysv/linux/syscall-names.list	2018-04-13 16:38:10.000000000 -0400
++++ b/sysdeps/unix/sysv/linux/syscall-names.list	2018-04-13 17:39:37.282289761 -0400
+@@ -1,5 +1,5 @@
+ # List of all known Linux system calls.
+-# Copyright (C) 2017 Free Software Foundation, Inc.
++# Copyright (C) 2017-2018 Free Software Foundation, Inc.
+ # This file is part of the GNU C Library.
+ #
+ # The GNU C Library is free software; you can redistribute it and/or
+@@ -22,8 +22,8 @@
+ # names are only used if the installed kernel headers also provide
+ # them.
+ 
+-# The list of system calls is current as of Linux 4.13.
+-kernel 4.13
++# The list of system calls is current as of Linux 4.16.
++kernel 4.16
+ 
+ FAST_atomic_update
+ FAST_cmpxchg
+@@ -444,6 +444,7 @@ s390_guarded_storage
+ s390_pci_mmio_read
+ s390_pci_mmio_write
+ s390_runtime_instr
++s390_sthyi
+ sched_get_affinity
+ sched_get_priority_max
+ sched_get_priority_min

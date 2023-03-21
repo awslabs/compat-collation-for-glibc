@@ -1,0 +1,34 @@
+commit ed159672eb3cd650a32b7e5cb4d5ec1fe0e63802
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Fri Apr 24 11:10:24 2015 +0200
+
+    Do not build with -Winline
+    
+    -Winline causes architecture- and optimization-dependent build failures
+    due to -Werror.  -Winline warns about inlining decisions based on
+    branch hints, in effect preventing the use of inline functions in
+    header files (because they might be called on unlikely branches, leading
+    to a decision not to inline).
+    
+    The option was apparently added to the glibc build at a time when GCC
+    did not support the always_inline attribute.  With current GCC versions,
+    inlining failure for functions declared always_inline will receive a
+    warning under -Wattributes, which is enabled by default, so -Winline
+    appears unnecessary.
+
+diff --git a/Makeconfig b/Makeconfig
+index 6f61e4835c0a7770..b1bf7f24b6154e3d 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -639,9 +639,9 @@ endif
+ 
+ # Extra flags to pass to GCC.
+ ifeq ($(all-warnings),yes)
+-+gccwarn := -Wall -Wwrite-strings -Winline -Wcast-qual -Wbad-function-cast -Wmissing-noreturn -Wmissing-prototypes -Wmissing-declarations -Wcomment -Wcomments -Wtrigraphs -Wsign-compare -Wfloat-equal -Wmultichar
+++gccwarn := -Wall -Wwrite-strings -Wcast-qual -Wbad-function-cast -Wmissing-noreturn -Wmissing-prototypes -Wmissing-declarations -Wcomment -Wcomments -Wtrigraphs -Wsign-compare -Wfloat-equal -Wmultichar
+ else
+-+gccwarn := -Wall -Wwrite-strings -Winline
+++gccwarn := -Wall -Wwrite-strings
+ endif
+ +gccwarn += -Wundef
+ ifeq ($(enable-werror),yes)

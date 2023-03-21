@@ -1,0 +1,1222 @@
+commit 60d2f8f3c7f1cdacafcbd60dc004e32cc90035ca
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sat Jun 8 00:22:23 2013 +0000
+
+    Use (void) in no-arguments function definitions.
+
+Conflicts:
+	resolv/compat-gethnamaddr.c
+
+Changes were already port of the stub resolver rebase in
+glibc-rh677316-resolv.patch.
+
+diff --git a/catgets/gencat.c b/catgets/gencat.c
+index 5078e3c8282cfa00..28dd8a5b05e5b0a0 100644
+--- a/catgets/gencat.c
++++ b/catgets/gencat.c
+@@ -260,7 +260,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\
+ /* The address of this function will be assigned to the hook in the
+    error functions.  */
+ static void
+-error_print ()
++error_print (void)
+ {
+   /* We don't want the program name to be printed in messages.  Emacs'
+      compile.el does not like this.  */
+diff --git a/crypt/crypt_util.c b/crypt/crypt_util.c
+index e08dd8fa994a3ab1..1ae7711915822715 100644
+--- a/crypt/crypt_util.c
++++ b/crypt/crypt_util.c
+@@ -554,7 +554,7 @@ small_tables_done:
+ }
+ 
+ void
+-__init_des()
++__init_des (void)
+ {
+   __init_des_r(&_ufc_foobar);
+ }
+diff --git a/crypt/speeds.c b/crypt/speeds.c
+index 7362391892aabe55..3afefb954216d8f2 100644
+--- a/crypt/speeds.c
++++ b/crypt/speeds.c
+@@ -42,7 +42,7 @@ struct tms tstart, tfinish;
+ char *crypt(), *fcrypt();
+ 
+ void
+-Stop ()
++Stop (void)
+ {
+     double elapsed;
+ #ifdef NO_ITIMER
+@@ -76,7 +76,7 @@ static void clearmem(start, cnt)
+       *start++ = '\0';
+   }
+ 
+-main ()
++main (void)
+ {
+    char *s;
+ #ifdef NO_ITIMER
+diff --git a/hurd/hurdmalloc.c b/hurd/hurdmalloc.c
+index 886b40208da56866..da611653b602975f 100644
+--- a/hurd/hurdmalloc.c
++++ b/hurd/hurdmalloc.c
+@@ -380,7 +380,7 @@ realloc(old_base, new_size)
+ 
+ #ifdef	DEBUG
+ void
+-print_malloc_free_list()
++print_malloc_free_list (void)
+ {
+   	int i, size;
+ 	free_list_t fl;
+diff --git a/inet/ruserpass.c b/inet/ruserpass.c
+index 71a734dfdac934b7..f64ca3f1c12d478e 100644
+--- a/inet/ruserpass.c
++++ b/inet/ruserpass.c
+@@ -289,7 +289,7 @@ bad:
+ libc_hidden_def (ruserpass)
+ 
+ static int
+-token()
++token (void)
+ {
+ 	char *cp;
+ 	int c;
+diff --git a/intl/finddomain.c b/intl/finddomain.c
+index fec3156985051234..4fff9dad5de54dad 100644
+--- a/intl/finddomain.c
++++ b/intl/finddomain.c
+@@ -171,7 +171,7 @@ out:
+ /* This is called from iconv/gconv_db.c's free_mem, as locales must
+    be freed before freeing gconv steps arrays.  */
+ void __libc_freeres_fn_section
+-_nl_finddomain_subfreeres ()
++_nl_finddomain_subfreeres (void)
+ {
+   struct loaded_l10nfile *runp = _nl_loaded_domains;
+ 
+diff --git a/intl/localealias.c b/intl/localealias.c
+index 1341228716241ffe..2f067dfe2cd7a130 100644
+--- a/intl/localealias.c
++++ b/intl/localealias.c
+@@ -362,7 +362,7 @@ out:
+ 
+ 
+ static int
+-extend_alias_table ()
++extend_alias_table (void)
+ {
+   size_t new_size;
+   struct alias_map *new_map;
+diff --git a/intl/plural-exp.c b/intl/plural-exp.c
+index 2fa27bd7f3afca65..e157bba4adfca8df 100644
+--- a/intl/plural-exp.c
++++ b/intl/plural-exp.c
+@@ -72,7 +72,7 @@ static struct expression plone;
+ struct expression GERMANIC_PLURAL;
+ 
+ static void
+-init_germanic_plural ()
++init_germanic_plural (void)
+ {
+   if (plone.val.num == 0)
+     {
+diff --git a/libio/fcloseall.c b/libio/fcloseall.c
+index 0864690a85504969..46184f6c4a7ad741 100644
+--- a/libio/fcloseall.c
++++ b/libio/fcloseall.c
+@@ -28,7 +28,7 @@
+ #include <stdio.h>
+ 
+ int
+-__fcloseall ()
++__fcloseall (void)
+ {
+   /* Close all streams.  */
+   return _IO_cleanup ();
+diff --git a/libio/genops.c b/libio/genops.c
+index 02d7dfd02ac3ea7c..4e0a40f90c8223dd 100644
+--- a/libio/genops.c
++++ b/libio/genops.c
+@@ -876,7 +876,7 @@ _IO_flush_all_lockp (int do_lock)
+ 
+ 
+ int
+-_IO_flush_all ()
++_IO_flush_all (void)
+ {
+   /* We want locking.  */
+   return _IO_flush_all_lockp (1);
+@@ -884,7 +884,7 @@ _IO_flush_all ()
+ libc_hidden_def (_IO_flush_all)
+ 
+ void
+-_IO_flush_all_linebuffered ()
++_IO_flush_all_linebuffered (void)
+ {
+   struct _IO_FILE *fp;
+   int last_stamp;
+@@ -1009,7 +1009,7 @@ libc_freeres_fn (buffer_free)
+ 
+ 
+ int
+-_IO_cleanup ()
++_IO_cleanup (void)
+ {
+   /* We do *not* want locking.  Some threads might use streams but
+      that is their problem, we flush them underneath them.  */
+@@ -1269,14 +1269,14 @@ _IO_default_imbue (fp, locale)
+ }
+ 
+ _IO_ITER
+-_IO_iter_begin()
++_IO_iter_begin (void)
+ {
+   return (_IO_ITER) _IO_list_all;
+ }
+ libc_hidden_def (_IO_iter_begin)
+ 
+ _IO_ITER
+-_IO_iter_end()
++_IO_iter_end (void)
+ {
+   return NULL;
+ }
+@@ -1299,7 +1299,7 @@ _IO_iter_file(iter)
+ libc_hidden_def (_IO_iter_file)
+ 
+ void
+-_IO_list_lock()
++_IO_list_lock (void)
+ {
+ #ifdef _IO_MTSAFE_IO
+   _IO_lock_lock (list_all_lock);
+@@ -1308,7 +1308,7 @@ _IO_list_lock()
+ libc_hidden_def (_IO_list_lock)
+ 
+ void
+-_IO_list_unlock()
++_IO_list_unlock (void)
+ {
+ #ifdef _IO_MTSAFE_IO
+   _IO_lock_unlock (list_all_lock);
+@@ -1317,7 +1317,7 @@ _IO_list_unlock()
+ libc_hidden_def (_IO_list_unlock)
+ 
+ void
+-_IO_list_resetlock()
++_IO_list_resetlock (void)
+ {
+ #ifdef _IO_MTSAFE_IO
+   _IO_lock_init (list_all_lock);
+diff --git a/libio/getchar.c b/libio/getchar.c
+index 3e35a0e524ef5236..d34398e69b9d42c2 100644
+--- a/libio/getchar.c
++++ b/libio/getchar.c
+@@ -30,7 +30,7 @@
+ #undef getchar
+ 
+ int
+-getchar ()
++getchar (void)
+ {
+   int result;
+   _IO_acquire_lock (_IO_stdin);
+diff --git a/libio/getchar_u.c b/libio/getchar_u.c
+index de0d1498737bb36a..4821163a486c8474 100644
+--- a/libio/getchar_u.c
++++ b/libio/getchar_u.c
+@@ -30,7 +30,7 @@
+ #undef getchar_unlocked
+ 
+ int
+-getchar_unlocked ()
++getchar_unlocked (void)
+ {
+   return _IO_getc_unlocked (_IO_stdin);
+ }
+diff --git a/libio/getwchar.c b/libio/getwchar.c
+index 8a9cb5cde21b5dfa..8344998f6fd2de65 100644
+--- a/libio/getwchar.c
++++ b/libio/getwchar.c
+@@ -30,7 +30,7 @@
+ #undef getwchar
+ 
+ wint_t
+-getwchar ()
++getwchar (void)
+ {
+   wint_t result;
+   _IO_acquire_lock (_IO_stdin);
+diff --git a/libio/getwchar_u.c b/libio/getwchar_u.c
+index 4ac335b4fce84b7a..a395fd6e78309944 100644
+--- a/libio/getwchar_u.c
++++ b/libio/getwchar_u.c
+@@ -30,7 +30,7 @@
+ #undef getwchar_unlocked
+ 
+ wint_t
+-getwchar_unlocked ()
++getwchar_unlocked (void)
+ {
+   return _IO_getwc_unlocked (_IO_stdin);
+ }
+diff --git a/libio/oldstdfiles.c b/libio/oldstdfiles.c
+index 5a67d73e27cc7e3b..870cb0536c52024f 100644
+--- a/libio/oldstdfiles.c
++++ b/libio/oldstdfiles.c
+@@ -73,7 +73,7 @@ static void _IO_check_libio (void) __THROW __attribute__ ((constructor));
+    _IO_list_all accordingly. */
+ 
+ static void
+-_IO_check_libio ()
++_IO_check_libio (void)
+ {
+   if (&_IO_stdin_used == NULL)
+     {
+diff --git a/login/getpt.c b/login/getpt.c
+index 4b9b037b986de2cc..89293d8cdf8d9523 100644
+--- a/login/getpt.c
++++ b/login/getpt.c
+@@ -22,7 +22,7 @@
+ /* Open the master side of a pseudoterminal and return its file
+    descriptor, or -1 on error. */
+ int
+-__getpt ()
++__getpt (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/login/tst-utmp.c b/login/tst-utmp.c
+index cce79b4980ed4841..7cc39cb2b7ff2dba 100644
+--- a/login/tst-utmp.c
++++ b/login/tst-utmp.c
+@@ -395,7 +395,7 @@ do_test (int argc, char *argv[])
+ 
+ /* No field 'ut_type' in struct utmp.  */
+ int
+-main ()
++main (void)
+ {
+   return 0;
+ }
+diff --git a/malloc/hooks.c b/malloc/hooks.c
+index a63668fdd07e89ef..e7bfb7e002b4fcdc 100644
+--- a/malloc/hooks.c
++++ b/malloc/hooks.c
+@@ -69,7 +69,7 @@ static int disallow_malloc_check;
+ 
+ /* Activate a standard set of debugging hooks. */
+ void
+-__malloc_check_init()
++__malloc_check_init (void)
+ {
+   if (disallow_malloc_check) {
+     disallow_malloc_check = 0;
+diff --git a/malloc/malloc.c b/malloc/malloc.c
+index cad40661cd0a6b8a..fc86b344ee3b3a7c 100644
+--- a/malloc/malloc.c
++++ b/malloc/malloc.c
+@@ -4708,7 +4708,7 @@ struct mallinfo __libc_mallinfo()
+ */
+ 
+ void
+-__malloc_stats()
++__malloc_stats (void)
+ {
+   int i;
+   mstate ar_ptr;
+diff --git a/malloc/mtrace.c b/malloc/mtrace.c
+index 0a26ccc65d81bd2a..34ec2a85b219882c 100644
+--- a/malloc/mtrace.c
++++ b/malloc/mtrace.c
+@@ -72,7 +72,7 @@ static __ptr_t (*tr_old_memalign_hook) (size_t __alignment, size_t __size,
+ extern void tr_break (void) __THROW;
+ libc_hidden_proto (tr_break)
+ void
+-tr_break ()
++tr_break (void)
+ {
+ }
+ libc_hidden_def (tr_break)
+@@ -293,7 +293,7 @@ release_libc_mem (void)
+    don't forget to set a breakpoint on tr_break!  */
+ 
+ void
+-mtrace ()
++mtrace (void)
+ {
+ #ifdef _LIBC
+   static int added_atexit_handler;
+@@ -358,7 +358,7 @@ mtrace ()
+ }
+ 
+ void
+-muntrace ()
++muntrace (void)
+ {
+   if (mallstream == NULL)
+     return;
+diff --git a/misc/fstab.c b/misc/fstab.c
+index d53845a9087771ec..86680466938ecc04 100644
+--- a/misc/fstab.c
++++ b/misc/fstab.c
+@@ -96,7 +96,7 @@ getfsfile (name)
+ 
+ 
+ void
+-endfsent ()
++endfsent (void)
+ {
+   struct fstab_state *state;
+ 
+diff --git a/misc/getclktck.c b/misc/getclktck.c
+index fe8e1338b11f19b9..5f9918c0121c02e5 100644
+--- a/misc/getclktck.c
++++ b/misc/getclktck.c
+@@ -19,7 +19,7 @@
+ 
+ /* Return frequency of times().  */
+ int
+-__getclktck ()
++__getclktck (void)
+ {
+ #ifdef	CLK_TCK
+   return CLK_TCK;
+diff --git a/misc/getdtsz.c b/misc/getdtsz.c
+index 7c6f7e633998daee..5c08127f82ee10dd 100644
+--- a/misc/getdtsz.c
++++ b/misc/getdtsz.c
+@@ -21,7 +21,7 @@
+ /* Return the maximum number of file descriptors
+    the current process could possibly have.  */
+ int
+-__getdtablesize ()
++__getdtablesize (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/misc/gethostid.c b/misc/gethostid.c
+index 876c83c691994d92..09e2e6bf76a55b41 100644
+--- a/misc/gethostid.c
++++ b/misc/gethostid.c
+@@ -20,7 +20,7 @@
+ 
+ /* Return the current machine's Internet number.  */
+ long int
+-gethostid ()
++gethostid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1L;
+diff --git a/misc/getpagesize.c b/misc/getpagesize.c
+index 6d3821aef1be0a45..1374a208511a47e3 100644
+--- a/misc/getpagesize.c
++++ b/misc/getpagesize.c
+@@ -20,7 +20,7 @@
+ 
+ /* Return the system page size.  */
+ int
+-__getpagesize ()
++__getpagesize (void)
+ {
+   __set_errno (ENOSYS);
+   return 0;
+diff --git a/misc/getsysstats.c b/misc/getsysstats.c
+index c5ce2fdb9fec724a..9ad2ad22c32c7f10 100644
+--- a/misc/getsysstats.c
++++ b/misc/getsysstats.c
+@@ -21,7 +21,7 @@
+ #include <sys/sysinfo.h>
+ 
+ int
+-__get_nprocs_conf ()
++__get_nprocs_conf (void)
+ {
+   /* We don't know how to determine the number.  Simply return always 1.  */
+   return 1;
+@@ -33,7 +33,7 @@ link_warning (get_nprocs_conf, "warning: get_nprocs_conf will always return 1")
+ 
+ 
+ int
+-__get_nprocs ()
++__get_nprocs (void)
+ {
+   /* We don't know how to determine the number.  Simply return always 1.  */
+   return 1;
+@@ -44,7 +44,7 @@ link_warning (get_nprocs, "warning: get_nprocs will always return 1")
+ 
+ 
+ long int
+-__get_phys_pages ()
++__get_phys_pages (void)
+ {
+   /* We have no general way to determine this value.  */
+   __set_errno (ENOSYS);
+@@ -56,7 +56,7 @@ stub_warning (get_phys_pages)
+ 
+ 
+ long int
+-__get_avphys_pages ()
++__get_avphys_pages (void)
+ {
+   /* We have no general way to determine this value.  */
+   __set_errno (ENOSYS);
+diff --git a/misc/getttyent.c b/misc/getttyent.c
+index 18944e2b99150aea..864f65f523de2522 100644
+--- a/misc/getttyent.c
++++ b/misc/getttyent.c
+@@ -61,7 +61,7 @@ static char *skip (char *) __THROW internal_function;
+ static char *value (char *) __THROW internal_function;
+ 
+ struct ttyent *
+-getttyent()
++getttyent (void)
+ {
+ 	static struct ttyent tty;
+ 	int c;
+@@ -184,7 +184,7 @@ value(p)
+ }
+ 
+ int
+-setttyent()
++setttyent (void)
+ {
+ 
+ 	if (tf) {
+@@ -200,7 +200,7 @@ setttyent()
+ libc_hidden_def (setttyent)
+ 
+ int
+-endttyent()
++endttyent (void)
+ {
+ 	int rval;
+ 
+diff --git a/misc/getusershell.c b/misc/getusershell.c
+index 677377c3f7fb9081..fc2c43b771439c08 100644
+--- a/misc/getusershell.c
++++ b/misc/getusershell.c
+@@ -62,7 +62,7 @@ static char **initshells (void) __THROW;
+  * Get a list of shells from _PATH_SHELLS, if it exists.
+  */
+ char *
+-getusershell()
++getusershell (void)
+ {
+ 	char *ret;
+ 
+@@ -75,7 +75,7 @@ getusershell()
+ }
+ 
+ void
+-endusershell()
++endusershell (void)
+ {
+ 
+ 	free(shells);
+@@ -86,14 +86,14 @@ endusershell()
+ }
+ 
+ void
+-setusershell()
++setusershell (void)
+ {
+ 
+ 	curshell = initshells();
+ }
+ 
+ static char **
+-initshells()
++initshells (void)
+ {
+ 	char **sp, *cp;
+ 	FILE *fp;
+diff --git a/misc/hsearch.c b/misc/hsearch.c
+index 928b192a5df9197c..26d12a96939f64d6 100644
+--- a/misc/hsearch.c
++++ b/misc/hsearch.c
+@@ -45,7 +45,7 @@ hcreate (nel)
+ 
+ 
+ void
+-__hdestroy ()
++__hdestroy (void)
+ {
+   hdestroy_r (&htab);
+ }
+diff --git a/misc/sync.c b/misc/sync.c
+index 01a1696ce2e1d5e5..d71d4334368d3e2e 100644
+--- a/misc/sync.c
++++ b/misc/sync.c
+@@ -20,7 +20,7 @@
+ 
+ /* Make all changes done to all files actually appear on disk.  */
+ void
+-sync ()
++sync (void)
+ {
+   __set_errno (ENOSYS);
+ }
+diff --git a/misc/syslog.c b/misc/syslog.c
+index 4976e89b6ea56364..70daa9e1f3b7b745 100644
+--- a/misc/syslog.c
++++ b/misc/syslog.c
+@@ -425,7 +425,7 @@ sigpipe_handler (int signo)
+ #endif
+ 
+ static void
+-closelog_internal()
++closelog_internal (void)
+ {
+   if (!connected)
+     return;
+@@ -436,7 +436,7 @@ closelog_internal()
+ }
+ 
+ void
+-closelog ()
++closelog (void)
+ {
+   /* Protect against multiple users and cancellation.  */
+   __libc_cleanup_push (cancel_handler, NULL);
+diff --git a/misc/ttyslot.c b/misc/ttyslot.c
+index 75ca6a2d42d2c79d..9c69589daee2b164 100644
+--- a/misc/ttyslot.c
++++ b/misc/ttyslot.c
+@@ -38,7 +38,7 @@ static char sccsid[] = "@(#)ttyslot.c	8.1 (Berkeley) 6/4/93";
+ #include <unistd.h>
+ 
+ int
+-ttyslot()
++ttyslot (void)
+ {
+ 	struct ttyent *ttyp;
+ 	int slot;
+diff --git a/misc/vhangup.c b/misc/vhangup.c
+index 0d8ce287c999e08f..1f86262f9c9fcd56 100644
+--- a/misc/vhangup.c
++++ b/misc/vhangup.c
+@@ -22,7 +22,7 @@
+    with the control terminal, and then send a SIGHUP signal to the process
+    group of the control terminal.  */
+ int
+-vhangup ()
++vhangup (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/ports/sysdeps/unix/sysv/linux/ia64/getpagesize.c b/ports/sysdeps/unix/sysv/linux/ia64/getpagesize.c
+index ade9123a3a79d621..007cc09646352fdb 100644
+--- a/ports/sysdeps/unix/sysv/linux/ia64/getpagesize.c
++++ b/ports/sysdeps/unix/sysv/linux/ia64/getpagesize.c
+@@ -29,7 +29,7 @@
+    as mmap and friends.  --davidm 99/11/30 */
+ 
+ int
+-__getpagesize ()
++__getpagesize (void)
+ {
+   assert (GLRO(dl_pagesize) != 0);
+   return GLRO(dl_pagesize);
+diff --git a/ports/sysdeps/unix/sysv/linux/m68k/getpagesize.c b/ports/sysdeps/unix/sysv/linux/m68k/getpagesize.c
+index 9e6000a196e3fe70..c50bc00a21a59020 100644
+--- a/ports/sysdeps/unix/sysv/linux/m68k/getpagesize.c
++++ b/ports/sysdeps/unix/sysv/linux/m68k/getpagesize.c
+@@ -26,7 +26,7 @@
+ 
+ /* Return the system page size.  */
+ int
+-__getpagesize ()
++__getpagesize (void)
+ {
+ #ifdef __NR_getpagesize
+   int result;
+diff --git a/posix/fork.c b/posix/fork.c
+index 08c69b69bd9cbbe3..107b76e293c155ad 100644
+--- a/posix/fork.c
++++ b/posix/fork.c
+@@ -23,7 +23,7 @@
+    Return -1 for errors, 0 to the new process,
+    and the process ID of the new process to the old process.  */
+ int
+-__fork ()
++__fork (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/getegid.c b/posix/getegid.c
+index 6692bc0837ec0066..1cffdc4e10b8e749 100644
+--- a/posix/getegid.c
++++ b/posix/getegid.c
+@@ -20,7 +20,7 @@
+ 
+ /* Get the effective group ID of the calling process.  */
+ __gid_t
+-__getegid ()
++__getegid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/geteuid.c b/posix/geteuid.c
+index eb59db35d88d522a..9e2087babc4dc02c 100644
+--- a/posix/geteuid.c
++++ b/posix/geteuid.c
+@@ -21,7 +21,7 @@
+ 
+ /* Get the effective user ID of the calling process.  */
+ __uid_t
+-__geteuid ()
++__geteuid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/getgid.c b/posix/getgid.c
+index 54c7d18705c971a5..464f03f9b2727d0d 100644
+--- a/posix/getgid.c
++++ b/posix/getgid.c
+@@ -21,7 +21,7 @@
+ 
+ /* Get the real group ID of the calling process.  */
+ gid_t
+-__getgid ()
++__getgid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/getpid.c b/posix/getpid.c
+index 3c3bb6a2afe4d5c5..5b5f11b0c091fe0a 100644
+--- a/posix/getpid.c
++++ b/posix/getpid.c
+@@ -20,7 +20,7 @@
+ 
+ /* Get the process ID of the calling process.  */
+ int
+-__getpid ()
++__getpid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/getppid.c b/posix/getppid.c
+index 92c8b9b6dfca4592..7e3baacce8b98140 100644
+--- a/posix/getppid.c
++++ b/posix/getppid.c
+@@ -21,7 +21,7 @@
+ 
+ /* Get the parent process ID of the calling process.  */
+ int
+-__getppid ()
++__getppid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/getuid.c b/posix/getuid.c
+index 2afbe583fd76f520..c16a72a4ae5182cc 100644
+--- a/posix/getuid.c
++++ b/posix/getuid.c
+@@ -21,7 +21,7 @@
+ 
+ /* Get the real user ID of the calling process.  */
+ uid_t
+-__getuid ()
++__getuid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/pause.c b/posix/pause.c
+index 095051002bb62799..6440f68562dc07b0 100644
+--- a/posix/pause.c
++++ b/posix/pause.c
+@@ -23,7 +23,7 @@
+    This is supposed to always return -1 and set errno to EINTR,
+    but rules were meant to be broken.  */
+ int
+-pause ()
++pause (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/setpgrp.c b/posix/setpgrp.c
+index 3f89a3218e6089de..31ff59518a966340 100644
+--- a/posix/setpgrp.c
++++ b/posix/setpgrp.c
+@@ -18,7 +18,7 @@
+ #include <unistd.h>
+ 
+ int
+-setpgrp ()
++setpgrp (void)
+ {
+   return __setpgid (0, 0);
+ }
+diff --git a/posix/setsid.c b/posix/setsid.c
+index a4f05254e136ba5e..5ccc2d6710dd7ac2 100644
+--- a/posix/setsid.c
++++ b/posix/setsid.c
+@@ -23,7 +23,7 @@
+    The process group IDs of the session and the calling process
+    are set to the process ID of the calling process, which is returned.  */
+ int
+-__setsid ()
++__setsid (void)
+ {
+   __set_errno (ENOSYS);
+   return -1;
+diff --git a/posix/test-vfork.c b/posix/test-vfork.c
+index c4904e36e130d928..6dfb7d47e36a65eb 100644
+--- a/posix/test-vfork.c
++++ b/posix/test-vfork.c
+@@ -37,6 +37,6 @@ main (void)
+ }
+ 
+ void
+-noop ()
++noop (void)
+ {
+ }
+diff --git a/stdlib/drand48.c b/stdlib/drand48.c
+index 9b54e4bc0db1eca1..d70e8ebaa0b611ad 100644
+--- a/stdlib/drand48.c
++++ b/stdlib/drand48.c
+@@ -20,7 +20,7 @@
+ 
+ 
+ double
+-drand48 ()
++drand48 (void)
+ {
+   double result;
+ 
+diff --git a/stdlib/lrand48.c b/stdlib/lrand48.c
+index e38ce91dd2b46306..70db2ab852dbc09d 100644
+--- a/stdlib/lrand48.c
++++ b/stdlib/lrand48.c
+@@ -20,7 +20,7 @@
+ 
+ 
+ long int
+-lrand48 ()
++lrand48 (void)
+ {
+   long int result;
+ 
+diff --git a/stdlib/mrand48.c b/stdlib/mrand48.c
+index 248781b767da3786..d2257bd542312ad8 100644
+--- a/stdlib/mrand48.c
++++ b/stdlib/mrand48.c
+@@ -20,7 +20,7 @@
+ 
+ 
+ long int
+-mrand48 ()
++mrand48 (void)
+ {
+   long int result;
+ 
+diff --git a/stdlib/rand.c b/stdlib/rand.c
+index 92916e833f7fc94a..15b2a647dcaea6a4 100644
+--- a/stdlib/rand.c
++++ b/stdlib/rand.c
+@@ -22,7 +22,7 @@
+ 
+ /* Return a random integer between 0 and RAND_MAX.  */
+ int
+-rand ()
++rand (void)
+ {
+   return (int) __random ();
+ }
+diff --git a/stdlib/random.c b/stdlib/random.c
+index ff6bdd2b5d5a8f76..537555c90098d426 100644
+--- a/stdlib/random.c
++++ b/stdlib/random.c
+@@ -288,7 +288,7 @@ weak_alias (__setstate, setstate)
+    pointer if the front one has wrapped.  Returns a 31-bit random number.  */
+ 
+ long int
+-__random ()
++__random (void)
+ {
+   int32_t retval;
+ 
+diff --git a/stdlib/setenv.c b/stdlib/setenv.c
+index 6185c69243464623..56b9bc67d93cbcc0 100644
+--- a/stdlib/setenv.c
++++ b/stdlib/setenv.c
+@@ -349,7 +349,7 @@ unsetenv (name)
+    never made it.  Nevertheless the POSIX.9 standard (POSIX bindings
+    for Fortran 77) requires this function.  */
+ int
+-clearenv ()
++clearenv (void)
+ {
+   LOCK;
+ 
+diff --git a/sunrpc/clnt_tcp.c b/sunrpc/clnt_tcp.c
+index ec85930e44730415..b46905fb06eb2a49 100644
+--- a/sunrpc/clnt_tcp.c
++++ b/sunrpc/clnt_tcp.c
+@@ -356,7 +356,7 @@ clnttcp_freeres (cl, xdr_res, res_ptr)
+ }
+ 
+ static void
+-clnttcp_abort ()
++clnttcp_abort (void)
+ {
+ }
+ 
+diff --git a/sunrpc/clnt_unix.c b/sunrpc/clnt_unix.c
+index 9b5d7ca82256290b..2ad81972561aa6b0 100644
+--- a/sunrpc/clnt_unix.c
++++ b/sunrpc/clnt_unix.c
+@@ -330,7 +330,7 @@ clntunix_freeres (cl, xdr_res, res_ptr)
+ }
+ 
+ static void
+-clntunix_abort ()
++clntunix_abort (void)
+ {
+ }
+ 
+diff --git a/sysdeps/mach/getpagesize.c b/sysdeps/mach/getpagesize.c
+index a4c59715acdc46f9..7586ffd455ae8a6d 100644
+--- a/sysdeps/mach/getpagesize.c
++++ b/sysdeps/mach/getpagesize.c
+@@ -20,7 +20,7 @@
+ 
+ /* Return the system page size.  */
+ int
+-__getpagesize ()
++__getpagesize (void)
+ {
+   return __vm_page_size;
+ }
+diff --git a/sysdeps/mach/getsysstats.c b/sysdeps/mach/getsysstats.c
+index 4820b35113aca031..8765004d9b48185d 100644
+--- a/sysdeps/mach/getsysstats.c
++++ b/sysdeps/mach/getsysstats.c
+@@ -24,7 +24,7 @@
+ 
+ /* Return the number of processors configured on the system. */
+ int
+-__get_nprocs_conf ()
++__get_nprocs_conf (void)
+ {
+   struct host_basic_info hbi;
+   kern_return_t err;
+@@ -43,7 +43,7 @@ weak_alias (__get_nprocs_conf, get_nprocs_conf)
+ 
+ /* Return the number of processors currently available on the system. */
+ int
+-__get_nprocs ()
++__get_nprocs (void)
+ {
+   struct host_basic_info hbi;
+   kern_return_t err;
+@@ -62,7 +62,7 @@ weak_alias (__get_nprocs, get_nprocs)
+ 
+ /* Return the number of physical pages on the system. */
+ long int
+-__get_phys_pages ()
++__get_phys_pages (void)
+ {
+   struct host_basic_info hbi;
+   kern_return_t err;
+@@ -81,7 +81,7 @@ weak_alias (__get_phys_pages, get_phys_pages)
+ 
+ /* Return the number of available physical pages */
+ long int
+-__get_avphys_pages ()
++__get_avphys_pages (void)
+ {
+   vm_statistics_data_t vs;
+   kern_return_t err;
+diff --git a/sysdeps/mach/hurd/dl-sysdep.c b/sysdeps/mach/hurd/dl-sysdep.c
+index 4eefe3af04f845c3..c3f31e2c8eb6bc2f 100644
+--- a/sysdeps/mach/hurd/dl-sysdep.c
++++ b/sysdeps/mach/hurd/dl-sysdep.c
+@@ -554,7 +554,7 @@ __access (const char *file, int type)
+ }
+ 
+ pid_t weak_function
+-__getpid ()
++__getpid (void)
+ {
+   pid_t pid, ppid;
+   int orphaned;
+diff --git a/sysdeps/mach/hurd/getclktck.c b/sysdeps/mach/hurd/getclktck.c
+index 5ea4781c1b40cade..d3cebc17778a3633 100644
+--- a/sysdeps/mach/hurd/getclktck.c
++++ b/sysdeps/mach/hurd/getclktck.c
+@@ -21,7 +21,7 @@
+ /* Return frequency of `times'.
+    Since Mach reports CPU times in microseconds, we always use 1 million.  */
+ int
+-__getclktck ()
++__getclktck (void)
+ {
+   return 1000000;
+ }
+diff --git a/sysdeps/mach/hurd/getdtsz.c b/sysdeps/mach/hurd/getdtsz.c
+index 9c754a79041f31ec..527a0e3130cc52a3 100644
+--- a/sysdeps/mach/hurd/getdtsz.c
++++ b/sysdeps/mach/hurd/getdtsz.c
+@@ -24,7 +24,7 @@
+ /* Return the maximum number of file descriptors the current process
+    could possibly have (until it raises the resource limit).  */
+ int
+-__getdtablesize ()
++__getdtablesize (void)
+ {
+   rlim_t limit;
+ 
+diff --git a/sysdeps/mach/hurd/getegid.c b/sysdeps/mach/hurd/getegid.c
+index cb1955356bba6304..8e63d640ca917688 100644
+--- a/sysdeps/mach/hurd/getegid.c
++++ b/sysdeps/mach/hurd/getegid.c
+@@ -22,7 +22,7 @@
+ 
+ /* Get the effective group ID of the calling process.  */
+ gid_t
+-__getegid ()
++__getegid (void)
+ {
+   error_t err;
+   gid_t egid;
+diff --git a/sysdeps/mach/hurd/geteuid.c b/sysdeps/mach/hurd/geteuid.c
+index 4bcf6f56acedc2aa..5b5228958d9733a0 100644
+--- a/sysdeps/mach/hurd/geteuid.c
++++ b/sysdeps/mach/hurd/geteuid.c
+@@ -22,7 +22,7 @@
+ 
+ /* Get the effective user ID of the calling process.  */
+ uid_t
+-__geteuid ()
++__geteuid (void)
+ {
+   error_t err;
+   uid_t euid;
+diff --git a/sysdeps/mach/hurd/getgid.c b/sysdeps/mach/hurd/getgid.c
+index a479ddf41429ecf2..0c297c392d69ee6d 100644
+--- a/sysdeps/mach/hurd/getgid.c
++++ b/sysdeps/mach/hurd/getgid.c
+@@ -22,7 +22,7 @@
+ 
+ /* Get the real group ID of the calling process.  */
+ gid_t
+-__getgid ()
++__getgid (void)
+ {
+   error_t err;
+   gid_t gid;
+diff --git a/sysdeps/mach/hurd/gethostid.c b/sysdeps/mach/hurd/gethostid.c
+index 0a8bbbe1b9b4ee52..4265b9574e7d97c2 100644
+--- a/sysdeps/mach/hurd/gethostid.c
++++ b/sysdeps/mach/hurd/gethostid.c
+@@ -21,7 +21,7 @@
+ 
+ /* Return the current machine's Internet number.  */
+ long int
+-gethostid ()
++gethostid (void)
+ {
+   /* The hostid is just the contents of the file /etc/hostid,
+      kept as text of hexadecimal digits.  */
+diff --git a/sysdeps/mach/hurd/getlogin.c b/sysdeps/mach/hurd/getlogin.c
+index 0f94c631a927ce68..83d1bfca649b70ef 100644
+--- a/sysdeps/mach/hurd/getlogin.c
++++ b/sysdeps/mach/hurd/getlogin.c
+@@ -23,7 +23,7 @@
+ /* Return the login name of the user, or NULL if it can't be determined.
+    The returned pointer, if not NULL, is good only until the next call.  */
+ char *
+-getlogin ()
++getlogin (void)
+ {
+   static char login[1024];	/* XXX */
+   error_t err;
+diff --git a/sysdeps/mach/hurd/getpid.c b/sysdeps/mach/hurd/getpid.c
+index 4698f3ce729f82b0..89c2dc138b90be5b 100644
+--- a/sysdeps/mach/hurd/getpid.c
++++ b/sysdeps/mach/hurd/getpid.c
+@@ -21,7 +21,7 @@
+ 
+ /* Get the process ID of the calling process.  */
+ pid_t
+-__getpid ()
++__getpid (void)
+ {
+   /* Assumes atomic word fetch and store, so doesn't lock _hurd_pid_lock.  */
+   return _hurd_pid;
+diff --git a/sysdeps/mach/hurd/getppid.c b/sysdeps/mach/hurd/getppid.c
+index a775b7a73e486cdc..4a8bca8d4a155197 100644
+--- a/sysdeps/mach/hurd/getppid.c
++++ b/sysdeps/mach/hurd/getppid.c
+@@ -23,7 +23,7 @@
+ 
+ /* Get the parent process ID of the calling process.  */
+ pid_t
+-__getppid ()
++__getppid (void)
+ {
+   /* Assumes atomic word fetch and store, so doesn't lock _hurd_pid_lock.  */
+   return _hurd_ppid;
+diff --git a/sysdeps/mach/hurd/getuid.c b/sysdeps/mach/hurd/getuid.c
+index b9feb903964b734e..e6d047a2bb281584 100644
+--- a/sysdeps/mach/hurd/getuid.c
++++ b/sysdeps/mach/hurd/getuid.c
+@@ -22,7 +22,7 @@
+ 
+ /* Get the real user ID of the calling process.  */
+ uid_t
+-__getuid ()
++__getuid (void)
+ {
+   error_t err;
+   uid_t uid;
+diff --git a/sysdeps/mach/hurd/sync.c b/sysdeps/mach/hurd/sync.c
+index 4042cb1625b8dbfa..e97aed373c982e2c 100644
+--- a/sysdeps/mach/hurd/sync.c
++++ b/sysdeps/mach/hurd/sync.c
+@@ -21,7 +21,7 @@
+ 
+ /* Make all changes done to all files actually appear on disk.  */
+ void
+-sync ()
++sync (void)
+ {
+   /* This is not actually synchronous; we don't wait.  */
+   error_t err = __USEPORT (CRDIR, __file_syncfs (port, 0, 1));
+diff --git a/sysdeps/posix/clock.c b/sysdeps/posix/clock.c
+index f670a35a6e5b2db1..78ee5806bf53293c 100644
+--- a/sysdeps/posix/clock.c
++++ b/sysdeps/posix/clock.c
+@@ -20,7 +20,7 @@
+ 
+ /* Return the time used by the program so far (user time + system time).  */
+ clock_t
+-clock ()
++clock (void)
+ {
+   struct tms buf;
+ 
+diff --git a/sysdeps/unix/bsd/setsid.c b/sysdeps/unix/bsd/setsid.c
+index dbad2711ce78ceda..ac8930eefa8b46e2 100644
+--- a/sysdeps/unix/bsd/setsid.c
++++ b/sysdeps/unix/bsd/setsid.c
+@@ -25,7 +25,7 @@
+    The process group IDs of the session and the calling process
+    are set to the process ID of the calling process, which is returned.  */
+ int
+-__setsid ()
++__setsid (void)
+ {
+   pid_t pid = getpid ();
+   int tty;
+diff --git a/sysdeps/unix/getpagesize.c b/sysdeps/unix/getpagesize.c
+index bcd5dca4aa634e0f..68d18ec47cdfb815 100644
+--- a/sysdeps/unix/getpagesize.c
++++ b/sysdeps/unix/getpagesize.c
+@@ -20,7 +20,7 @@
+ 
+ /* Return the system page size.  */
+ int
+-__getpagesize ()
++__getpagesize (void)
+ {
+ #ifdef	EXEC_PAGESIZE
+   return EXEC_PAGESIZE;
+diff --git a/sysdeps/unix/sysv/linux/getclktck.c b/sysdeps/unix/sysv/linux/getclktck.c
+index 3866bf9aa56bb95a..a1e036ebeb0372b9 100644
+--- a/sysdeps/unix/sysv/linux/getclktck.c
++++ b/sysdeps/unix/sysv/linux/getclktck.c
+@@ -25,7 +25,7 @@
+ 
+ /* Return frequency of times().  */
+ int
+-__getclktck ()
++__getclktck (void)
+ {
+   return GLRO(dl_clktck) ?: SYSTEM_CLK_TCK;
+ }
+diff --git a/sysdeps/unix/sysv/linux/gethostid.c b/sysdeps/unix/sysv/linux/gethostid.c
+index 9441bb2f9b313c6d..c9f4b4cbcbad6bdb 100644
+--- a/sysdeps/unix/sysv/linux/gethostid.c
++++ b/sysdeps/unix/sysv/linux/gethostid.c
+@@ -67,7 +67,7 @@ sethostid (id)
+ # include <netinet/in.h>
+ 
+ long int
+-gethostid ()
++gethostid (void)
+ {
+   char hostname[MAXHOSTNAMELEN + 1];
+   size_t buflen;
+diff --git a/sysdeps/unix/sysv/linux/getpagesize.c b/sysdeps/unix/sysv/linux/getpagesize.c
+index a09bda8c9a527aa3..420e97235118efd0 100644
+--- a/sysdeps/unix/sysv/linux/getpagesize.c
++++ b/sysdeps/unix/sysv/linux/getpagesize.c
+@@ -25,7 +25,7 @@
+ 
+ /* Return the system page size.  */
+ int
+-__getpagesize ()
++__getpagesize (void)
+ {
+   assert (GLRO(dl_pagesize) != 0);
+   return GLRO(dl_pagesize);
+diff --git a/sysdeps/unix/sysv/linux/getsysstats.c b/sysdeps/unix/sysv/linux/getsysstats.c
+index 9082b1a7ab29a9f9..7478e735c6333104 100644
+--- a/sysdeps/unix/sysv/linux/getsysstats.c
++++ b/sysdeps/unix/sysv/linux/getsysstats.c
+@@ -124,7 +124,7 @@ next_line (int fd, char *const buffer, char **cp, char **re,
+ 
+ 
+ int
+-__get_nprocs ()
++__get_nprocs (void)
+ {
+   static int cached_result;
+   static time_t timestamp;
+@@ -234,7 +234,7 @@ weak_alias (__get_nprocs, get_nprocs)
+ /* On some architectures it is possible to distinguish between configured
+    and active cpus.  */
+ int
+-__get_nprocs_conf ()
++__get_nprocs_conf (void)
+ {
+   /* XXX Here will come a test for the new system call.  */
+ 
+@@ -333,7 +333,7 @@ phys_pages_info (const char *format)
+    But not all systems have support for the /proc filesystem.  If it
+    is not available we return -1 as an error signal.  */
+ long int
+-__get_phys_pages ()
++__get_phys_pages (void)
+ {
+   /* XXX Here will come a test for the new system call.  */
+ 
+@@ -354,7 +354,7 @@ weak_alias (__get_phys_pages, get_phys_pages)
+    But not all systems have support for the /proc filesystem.  If it
+    is not available we return -1 as an error signal.  */
+ long int
+-__get_avphys_pages ()
++__get_avphys_pages (void)
+ {
+   /* XXX Here will come a test for the new system call.  */
+ 
+diff --git a/time/clock.c b/time/clock.c
+index 2e10fd3e3aaa1561..918a97c4d3077fe4 100644
+--- a/time/clock.c
++++ b/time/clock.c
+@@ -21,7 +21,7 @@
+ 
+ /* Return the time used by the program so far (user time + system time).  */
+ clock_t
+-clock ()
++clock (void)
+ {
+   __set_errno (ENOSYS);
+   return (clock_t) -1;

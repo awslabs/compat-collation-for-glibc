@@ -1,0 +1,38 @@
+commit 8b35e35d0f4eae28a47c23e2aa15ddf570fa86ef
+Author: Ondřej Bílka <neleai@seznam.cz>
+Date:   Fri Nov 1 15:39:26 2013 +0100
+
+    Fix malloc_info statistic. Fixes bug 16112
+
+diff --git a/malloc/malloc.c b/malloc/malloc.c
+index b47d99ac65344c82..c98b3f79ed38b4f0 100644
+--- a/malloc/malloc.c
++++ b/malloc/malloc.c
+@@ -5068,23 +5068,11 @@ malloc_info (int options, FILE *fp)
+ 	sizes[i].total = sizes[i].count * sizes[i].to;
+       }
+ 
+-    mbinptr bin = bin_at (ar_ptr, 1);
+-    struct malloc_chunk *r = bin->fd;
+-    if (r != NULL)
+-      {
+-	while (r != bin)
+-	  {
+-	    ++sizes[NFASTBINS].count;
+-	    sizes[NFASTBINS].total += r->size;
+-	    sizes[NFASTBINS].from = MIN (sizes[NFASTBINS].from, r->size);
+-	    sizes[NFASTBINS].to = MAX (sizes[NFASTBINS].to, r->size);
+-	    r = r->fd;
+-	  }
+-	nblocks += sizes[NFASTBINS].count;
+-	avail += sizes[NFASTBINS].total;
+-      }
+ 
+-    for (size_t i = 2; i < NBINS; ++i)
++    mbinptr bin;
++    struct malloc_chunk *r;
++
++    for (size_t i = 1; i < NBINS; ++i)
+       {
+ 	bin = bin_at (ar_ptr, i);
+ 	r = bin->fd;

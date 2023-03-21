@@ -1,0 +1,22 @@
+commit 6680738a18fc219de2e4f7be1d53e4fb251f1166
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Wed Jul 9 10:36:23 2014 +0530
+
+    Fix Wundef warning for __cplusplus
+    
+    All current uses of the __cplusplus macro only check if it is defined
+    or not.  Fix this #if to use $ifdef like the rest of the code.
+
+diff --git a/sysdeps/generic/unwind-pe.h b/sysdeps/generic/unwind-pe.h
+index 3985fec998a2083d..b190cb34a102f5f9 100644
+--- a/sysdeps/generic/unwind-pe.h
++++ b/sysdeps/generic/unwind-pe.h
+@@ -22,7 +22,7 @@
+    than duplicating code, however.  */
+ 
+ /* If using C++, references to abort have to be qualified with std::.  */
+-#if __cplusplus
++#ifdef __cplusplus
+ #define __gxx_abort std::abort
+ #else
+ #define __gxx_abort abort

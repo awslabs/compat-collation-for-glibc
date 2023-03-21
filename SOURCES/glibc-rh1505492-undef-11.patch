@@ -1,0 +1,101 @@
+commit fdf4534d02483af279deddfd23cb61f6079dd277
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Tue Mar 18 07:22:36 2014 +0530
+
+    Fix -Wundef warnins for __FP_FAST_FMA*
+    
+    The macros are defined by the compiler, so we can only verify whether
+    they are defined or not.
+
+diff --git a/bits/mathdef.h b/bits/mathdef.h
+index fb998ca22fd78e44..ed62a000be11cd37 100644
+--- a/bits/mathdef.h
++++ b/bits/mathdef.h
+@@ -35,15 +35,15 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ /* The GCC 4.6 compiler will define __FP_FAST_FMA{,F,L} if the fma{,f,l}
+    builtins are supported.  */
+-#if __FP_FAST_FMA
++#ifdef __FP_FAST_FMA
+ # define FP_FAST_FMA 1
+ #endif
+ 
+-#if __FP_FAST_FMAF
++#ifdef __FP_FAST_FMAF
+ # define FP_FAST_FMAF 1
+ #endif
+ 
+-#if __FP_FAST_FMAL
++#ifdef __FP_FAST_FMAL
+ # define FP_FAST_FMAL 1
+ #endif
+ 
+diff --git a/sysdeps/arm/bits/mathdef.h b/sysdeps/arm/bits/mathdef.h
+index 37e92267455e5ddd..8230d4ba78a991c6 100644
+--- a/sysdeps/arm/bits/mathdef.h
++++ b/sysdeps/arm/bits/mathdef.h
+@@ -35,15 +35,15 @@ typedef double double_t;	/* `double' expressions are evaluated as
+ 
+ /* The GCC 4.6 compiler will define __FP_FAST_FMA{,F,L} if the fma{,f,l}
+    builtins are supported.  */
+-# if __FP_FAST_FMA
++# ifdef __FP_FAST_FMA
+ #  define FP_FAST_FMA 1
+ # endif
+ 
+-# if __FP_FAST_FMAF
++# ifdef __FP_FAST_FMAF
+ #  define FP_FAST_FMAF 1
+ # endif
+ 
+-# if __FP_FAST_FMAL
++# ifdef __FP_FAST_FMAL
+ #  define FP_FAST_FMAL 1
+ # endif
+ 
+diff --git a/sysdeps/tile/bits/mathdef.h b/sysdeps/tile/bits/mathdef.h
+index bf0da5e438b2c01c..e5c54e85674d7695 100644
+--- a/sysdeps/tile/bits/mathdef.h
++++ b/sysdeps/tile/bits/mathdef.h
+@@ -33,15 +33,15 @@ typedef double double_t;
+ 
+ /* The GCC 4.6 compiler will define __FP_FAST_FMA{,F,L} if the fma{,f,l}
+    builtins are supported.  */
+-# if __FP_FAST_FMA
++# ifdef __FP_FAST_FMA
+ #  define FP_FAST_FMA 1
+ # endif
+ 
+-# if __FP_FAST_FMAF
++# ifdef __FP_FAST_FMAF
+ #  define FP_FAST_FMAF 1
+ # endif
+ 
+-# if __FP_FAST_FMAL
++# ifdef __FP_FAST_FMAL
+ #  define FP_FAST_FMAL 1
+ # endif
+ 
+diff --git a/sysdeps/x86/bits/mathdef.h b/sysdeps/x86/bits/mathdef.h
+index c202ad5928659f21..d7b40b4a52e95fe1 100644
+--- a/sysdeps/x86/bits/mathdef.h
++++ b/sysdeps/x86/bits/mathdef.h
+@@ -44,15 +44,15 @@ typedef long double double_t;	/* `double' expressions are evaluated as
+ 
+ /* The GCC 4.6 compiler will define __FP_FAST_FMA{,F,L} if the fma{,f,l}
+    builtins are supported.  */
+-# if __FP_FAST_FMA
++# ifdef __FP_FAST_FMA
+ #  define FP_FAST_FMA 1
+ # endif
+ 
+-# if __FP_FAST_FMAF
++# ifdef __FP_FAST_FMAF
+ #  define FP_FAST_FMAF 1
+ # endif
+ 
+-# if __FP_FAST_FMAL
++# ifdef __FP_FAST_FMAL
+ #  define FP_FAST_FMAL 1
+ # endif
+ 

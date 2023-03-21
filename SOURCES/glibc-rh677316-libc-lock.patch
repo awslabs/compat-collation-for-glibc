@@ -1,0 +1,12 @@
+This patch adds an include file <libc-lock.h>.  This simplifies
+backports because upstream moved <bits/libc-lock.h> to this file in
+commit ec999b8e5ede67f42759657beb8c5fef87c8cc63 (Move bits/libc-lock.h
+and bits/libc-lockP.h out of bits/ (bug 14912)).
+
+diff --git a/include/libc-lock.h b/include/libc-lock.h
+new file mode 100644
+index 0000000000000000..1f2fd8433454e870
+--- /dev/null
++++ b/include/libc-lock.h
+@@ -0,0 +1 @@
++#include <bits/libc-lock.h>

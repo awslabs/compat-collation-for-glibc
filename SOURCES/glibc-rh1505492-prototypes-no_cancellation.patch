@@ -1,0 +1,25 @@
+Adjust various functions to prototype style which are defined under
+NO_CANCELLATION conditionals.
+
+Upstream, the function definitions were removed in:
+
+commit c6bb095eb544aa32d3f4b8e9aa434d686915446e
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Sun Sep 28 08:46:23 2014 -0300
+
+    nptl: Rewrite cancellation macros
+
+diff --git a/sysdeps/unix/sysv/linux/sigsuspend.c b/sysdeps/unix/sysv/linux/sigsuspend.c
+index 1cd1de88d303fd66..e5ae86382bc74c7d 100644
+--- a/sysdeps/unix/sysv/linux/sigsuspend.c
++++ b/sysdeps/unix/sysv/linux/sigsuspend.c
+@@ -53,8 +53,7 @@ strong_alias (__sigsuspend, __libc_sigsuspend)
+ 
+ #ifndef NO_CANCELLATION
+ int
+-__sigsuspend_nocancel (set)
+-     const sigset_t *set;
++__sigsuspend_nocancel (const sigset_t *set)
+ {
+   return do_sigsuspend (set);
+ }

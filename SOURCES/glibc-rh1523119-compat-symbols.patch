@@ -1,0 +1,175 @@
+Provide GLIBC_PRIVATE symbols no longer used by the current library
+version to increase backwards compatibility during glibc updates.
+This will help to avoid some of the issues that surface while a
+glibc update is performed with concurrent application updates,
+and it also allows old nscd to trigger cache invalidation in a
+running nscd daemon.
+
+While at this, also add interfaces for supporting old nss_dns modules.
+
+This patch is not needed upstream because upstream does not provide
+backwards compatibility for GLIBC_PRIVATE symbols.
+
+diff --git a/inet/herrno.c b/inet/herrno.c
+index 0cd84445190728b3..4d26e9b254181422 100644
+--- a/inet/herrno.c
++++ b/inet/herrno.c
+@@ -28,3 +28,9 @@ __thread int __h_errno;
+ extern __thread int __libc_h_errno __attribute__ ((alias ("__h_errno")))
+   attribute_hidden;
+ #define h_errno __libc_h_errno
++
++#ifdef SHARED
++/* Provide an alias for use by the old libpthread.so.0 during
++   updates.  */
++asm (".symver __h_errno, h_errno@GLIBC_PRIVATE");
++#endif
+diff --git a/resolv/res_libc.c b/resolv/res_libc.c
+index 9f2d3c3bd442bb38..5ab02c79c72eb1ac 100644
+--- a/resolv/res_libc.c
++++ b/resolv/res_libc.c
+@@ -41,6 +41,7 @@
+ #include <resolv.h>
+ #include <libc-lock.h>
+ #include <resolv-internal.h>
++#include <resolv_context.h>
+ 
+ int
+ res_init (void)
+@@ -80,7 +81,34 @@ res_init (void)
+ 
+   return __res_vinit (&_res, 1);
+ }
+-
++
++#ifdef SHARED
++
++/* An old nscd binary may bind to __res_maybe_init during a glibc
++   update.  Emulate it using the new functions.  Ignore PREINIT
++   because almost all existing __res_maybe_init callers used zero
++   PREINIT, and the difference for RESP == &_res is very minor (a
++   potential override of application configuration).  */
++attribute_compat_text_section
++int
++__res_maybe_init (res_state resp, int preinit)
++{
++  if (resp == &_res)
++    {
++      /* This performs an implicit initialization of _res.  */
++      struct resolv_context *ctx = __resolv_context_get ();
++      if (ctx == NULL)
++        return -1;
++      __resolv_context_put (ctx);
++      return 0;
++    }
++  else
++    return __res_vinit (resp, 0);
++}
++asm (".symver __res_maybe_init, __res_maybe_init@GLIBC_PRIVATE");
++
++#endif /* SHARED */
++
+ /* This needs to be after the use of _res in res_init, above.  */
+ #undef _res
+ 
+diff --git a/resolv/res_query.c b/resolv/res_query.c
+index ebbe5a6a4ed86abe..24fefb561e7f1f5e 100644
+--- a/resolv/res_query.c
++++ b/resolv/res_query.c
+@@ -705,6 +705,96 @@ hostalias (const char *name)
+     (__resolv_context_get (), name, abuf, sizeof (abuf));
+ }
+ 
++#ifdef SHARED
++/* Compatibiliaty functions to support old nss_dns modules.  */
++
++typedef int (*compat_query_function) (struct resolv_context *,
++				      const char *name,
++				      int class, int type,
++				      u_char *answer,
++				      int anslen,
++				      u_char **answerp,
++				      u_char **answerp2,
++				      int *nanswerp2,
++				      int *resplen2,
++				      int *answerp2_malloced);
++
++attribute_compat_text_section
++static int
++wrap_compat_call (compat_query_function qf,
++		  res_state statp,
++		  const char *name,	/* domain name */
++		  int class, int type,	/* class and type of query */
++		  u_char *answer,	/* buffer to put answer */
++		  int anslen,		/* size of answer buffer */
++		  u_char **answerp,	/* if buffer needs to be enlarged */
++		  u_char **answerp2,
++		  int *nanswerp2,
++		  int *resplen2,
++		  int *answerp2_malloced)
++{
++  if (statp == &_res)
++    {
++      struct resolv_context *ctx = __resolv_context_get ();
++      if (ctx == NULL)
++	{
++	  __set_h_errno (NO_RECOVERY);
++	  return -1;
++	}
++      int ret = qf (ctx, name, class, type,
++		    answer, anslen, answerp, answerp2,
++		    nanswerp2, resplen2, answerp2_malloced);
++      __resolv_context_put (ctx);
++      return ret;
++    }
++  else
++    {
++      __set_h_errno (NO_RECOVERY);
++      __set_errno (ENOTSUP);
++      return -1;
++    }
++}
++
++attribute_compat_text_section
++int
++__libc_res_nquery(res_state statp,
++		  const char *name,	/* domain name */
++		  int class, int type,	/* class and type of query */
++		  u_char *answer,	/* buffer to put answer */
++		  int anslen,		/* size of answer buffer */
++		  u_char **answerp,	/* if buffer needs to be enlarged */
++		  u_char **answerp2,
++		  int *nanswerp2,
++		  int *resplen2,
++		  int *answerp2_malloced)
++{
++  return wrap_compat_call (__res_context_query, statp, name, class, type,
++			   answer, anslen, answerp, answerp2,
++			   nanswerp2, resplen2, answerp2_malloced);
++}
++asm (".symver __libc_res_nquery, __libc_res_nquery@GLIBC_PRIVATE");
++
++attribute_compat_text_section
++int
++__libc_res_nsearch(res_state statp,
++		   const char *name,	/* domain name */
++		   int class, int type,	/* class and type of query */
++		   u_char *answer,	/* buffer to put answer */
++		   int anslen,		/* size of answer */
++		   u_char **answerp,
++		   u_char **answerp2,
++		   int *nanswerp2,
++		   int *resplen2,
++		   int *answerp2_malloced)
++{
++  return wrap_compat_call (__res_context_search, statp, name, class, type,
++			   answer, anslen, answerp, answerp2,
++			   nanswerp2, resplen2, answerp2_malloced);
++}
++asm (".symver __libc_res_nsearch, __libc_res_nsearch@GLIBC_PRIVATE");
++
++#endif /* SHARED */
++
+ #if SHLIB_COMPAT (libresolv, GLIBC_2_0, GLIBC_2_2)
+ # undef res_query
+ # undef res_querydomain

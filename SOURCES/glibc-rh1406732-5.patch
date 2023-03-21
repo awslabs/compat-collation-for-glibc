@@ -1,0 +1,26 @@
+This patch enables building memusagestat with BIND_NOW enabled.
+
+Upstream, this change was part of the following commit...
+
+commit f9b645b4b0a10c43753296ce3fa40053fa44606a
+Author: Mike Frysinger <vapier@gentoo.org>
+Date:   Wed Apr 24 13:32:22 2019 +0200
+
+    memusagestat: use local glibc when linking [BZ #18465]
+
+...but since that commit cannot be backported to RHEL-7, this patch
+adds only the BIND_NOW linker flag at the appropriate place instead.
+
+diff --git a/malloc/Makefile b/malloc/Makefile
+index 476208cf43d211c9..992cec6b03115a76 100644
+--- a/malloc/Makefile
++++ b/malloc/Makefile
+@@ -142,7 +142,7 @@ lib := memusagestat
+ include $(patsubst %,$(..)cppflags-iterator.mk,$(cpp-srcs-left))
+ 
+ $(objpfx)memusagestat: $(memusagestat-modules:%=$(objpfx)%.o)
+-	$(LINK.o) -o $@ $^ $(libgd-LDFLAGS) -lgd -lpng -lz -lm
++	$(LINK.o) -Wl,-z,now -o $@ $^ $(libgd-LDFLAGS) -lgd -lpng -lz -lm
+ 
+ include ../Rules
+ 

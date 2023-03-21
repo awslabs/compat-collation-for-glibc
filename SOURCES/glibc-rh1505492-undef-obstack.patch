@@ -1,0 +1,43 @@
+Fix -Wundef warnings.  Upstream addressed this as part of this commit:
+
+commit b100f9aa77027e4371154820ea8a0353bfd13223
+Author: Will Newton <will.newton@linaro.org>
+Date:   Mon Jun 23 16:53:30 2014 +0100
+
+    malloc/obstack: Merge from gnulib
+
+diff --git a/malloc/obstack.c b/malloc/obstack.c
+index e3ce53f987727eca..2b103727e010b417 100644
+--- a/malloc/obstack.c
++++ b/malloc/obstack.c
+@@ -56,10 +56,10 @@
+ #ifndef ELIDE_CODE
+ 
+ 
+-# if HAVE_INTTYPES_H
++# if _LIBC || HAVE_INTTYPES_H
+ #  include <inttypes.h>
+ # endif
+-# if HAVE_STDINT_H || defined _LIBC
++# if _LIBC || HAVE_STDINT_H
+ #  include <stdint.h>
+ # endif
+ 
+diff --git a/malloc/obstack.h b/malloc/obstack.h
+index a791823cf3f18348..69e92d1146b02eb1 100644
+--- a/malloc/obstack.h
++++ b/malloc/obstack.h
+@@ -250,13 +250,6 @@ extern int obstack_exit_failure;
+ #define obstack_memory_used(h) _obstack_memory_used (h)
+ 
+ #if defined __GNUC__
+-/* NextStep 2.0 cc is really gcc 1.93 but it defines __GNUC__ = 2 and
+-   does not implement __extension__.  But that compiler doesn't define
+-   __GNUC_MINOR__.  */
+-# if __GNUC__ < 2 || (__NeXT__ && !__GNUC_MINOR__)
+-#  define __extension__
+-# endif
+-
+ /* For GNU C, if not -traditional,
+    we can define these macros to compute all args only once
+    without using a global variable.

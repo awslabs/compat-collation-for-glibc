@@ -1,0 +1,24 @@
+Introduce prototype-style definition for wcschr.  This happened upstream
+in:
+
+commit fb78612a963cfe1299b33b1c60a0c24a206276c3
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Wed Feb 25 16:22:10 2015 -0300
+
+    powerpc: Fix __wcschr static build
+
+diff --git a/wcsmbs/wcschr.c b/wcsmbs/wcschr.c
+index 56511d88176fa1f0..b3fded42692b1797 100644
+--- a/wcsmbs/wcschr.c
++++ b/wcsmbs/wcschr.c
+@@ -23,9 +23,7 @@
+ #endif
+ 
+ wchar_t *
+-wcschr (wcs, wc)
+-     const wchar_t *wcs;
+-     const wchar_t wc;
++wcschr (const wchar_t *wcs, const wchar_t wc)
+ {
+   do
+     if (*wcs == wc)

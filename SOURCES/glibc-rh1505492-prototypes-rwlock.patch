@@ -1,0 +1,38 @@
+Introduce prototype-style function definitions for
+__pthread_rwlock_rdlock, __pthread_rwlock_wrlock.  Upstream did this as
+part of:
+
+commit a832bdd36203fcb37fa5ad25200ef3c1ae205efe
+Author: Andi Kleen <ak@linux.intel.com>
+Date:   Mon Mar 17 05:48:28 2014 -0700
+
+    Add a fast path for C rd/wrlock v2
+
+diff --git a/nptl/pthread_rwlock_rdlock.c b/nptl/pthread_rwlock_rdlock.c
+index 2c176c7cb9ab4b7f..4c397d784b82a510 100644
+--- a/nptl/pthread_rwlock_rdlock.c
++++ b/nptl/pthread_rwlock_rdlock.c
+@@ -26,8 +26,7 @@
+ 
+ /* Acquire read lock for RWLOCK.  */
+ int
+-__pthread_rwlock_rdlock (rwlock)
+-     pthread_rwlock_t *rwlock;
++__pthread_rwlock_rdlock (pthread_rwlock_t *rwlock)
+ {
+   int result = 0;
+ 
+diff --git a/nptl/pthread_rwlock_wrlock.c b/nptl/pthread_rwlock_wrlock.c
+index 1476d1370d56475a..3dcc42b774eef8de 100644
+--- a/nptl/pthread_rwlock_wrlock.c
++++ b/nptl/pthread_rwlock_wrlock.c
+@@ -26,8 +26,7 @@
+ 
+ /* Acquire write lock for RWLOCK.  */
+ int
+-__pthread_rwlock_wrlock (rwlock)
+-     pthread_rwlock_t *rwlock;
++__pthread_rwlock_wrlock (pthread_rwlock_t *rwlock)
+ {
+   int result = 0;
+ 

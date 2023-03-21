@@ -1,0 +1,27 @@
+commit 6ee3eab42979fdd5bb971a40fec32e04bb9dd2ad
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Wed Jul 9 10:36:50 2014 +0530
+
+    Fix -Wmaybe-uninitialized warning in xdr.c
+    
+    While we're at fixing build warnings, here's one unnecessary warning
+    that can be fixed fairly easily.  The SIZE variable is never actually
+    use uninitialized, but the compiler cannot make that out and thinks
+    (correctly) that there is a potential for accessing SIZE without
+    initializing it.  Make this safe by initializing SIZE to 0.
+    
+    Tested on x86_64.
+
+diff --git a/sunrpc/xdr.c b/sunrpc/xdr.c
+index 7eac2d40f036aa70..b3e713cbc9c3e012 100644
+--- a/sunrpc/xdr.c
++++ b/sunrpc/xdr.c
+@@ -738,7 +738,7 @@ xdr_string (xdrs, cpp, maxsize)
+      u_int maxsize;
+ {
+   char *sp = *cpp;	/* sp is the actual string pointer */
+-  u_int size;
++  u_int size = 0;
+   u_int nodesize;
+ 
+   /*

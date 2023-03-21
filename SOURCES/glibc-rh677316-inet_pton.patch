@@ -1,0 +1,1613 @@
+Backport of
+
+inet/if_index.c
+inet/inet6_scopeid_pton.c
+inet/inet_mkadr.c
+inet/tst-inet6_scopeid_pton.c
+resolv/inet_pton.c
+resolv/tst-inet_pton.c
+
+up to and including this upstream commit on the 2.26 branch:
+
+commit 77db8772bd3f6f2bbad697dcf46861ce310f5b95
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Aug 10 16:06:52 2017 +0200
+
+    __inet6_scopeid_pton: Remove attribute_hidden, internal_function
+
+This change makes the inet_pton parser more strict for IPv6 addresses
+(upstream bug 16637).  The stricter __inet6_scopeid_pton parser is not
+effective yet with this patch because it is not used by the library yet.
+
+diff --git a/include/arpa/inet.h b/include/arpa/inet.h
+index 63ece7029aa1d417..c3f28f2baaa2ed66 100644
+--- a/include/arpa/inet.h
++++ b/include/arpa/inet.h
+@@ -7,6 +7,9 @@ libc_hidden_proto (__inet_aton)
+ libc_hidden_proto (inet_aton)
+ libc_hidden_proto (inet_ntop)
+ libc_hidden_proto (inet_pton)
+-libc_hidden_proto (inet_makeaddr)
++extern __typeof (inet_pton) __inet_pton;
++libc_hidden_proto (__inet_pton)
++extern __typeof (inet_makeaddr) __inet_makeaddr;
++libc_hidden_proto (__inet_makeaddr)
+ libc_hidden_proto (inet_netof)
+ #endif
+diff --git a/include/net/if.h b/include/net/if.h
+index 1d862260c7e83977..6c4cbc96c3733a01 100644
+--- a/include/net/if.h
++++ b/include/net/if.h
+@@ -4,9 +4,13 @@
+ 
+ #ifndef _ISOMAC
+ libc_hidden_proto (if_nametoindex)
++extern __typeof (if_nametoindex) __if_nametoindex;
++libc_hidden_proto (__if_nametoindex)
+ libc_hidden_proto (if_indextoname)
+ libc_hidden_proto (if_nameindex)
+ libc_hidden_proto (if_freenameindex)
++extern __typeof (if_freenameindex) __if_freenameindex;
++libc_hidden_proto (__if_freenameindex)
+ #endif
+ 
+ #endif
+diff --git a/inet/Makefile b/inet/Makefile
+index 768df21b92534a31..4abf2ddf6dfff327 100644
+--- a/inet/Makefile
++++ b/inet/Makefile
+@@ -45,7 +45,7 @@ routines := htonl htons		\
+ 	    in6_addr getnameinfo if_index ifaddrs inet6_option \
+ 	    getipv4sourcefilter setipv4sourcefilter \
+ 	    getsourcefilter setsourcefilter inet6_opt inet6_rth \
+-	    deadline
++	    inet6_scopeid_pton deadline
+ 
+ aux := check_pf check_native ifreq
+ 
+@@ -57,6 +57,10 @@ tests := htontest test_ifindex tst-ntoa tst-ether_aton tst-network \
+ # internal functions.
+ tests-static += tst-deadline
+ 
++# tst-inet6_scopeid_pton also needs internal functions but does not
++# need to be linked statically.
++tests += tst-inet6_scopeid_pton
++
+ include ../Rules
+ 
+ ifeq ($(have-thread-library),yes)
+diff --git a/inet/Versions b/inet/Versions
+index 06507199a92b3c51..157559c44442259e 100644
+--- a/inet/Versions
++++ b/inet/Versions
+@@ -88,5 +88,8 @@ libc {
+     # functions used in other libraries
+     __internal_endnetgrent; __internal_getnetgrent_r;
+     __internal_setnetgrent;
++
++   # Used from nscd.
++    __inet6_scopeid_pton;
+   }
+ }
+diff --git a/inet/if_index.c b/inet/if_index.c
+index 3d706766be62b91b..4604e0a35b890471 100644
+--- a/inet/if_index.c
++++ b/inet/if_index.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 1997,98,99,2000,02 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+ 
+    The GNU C Library is free software; you can redistribute it and/or
+@@ -20,44 +20,41 @@
+ #include <stddef.h>
+ 
+ unsigned int
+-if_nametoindex (const char *ifname)
++__if_nametoindex (const char *ifname)
+ {
+   __set_errno (ENOSYS);
+   return 0;
+ }
+-libc_hidden_def (if_nametoindex)
++libc_hidden_def (__if_nametoindex)
++weak_alias (__if_nametoindex, if_nametoindex)
++libc_hidden_weak (if_nametoindex)
+ stub_warning (if_nametoindex)
+ 
+ char *
+-if_indextoname (unsigned int ifindex, char *ifname)
++__if_indextoname (unsigned int ifindex, char *ifname)
+ {
+   __set_errno (ENOSYS);
+   return NULL;
+ }
+-libc_hidden_def (if_indextoname)
++weak_alias (__if_indextoname, if_indextoname)
++libc_hidden_weak (if_indextoname)
+ stub_warning (if_indextoname)
+ 
+ void
+-if_freenameindex (struct if_nameindex *ifn)
++__if_freenameindex (struct if_nameindex *ifn)
+ {
+ }
++libc_hidden_def (__if_freenameindex)
++weak_alias (__if_freenameindex, if_freenameindex)
++libc_hidden_weak (if_freenameindex)
+ stub_warning (if_freenameindex)
+ 
+ struct if_nameindex *
+-if_nameindex (void)
++__if_nameindex (void)
+ {
+   __set_errno (ENOSYS);
+   return NULL;
+ }
++weak_alias (__if_nameindex, if_nameindex)
++libc_hidden_weak (if_nameindex)
+ stub_warning (if_nameindex)
+-
+-#if 0
+-void
+-internal_function
+-__protocol_available (int *have_inet, int *have_inet6)
+-{
+-  /* By default we assume that IPv4 is available, IPv6 not.  */
+-  *have_inet = 1;
+-  *have_inet6 = 0;
+-}
+-#endif
+diff --git a/inet/inet6_scopeid_pton.c b/inet/inet6_scopeid_pton.c
+new file mode 100644
+index 0000000000000000..cc8803fa108f7bcb
+--- /dev/null
++++ b/inet/inet6_scopeid_pton.c
+@@ -0,0 +1,64 @@
++/* Convert an IPv6 scope ID from text to the internal representation.
++   Copyright (C) 2016-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <net-internal.h>
++
++#include <ctype.h>
++#include <errno.h>
++#include <locale.h>
++#include <net/if.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdlib.h>
++
++/* Parse SOURCE as a scope ID for ADDRESS.  Return 0 on success and -1
++   on error.  */
++int
++__inet6_scopeid_pton (const struct in6_addr *address, const char *scope,
++                      uint32_t *result)
++{
++  if (IN6_IS_ADDR_LINKLOCAL (address)
++      || IN6_IS_ADDR_MC_NODELOCAL (address)
++      || IN6_IS_ADDR_MC_LINKLOCAL (address))
++    {
++      uint32_t number = __if_nametoindex (scope);
++      if (number != 0)
++        {
++          *result = number;
++          return 0;
++        }
++    }
++
++  if (isdigit_l (scope[0], _nl_C_locobj_ptr))
++    {
++      char *end;
++      unsigned long long number
++        = ____strtoull_l_internal (scope, &end, /*base */ 10, /* group */ 0,
++                                   _nl_C_locobj_ptr);
++      if (*end == '\0' && number <= UINT32_MAX)
++        {
++          *result = number;
++          return 0;
++        }
++    }
++
++  __set_errno (EINVAL);
++  return -1;
++}
++
++libc_hidden_def (__inet6_scopeid_pton)
+diff --git a/inet/inet_mkadr.c b/inet/inet_mkadr.c
+index d8d92da768b2ede0..88faef74cf50b722 100644
+--- a/inet/inet_mkadr.c
++++ b/inet/inet_mkadr.c
+@@ -27,10 +27,6 @@
+  * SUCH DAMAGE.
+  */
+ 
+-#if defined(LIBC_SCCS) && !defined(lint)
+-static char sccsid[] = "@(#)inet_makeaddr.c	8.1 (Berkeley) 6/4/93";
+-#endif /* LIBC_SCCS and not lint */
+-
+ #include <sys/param.h>
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
+@@ -40,8 +36,7 @@ static char sccsid[] = "@(#)inet_makeaddr.c	8.1 (Berkeley) 6/4/93";
+  * building addresses stored in the ifnet structure.
+  */
+ struct in_addr
+-inet_makeaddr(net, host)
+-	in_addr_t net, host;
++__inet_makeaddr (in_addr_t net, in_addr_t host)
+ {
+ 	struct in_addr in;
+ 
+@@ -56,4 +51,5 @@ inet_makeaddr(net, host)
+ 	in.s_addr = htonl(in.s_addr);
+ 	return in;
+ }
+-libc_hidden_def (inet_makeaddr)
++libc_hidden_def (__inet_makeaddr)
++weak_alias (__inet_makeaddr, inet_makeaddr)
+diff --git a/inet/net-internal.h b/inet/net-internal.h
+index 58349f54ea126698..6c666752493811be 100644
+--- a/inet/net-internal.h
++++ b/inet/net-internal.h
+@@ -19,10 +19,15 @@
+ #ifndef _NET_INTERNAL_H
+ #define _NET_INTERNAL_H 1
+ 
++#include <arpa/inet.h>
+ #include <stdbool.h>
+ #include <stdint.h>
+ #include <sys/time.h>
+ 
++int __inet6_scopeid_pton (const struct in6_addr *address,
++                          const char *scope, uint32_t *result);
++libc_hidden_proto (__inet6_scopeid_pton)
++
+ /* Deadline handling for enforcing timeouts.
+ 
+    Code should call __deadline_current_time to obtain the current time
+diff --git a/inet/tst-inet6_scopeid_pton.c b/inet/tst-inet6_scopeid_pton.c
+new file mode 100644
+index 0000000000000000..8225b3b80abe6331
+--- /dev/null
++++ b/inet/tst-inet6_scopeid_pton.c
+@@ -0,0 +1,230 @@
++/* Tests for __inet6_scopeid_pton and IPv6 scopes in getaddrinfo.
++   Copyright (C) 2016-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <arpa/inet.h>
++#include <inttypes.h>
++#include <net-internal.h>
++#include <net/if.h>
++#include <netdb.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <support/check.h>
++#include <support/support.h>
++#include <support/test-driver.h>
++
++/* An interface which is known to the system.  */
++static const char *interface_name;
++static uint32_t interface_index;
++
++/* Initiale the variables above.  */
++static void
++setup_interface (void)
++{
++  struct if_nameindex *list = if_nameindex ();
++  if (list != NULL && list[0].if_index != 0 && list[0].if_name[0] != '\0')
++    {
++      interface_name = list[0].if_name;
++      interface_index = list[0].if_index;
++    }
++}
++
++/* Convert ADDRESS to struct in6_addr.  */
++static struct in6_addr
++from_string (const char *address)
++{
++  struct in6_addr addr;
++  if (inet_pton (AF_INET6, address, &addr) != 1)
++    FAIL_EXIT1 ("inet_pton (\"%s\")", address);
++  return addr;
++}
++
++/* Invoke getaddrinfo to parse ADDRESS%SCOPE.  Return true if
++   getaddrinfo was successful.  */
++static bool
++call_gai (int family, const char *address, const char *scope,
++          struct sockaddr_in6 *result)
++{
++  struct addrinfo hints =
++    {
++      .ai_family = family,
++      .ai_flags = AI_NUMERICHOST,
++      .ai_socktype = SOCK_DGRAM,
++      .ai_protocol = IPPROTO_UDP,
++    };
++  char *fulladdr = xasprintf ("%s%%%s", address, scope);
++  struct addrinfo *ai = NULL;
++  int ret = getaddrinfo (fulladdr, NULL, &hints, &ai);
++  if (ret == EAI_ADDRFAMILY || ret == EAI_NONAME)
++    {
++      if (test_verbose > 0)
++        printf ("info: getaddrinfo (\"%s\"): %s (%d)\n",
++                fulladdr, gai_strerror (ret), ret);
++      free (fulladdr);
++      return false;
++    }
++  if (ret != 0)
++    FAIL_EXIT1 ("getaddrinfo (\"%s\"): %s (%d)\n",
++                fulladdr, gai_strerror (ret), ret);
++  TEST_VERIFY_EXIT (ai != NULL);
++  TEST_VERIFY_EXIT (ai->ai_addrlen == sizeof (*result));
++  TEST_VERIFY (ai->ai_family == AF_INET6);
++  TEST_VERIFY (ai->ai_next == NULL);
++  memcpy (result, ai->ai_addr, sizeof (*result));
++  free (fulladdr);
++  freeaddrinfo (ai);
++  return true;
++}
++
++/* Verify that a successful call to getaddrinfo returned the expected
++   scope data.  */
++static void
++check_ai (const char *what, const char *addr_string, const char *scope_string,
++          const struct sockaddr_in6 *sa,
++          const struct in6_addr *addr, uint32_t scope)
++{
++  if (memcmp (addr, &sa->sin6_addr, sizeof (*addr)) != 0)
++    {
++      support_record_failure ();
++      printf ("error: getaddrinfo %s address mismatch for %s%%%s\n",
++              what, addr_string, scope_string);
++    }
++  if (sa->sin6_scope_id != scope)
++    {
++      support_record_failure ();
++      printf ("error: getaddrinfo %s scope mismatch for %s%%%s\n"
++              "  expected: %" PRIu32 "\n"
++              "  actual:   %" PRIu32 "\n",
++              what, addr_string, scope_string, scope, sa->sin6_scope_id);
++    }
++}
++
++/* Check a single address were we expected a failure.  */
++static void
++expect_failure (const char *address, const char *scope)
++{
++  if (test_verbose > 0)
++    printf ("info: expecting failure for %s%%%s\n", address, scope);
++  struct in6_addr addr = from_string (address);
++  uint32_t result = 1234;
++  if (__inet6_scopeid_pton (&addr, scope, &result) == 0)
++    {
++      support_record_failure ();
++      printf ("error: unexpected success for %s%%%s\n",
++              address, scope);
++    }
++  if (result != 1234)
++    {
++      support_record_failure ();
++      printf ("error: unexpected result update for %s%%%s\n",
++              address, scope);
++    }
++
++  struct sockaddr_in6 sa;
++  if (call_gai (AF_UNSPEC, address, scope, &sa))
++    {
++      support_record_failure ();
++      printf ("error: unexpected getaddrinfo success for %s%%%s (AF_UNSPEC)\n",
++              address, scope);
++    }
++  if (call_gai (AF_INET6, address, scope, &sa))
++    {
++      support_record_failure ();
++      printf ("error: unexpected getaddrinfo success for %s%%%s (AF_INET6)\n",
++              address, scope);
++    }
++}
++
++/* Check a single address were we expected a success.  */
++static void
++expect_success (const char *address, const char *scope, uint32_t expected)
++{
++  if (test_verbose > 0)
++    printf ("info: expecting success for %s%%%s\n", address, scope);
++  struct in6_addr addr = from_string (address);
++  uint32_t actual = expected + 1;
++  if (__inet6_scopeid_pton (&addr, scope, &actual) != 0)
++    {
++      support_record_failure ();
++      printf ("error: unexpected failure for %s%%%s\n",
++              address, scope);
++    }
++  if (actual != expected)
++    {
++      support_record_failure ();
++      printf ("error: unexpected result for for %s%%%s\n",
++              address, scope);
++      printf ("  expected: %" PRIu32 "\n", expected);
++      printf ("  actual:   %" PRIu32 "\n", actual);
++    }
++
++  struct sockaddr_in6 sa;
++  memset (&sa, 0xc0, sizeof (sa));
++  if (call_gai (AF_UNSPEC, address, scope, &sa))
++    check_ai ("AF_UNSPEC", address, scope, &sa, &addr, expected);
++  else
++    {
++      support_record_failure ();
++      printf ("error: unexpected getaddrinfo failure for %s%%%s (AF_UNSPEC)\n",
++              address, scope);
++    }
++  memset (&sa, 0xc0, sizeof (sa));
++  if (call_gai (AF_INET6, address, scope, &sa))
++    check_ai ("AF_INET6", address, scope, &sa, &addr, expected);
++  else
++    {
++      support_record_failure ();
++      printf ("error: unexpected getaddrinfo failure for %s%%%s (AF_INET6)\n",
++              address, scope);
++    }
++}
++
++static int
++do_test (void)
++{
++  setup_interface ();
++
++  static const char *test_addresses[]
++    = { "::", "::1", "2001:db8::1", NULL };
++  for (int i = 0; test_addresses[i] != NULL; ++i)
++    {
++      expect_success (test_addresses[i], "0", 0);
++      expect_success (test_addresses[i], "5555", 5555);
++
++      expect_failure (test_addresses[i], "");
++      expect_failure (test_addresses[i], "-1");
++      expect_failure (test_addresses[i], "-99");
++      expect_failure (test_addresses[i], "037777777777");
++      expect_failure (test_addresses[i], "0x");
++      expect_failure (test_addresses[i], "0x1");
++    }
++
++  if (interface_name != NULL)
++    {
++      expect_success ("fe80::1", interface_name, interface_index);
++      expect_success ("ff02::1", interface_name, interface_index);
++      expect_success ("ff01::1", interface_name, interface_index);
++      expect_failure ("::", interface_name);
++      expect_failure ("::1", interface_name);
++      expect_failure ("2001:db8::1", interface_name);
++    }
++
++  return 0;
++}
++
++#include <support/test-driver.c>
+diff --git a/resolv/Makefile b/resolv/Makefile
+index a86646d4ef61b77d..3f525bcc75ee83ae 100644
+--- a/resolv/Makefile
++++ b/resolv/Makefile
+@@ -29,7 +29,7 @@ headers	:= resolv.h \
+ routines := herror inet_addr inet_ntop inet_pton nsap_addr res_init \
+ 	    res_hconf res_libc res-state
+ 
+-tests = tst-aton tst-leaks tst-inet_ntop
++tests = tst-aton tst-leaks tst-inet_ntop tst-inet_pton
+ xtests = tst-leaks2
+ 
+ generate := mtrace-tst-leaks tst-leaks.mtrace tst-leaks2.mtrace
+diff --git a/resolv/Versions b/resolv/Versions
+index 152ef3f68f9a8b48..24b07ef770ed3915 100644
+--- a/resolv/Versions
++++ b/resolv/Versions
+@@ -29,6 +29,7 @@ libc {
+     __h_errno; __resp;
+ 
+     __res_maybe_init; __res_iclose;
++    __inet_pton_length;
+   }
+ }
+ 
+diff --git a/resolv/inet_pton.c b/resolv/inet_pton.c
+index c507013e4ea9a90b..16ee33e0c0dfb015 100644
+--- a/resolv/inet_pton.c
++++ b/resolv/inet_pton.c
+@@ -1,3 +1,20 @@
++/* Copyright (C) 1996-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
+ /*
+  * Copyright (c) 1996,1999 by Internet Software Consortium.
+  *
+@@ -15,207 +32,203 @@
+  * SOFTWARE.
+  */
+ 
+-#if defined(LIBC_SCCS) && !defined(lint)
+-static const char rcsid[] = "$BINDId: inet_pton.c,v 1.7 1999/10/13 16:39:28 vixie Exp $";
+-#endif /* LIBC_SCCS and not lint */
+-
+-#include <sys/param.h>
+-#include <sys/types.h>
+-#include <sys/socket.h>
+-#include <netinet/in.h>
+ #include <arpa/inet.h>
+ #include <arpa/nameser.h>
+ #include <ctype.h>
+-#include <string.h>
+ #include <errno.h>
++#include <netinet/in.h>
++#include <resolv/resolv-internal.h>
++#include <string.h>
++#include <sys/socket.h>
++#include <sys/types.h>
+ 
+-/*
+- * WARNING: Don't even consider trying to compile this on a system where
+- * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
+- */
++static int inet_pton4 (const char *src, const char *src_end, u_char *dst);
++static int inet_pton6 (const char *src, const char *src_end, u_char *dst);
+ 
+-static int inet_pton4 (const char *src, u_char *dst) internal_function;
+-static int inet_pton6 (const char *src, u_char *dst) internal_function;
+-
+-/* int
+- * inet_pton(af, src, dst)
+- *	convert from presentation format (which usually means ASCII printable)
+- *	to network format (which is usually some kind of binary format).
+- * return:
+- *	1 if the address was valid for the specified address family
+- *	0 if the address wasn't valid (`dst' is untouched in this case)
+- *	-1 if some other error occurred (`dst' is untouched in this case, too)
+- * author:
+- *	Paul Vixie, 1996.
+- */
+ int
+-inet_pton(af, src, dst)
+-	int af;
+-	const char *src;
+-	void *dst;
++__inet_pton_length (int af, const char *src, size_t srclen, void *dst)
+ {
+-	switch (af) {
+-	case AF_INET:
+-		return (inet_pton4(src, dst));
+-	case AF_INET6:
+-		return (inet_pton6(src, dst));
+-	default:
+-		__set_errno (EAFNOSUPPORT);
+-		return (-1);
+-	}
+-	/* NOTREACHED */
++  switch (af)
++    {
++    case AF_INET:
++      return inet_pton4 (src, src + srclen, dst);
++    case AF_INET6:
++      return inet_pton6 (src, src + srclen, dst);
++    default:
++      __set_errno (EAFNOSUPPORT);
++      return -1;
++    }
+ }
+-libc_hidden_def (inet_pton)
+-
+-/* int
+- * inet_pton4(src, dst)
+- *	like inet_aton() but without all the hexadecimal, octal (with the
+- *	exception of 0) and shorthand.
+- * return:
+- *	1 if `src' is a valid dotted quad, else 0.
+- * notice:
+- *	does not touch `dst' unless it's returning 1.
+- * author:
+- *	Paul Vixie, 1996.
+- */
++libc_hidden_def (__inet_pton_length)
++
++/* Like __inet_pton_length, but use strlen (SRC) as the length of
++   SRC.  */
++int
++__inet_pton (int af, const char *src, void *dst)
++{
++  return __inet_pton_length (af, src, strlen (src), dst);
++}
++libc_hidden_def (__inet_pton)
++weak_alias (__inet_pton, inet_pton)
++libc_hidden_weak (inet_pton)
++
++/* Like inet_aton but without all the hexadecimal, octal and shorthand
++   (and trailing garbage is not ignored).  Return 1 if SRC is a valid
++   dotted quad, else 0.  This function does not touch DST unless it's
++   returning 1.
++   Author: Paul Vixie, 1996.  */
+ static int
+-internal_function
+-inet_pton4(src, dst)
+-	const char *src;
+-	u_char *dst;
++inet_pton4 (const char *src, const char *end, unsigned char *dst)
+ {
+-	int saw_digit, octets, ch;
+-	u_char tmp[NS_INADDRSZ], *tp;
+-
+-	saw_digit = 0;
+-	octets = 0;
+-	*(tp = tmp) = 0;
+-	while ((ch = *src++) != '\0') {
+-
+-		if (ch >= '0' && ch <= '9') {
+-			u_int new = *tp * 10 + (ch - '0');
+-
+-			if (saw_digit && *tp == 0)
+-				return (0);
+-			if (new > 255)
+-				return (0);
+-			*tp = new;
+-			if (! saw_digit) {
+-				if (++octets > 4)
+-					return (0);
+-				saw_digit = 1;
+-			}
+-		} else if (ch == '.' && saw_digit) {
+-			if (octets == 4)
+-				return (0);
+-			*++tp = 0;
+-			saw_digit = 0;
+-		} else
+-			return (0);
+-	}
+-	if (octets < 4)
+-		return (0);
+-	memcpy(dst, tmp, NS_INADDRSZ);
+-	return (1);
++  int saw_digit, octets, ch;
++  unsigned char tmp[NS_INADDRSZ], *tp;
++
++  saw_digit = 0;
++  octets = 0;
++  *(tp = tmp) = 0;
++  while (src < end)
++    {
++      ch = *src++;
++      if (ch >= '0' && ch <= '9')
++        {
++          unsigned int new = *tp * 10 + (ch - '0');
++
++          if (saw_digit && *tp == 0)
++            return 0;
++          if (new > 255)
++            return 0;
++          *tp = new;
++          if (! saw_digit)
++            {
++              if (++octets > 4)
++                return 0;
++              saw_digit = 1;
++            }
++        }
++      else if (ch == '.' && saw_digit)
++        {
++          if (octets == 4)
++            return 0;
++          *++tp = 0;
++          saw_digit = 0;
++        }
++      else
++        return 0;
++    }
++  if (octets < 4)
++    return 0;
++  memcpy (dst, tmp, NS_INADDRSZ);
++  return 1;
+ }
+ 
+-/* int
+- * inet_pton6(src, dst)
+- *	convert presentation level address to network order binary form.
+- * return:
+- *	1 if `src' is a valid [RFC1884 2.2] address, else 0.
+- * notice:
+- *	(1) does not touch `dst' unless it's returning 1.
+- *	(2) :: in a full address is silently ignored.
+- * credit:
+- *	inspired by Mark Andrews.
+- * author:
+- *	Paul Vixie, 1996.
+- */
++/* Return the value of CH as a hexademical digit, or -1 if it is a
++   different type of character.  */
++static int
++hex_digit_value (char ch)
++{
++  if ('0' <= ch && ch <= '9')
++    return ch - '0';
++  if ('a' <= ch && ch <= 'f')
++    return ch - 'a' + 10;
++  if ('A' <= ch && ch <= 'F')
++    return ch - 'A' + 10;
++  return -1;
++}
++
++/* Convert presentation-level IPv6 address to network order binary
++   form.  Return 1 if SRC is a valid [RFC1884 2.2] address, else 0.
++   This function does not touch DST unless it's returning 1.
++   Author: Paul Vixie, 1996.  Inspired by Mark Andrews.  */
+ static int
+-internal_function
+-inet_pton6(src, dst)
+-	const char *src;
+-	u_char *dst;
++inet_pton6 (const char *src, const char *src_endp, unsigned char *dst)
+ {
+-	static const char xdigits[] = "0123456789abcdef";
+-	u_char tmp[NS_IN6ADDRSZ], *tp, *endp, *colonp;
+-	const char *curtok;
+-	int ch, saw_xdigit;
+-	u_int val;
+-
+-	tp = memset(tmp, '\0', NS_IN6ADDRSZ);
+-	endp = tp + NS_IN6ADDRSZ;
+-	colonp = NULL;
+-	/* Leading :: requires some special handling. */
+-	if (*src == ':')
+-		if (*++src != ':')
+-			return (0);
+-	curtok = src;
+-	saw_xdigit = 0;
+-	val = 0;
+-	while ((ch = tolower (*src++)) != '\0') {
+-		const char *pch;
+-
+-		pch = strchr(xdigits, ch);
+-		if (pch != NULL) {
+-			val <<= 4;
+-			val |= (pch - xdigits);
+-			if (val > 0xffff)
+-				return (0);
+-			saw_xdigit = 1;
+-			continue;
+-		}
+-		if (ch == ':') {
+-			curtok = src;
+-			if (!saw_xdigit) {
+-				if (colonp)
+-					return (0);
+-				colonp = tp;
+-				continue;
+-			} else if (*src == '\0') {
+-				return (0);
+-			}
+-			if (tp + NS_INT16SZ > endp)
+-				return (0);
+-			*tp++ = (u_char) (val >> 8) & 0xff;
+-			*tp++ = (u_char) val & 0xff;
+-			saw_xdigit = 0;
+-			val = 0;
+-			continue;
+-		}
+-		if (ch == '.' && ((tp + NS_INADDRSZ) <= endp) &&
+-		    inet_pton4(curtok, tp) > 0) {
+-			tp += NS_INADDRSZ;
+-			saw_xdigit = 0;
+-			break;	/* '\0' was seen by inet_pton4(). */
+-		}
+-		return (0);
++  unsigned char tmp[NS_IN6ADDRSZ], *tp, *endp, *colonp;
++  const char *curtok;
++  int ch;
++  size_t xdigits_seen;	/* Number of hex digits since colon.  */
++  unsigned int val;
++
++  tp = memset (tmp, '\0', NS_IN6ADDRSZ);
++  endp = tp + NS_IN6ADDRSZ;
++  colonp = NULL;
++
++  /* Leading :: requires some special handling.  */
++  if (src == src_endp)
++    return 0;
++  if (*src == ':')
++    {
++      ++src;
++      if (src == src_endp || *src != ':')
++        return 0;
++    }
++
++  curtok = src;
++  xdigits_seen = 0;
++  val = 0;
++  while (src < src_endp)
++    {
++      ch = *src++;
++      int digit = hex_digit_value (ch);
++      if (digit >= 0)
++	{
++	  if (xdigits_seen == 4)
++	    return 0;
++	  val <<= 4;
++	  val |= digit;
++	  if (val > 0xffff)
++	    return 0;
++	  ++xdigits_seen;
++	  continue;
+ 	}
+-	if (saw_xdigit) {
+-		if (tp + NS_INT16SZ > endp)
+-			return (0);
+-		*tp++ = (u_char) (val >> 8) & 0xff;
+-		*tp++ = (u_char) val & 0xff;
++      if (ch == ':')
++	{
++	  curtok = src;
++	  if (xdigits_seen == 0)
++	    {
++	      if (colonp)
++		return 0;
++	      colonp = tp;
++	      continue;
++	    }
++	  else if (src == src_endp)
++            return 0;
++	  if (tp + NS_INT16SZ > endp)
++	    return 0;
++	  *tp++ = (unsigned char) (val >> 8) & 0xff;
++	  *tp++ = (unsigned char) val & 0xff;
++	  xdigits_seen = 0;
++	  val = 0;
++	  continue;
+ 	}
+-	if (colonp != NULL) {
+-		/*
+-		 * Since some memmove()'s erroneously fail to handle
+-		 * overlapping regions, we'll do the shift by hand.
+-		 */
+-		const int n = tp - colonp;
+-		int i;
+-
+-		if (tp == endp)
+-			return (0);
+-		for (i = 1; i <= n; i++) {
+-			endp[- i] = colonp[n - i];
+-			colonp[n - i] = 0;
+-		}
+-		tp = endp;
++      if (ch == '.' && ((tp + NS_INADDRSZ) <= endp)
++          && inet_pton4 (curtok, src_endp, tp) > 0)
++	{
++	  tp += NS_INADDRSZ;
++	  xdigits_seen = 0;
++	  break;  /* '\0' was seen by inet_pton4.  */
+ 	}
+-	if (tp != endp)
+-		return (0);
+-	memcpy(dst, tmp, NS_IN6ADDRSZ);
+-	return (1);
++      return 0;
++    }
++  if (xdigits_seen > 0)
++    {
++      if (tp + NS_INT16SZ > endp)
++	return 0;
++      *tp++ = (unsigned char) (val >> 8) & 0xff;
++      *tp++ = (unsigned char) val & 0xff;
++    }
++  if (colonp != NULL)
++    {
++      /* Replace :: with zeros.  */
++      if (tp == endp)
++        /* :: would expand to a zero-width field.  */
++        return 0;
++      size_t n = tp - colonp;
++      memmove (endp - n, colonp, n);
++      memset (colonp, 0, endp - n - colonp);
++      tp = endp;
++    }
++  if (tp != endp)
++    return 0;
++  memcpy (dst, tmp, NS_IN6ADDRSZ);
++  return 1;
+ }
+diff --git a/resolv/resolv-internal.h b/resolv/resolv-internal.h
+index 269758c416544cb4..a9f5659dbbacb477 100644
+--- a/resolv/resolv-internal.h
++++ b/resolv/resolv-internal.h
+@@ -32,4 +32,13 @@ res_use_inet6 (void)
+   return _res.options & DEPRECATED_RES_USE_INET6;
+ }
+ 
++/* Convert from presentation format (which usually means ASCII
++   printable) to network format (which is usually some kind of binary
++   format).  The input is in the range [SRC, SRC + SRCLEN).  The
++   output is written to DST (which has to be 4 or 16 bytes long,
++   depending on AF).  Return 0 for invalid input, 1 for success, -1
++   for an invalid address family.  */
++int __inet_pton_length (int af, const char *src, size_t srclen, void *);
++libc_hidden_proto (__inet_pton_length)
++
+ #endif  /* _RESOLV_INTERNAL_H */
+diff --git a/resolv/tst-inet_pton.c b/resolv/tst-inet_pton.c
+new file mode 100644
+index 0000000000000000..4bb9f8119378b467
+--- /dev/null
++++ b/resolv/tst-inet_pton.c
+@@ -0,0 +1,537 @@
++/* Test inet_pton functions.
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <arpa/inet.h>
++#include <resolv/resolv-internal.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <string.h>
++#include <support/check.h>
++#include <support/xunistd.h>
++#include <sys/mman.h>
++#include <sys/param.h>
++#include <unistd.h>
++
++/* Memory region created by next_to_fault_allocate.  */
++struct next_to_fault
++{
++  /* The user data.  */
++  char *buffer;
++  size_t length;
++
++  /* The entire allocated region.  */
++  void *region_start;
++  size_t region_size;
++};
++
++/* Allocate a buffer of SIZE bytes just before a page which is mapped
++   with PROT_NONE (so that overrunning the buffer will cause a
++   fault).  */
++static struct next_to_fault
++next_to_fault_allocate (size_t size)
++{
++  long page_size = sysconf (_SC_PAGE_SIZE);
++  TEST_VERIFY_EXIT (page_size > 0);
++  struct next_to_fault result;
++  result.region_size = roundup (size, page_size) + page_size;
++  TEST_VERIFY_EXIT (size + page_size > size);
++  TEST_VERIFY_EXIT (result.region_size > size);
++  result.region_start
++    = xmmap (NULL, result.region_size, PROT_READ | PROT_WRITE,
++             MAP_PRIVATE | MAP_ANONYMOUS, -1);
++  /* Unmap the page after the allocation.  */
++  xmprotect (result.region_start + (result.region_size - page_size),
++             page_size, PROT_NONE);
++  /* Align the allocation within the region so that it ends just
++     before the PROT_NONE page.  */
++  result.buffer = result.region_start + result.region_size - page_size - size;
++  result.length = size;
++  return result;
++}
++
++/* Deallocate the memory region allocated by
++   next_to_fault_allocate.  */
++static void
++next_to_fault_free (struct next_to_fault *ntf)
++{
++  xmunmap (ntf->region_start, ntf->region_size);
++  *ntf = (struct next_to_fault) { NULL, };
++}
++
++struct test_case
++{
++  /* The input data.  */
++  const char *input;
++
++  /* True if AF_INET parses successfully.  */
++  bool ipv4_ok;
++
++  /* True if AF_INET6 parses successfully.  */
++  bool ipv6_ok;
++
++  /* Expected result for AF_INET.  */
++  unsigned char ipv4_expected[4];
++
++  /* Expected result for AF_INET6.  */
++  unsigned char ipv6_expected[16];
++};
++
++static void
++check_result (const char *what, const struct test_case *t, int family,
++              void *result_buffer, int inet_ret)
++{
++  TEST_VERIFY_EXIT (inet_ret >= -1);
++  TEST_VERIFY_EXIT (inet_ret <= 1);
++
++  int ok;
++  const unsigned char *expected;
++  size_t result_size;
++  switch (family)
++    {
++    case AF_INET:
++      ok = t->ipv4_ok;
++      expected = t->ipv4_expected;
++      result_size = 4;
++      break;
++    case AF_INET6:
++      ok = t->ipv6_ok;
++      expected = t->ipv6_expected;
++      result_size = 16;
++      break;
++    default:
++      FAIL_EXIT1 ("invalid address family %d", family);
++    }
++
++  if (inet_ret != ok)
++    {
++      support_record_failure ();
++      printf ("error: %s return value mismatch for [[%s]], family %d\n"
++              "  expected: %d\n"
++              "  actual: %d\n",
++              what, t->input, family, ok, inet_ret);
++      return;
++    }
++  if (memcmp (result_buffer, expected, result_size) != 0)
++    {
++      support_record_failure ();
++      printf ("error: %s result mismatch for [[%s]], family %d\n",
++              what, t->input, family);
++    }
++}
++
++static void
++run_one_test (const struct test_case *t)
++{
++  size_t test_len = strlen (t->input);
++
++  struct next_to_fault ntf_out4 = next_to_fault_allocate (4);
++  struct next_to_fault ntf_out6 = next_to_fault_allocate (16);
++
++  /* inet_pton requires NUL termination.  */
++  {
++    struct next_to_fault ntf_in = next_to_fault_allocate (test_len + 1);
++    memcpy (ntf_in.buffer, t->input, test_len + 1);
++    memset (ntf_out4.buffer, 0, 4);
++    check_result ("inet_pton", t, AF_INET, ntf_out4.buffer,
++                  inet_pton (AF_INET, ntf_in.buffer, ntf_out4.buffer));
++    memset (ntf_out6.buffer, 0, 16);
++    check_result ("inet_pton", t, AF_INET6, ntf_out6.buffer,
++                  inet_pton (AF_INET6, ntf_in.buffer, ntf_out6.buffer));
++    next_to_fault_free (&ntf_in);
++  }
++
++  /* __inet_pton_length does not require NUL termination.  */
++  {
++    struct next_to_fault ntf_in = next_to_fault_allocate (test_len);
++    memcpy (ntf_in.buffer, t->input, test_len);
++    memset (ntf_out4.buffer, 0, 4);
++    check_result ("__inet_pton_length", t, AF_INET, ntf_out4.buffer,
++                  __inet_pton_length (AF_INET, ntf_in.buffer, ntf_in.length,
++                                      ntf_out4.buffer));
++    memset (ntf_out6.buffer, 0, 16);
++    check_result ("__inet_pton_length", t, AF_INET6, ntf_out6.buffer,
++                  __inet_pton_length (AF_INET6, ntf_in.buffer, ntf_in.length,
++                                      ntf_out6.buffer));
++    next_to_fault_free (&ntf_in);
++  }
++
++  next_to_fault_free (&ntf_out4);
++  next_to_fault_free (&ntf_out6);
++}
++
++/* The test cases were manually crafted and the set enhanced with
++   American Fuzzy Lop.  */
++const struct test_case test_cases[] =
++  {
++    {.input = ".:", },
++    {.input = "0.0.0.0",
++     .ipv4_ok = true,
++     .ipv4_expected = {0, 0, 0, 0},
++    },
++    {.input = "0.:", },
++    {.input = "00", },
++    {.input = "0000000", },
++    {.input = "00000000000000000", },
++    {.input = "092.", },
++    {.input = "10.0.301.2", },
++    {.input = "127.0.0.1",
++     .ipv4_ok = true,
++     .ipv4_expected = {127, 0, 0, 1},
++    },
++    {.input = "19..", },
++    {.input = "192.0.2.-1", },
++    {.input = "192.0.2.01", },
++    {.input = "192.0.2.1.", },
++    {.input = "192.0.2.1192.", },
++    {.input = "192.0.2.192.\377..", },
++    {.input = "192.0.2.256", },
++    {.input = "192.0.2.27",
++     .ipv4_ok = true,
++     .ipv4_expected = {192, 0, 2, 27},
++    },
++    {.input = "192.0.201.", },
++    {.input = "192.0.261.", },
++    {.input = "192.0.2\256", },
++    {.input = "192.0.\262.", },
++    {.input = "192.062.", },
++    {.input = "192.092.\256", },
++    {.input = "192.0\2562.", },
++    {.input = "192.192.0.2661\031", },
++    {.input = "192.192.00n2.1.", },
++    {.input = "192.192.2.190.", },
++    {.input = "192.255.255.2555", },
++    {.input = "192.92.219\023.", },
++    {.input = "192.\260.2.", },
++    {.input = "1:1::1:1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1
++     },
++    },
++    {.input = "2", },
++    {.input = "2.", },
++    {.input = "2001:db8:00001::f", },
++    {.input = "2001:db8:10000::f", },
++    {.input = "2001:db8:1234:5678:abcd:ef01:2345:67",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x12, 0x34, 0x56, 0x78,
++       0xab, 0xcd, 0xef, 0x1, 0x23, 0x45, 0x0, 0x67
++     },
++    },
++    {.input = "2001:db8:1234:5678:abcd:ef01:2345:6789:1", },
++    {.input = "2001:db8:1234:5678:abcd:ef01:2345::6789", },
++    {.input = "2001:db8::0",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
++     },
++    },
++    {.input = "2001:db8::00",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
++     },
++    },
++    {.input = "2001:db8::1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1
++     },
++    },
++    {.input = "2001:db8::10",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x10
++     },
++    },
++    {.input = "2001:db8::19",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x19
++     },
++    },
++    {.input = "2001:db8::1::\012", },
++    {.input = "2001:db8::1::2\012", },
++    {.input = "2001:db8::2",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2
++     },
++    },
++    {.input = "2001:db8::3",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3
++     },
++    },
++    {.input = "2001:db8::4",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4
++     },
++    },
++    {.input = "2001:db8::5",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x5
++     },
++    },
++    {.input = "2001:db8::6",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x6
++     },
++    },
++    {.input = "2001:db8::7",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x7
++     },
++    },
++    {.input = "2001:db8::8",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x8
++     },
++    },
++    {.input = "2001:db8::9",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x9
++     },
++    },
++    {.input = "2001:db8::A",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa
++     },
++    },
++    {.input = "2001:db8::B",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xb
++     },
++    },
++    {.input = "2001:db8::C",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xc
++     },
++    },
++    {.input = "2001:db8::D",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xd
++     },
++    },
++    {.input = "2001:db8::E",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe
++     },
++    },
++    {.input = "2001:db8::F",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf
++     },
++    },
++    {.input = "2001:db8::a",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa
++     },
++    },
++    {.input = "2001:db8::b",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xb
++     },
++    },
++    {.input = "2001:db8::c",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xc
++     },
++    },
++    {.input = "2001:db8::d",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xd
++     },
++    },
++    {.input = "2001:db8::e",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe
++     },
++    },
++    {.input = "2001:db8::f",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf
++     },
++    },
++    {.input = "2001:db8::ff",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x20, 0x1, 0xd, 0xb8, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff
++     },
++    },
++    {.input = "2001:db8::ffff:2\012", },
++    {.input = "22", },
++    {.input = "2222@", },
++    {.input = "255.255.255.255",
++     .ipv4_ok = true,
++     .ipv4_expected = {255, 255, 255, 255},
++    },
++    {.input = "255.255.255.255\001", },
++    {.input = "255.255.255.25555", },
++    {.input = "2:", },
++    {.input = "2:a:8:EEEE::EEEE:F:EEE8:EEEE\034*:", },
++    {.input = "2:ff:1:1:7:ff:1:1:7.", },
++    {.input = "2f:0000000000000000000000000000000000000000000000000000000000"
++     "0000000000000000000000000000000000000000000000000000000000000000000000"
++     "0G01",
++    },
++    {.input = "429495", },
++    {.input = "5::5::", },
++    {.input = "6.6.", },
++    {.input = "992.", },
++    {.input = "::",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
++     },
++    },
++    {.input = "::00001", },
++    {.input = "::1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1
++     },
++    },
++    {.input = "::10000", },
++    {.input = "::1:1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1
++     },
++    },
++    {.input = "::ff:1:1:7.0.0.1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff,
++       0x0, 0x1, 0x0, 0x1, 0x7, 0x0, 0x0, 0x1
++     },
++    },
++    {.input = "::ff:1:1:7:ff:1:1:7.", },
++    {.input = "::ff:1:1:7ff:1:8:7.0.0.1", },
++    {.input = "::ff:1:1:7ff:1:8f:1:1:71", },
++    {.input = "::ffff:02fff:127.0.S1", },
++    {.input = "::ffff:127.0.0.1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0xff, 0xff, 0x7f, 0x0, 0x0, 0x1
++     },
++    },
++    {.input = "::ffff:1:7.0.0.1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0xff, 0xff, 0x0, 0x1, 0x7, 0x0, 0x0, 0x1
++     },
++    },
++    {.input = ":\272", },
++    {.input = "A:f:ff:1:1:D:ff:1:1::7.", },
++    {.input = "AAAAA.", },
++    {.input = "D:::", },
++    {.input = "DF8F", },
++    {.input = "F::",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0xf, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
++     },
++    },
++    {.input = "F:A:8:EEEE:8:EEEE\034*:", },
++    {.input = "F:a:8:EEEE:8:EEEE\034*:", },
++    {.input = "F:ff:100:7ff:1:8:7.0.10.1",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0x0, 0xf, 0x0, 0xff, 0x1, 0x0, 0x7, 0xff,
++       0x0, 0x1, 0x0, 0x8, 0x7, 0x0, 0xa, 0x1
++     },
++    },
++    {.input = "d92.", },
++    {.input = "ff:00000000000000000000000000000000000000000000000000000000000"
++     "00000000000000000000000000000000000000000000000000000000000000000001",
++    },
++    {.input = "fff2:2::ff2:2:f7",
++     .ipv6_ok = true,
++     .ipv6_expected = {
++       0xff, 0xf2, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0,
++       0x0, 0x0, 0xf, 0xf2, 0x0, 0x2, 0x0, 0xf7
++     },
++    },
++    {.input = "ffff:ff:ff:fff:ff:ff:ff:", },
++    {.input = "\272:", },
++    {NULL}
++  };
++
++static int
++do_test (void)
++{
++  for (size_t i = 0; test_cases[i].input != NULL; ++i)
++    run_one_test (test_cases + i);
++  return 0;
++}
++
++#include <support/test-driver.c>
+diff --git a/sysdeps/unix/sysv/linux/if_index.c b/sysdeps/unix/sysv/linux/if_index.c
+index cf336839259b24b6..8ba5eae7818b49cd 100644
+--- a/sysdeps/unix/sysv/linux/if_index.c
++++ b/sysdeps/unix/sysv/linux/if_index.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 1997-2012 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+ 
+    The GNU C Library is free software; you can redistribute it and/or
+@@ -24,15 +24,14 @@
+ #include <net/if.h>
+ #include <sys/socket.h>
+ #include <sys/ioctl.h>
+-#include <bits/libc-lock.h>
++#include <libc-lock.h>
+ #include <not-cancel.h>
+-#include <kernel-features.h>
+ 
+ #include "netlinkaccess.h"
+ 
+ 
+ unsigned int
+-if_nametoindex (const char *ifname)
++__if_nametoindex (const char *ifname)
+ {
+ #ifndef SIOCGIFINDEX
+   __set_errno (ENOSYS);
+@@ -57,11 +56,13 @@ if_nametoindex (const char *ifname)
+   return ifr.ifr_ifindex;
+ #endif
+ }
+-libc_hidden_def (if_nametoindex)
++libc_hidden_def (__if_nametoindex)
++weak_alias (__if_nametoindex, if_nametoindex)
++libc_hidden_weak (if_nametoindex)
+ 
+ 
+ void
+-if_freenameindex (struct if_nameindex *ifn)
++__if_freenameindex (struct if_nameindex *ifn)
+ {
+   struct if_nameindex *ptr = ifn;
+   while (ptr->if_name || ptr->if_index)
+@@ -71,7 +72,9 @@ if_freenameindex (struct if_nameindex *ifn)
+     }
+   free (ifn);
+ }
+-libc_hidden_def (if_freenameindex)
++libc_hidden_def (__if_freenameindex)
++weak_alias (__if_freenameindex, if_freenameindex)
++libc_hidden_weak (if_freenameindex)
+ 
+ 
+ static struct if_nameindex *
+@@ -163,7 +166,7 @@ if_nameindex_netlink (void)
+ 		      if (idx[nifs].if_name == NULL)
+ 			{
+ 			  idx[nifs].if_index = 0;
+-			  if_freenameindex (idx);
++			  __if_freenameindex (idx);
+ 			  idx = NULL;
+ 			  goto nomem;
+ 			}
+@@ -190,7 +193,7 @@ if_nameindex_netlink (void)
+ 
+ 
+ struct if_nameindex *
+-if_nameindex (void)
++__if_nameindex (void)
+ {
+ #ifndef SIOCGIFINDEX
+   __set_errno (ENOSYS);
+@@ -200,11 +203,12 @@ if_nameindex (void)
+   return result;
+ #endif
+ }
+-libc_hidden_def (if_nameindex)
++weak_alias (__if_nameindex, if_nameindex)
++libc_hidden_weak (if_nameindex)
+ 
+ 
+ char *
+-if_indextoname (unsigned int ifindex, char *ifname)
++__if_indextoname (unsigned int ifindex, char *ifname)
+ {
+   /* We may be able to do the conversion directly, rather than searching a
+      list.  This ioctl is not present in kernels before version 2.1.50.  */
+@@ -233,4 +237,5 @@ if_indextoname (unsigned int ifindex, char *ifname)
+   else
+     return strncpy (ifname, ifr.ifr_name, IFNAMSIZ);
+ }
+-libc_hidden_def (if_indextoname)
++weak_alias (__if_indextoname, if_indextoname)
++libc_hidden_weak (if_indextoname)

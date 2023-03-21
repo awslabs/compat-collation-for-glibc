@@ -1,0 +1,87 @@
+commit 0cdddc25a47509262a9a55a343395971b492b0fa
+Author: Steve Ellcey <sellcey@mips.com>
+Date:   Thu May 1 10:22:35 2014 -0700
+
+    2014-05-01  Steve Ellcey  <sellcey@mips.com>
+    
+            * intl/iconv/skeleton.c (ONE_DIRECTION): Remove define.
+            * iconv/gconv_simple.c (ONE_DIRECTION): Define.
+            * iconvdata/8bit-gap.c (ONE_DIRECTION): Ditto.
+            * iconvdata/8bit-generic.c (ONE_DIRECTION): Ditto.
+
+diff --git a/iconv/gconv_simple.c b/iconv/gconv_simple.c
+index 03fa5f2e2c771ebc..78c2421ecf77f198 100644
+--- a/iconv/gconv_simple.c
++++ b/iconv/gconv_simple.c
+@@ -68,6 +68,7 @@ __gconv_btwoc_ascii (struct __gconv_step *step, unsigned char c)
+ #define FROM_LOOP		internal_ucs4_loop
+ #define TO_LOOP			internal_ucs4_loop /* This is not used.  */
+ #define FUNCTION_NAME		__gconv_transform_internal_ucs4
++#define ONE_DIRECTION		0
+ 
+ 
+ static inline int
+@@ -222,6 +223,7 @@ internal_ucs4_loop_single (struct __gconv_step *step,
+ #define FROM_LOOP		ucs4_internal_loop
+ #define TO_LOOP			ucs4_internal_loop /* This is not used.  */
+ #define FUNCTION_NAME		__gconv_transform_ucs4_internal
++#define ONE_DIRECTION		0
+ 
+ 
+ static inline int
+@@ -433,6 +435,7 @@ ucs4_internal_loop_single (struct __gconv_step *step,
+ #define FROM_LOOP		internal_ucs4le_loop
+ #define TO_LOOP			internal_ucs4le_loop /* This is not used.  */
+ #define FUNCTION_NAME		__gconv_transform_internal_ucs4le
++#define ONE_DIRECTION		0
+ 
+ 
+ static inline int
+@@ -590,6 +593,7 @@ internal_ucs4le_loop_single (struct __gconv_step *step,
+ #define FROM_LOOP		ucs4le_internal_loop
+ #define TO_LOOP			ucs4le_internal_loop /* This is not used.  */
+ #define FUNCTION_NAME		__gconv_transform_ucs4le_internal
++#define ONE_DIRECTION		0
+ 
+ 
+ static inline int
+diff --git a/iconv/skeleton.c b/iconv/skeleton.c
+index 527ef0380c999740..3384d520661f88ed 100644
+--- a/iconv/skeleton.c
++++ b/iconv/skeleton.c
+@@ -162,11 +162,6 @@
+ # endif
+ #endif
+ 
+-#ifndef ONE_DIRECTION
+-# define ONE_DIRECTION 0
+-#endif
+-
+-
+ /* How many bytes are needed at most for the from-charset.  */
+ #ifndef MAX_NEEDED_FROM
+ # define MAX_NEEDED_FROM	MIN_NEEDED_FROM
+diff --git a/iconvdata/8bit-gap.c b/iconvdata/8bit-gap.c
+index d2e4efc2b7ee9c4a..5139c4cef6ea8788 100644
+--- a/iconvdata/8bit-gap.c
++++ b/iconvdata/8bit-gap.c
+@@ -42,6 +42,7 @@ struct gap
+ #define DEFINE_FINI		1
+ #define MIN_NEEDED_FROM		1
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from the 8bit charset to UCS4.  */
+diff --git a/iconvdata/8bit-generic.c b/iconvdata/8bit-generic.c
+index 4757d18a1f4dc037..f9bb50cb3d8bc482 100644
+--- a/iconvdata/8bit-generic.c
++++ b/iconvdata/8bit-generic.c
+@@ -25,6 +25,7 @@
+ #define DEFINE_FINI		1
+ #define MIN_NEEDED_FROM		1
+ #define MIN_NEEDED_TO		4
++#define ONE_DIRECTION		0
+ 
+ 
+ /* First define the conversion function from the 8bit charset to UCS4.  */

@@ -1,0 +1,68 @@
+Fix potential ABI change introduced by glibc-rh1398413.patch.
+
+extern void _IO_str_init_static (struct _IO_strfile_ *, char *, int, char *)
+     __THROW;
+extern void _IO_str_init_readonly (struct _IO_strfile_ *, const char *, int)
+     __THROW;
+
+Upstream, this did not have any effect because the function definitions
+were prototypes, so there is no upstream fix necessary.
+
+But downstream, we have:
+
+     70 void
+     71 _IO_str_init_static (sf, ptr, size, pstart)
+     72      _IO_strfile *sf;
+     73      char *ptr;
+     74      int size;
+     75      char *pstart;
+     76 {
+     77   return _IO_str_init_static_internal (sf, ptr, size < 0 ? -1 : size, pstart);
+     78 }
+     79 
+     80 void
+     81 _IO_str_init_readonly (sf, ptr, size)
+     82      _IO_strfile *sf;
+     83      const char *ptr;
+     84      int size;
+     85 {
+     86   _IO_str_init_static_internal (sf, (char *) ptr, size < 0 ? -1 : size, NULL);
+     87   sf->_sbf._f._IO_file_flags |= _IO_NO_WRITES;
+     88 }
+
+This results in:
+
+strops.c:71:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+strops.c:81:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+
+It is a potential ABI change, depending on the architecture.  None of
+the architectures in Red Hat Enterprise Linux appear to be affected,
+though.
+
+diff --git a/libio/strops.c b/libio/strops.c
+index 7df842fa519e4a49..a5b76af963e77877 100644
+--- a/libio/strops.c
++++ b/libio/strops.c
+@@ -68,20 +68,13 @@ _IO_str_init_static_internal (sf, ptr, size, pstart)
+ }
+ 
+ void
+-_IO_str_init_static (sf, ptr, size, pstart)
+-     _IO_strfile *sf;
+-     char *ptr;
+-     int size;
+-     char *pstart;
++_IO_str_init_static (_IO_strfile *sf, char *ptr, int size, char *pstart)
+ {
+   return _IO_str_init_static_internal (sf, ptr, size < 0 ? -1 : size, pstart);
+ }
+ 
+ void
+-_IO_str_init_readonly (sf, ptr, size)
+-     _IO_strfile *sf;
+-     const char *ptr;
+-     int size;
++_IO_str_init_readonly (_IO_strfile *sf, const char *ptr, int size)
+ {
+   _IO_str_init_static_internal (sf, (char *) ptr, size < 0 ? -1 : size, NULL);
+   sf->_sbf._f._IO_file_flags |= _IO_NO_WRITES;

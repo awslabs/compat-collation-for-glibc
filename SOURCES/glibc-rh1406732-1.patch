@@ -1,0 +1,98 @@
+This patch is based on the following upstream commit:
+
+commit 2d6ab5df3b675e96ee587ae6a8c2ce004c6b1ba9
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Mar 2 14:44:28 2017 +0100
+
+    Document and fix --enable-bind-now [BZ #21015]
+
+diff --git a/INSTALL b/INSTALL
+index 82b29f5d8746f929..230be71b9d0821c2 100644
+--- a/INSTALL
++++ b/INSTALL
+@@ -143,6 +143,12 @@ will be used, and CFLAGS sets optimization options for the compiler.
+ `--enable-lock-elision=yes'
+      Enable lock elision for pthread mutexes by default.
+ 
++'--enable-bind-now'
++     Disable lazy binding for installed shared objects.  This provides
++     additional security hardening because it enables full RELRO and a
++     read-only global offset table (GOT), at the cost of slightly
++     increased program load times.
++
+ `--disable-werror'
+      By default, the GNU C Library is built with `-Werror'.  If you wish
+      to build without this option (for example, if building with a newer
+diff --git a/Makeconfig b/Makeconfig
+index f8313c9774d47522..1ad9b6f0d494c027 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -384,6 +384,13 @@ LDFLAGS.so += $(hashstyle-LDFLAGS)
+ LDFLAGS-rtld += $(hashstyle-LDFLAGS)
+ endif
+ 
++# If lazy relocations are disabled, add the -z now flag.  Use
++# LDFLAGS-lib.so instead of LDFLAGS.so, to avoid adding the flag to
++# test modules.
++ifeq ($(bind-now),yes)
++LDFLAGS-lib.so += -Wl,-z,now
++endif
++
+ # Additional libraries to link into every test.
+ link-extra-libs-tests = $(libsupport)
+ 
+diff --git a/Makerules b/Makerules
+index 9bd7d603fc28a4de..50fe7e48187f0e68 100644
+--- a/Makerules
++++ b/Makerules
+@@ -477,7 +477,7 @@ $(LINK.o) -shared $(static-libgcc) -Wl,-O1 $(sysdep-LDFLAGS) \
+ 	  $(extra-B-$(@F:lib%.so=%).so) -B$(csu-objpfx) \
+ 	  $(extra-B-$(@F:lib%.so=%).so) $(load-map-file) \
+ 	  -Wl,-soname=lib$(libprefix)$(@F:lib%.so=%).so$($(@F)-version) \
+-	  $(LDFLAGS.so) $(LDFLAGS-$(@F:lib%.so=%).so) \
++	  $(LDFLAGS.so) $(LDFLAGS-lib.so) $(LDFLAGS-$(@F:lib%.so=%).so) \
+ 	  -L$(subst :, -L,$(rpath-link)) -Wl,-rpath-link=$(rpath-link)
+ endef
+ 
+@@ -938,7 +938,8 @@ $(common-objpfx)format.lds: $(..)scripts/output-format.sed \
+ ifneq (unknown,$(output-format))
+ 	echo > $@.new 'OUTPUT_FORMAT($(output-format))'
+ else
+-	$(LINK.o) -shared $(sysdep-LDFLAGS) $(config-LDFLAGS) $(LDFLAGS.so) \
++	$(LINK.o) -shared $(sysdep-LDFLAGS) $(config-LDFLAGS) \
++		  $(LDFLAGS.so) $(LDFLAGS-lib.so) \
+ 		  -x c /dev/null -o $@.so -Wl,--verbose -v 2>&1 \
+ 	| sed -n -f $< > $@.new
+ 	test -s $@.new
+diff --git a/iconvdata/Makefile b/iconvdata/Makefile
+index 7930dcd49d77c818..ddb2dc6a3c6500c8 100644
+--- a/iconvdata/Makefile
++++ b/iconvdata/Makefile
+@@ -65,6 +65,10 @@ modules.so := $(addsuffix .so, $(modules))
+ 
+ include ../Makeconfig
+ 
++ifeq ($(bind-now),yes)
++LDFLAGS.so += -Wl,-z,now
++endif
++
+ ifeq (yes,$(build-shared))
+ tests = bug-iconv1 bug-iconv2 tst-loading tst-e2big tst-iconv4 bug-iconv4 \
+ 	tst-iconv6 bug-iconv5 bug-iconv6 tst-iconv7 bug-iconv8 bug-iconv9 \
+diff --git a/manual/install.texi b/manual/install.texi
+index 3799cee621ddc4f9..47d832cc59bc695e 100644
+--- a/manual/install.texi
++++ b/manual/install.texi
+@@ -160,6 +160,12 @@ so that they can be invoked directly.
+ @item --enable-lock-elision=yes
+ Enable lock elision for pthread mutexes by default.
+ 
++@item --enable-bind-now
++Disable lazy binding for installed shared objects.  This provides
++additional security hardening because it enables full RELRO and a
++read-only global offset table (GOT), at the cost of slightly increased
++program load times.
++
+ @pindex pt_chown
+ @findex grantpt
+ @item --enable-pt_chown

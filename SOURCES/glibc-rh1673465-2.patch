@@ -1,0 +1,34 @@
+commit 8311c83f91a3127ccd2fe684e25bc60c5178d23b
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Feb 7 09:03:02 2019 +0100
+
+    array_length: Make usable as a constant expression
+    
+    Do not use a statement expression in array_length, so that
+    array_length can be used at file scope and as a constant expression.
+    Instead, put the _Static_assert into a struct (as a declaration),
+    and nest this in the expression using a sizeof expression.
+
+diff --git a/include/array_length.h b/include/array_length.h
+index cb4a8b2a56bca3ad..ccb253c1dc1641cf 100644
+--- a/include/array_length.h
++++ b/include/array_length.h
+@@ -22,12 +22,12 @@
+ /* array_length (VAR) is the number of elements in the array VAR.  VAR
+    must evaluate to an array, not a pointer.  */
+ #define array_length(var)                                               \
+-  __extension__ ({                                                      \
+-    _Static_assert (!__builtin_types_compatible_p                       \
+-                    (__typeof (var), __typeof (&(var)[0])),             \
+-                    "argument must be an array");                       \
+-    sizeof (var) / sizeof ((var)[0]);                                   \
+-  })
++  (sizeof (var) / sizeof ((var)[0])                                     \
++   + 0 * sizeof (struct {                                               \
++       _Static_assert (!__builtin_types_compatible_p                    \
++                       (__typeof (var), __typeof (&(var)[0])),          \
++                       "argument must be an array");                    \
++   }))
+ 
+ /* array_end (VAR) is a pointer one past the end of the array VAR.
+    VAR must evaluate to an array, not a pointer.  */

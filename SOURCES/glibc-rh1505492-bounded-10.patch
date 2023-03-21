@@ -1,0 +1,985 @@
+commit 70d9946a44ba381f81eb08c71cc150315cc112ad
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Feb 13 23:30:40 2013 +0000
+
+    Remove __ptrvalue, __bounded and __unbounded.
+
+Conflicts:
+	sysdeps/sparc/backtrace.c
+
+The changes to that file have been applied to
+sysdeps/sparc/sparc64/backtrace.c instead.
+
+The installed header <sys/cdefs.h> is not changed, so the
+misc/sys/cdefs.h change is excluded from the backport.
+
+diff --git a/csu/libc-start.c b/csu/libc-start.c
+index 2fab8556a5e2cb26..63757062c730c81a 100644
+--- a/csu/libc-start.c
++++ b/csu/libc-start.c
+@@ -107,14 +107,14 @@ apply_irel (void)
+ STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **
+ 					 MAIN_AUXVEC_DECL),
+ 			    int argc,
+-			    char *__unbounded *__unbounded ubp_av,
++			    char **argv,
+ #ifdef LIBC_START_MAIN_AUXVEC_ARG
+-			    ElfW(auxv_t) *__unbounded auxvec,
++			    ElfW(auxv_t) *auxvec,
+ #endif
+ 			    __typeof (main) init,
+ 			    void (*fini) (void),
+ 			    void (*rtld_fini) (void),
+-			    void *__unbounded stack_end)
++			    void *stack_end)
+      __attribute__ ((noreturn));
+ 
+ 
+@@ -123,29 +123,23 @@ STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **
+    finalizers were called in more than one place.  */
+ STATIC int
+ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
+-		 int argc, char *__unbounded *__unbounded ubp_av,
++		 int argc, char **argv,
+ #ifdef LIBC_START_MAIN_AUXVEC_ARG
+-		 ElfW(auxv_t) *__unbounded auxvec,
++		 ElfW(auxv_t) *auxvec,
+ #endif
+ 		 __typeof (main) init,
+ 		 void (*fini) (void),
+-		 void (*rtld_fini) (void), void *__unbounded stack_end)
++		 void (*rtld_fini) (void), void *stack_end)
+ {
+-#if __BOUNDED_POINTERS__
+-  char **argv;
+-#else
+-# define argv ubp_av
+-#endif
+-
+   /* Result of the 'main' function.  */
+   int result;
+ 
+   __libc_multiple_libcs = &_dl_starting_up && !_dl_starting_up;
+ 
+ #ifndef SHARED
+-  char *__unbounded *__unbounded ubp_ev = &ubp_av[argc + 1];
++  char **ev = &argv[argc + 1];
+ 
+-  __environ = ubp_ev;
++  __environ = ev;
+ 
+   /* Store the lowest stack address.  This is done in ld.so if this is
+      the code for the DSO.  */
+@@ -155,12 +149,12 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
+   /* First process the auxiliary vector since we need to find the
+      program header to locate an eventually present PT_TLS entry.  */
+ #  ifndef LIBC_START_MAIN_AUXVEC_ARG
+-  ElfW(auxv_t) *__unbounded auxvec;
++  ElfW(auxv_t) *auxvec;
+   {
+-    char *__unbounded *__unbounded evp = ubp_ev;
++    char **evp = ev;
+     while (*evp++ != NULL)
+       ;
+-    auxvec = (ElfW(auxv_t) *__unbounded) evp;
++    auxvec = (ElfW(auxv_t) *) evp;
+   }
+ #  endif
+   _dl_aux_init (auxvec);
+diff --git a/debug/backtrace.c b/debug/backtrace.c
+index d0785329a2514e20..0537f6655e62be49 100644
+--- a/debug/backtrace.c
++++ b/debug/backtrace.c
+@@ -63,8 +63,8 @@ __backtrace (array, size)
+      int size;
+ {
+   struct layout *current;
+-  void *__unbounded top_frame;
+-  void *__unbounded top_stack;
++  void *top_frame;
++  void *top_stack;
+   int cnt = 0;
+ 
+   top_frame = FIRST_FRAME_POINTER;
+diff --git a/elf/dl-runtime.c b/elf/dl-runtime.c
+index 19543aa44b84cac2..de55b2676fc80645 100644
+--- a/elf/dl-runtime.c
++++ b/elf/dl-runtime.c
+@@ -62,9 +62,7 @@ _dl_fixup (
+ # ifdef ELF_MACHINE_RUNTIME_FIXUP_ARGS
+ 	   ELF_MACHINE_RUNTIME_FIXUP_ARGS,
+ # endif
+-	   /* GKM FIXME: Fix trampoline to pass bounds so we can do
+-	      without the `__unbounded' qualifier.  */
+-	   struct link_map *__unbounded l, ElfW(Word) reloc_arg)
++	   struct link_map *l, ElfW(Word) reloc_arg)
+ {
+   const ElfW(Sym) *const symtab
+     = (const void *) D_PTR (l, l_info[DT_SYMTAB]);
+diff --git a/include/set-hooks.h b/include/set-hooks.h
+index 74c03acb0d81acdc..8c902fa18195fa46 100644
+--- a/include/set-hooks.h
++++ b/include/set-hooks.h
+@@ -41,7 +41,7 @@
+ 
+ # define RUN_HOOK(NAME, ARGS)						      \
+ do {									      \
+-  void *const *__unbounded ptr;						      \
++  void *const *ptr;						      \
+   for (ptr = (void *const *) symbol_set_first_element (NAME);		      \
+        ! symbol_set_end_p (NAME, ptr); ++ptr)				      \
+     (*(__##NAME##_hook_function_t *) *ptr) ARGS;			      \
+diff --git a/ports/sysdeps/am33/dl-machine.h b/ports/sysdeps/am33/dl-machine.h
+index 52278c0a4e006563..90083c7dc45fc602 100644
+--- a/ports/sysdeps/am33/dl-machine.h
++++ b/ports/sysdeps/am33/dl-machine.h
+@@ -63,9 +63,7 @@ elf_machine_load_address (void)
+ 
+    We cannot use this scheme for profiling because the _mcount call
+    destroys the passed register information.  */
+-/* GKM FIXME: Fix trampoline to pass bounds so we can do
+-   without the `__unbounded' qualifier.  */
+-static ElfW(Addr) fixup (struct link_map *__unbounded l, ElfW(Word) reloc_offset)
++static ElfW(Addr) fixup (struct link_map *l, ElfW(Word) reloc_offset)
+      __attribute__ ((unused));
+ static ElfW(Addr) profile_fixup (struct link_map *l, ElfW(Word) reloc_offset,
+ 				 ElfW(Addr) retaddr)
+diff --git a/ports/sysdeps/arm/frame.h b/ports/sysdeps/arm/frame.h
+index a98729b6887722ed..268f8b250f033f0f 100644
+--- a/ports/sysdeps/arm/frame.h
++++ b/ports/sysdeps/arm/frame.h
+@@ -19,9 +19,9 @@
+ /* This is the APCS stack backtrace structure.  */
+ struct layout
+ {
+-  struct layout *__unbounded next;
+-  void *__unbounded sp;
+-  void *__unbounded return_address;
++  struct layout *next;
++  void *sp;
++  void *return_address;
+ };
+ 
+ #define FIRST_FRAME_POINTER ADVANCE_STACK_FRAME (__builtin_frame_address (0))
+diff --git a/ports/sysdeps/unix/sysv/linux/aarch64/sigaction.c b/ports/sysdeps/unix/sysv/linux/aarch64/sigaction.c
+index 811230a1fdec983f..1db848f06e9fb072 100644
+--- a/ports/sysdeps/unix/sysv/linux/aarch64/sigaction.c
++++ b/ports/sysdeps/unix/sysv/linux/aarch64/sigaction.c
+@@ -51,8 +51,8 @@ __libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+     }
+ 
+   result = INLINE_SYSCALL (rt_sigaction, 4, sig,
+-			   act ? __ptrvalue (&kact) : NULL,
+-			   oact ? __ptrvalue (&koact) : NULL, _NSIG / 8);
++			   act ? &kact : NULL,
++			   oact ? &koact : NULL, _NSIG / 8);
+   if (result >= 0 || errno != ENOSYS)
+     {
+       if (oact && result >= 0)
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/sigaction.c b/ports/sysdeps/unix/sysv/linux/alpha/sigaction.c
+index 2dcb133442a4636a..14b47feee06c43b0 100644
+--- a/ports/sysdeps/unix/sysv/linux/alpha/sigaction.c
++++ b/ports/sysdeps/unix/sysv/linux/alpha/sigaction.c
+@@ -32,7 +32,7 @@
+          : INLINE_SYSCALL1(name, nr, args))
+ 
+ struct kernel_sigaction;
+-extern int __syscall_rt_sigaction (int, const struct kernel_sigaction *__unbounded,
+-				   struct kernel_sigaction *__unbounded, size_t);
++extern int __syscall_rt_sigaction (int, const struct kernel_sigaction *,
++				   struct kernel_sigaction *, size_t);
+ 
+ #include <sysdeps/unix/sysv/linux/sigaction.c>
+diff --git a/ports/sysdeps/unix/sysv/linux/am33/brk.c b/ports/sysdeps/unix/sysv/linux/am33/brk.c
+index a06495cf29d5d67b..dc7ec639b3a558c0 100644
+--- a/ports/sysdeps/unix/sysv/linux/am33/brk.c
++++ b/ports/sysdeps/unix/sysv/linux/am33/brk.c
+@@ -30,7 +30,7 @@ __brk (void *addr)
+ {
+   void *newbrk;
+ 
+-  newbrk = INLINE_SYSCALL (brk, 1, __ptrvalue (addr));
++  newbrk = INLINE_SYSCALL (brk, 1, addr);
+ 
+   __curbrk = newbrk;
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/sigaction.c b/ports/sysdeps/unix/sysv/linux/arm/sigaction.c
+index fe036c1bdc6660b0..02b47e79e2139e0e 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/sigaction.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/sigaction.c
+@@ -83,8 +83,8 @@ __libc_sigaction (sig, act, oact)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+   result = INLINE_SYSCALL (rt_sigaction, 4, sig,
+-			   act ? __ptrvalue (&kact) : NULL,
+-			   oact ? __ptrvalue (&koact) : NULL, _NSIG / 8);
++			   act ? &kact : NULL,
++			   oact ? &koact : NULL, _NSIG / 8);
+ 
+   if (oact && result >= 0)
+     {
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c
+index dda02b14442d5cb5..2006bc69d80720ba 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstat64.c
+@@ -34,7 +34,7 @@ __fxstat64 (int vers, int fd, struct stat64 *buf)
+   int result;
+   struct kernel_stat kbuf;
+ 
+-  result = INLINE_SYSCALL (fstat, 2, fd, __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (fstat, 2, fd, &kbuf);
+   if (result == 0)
+     result = __xstat64_conv (vers, &kbuf, buf);
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c
+index 645ffa122ea62de6..5c795e47a977baaa 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c
+@@ -95,9 +95,9 @@ __fxstatat64 (int vers, int fd, const char *file, struct stat64 *st, int flag)
+     }
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat, err, 2, file, __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (lstat, err, 2, file, &kst);
+   else
+-    result = INTERNAL_SYSCALL (stat, err, 2, file, __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (stat, err, 2, file, &kst);
+ 
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     return __xstat64_conv (vers, &kst, st);
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c
+index f698d9298a3855e6..a59e2bb389238751 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c
+@@ -33,7 +33,7 @@ __lxstat64 (int vers, const char *name, struct stat64 *buf)
+   int result;
+   struct kernel_stat kbuf;
+ 
+-  result = INLINE_SYSCALL (lstat, 2, name, __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (lstat, 2, name, &kbuf);
+   if (result == 0)
+     result = __xstat64_conv (vers, &kbuf, buf);
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c
+index 623299c6b8db85c4..e08c177d256108a0 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c
+@@ -34,7 +34,7 @@ __xstat64 (int vers, const char *name, struct stat64 *buf)
+   int result;
+   struct kernel_stat kbuf;
+ 
+-  result = INLINE_SYSCALL (stat, 2, name, __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (stat, 2, name, &kbuf);
+   if (result == 0)
+     result = __xstat64_conv (vers, &kbuf, buf);
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/sigaction.c b/ports/sysdeps/unix/sysv/linux/mips/sigaction.c
+index d646af3f22928ef7..b6e6811a271344a3 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/sigaction.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/sigaction.c
+@@ -71,8 +71,8 @@ __libc_sigaction (sig, act, oact)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.	*/
+   result = INLINE_SYSCALL (rt_sigaction, 4, sig,
+-			   act ? __ptrvalue (&kact) : NULL,
+-			   oact ? __ptrvalue (&koact) : NULL,
++			   act ? &kact : NULL,
++			   oact ? &koact : NULL,
+ 			   sizeof (kernel_sigset_t));
+ 
+   if (oact && result >= 0)
+diff --git a/stdio-common/vfprintf.c b/stdio-common/vfprintf.c
+index 3e88b2c4dd513909..97805989f6db70bf 100644
+--- a/stdio-common/vfprintf.c
++++ b/stdio-common/vfprintf.c
+@@ -308,7 +308,7 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap)
+       do								      \
+ 	{								      \
+ 	  int offset;							      \
+-	  void *__unbounded ptr;					      \
++	  void *ptr;							      \
+ 	  spec = (ChExpr);						      \
+ 	  offset = NOT_IN_JUMP_RANGE (spec) ? REF (form_unknown)	      \
+ 	    : table[CHAR_CLASS (spec)];					      \
+@@ -321,7 +321,7 @@ vfprintf (FILE *s, const CHAR_T *format, va_list ap)
+ # define JUMP(ChExpr, table)						      \
+       do								      \
+ 	{								      \
+-	  const void *__unbounded ptr;					      \
++	  const void *ptr;						      \
+ 	  spec = (ChExpr);						      \
+ 	  ptr = NOT_IN_JUMP_RANGE (spec) ? REF (form_unknown)		      \
+ 	    : table[CHAR_CLASS (spec)];					      \
+diff --git a/string/strcpy.c b/string/strcpy.c
+index bf624947cc780328..22467bb88dc8cef8 100644
+--- a/string/strcpy.c
++++ b/string/strcpy.c
+@@ -28,7 +28,7 @@ strcpy (dest, src)
+      const char *src;
+ {
+   char c;
+-  char *__unbounded s = (char *__unbounded) src;
++  char *s = (char *) src;
+   const ptrdiff_t off = dest - s - 1;
+ 
+   do
+diff --git a/sysdeps/generic/frame.h b/sysdeps/generic/frame.h
+index 0f24b85913aa9694..1772f8c05b6f0fa9 100644
+--- a/sysdeps/generic/frame.h
++++ b/sysdeps/generic/frame.h
+@@ -18,6 +18,6 @@
+ 
+ struct layout
+ {
+-  void *__unbounded next;
+-  void *__unbounded return_address;
++  void *next;
++  void *return_address;
+ };
+diff --git a/sysdeps/gnu/bits/msq.h b/sysdeps/gnu/bits/msq.h
+index 6cfc7d76e54a3742..ee9812ae111db277 100644
+--- a/sysdeps/gnu/bits/msq.h
++++ b/sysdeps/gnu/bits/msq.h
+@@ -38,13 +38,13 @@ typedef unsigned short int msglen_t;
+ struct msqid_ds
+ {
+   struct ipc_perm msg_perm;	/* structure describing operation permission */
+-  struct msg *__unbounded __msg_first; /* pointer to first message on queue */
+-  struct msg *__unbounded __msg_last; /* pointer to last message on queue */
++  struct msg *__msg_first;	/* pointer to first message on queue */
++  struct msg *__msg_last;	/* pointer to last message on queue */
+   __time_t msg_stime;		/* time of last msgsnd command */
+   __time_t msg_rtime;		/* time of last msgrcv command */
+   __time_t msg_ctime;		/* time of last change */
+-  struct wait_queue *__unbounded __wwait; /* ??? */
+-  struct wait_queue *__unbounded __rwait; /* ??? */
++  struct wait_queue *__wwait;	/* ??? */
++  struct wait_queue *__rwait;	/* ??? */
+   unsigned short int __msg_cbytes;/* current number of bytes on queue */
+   msgqnum_t msg_qnum;		/* number of messages currently on queue */
+   msglen_t msg_qbytes;		/* max number of bytes allowed on queue */
+diff --git a/sysdeps/i386/dl-machine.h b/sysdeps/i386/dl-machine.h
+index 2f6dd4fae200c016..fc2b976651e20ca7 100644
+--- a/sysdeps/i386/dl-machine.h
++++ b/sysdeps/i386/dl-machine.h
+@@ -152,11 +152,9 @@ elf_machine_runtime_setup (struct link_map *l, int lazy, int profile)
+ 
+    We cannot use this scheme for profiling because the _mcount call
+    destroys the passed register information.  */
+-/* GKM FIXME: Fix trampoline to pass bounds so we can do
+-   without the `__unbounded' qualifier.  */
+ #define ARCH_FIXUP_ATTRIBUTE __attribute__ ((regparm (3), stdcall, unused))
+ 
+-extern ElfW(Addr) _dl_fixup (struct link_map *__unbounded l,
++extern ElfW(Addr) _dl_fixup (struct link_map *l,
+ 			     ElfW(Word) reloc_offset)
+      ARCH_FIXUP_ATTRIBUTE;
+ extern ElfW(Addr) _dl_profile_fixup (struct link_map *l,
+diff --git a/sysdeps/powerpc/powerpc32/backtrace.c b/sysdeps/powerpc/powerpc32/backtrace.c
+index 0e2e5c296876444e..6fab3b586aee06d5 100644
+--- a/sysdeps/powerpc/powerpc32/backtrace.c
++++ b/sysdeps/powerpc/powerpc32/backtrace.c
+@@ -31,8 +31,8 @@
+ */
+ struct layout
+ {
+-  struct layout *__unbounded next;
+-  void *__unbounded return_address;
++  struct layout *next;
++  void *return_address;
+ };
+ 
+ int
+diff --git a/sysdeps/powerpc/powerpc64/backtrace.c b/sysdeps/powerpc/powerpc64/backtrace.c
+index 08e535585ef2a104..dcdd51cb454e8fa2 100644
+--- a/sysdeps/powerpc/powerpc64/backtrace.c
++++ b/sysdeps/powerpc/powerpc64/backtrace.c
+@@ -33,9 +33,9 @@
+ */
+ struct layout
+ {
+-  struct layout *__unbounded next;
++  struct layout *next;
+   long condition_register;
+-  void *__unbounded return_address;
++  void *return_address;
+ };
+ 
+ int
+diff --git a/sysdeps/sparc/sparc64/backtrace.c b/sysdeps/sparc/sparc64/backtrace.c
+index d5a1ebec000ce91e..f45e2b8b63ad00ed 100644
+--- a/sysdeps/sparc/sparc64/backtrace.c
++++ b/sysdeps/sparc/sparc64/backtrace.c
+@@ -26,7 +26,7 @@ struct layout
+   unsigned long locals[8];
+   unsigned long ins[6];
+   unsigned long next;
+-  void *__unbounded return_address;
++  void *return_address;
+ };
+ 
+ int
+@@ -38,14 +38,14 @@ __backtrace (void **array, int size)
+ 
+   asm volatile ("flushw");
+   asm volatile ("mov %%fp, %0" : "=r"(fp));
+-  current = (struct layout *__unbounded) (fp + STACK_BIAS);
++  current = (struct layout *) (fp + STACK_BIAS);
+ 
+   for (count = 0; count < size; count++)
+     {
+       array[count] = current->return_address;
+       if (!current->next)
+ 	break;
+-      current = (struct layout *__unbounded) (current->next + STACK_BIAS);
++      current = (struct layout *) (current->next + STACK_BIAS);
+     }
+ 
+   return count;
+diff --git a/sysdeps/unix/sysv/linux/aio_sigqueue.c b/sysdeps/unix/sysv/linux/aio_sigqueue.c
+index 91785e545f18c843..9ad149fe32fb214b 100644
+--- a/sysdeps/unix/sysv/linux/aio_sigqueue.c
++++ b/sysdeps/unix/sysv/linux/aio_sigqueue.c
+@@ -48,8 +48,7 @@ __aio_sigqueue (sig, val, caller_pid)
+   info.si_uid = getuid ();
+   info.si_value = val;
+ 
+-  return INLINE_SYSCALL (rt_sigqueueinfo, 3, info.si_pid,
+-			 sig, __ptrvalue (&info));
++  return INLINE_SYSCALL (rt_sigqueueinfo, 3, info.si_pid, sig, &info);
+ }
+ #else
+ # include <rt/aio_sigqueue.c>
+diff --git a/sysdeps/unix/sysv/linux/fxstat.c b/sysdeps/unix/sysv/linux/fxstat.c
+index 369ceb818267086c..e3cf3d8e284beb65 100644
+--- a/sysdeps/unix/sysv/linux/fxstat.c
++++ b/sysdeps/unix/sysv/linux/fxstat.c
+@@ -45,7 +45,7 @@ __fxstat (int vers, int fd, struct stat *buf)
+   struct kernel_stat kbuf;
+   int result;
+ 
+-  result = INLINE_SYSCALL (fstat, 2, fd, __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (fstat, 2, fd, &kbuf);
+   if (result == 0)
+     result = __xstat_conv (vers, &kbuf, buf);
+ 
+diff --git a/sysdeps/unix/sysv/linux/fxstatat.c b/sysdeps/unix/sysv/linux/fxstatat.c
+index 127f979adf050b45..b4397b54ada455f0 100644
+--- a/sysdeps/unix/sysv/linux/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/fxstatat.c
+@@ -125,9 +125,9 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+     }
+ #else
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat, err, 2, file, __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (lstat, err, 2, file, &kst);
+   else
+-    result = INTERNAL_SYSCALL (stat, err, 2, file, __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (stat, err, 2, file, &kst);
+ 
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     return __xstat_conv (vers, &kst, st);
+diff --git a/sysdeps/unix/sysv/linux/gai_sigqueue.c b/sysdeps/unix/sysv/linux/gai_sigqueue.c
+index f517f9c850069cab..3896df0cd345bc8b 100644
+--- a/sysdeps/unix/sysv/linux/gai_sigqueue.c
++++ b/sysdeps/unix/sysv/linux/gai_sigqueue.c
+@@ -47,8 +47,7 @@ __gai_sigqueue (sig, val, caller_pid)
+   info.si_uid = __getuid ();
+   info.si_value = val;
+ 
+-  return INLINE_SYSCALL (rt_sigqueueinfo, 3, info.si_pid,
+-			 sig, __ptrvalue (&info));
++  return INLINE_SYSCALL (rt_sigqueueinfo, 3, info.si_pid, sig, &info);
+ }
+ #else
+ # include <resolv/gai_sigqueue.c>
+diff --git a/sysdeps/unix/sysv/linux/i386/brk.c b/sysdeps/unix/sysv/linux/i386/brk.c
+index 0b367096f47007ce..c785b68b5fc2c6b5 100644
+--- a/sysdeps/unix/sysv/linux/i386/brk.c
++++ b/sysdeps/unix/sysv/linux/i386/brk.c
+@@ -31,11 +31,10 @@ weak_alias (__curbrk, ___brk_addr)
+ int
+ __brk (void *addr)
+ {
+-  void *__unbounded newbrk;
++  void *newbrk;
+ 
+   INTERNAL_SYSCALL_DECL (err);
+-  newbrk = (void *__unbounded) INTERNAL_SYSCALL (brk, err, 1,
+-						 __ptrvalue (addr));
++  newbrk = (void *) INTERNAL_SYSCALL (brk, err, 1, addr);
+ 
+   __curbrk = newbrk;
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/fxstat.c b/sysdeps/unix/sysv/linux/i386/fxstat.c
+index 323039927e1687a3..64cf4c0f75c3bd8b 100644
+--- a/sysdeps/unix/sysv/linux/i386/fxstat.c
++++ b/sysdeps/unix/sysv/linux/i386/fxstat.c
+@@ -44,7 +44,7 @@ __fxstat (int vers, int fd, struct stat *buf)
+   {
+     struct stat64 buf64;
+ 
+-    result = INLINE_SYSCALL (fstat64, 2, fd, __ptrvalue (&buf64));
++    result = INLINE_SYSCALL (fstat64, 2, fd, &buf64);
+     if (result == 0)
+       result = __xstat32_conv (vers, &buf64, buf);
+     return result;
+diff --git a/sysdeps/unix/sysv/linux/i386/fxstatat.c b/sysdeps/unix/sysv/linux/i386/fxstatat.c
+index ad3a386864f8b04b..2125ce7d7673c841 100644
+--- a/sysdeps/unix/sysv/linux/i386/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/i386/fxstatat.c
+@@ -110,9 +110,9 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+     }
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat64, err, 2, file, __ptrvalue (&st64));
++    result = INTERNAL_SYSCALL (lstat64, err, 2, file, &st64);
+   else
+-    result = INTERNAL_SYSCALL (stat64, err, 2, file, __ptrvalue (&st64));
++    result = INTERNAL_SYSCALL (stat64, err, 2, file, &st64);
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     return __xstat32_conv (vers, &st64, st);
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/lxstat.c b/sysdeps/unix/sysv/linux/i386/lxstat.c
+index 97b237404f8c8822..bc2d27a1739ca3c2 100644
+--- a/sysdeps/unix/sysv/linux/i386/lxstat.c
++++ b/sysdeps/unix/sysv/linux/i386/lxstat.c
+@@ -45,7 +45,7 @@ __lxstat (int vers, const char *name, struct stat *buf)
+   {
+     struct stat64 buf64;
+ 
+-    result = INLINE_SYSCALL (lstat64, 2, name, __ptrvalue (&buf64));
++    result = INLINE_SYSCALL (lstat64, 2, name, &buf64);
+     if (result == 0)
+       result = __xstat32_conv (vers, &buf64, buf);
+     return result;
+diff --git a/sysdeps/unix/sysv/linux/i386/msgctl.c b/sysdeps/unix/sysv/linux/i386/msgctl.c
+index 7d009801b16fbdba..d63b0b4b46134185 100644
+--- a/sysdeps/unix/sysv/linux/i386/msgctl.c
++++ b/sysdeps/unix/sysv/linux/i386/msgctl.c
+@@ -29,13 +29,13 @@
+ struct __old_msqid_ds
+ {
+   struct __old_ipc_perm msg_perm;	/* structure describing operation permission */
+-  struct msg *__unbounded __msg_first;	/* pointer to first message on queue */
+-  struct msg *__unbounded __msg_last;	/* pointer to last message on queue */
++  struct msg *__msg_first;		/* pointer to first message on queue */
++  struct msg *__msg_last;		/* pointer to last message on queue */
+   __time_t msg_stime;			/* time of last msgsnd command */
+   __time_t msg_rtime;			/* time of last msgrcv command */
+   __time_t msg_ctime;			/* time of last change */
+-  struct wait_queue *__unbounded __wwait; /* ??? */
+-  struct wait_queue *__unbounded __rwait; /* ??? */
++  struct wait_queue *__wwait;		/* ??? */
++  struct wait_queue *__rwait;		/* ??? */
+   unsigned short int __msg_cbytes;	/* current number of bytes on queue */
+   unsigned short int msg_qnum;		/* number of messages currently on queue */
+   unsigned short int msg_qbytes;	/* max number of bytes allowed on queue */
+diff --git a/sysdeps/unix/sysv/linux/i386/setrlimit.c b/sysdeps/unix/sysv/linux/i386/setrlimit.c
+index 7d0840ded5fe3c70..9c6f5dd64ddf27cf 100644
+--- a/sysdeps/unix/sysv/linux/i386/setrlimit.c
++++ b/sysdeps/unix/sysv/linux/i386/setrlimit.c
+@@ -24,7 +24,7 @@
+ #include <shlib-compat.h>
+ 
+ extern int __new_setrlimit (enum __rlimit_resource resource,
+-			    const struct rlimit *__unboundedrlimits);
++			    const struct rlimit *rlimits);
+ 
+ /* Consider moving to syscalls.list.  */
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/shmctl.c b/sysdeps/unix/sysv/linux/i386/shmctl.c
+index a1f4feb3fe1c815c..59d07d7ee09579ef 100644
+--- a/sysdeps/unix/sysv/linux/i386/shmctl.c
++++ b/sysdeps/unix/sysv/linux/i386/shmctl.c
+@@ -38,8 +38,8 @@ struct __old_shmid_ds
+   __ipc_pid_t shm_lpid;			/* pid of last shmop */
+   unsigned short int shm_nattch;	/* number of current attaches */
+   unsigned short int __shm_npages;	/* size of segment (pages) */
+-  unsigned long int *__unbounded __shm_pages; /* array of ptrs to frames -> SHMMAX */
+-  struct vm_area_struct *__unbounded __attaches; /* descriptors for attaches */
++  unsigned long int *__shm_pages;	/* array of ptrs to frames -> SHMMAX */
++  struct vm_area_struct *__attaches;	/* descriptors for attaches */
+ };
+ 
+ struct __old_shminfo
+diff --git a/sysdeps/unix/sysv/linux/i386/sigaction.c b/sysdeps/unix/sysv/linux/i386/sigaction.c
+index df5c235e5ac271dc..414ef759a97363c4 100644
+--- a/sysdeps/unix/sysv/linux/i386/sigaction.c
++++ b/sysdeps/unix/sysv/linux/i386/sigaction.c
+@@ -72,8 +72,8 @@ __libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+   result = INLINE_SYSCALL (rt_sigaction, 4,
+-			   sig, act ? __ptrvalue (&kact) : NULL,
+-			   oact ? __ptrvalue (&koact) : NULL, _NSIG / 8);
++			   sig, act ? &kact : NULL,
++			   oact ? &koact : NULL, _NSIG / 8);
+ 
+   if (oact && result >= 0)
+     {
+diff --git a/sysdeps/unix/sysv/linux/i386/xstat.c b/sysdeps/unix/sysv/linux/i386/xstat.c
+index f063ac98d849ed7b..049e70fa7f007896 100644
+--- a/sysdeps/unix/sysv/linux/i386/xstat.c
++++ b/sysdeps/unix/sysv/linux/i386/xstat.c
+@@ -45,7 +45,7 @@ __xstat (int vers, const char *name, struct stat *buf)
+   {
+     struct stat64 buf64;
+ 
+-    result = INLINE_SYSCALL (stat64, 2, name, __ptrvalue (&buf64));
++    result = INLINE_SYSCALL (stat64, 2, name, &buf64);
+     if (result == 0)
+       result = __xstat32_conv (vers, &buf64, buf);
+     return result;
+diff --git a/sysdeps/unix/sysv/linux/llseek.c b/sysdeps/unix/sysv/linux/llseek.c
+index feef9aaaf9dcf853..6608a2145c680cb9 100644
+--- a/sysdeps/unix/sysv/linux/llseek.c
++++ b/sysdeps/unix/sysv/linux/llseek.c
+@@ -32,7 +32,7 @@ __llseek (int fd, loff_t offset, int whence)
+ 
+   return (loff_t) (INLINE_SYSCALL (_llseek, 5, fd, (off_t) (offset >> 32),
+ 				   (off_t) (offset & 0xffffffff),
+-				   __ptrvalue (&retval), whence) ?: retval);
++				   &retval, whence) ?: retval);
+ }
+ weak_alias (__llseek, llseek)
+ strong_alias (__llseek, __libc_lseek64)
+diff --git a/sysdeps/unix/sysv/linux/lxstat.c b/sysdeps/unix/sysv/linux/lxstat.c
+index 15f93b09ec1661f1..1096b981f5560eb8 100644
+--- a/sysdeps/unix/sysv/linux/lxstat.c
++++ b/sysdeps/unix/sysv/linux/lxstat.c
+@@ -44,7 +44,7 @@ __lxstat (int vers, const char *name, struct stat *buf)
+   struct kernel_stat kbuf;
+   int result;
+ 
+-  result = INLINE_SYSCALL (lstat, 2, name, __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (lstat, 2, name, &kbuf);
+   if (result == 0)
+     result = __xstat_conv (vers, &kbuf, buf);
+ 
+diff --git a/sysdeps/unix/sysv/linux/mmap64.c b/sysdeps/unix/sysv/linux/mmap64.c
+index 87bd532c5e350c56..2c8304d860f19d58 100644
+--- a/sysdeps/unix/sysv/linux/mmap64.c
++++ b/sysdeps/unix/sysv/linux/mmap64.c
+@@ -53,14 +53,10 @@ __mmap64 (void *addr, size_t len, int prot, int flags, int fd, off64_t offset)
+       return MAP_FAILED;
+     }
+   void *result;
+-  __ptrvalue (result) = (void *__unbounded)
+-    INLINE_SYSCALL (mmap2, 6, __ptrvalue (addr),
++  result = (void *)
++    INLINE_SYSCALL (mmap2, 6, addr,
+ 		    len, prot, flags, fd,
+ 		    (off_t) (offset >> MMAP2_PAGE_SHIFT));
+-#if __BOUNDED_POINTERS__
+-  __ptrlow (result) = __ptrvalue (result);
+-  __ptrhigh (result) = __ptrvalue (result) + len;
+-#endif
+   return result;
+ }
+ weak_alias (__mmap64, mmap64)
+diff --git a/sysdeps/unix/sysv/linux/msgctl.c b/sysdeps/unix/sysv/linux/msgctl.c
+index 00285a7103d70cea..09d4dc11f779a63f 100644
+--- a/sysdeps/unix/sysv/linux/msgctl.c
++++ b/sysdeps/unix/sysv/linux/msgctl.c
+@@ -31,13 +31,13 @@
+ struct __old_msqid_ds
+ {
+   struct __old_ipc_perm msg_perm;	/* structure describing operation permission */
+-  struct msg *__unbounded __msg_first;	/* pointer to first message on queue */
+-  struct msg *__unbounded __msg_last;	/* pointer to last message on queue */
++  struct msg *__msg_first;		/* pointer to first message on queue */
++  struct msg *__msg_last;		/* pointer to last message on queue */
+   __time_t msg_stime;			/* time of last msgsnd command */
+   __time_t msg_rtime;			/* time of last msgrcv command */
+   __time_t msg_ctime;			/* time of last change */
+-  struct wait_queue *__unbounded __wwait; /* ??? */
+-  struct wait_queue *__unbounded __rwait; /* ??? */
++  struct wait_queue *__wwait;		/* ??? */
++  struct wait_queue *__rwait;		/* ??? */
+   unsigned short int __msg_cbytes;	/* current number of bytes on queue */
+   unsigned short int msg_qnum;		/* number of messages currently on queue */
+   unsigned short int msg_qbytes;	/* max number of bytes allowed on queue */
+@@ -104,8 +104,7 @@ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+ 	    return -1;
+ 	  }
+       }
+-    result = INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+-			     msqid, cmd, 0, __ptrvalue (&old));
++    result = INLINE_SYSCALL (ipc, 5, IPCOP_msgctl, msqid, cmd, 0, &old);
+     if (result != -1 && cmd != IPC_SET)
+       {
+ 	memset(buf, 0, sizeof(*buf));
+diff --git a/sysdeps/unix/sysv/linux/msgrcv.c b/sysdeps/unix/sysv/linux/msgrcv.c
+index dc0e34fe3d7f2ffd..a3085abda24d4512 100644
+--- a/sysdeps/unix/sysv/linux/msgrcv.c
++++ b/sysdeps/unix/sysv/linux/msgrcv.c
+@@ -27,7 +27,7 @@
+    arguments to a system call.  */
+ struct ipc_kludge
+   {
+-    void *__unbounded msgp;
++    void *msgp;
+     long int msgtyp;
+   };
+ 
+@@ -48,13 +48,12 @@ __libc_msgrcv (msqid, msgp, msgsz, msgtyp, msgflg)
+   tmp.msgtyp = msgtyp;
+ 
+   if (SINGLE_THREAD_P)
+-    return INLINE_SYSCALL (ipc, 5, IPCOP_msgrcv, msqid, msgsz, msgflg,
+-			   __ptrvalue (&tmp));
++    return INLINE_SYSCALL (ipc, 5, IPCOP_msgrcv, msqid, msgsz, msgflg, &tmp);
+ 
+   int oldtype = LIBC_CANCEL_ASYNC ();
+ 
+   ssize_t result = INLINE_SYSCALL (ipc, 5, IPCOP_msgrcv, msqid, msgsz, msgflg,
+-				   __ptrvalue (&tmp));
++				   &tmp);
+ 
+    LIBC_CANCEL_RESET (oldtype);
+ 
+diff --git a/sysdeps/unix/sysv/linux/powerpc/libc-start.c b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+index 89de1aa7e6e1df59..078d6c7ca99c7203 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/libc-start.c
++++ b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+@@ -34,7 +34,7 @@ int __cache_line_size attribute_hidden;
+ 
+ struct startup_info
+   {
+-    void *__unbounded sda_base;
++    void *sda_base;
+     int (*main) (int, char **, char **, void *);
+     int (*init) (int, char **, char **, void *);
+     void (*fini) (void);
+@@ -43,34 +43,28 @@ struct startup_info
+ int
+ /* GKM FIXME: GCC: this should get __BP_ prefix by virtue of the
+    BPs in the arglist of startup_info.main and startup_info.init. */
+-  BP_SYM (__libc_start_main) (int argc, char *__unbounded *__unbounded ubp_av,
+-			      char *__unbounded *__unbounded ubp_ev,
+-			      ElfW (auxv_t) * __unbounded auxvec,
++  BP_SYM (__libc_start_main) (int argc, char **argv,
++			      char **ev,
++			      ElfW (auxv_t) * auxvec,
+ 			      void (*rtld_fini) (void),
+-			      struct startup_info *__unbounded stinfo,
+-			      char *__unbounded *__unbounded stack_on_entry)
++			      struct startup_info *stinfo,
++			      char **stack_on_entry)
+ {
+-#if __BOUNDED_POINTERS__
+-  char **argv;
+-#else
+-# define argv ubp_av
+-#endif
+-
+   /* the PPC SVR4 ABI says that the top thing on the stack will
+      be a NULL pointer, so if not we assume that we're being called
+      as a statically-linked program by Linux...  */
+   if (*stack_on_entry != NULL)
+     {
+-      char *__unbounded * __unbounded temp;
++      char **temp;
+       /* ...in which case, we have argc as the top thing on the
+          stack, followed by argv (NULL-terminated), envp (likewise),
+          and the auxilary vector.  */
+       /* 32/64-bit agnostic load from stack */
+-      argc = *(long int *__unbounded) stack_on_entry;
+-      ubp_av = stack_on_entry + 1;
+-      ubp_ev = ubp_av + argc + 1;
++      argc = *(long int *) stack_on_entry;
++      argv = stack_on_entry + 1;
++      ev = argv + argc + 1;
+ #ifdef HAVE_AUX_VECTOR
+-      temp = ubp_ev;
++      temp = ev;
+       while (*temp != NULL)
+ 	++temp;
+       auxvec = (ElfW (auxv_t) *)++ temp;
+@@ -87,7 +81,7 @@ int
+ 	break;
+       }
+ 
+-  return generic_start_main (stinfo->main, argc, ubp_av, auxvec,
++  return generic_start_main (stinfo->main, argc, argv, auxvec,
+ 			     stinfo->init, stinfo->fini, rtld_fini,
+ 			     stack_on_entry);
+ }
+diff --git a/sysdeps/unix/sysv/linux/ptrace.c b/sysdeps/unix/sysv/linux/ptrace.c
+index a75e5ba0a8ab6b53..b06a42ace08e38fa 100644
+--- a/sysdeps/unix/sysv/linux/ptrace.c
++++ b/sysdeps/unix/sysv/linux/ptrace.c
+@@ -42,8 +42,7 @@ ptrace (enum __ptrace_request request, ...)
+   if (request > 0 && request < 4)
+     data = &ret;
+ 
+-  res = INLINE_SYSCALL (ptrace, 4, request, pid,
+-			__ptrvalue (addr), __ptrvalue (data));
++  res = INLINE_SYSCALL (ptrace, 4, request, pid, addr, data);
+   if (res >= 0 && request > 0 && request < 4)
+     {
+       __set_errno (0);
+diff --git a/sysdeps/unix/sysv/linux/semctl.c b/sysdeps/unix/sysv/linux/semctl.c
+index bae5a8d28306e653..3a2f1b39cea657e5 100644
+--- a/sysdeps/unix/sysv/linux/semctl.c
++++ b/sysdeps/unix/sysv/linux/semctl.c
+@@ -34,10 +34,10 @@ struct __old_semid_ds
+   struct __old_ipc_perm sem_perm;	/* operation permission struct */
+   __time_t sem_otime;			/* last semop() time */
+   __time_t sem_ctime;			/* last time changed by semctl() */
+-  struct sem *__unbounded __sembase;	/* ptr to first semaphore in array */
+-  struct sem_queue *__unbounded __sem_pending; /* pending operations */
+-  struct sem_queue *__unbounded __sem_pending_last; /* last pending operation */
+-  struct sem_undo *__unbounded __undo;	/* ondo requests on this array */
++  struct sem *__sembase;		/* ptr to first semaphore in array */
++  struct sem_queue *__sem_pending;	/* pending operations */
++  struct sem_queue *__sem_pending_last; /* last pending operation */
++  struct sem_undo *__undo;		/* ondo requests on this array */
+   unsigned short int sem_nsems;		/* number of semaphores in set */
+ };
+ 
+diff --git a/sysdeps/unix/sysv/linux/shmat.c b/sysdeps/unix/sysv/linux/shmat.c
+index 21417f4ced70e778..5ac515bc023e6783 100644
+--- a/sysdeps/unix/sysv/linux/shmat.c
++++ b/sysdeps/unix/sysv/linux/shmat.c
+@@ -36,7 +36,7 @@ shmat (shmid, shmaddr, shmflg)
+ {
+   INTERNAL_SYSCALL_DECL(err);
+   unsigned long resultvar;
+-  void *__unbounded raddr;
++  void *raddr;
+ 
+ #if __BOUNDED_POINTERS__
+   size_t length = ~0;
+@@ -49,8 +49,8 @@ shmat (shmid, shmaddr, shmflg)
+ 
+   resultvar = INTERNAL_SYSCALL (ipc, err, 5, IPCOP_shmat,
+ 				shmid, shmflg,
+-				(long int) __ptrvalue (&raddr),
+-				__ptrvalue ((void *) shmaddr));
++				(long int) &raddr,
++				(void *) shmaddr);
+   if (INTERNAL_SYSCALL_ERROR_P (resultvar, err))
+     {
+       __set_errno (INTERNAL_SYSCALL_ERRNO (resultvar, err));
+diff --git a/sysdeps/unix/sysv/linux/shmctl.c b/sysdeps/unix/sysv/linux/shmctl.c
+index 3fb6b0c0f203db08..f99ee77f92878b1b 100644
+--- a/sysdeps/unix/sysv/linux/shmctl.c
++++ b/sysdeps/unix/sysv/linux/shmctl.c
+@@ -40,8 +40,8 @@ struct __old_shmid_ds
+   __ipc_pid_t shm_lpid;			/* pid of last shmop */
+   unsigned short int shm_nattch;	/* number of current attaches */
+   unsigned short int __shm_npages;	/* size of segment (pages) */
+-  unsigned long int *__unbounded __shm_pages; /* array of ptrs to frames -> SHMMAX */
+-  struct vm_area_struct *__unbounded __attaches; /* descriptors for attaches */
++  unsigned long int *__shm_pages;	/* array of ptrs to frames -> SHMMAX */
++  struct vm_area_struct *__attaches;	/* descriptors for attaches */
+ };
+ 
+ struct __old_shminfo
+@@ -116,8 +116,7 @@ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ 	    return -1;
+ 	  }
+       }
+-    result = INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0,
+-			     __ptrvalue (&old.ds));
++    result = INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0, &old.ds);
+     if (result != -1 && (cmd == SHM_STAT || cmd == IPC_STAT))
+       {
+ 	memset(buf, 0, sizeof(*buf));
+diff --git a/sysdeps/unix/sysv/linux/shmdt.c b/sysdeps/unix/sysv/linux/shmdt.c
+index 0791b37e1982eaa3..c7fd62d3c1c82ffb 100644
+--- a/sysdeps/unix/sysv/linux/shmdt.c
++++ b/sysdeps/unix/sysv/linux/shmdt.c
+@@ -30,5 +30,5 @@ int
+ shmdt (shmaddr)
+      const void *shmaddr;
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_shmdt, 0, 0, 0, __ptrvalue ((void *) shmaddr));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_shmdt, 0, 0, 0, (void *) shmaddr);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sigaction.c b/sysdeps/unix/sysv/linux/sigaction.c
+index 01fb16e5573491c5..0eee8e6b0322399a 100644
+--- a/sysdeps/unix/sysv/linux/sigaction.c
++++ b/sysdeps/unix/sysv/linux/sigaction.c
+@@ -55,8 +55,8 @@ __libc_sigaction (sig, act, oact)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+   result = INLINE_SYSCALL (rt_sigaction, 4, sig,
+-			   act ? __ptrvalue (&kact) : NULL,
+-			   oact ? __ptrvalue (&koact) : NULL, _NSIG / 8);
++			   act ? &kact : NULL,
++			   oact ? &koact : NULL, _NSIG / 8);
+ 
+   if (oact && result >= 0)
+     {
+diff --git a/sysdeps/unix/sysv/linux/sigqueue.c b/sysdeps/unix/sysv/linux/sigqueue.c
+index d87c0da3af1a5070..e4470d4ca660f9b8 100644
+--- a/sysdeps/unix/sysv/linux/sigqueue.c
++++ b/sysdeps/unix/sysv/linux/sigqueue.c
+@@ -43,7 +43,7 @@ __sigqueue (pid, sig, val)
+   info.si_uid = __getuid ();
+   info.si_value = val;
+ 
+-  return INLINE_SYSCALL (rt_sigqueueinfo, 3, pid, sig, __ptrvalue (&info));
++  return INLINE_SYSCALL (rt_sigqueueinfo, 3, pid, sig, &info);
+ }
+ weak_alias (__sigqueue, sigqueue)
+ #else
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c b/sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c
+index a7eb88afa4fc5309..33715e54aa5837f2 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c
+@@ -48,8 +48,8 @@ __libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+   ret = INLINE_SYSCALL (rt_sigaction, 5, sig,
+-			act ? __ptrvalue (&kact) : 0,
+-			oact ? __ptrvalue (&koact) : 0, stub, _NSIG / 8);
++			act ? &kact : 0,
++			oact ? &koact : 0, stub, _NSIG / 8);
+ 
+   if (oact && ret >= 0)
+     {
+diff --git a/sysdeps/unix/sysv/linux/sysctl.c b/sysdeps/unix/sysv/linux/sysctl.c
+index e00ecfe85cfc0281..bcec384cb55f33ac 100644
+--- a/sysdeps/unix/sysv/linux/sysctl.c
++++ b/sysdeps/unix/sysv/linux/sysctl.c
+@@ -37,7 +37,7 @@ __sysctl (int *name, int nlen, void *oldval, size_t *oldlenp,
+     .newlen = newlen
+   };
+ 
+-  return INLINE_SYSCALL (_sysctl, 1, __ptrvalue (&args));
++  return INLINE_SYSCALL (_sysctl, 1, &args);
+ }
+ libc_hidden_def (__sysctl)
+ weak_alias (__sysctl, sysctl)
+diff --git a/sysdeps/unix/sysv/linux/x86_64/sigaction.c b/sysdeps/unix/sysv/linux/x86_64/sigaction.c
+index 5a3ad1830e67e38b..6e171dae6c429367 100644
+--- a/sysdeps/unix/sysv/linux/x86_64/sigaction.c
++++ b/sysdeps/unix/sysv/linux/x86_64/sigaction.c
+@@ -62,8 +62,8 @@ __libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+   result = INLINE_SYSCALL (rt_sigaction, 4,
+-			   sig, act ? __ptrvalue (&kact) : NULL,
+-			   oact ? __ptrvalue (&koact) : NULL, _NSIG / 8);
++			   sig, act ? &kact : NULL,
++			   oact ? &koact : NULL, _NSIG / 8);
+   if (oact && result >= 0)
+     {
+       oact->sa_handler = koact.k_sa_handler;
+diff --git a/sysdeps/unix/sysv/linux/xstat.c b/sysdeps/unix/sysv/linux/xstat.c
+index a3c0c1ca42424830..bb4477bb89f65fb7 100644
+--- a/sysdeps/unix/sysv/linux/xstat.c
++++ b/sysdeps/unix/sysv/linux/xstat.c
+@@ -44,7 +44,7 @@ __xstat (int vers, const char *name, struct stat *buf)
+   struct kernel_stat kbuf;
+   int result;
+ 
+-  result = INLINE_SYSCALL (stat, 2, name, __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (stat, 2, name, &kbuf);
+   if (result == 0)
+     result = __xstat_conv (vers, &kbuf, buf);
+ 

@@ -1,0 +1,164 @@
+From 176c7fee517c11f628aed4ef4b9457e47fa976a1 Mon Sep 17 00:00:00 2001
+From: Joseph Myers <joseph@codesourcery.com>
+Date: Mon, 18 Jun 2018 13:36:41 +0000
+Subject: [PATCH] Add SEM_STAT_ANY from Linux 4.17 to bits/sem.h.
+
+Linux 4.17 adds a SEM_STAT_ANY constant (ipcs command).  This patch
+adds it to the relevant bits/sem.h headers.
+
+Tested for x86_64.
+
+	* sysdeps/unix/sysv/linux/alpha/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): New macro.
+	* sysdeps/unix/sysv/linux/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/generic/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/hppa/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/ia64/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/mips/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/s390/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/sparc/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+	* sysdeps/unix/sysv/linux/x86/bits/sem.h [__USE_MISC]
+	(SEM_STAT_ANY): Likewise.
+---
+ ChangeLog                                  | 21 +++++++++++++++++++++
+ sysdeps/unix/sysv/linux/alpha/bits/sem.h   |  1 +
+ sysdeps/unix/sysv/linux/bits/sem.h         |  1 +
+ sysdeps/unix/sysv/linux/generic/bits/sem.h |  1 +
+ sysdeps/unix/sysv/linux/hppa/bits/sem.h    |  1 +
+ sysdeps/unix/sysv/linux/ia64/bits/sem.h    |  1 +
+ sysdeps/unix/sysv/linux/mips/bits/sem.h    |  1 +
+ sysdeps/unix/sysv/linux/powerpc/bits/sem.h |  1 +
+ sysdeps/unix/sysv/linux/s390/bits/sem.h    |  1 +
+ sysdeps/unix/sysv/linux/sparc/bits/sem.h   |  1 +
+ sysdeps/unix/sysv/linux/x86/bits/sem.h     |  1 +
+ 11 files changed, 31 insertions(+)
+
+Index: b/sysdeps/unix/sysv/linux/alpha/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/alpha/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/alpha/bits/sem.h
+@@ -66,6 +66,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/bits/sem.h
+@@ -68,6 +68,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/generic/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/generic/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/generic/bits/sem.h
+@@ -74,6 +74,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/hppa/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/hppa/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/hppa/bits/sem.h
+@@ -73,6 +73,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/ia64/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/ia64/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/ia64/bits/sem.h
+@@ -68,6 +68,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/mips/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/mips/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/mips/bits/sem.h
+@@ -66,6 +66,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/powerpc/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/powerpc/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/powerpc/bits/sem.h
+@@ -73,6 +73,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/s390/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/s390/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/s390/bits/sem.h
+@@ -73,6 +73,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct	seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/sparc/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/sparc/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/sparc/bits/sem.h
+@@ -73,6 +73,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {
+Index: b/sysdeps/unix/sysv/linux/x86/bits/sem.h
+===================================================================
+--- a/sysdeps/unix/sysv/linux/x86/bits/sem.h
++++ b/sysdeps/unix/sysv/linux/x86/bits/sem.h
+@@ -68,6 +68,7 @@ struct semid_ds
+ /* ipcs ctl cmds */
+ # define SEM_STAT 18
+ # define SEM_INFO 19
++# define SEM_STAT_ANY 20
+ 
+ struct  seminfo
+ {

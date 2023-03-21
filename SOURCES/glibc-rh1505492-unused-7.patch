@@ -1,0 +1,28 @@
+commit bde2667a22c355467a4f07246c6d07a9dcc89366
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Tue Nov 25 21:40:51 2014 +0000
+
+    Fix warning in posix/bug-regex31.c.
+    
+    This patch fixes a "set but not used" warning in posix/bug-regex31.c.
+    A variable res stored an indication of whether the test behaved as
+    expected, but was then ignored and the test returned 0 unconditionally
+    (as an mtrace test, the auxiliary test for leaks could still have
+    failed if that bug was present).  This patch makes the test return
+    res.
+    
+    Tested for x86_64.
+    
+            * posix/bug-regex31.c (main): Return RES not 0.
+
+diff --git a/posix/bug-regex31.c b/posix/bug-regex31.c
+index fc485815fcf67d82..fd7e0c57cab515be 100644
+--- a/posix/bug-regex31.c
++++ b/posix/bug-regex31.c
+@@ -33,5 +33,5 @@ main (void)
+ 
+   free (buf);
+ 
+-  return 0;
++  return res;
+ }

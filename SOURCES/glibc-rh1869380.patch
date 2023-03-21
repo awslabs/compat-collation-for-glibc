@@ -1,0 +1,134 @@
+This is a custom patch for RHEL 7 to fix CVE-2020-29573 and includes
+parts of 41290b6e842a2adfbda77a49abfacb0db2d63bfb, and
+681900d29683722b1cb0a8e565a0585846ec5a61.
+
+We had a discussion[1] upstream about the treatment of unnormal long
+double numbers in glibc and gcc and there is general consensus that
+unnormal numbers (pseudos in general) ought to be treated like NaNs
+without the guarantee that they will always be treated correctly in
+glibc.  That is, there is agreement that we should fix bugs and
+security issues arising from such inputs but not guarantee glibc
+behaviour with such inputs since the latter would involve extensive
+coverage.
+
+Now on to #1869380, this crash in printf manifests itself only in
+RHEL-7 and not in any other Red Hat distribution because later
+versions of glibc use __builtin_nan from gcc, which always recognizes
+pseudos as NaN.  Based on that and the recent consensus, the correct
+way to fix #1869380 appears to be to treat unnormals as NaN instead of
+fixing the unnormal representation as in this patch[2].
+
+[1] https://sourceware.org/pipermail/libc-alpha/2020-November/119949.html
+[2] https://sourceware.org/pipermail/libc-alpha/2020-September/117779.html
+
+Co-authored-by: Siddhesh Poyarekar <siddhesh@redhat.com>
+
+diff --git a/stdio-common/printf_fp.c b/stdio-common/printf_fp.c
+index d0e082494af6b0a3..60b143571065a082 100644
+--- a/stdio-common/printf_fp.c
++++ b/stdio-common/printf_fp.c
+@@ -151,6 +151,28 @@ static wchar_t *group_number (wchar_t *buf, wchar_t *bufend,
+ 			      wchar_t thousands_sep, int ngroups)
+      internal_function;
+ 
++static __always_inline int
++isnanl_or_pseudo (long double in)
++{
++#if defined __x86_64__ || defined __i386__
++  union
++    {
++      long double f;
++      struct
++	{
++	  uint64_t low;
++	  uint64_t high;
++	} u;
++    } ldouble;
++
++  ldouble.f = in;
++
++  return __isnanl (in) || (ldouble.u.low & 0x8000000000000000) == 0;
++#else
++  return __isnanl (in);
++#endif
++}
++
+ 
+ int
+ __printf_fp_l (FILE *fp, locale_t loc,
+@@ -335,7 +357,7 @@ __printf_fp_l (FILE *fp, locale_t loc,
+ 
+       /* Check for special values: not a number or infinity.  */
+       int res;
+-      if (__isnanl (fpnum.ldbl))
++      if (isnanl_or_pseudo (fpnum.ldbl))
+ 	{
+ 	  is_neg = signbit (fpnum.ldbl);
+ 	  if (isupper (info->spec))
+diff --git a/sysdeps/x86/Makefile b/sysdeps/x86/Makefile
+index c26533245e8a8103..f1da941dbbadadb3 100644
+--- a/sysdeps/x86/Makefile
++++ b/sysdeps/x86/Makefile
+@@ -18,3 +18,7 @@ sysdep-dl-routines += dl-get-cpu-features
+ tests += tst-get-cpu-features
+ tests-static += tst-get-cpu-features-static
+ endif
++
++ifeq ($(subdir),math)
++tests += tst-ldbl-nonnormal-printf
++endif # $(subdir) == math
+diff --git a/sysdeps/x86/tst-ldbl-nonnormal-printf.c b/sysdeps/x86/tst-ldbl-nonnormal-printf.c
+new file mode 100644
+index 0000000000000000..e4e3e428747488b9
+--- /dev/null
++++ b/sysdeps/x86/tst-ldbl-nonnormal-printf.c
+@@ -0,0 +1,49 @@
++/* Test printf with x86-specific non-normal long double value.
++   Copyright (C) 2020-2021 Free Software Foundation, Inc.
++
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <stdio.h>
++#include <string.h>
++#include <support/check.h>
++
++/* Fill the stack with non-zero values.  This makes a crash in
++   snprintf more likely.  */
++static void __attribute__ ((noinline, noclone))
++fill_stack (void)
++{
++  char buffer[65536];
++  memset (buffer, 0xc0, sizeof (buffer));
++  asm ("" ::: "memory");
++}
++
++static int
++do_test (void)
++{
++  fill_stack ();
++
++  long double value;
++  memcpy (&value, "\x00\x04\x00\x00\x00\x00\x00\x00\x00\x04", 10);
++
++  char buf[30];
++  int ret = snprintf (buf, sizeof (buf), "%Lg", value);
++  TEST_COMPARE (ret, strlen (buf));
++  TEST_COMPARE_STRING (buf, "nan");
++  return 0;
++}
++
++#include <support/test-driver.c>

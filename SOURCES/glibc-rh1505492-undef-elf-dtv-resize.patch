@@ -1,0 +1,16 @@
+Suppress -Wundef warnings in glibc-rh1189278.patch.  Specific to the
+backport, so no upstream patch.
+
+diff --git a/elf/dl-tls.c b/elf/dl-tls.c
+index b9f58a9cd2745b95..02857f5d61fcfc81 100644
+--- a/elf/dl-tls.c
++++ b/elf/dl-tls.c
+@@ -404,7 +404,7 @@ _dl_resize_dtv (dtv_t *dtv)
+   size_t newsize = GL(dl_tls_max_dtv_idx) + DTV_SURPLUS;
+   size_t oldsize = dtv[-1].counter;
+ 
+-#if SHARED
++#ifdef SHARED
+   if (dtv == GL(dl_initial_dtv))
+     {
+       /* This is the initial dtv that was either statically allocated in

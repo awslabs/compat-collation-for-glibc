@@ -1,0 +1,26 @@
+Fix -Wundef warnings.  Fixed upstream as part of this commit:
+
+commit 1570a72bb8359c9a3a64c4e22d9ea47ce6fcff31
+Author: Will Newton <will.newton@linaro.org>
+Date:   Thu Jun 26 16:00:44 2014 +0100
+
+    string/memchr.c: Merge from gnulib
+
+diff --git a/string/memchr.c b/string/memchr.c
+index 1684bfa56885e883..d1880cfbaed951a6 100644
+--- a/string/memchr.c
++++ b/string/memchr.c
+@@ -32,11 +32,11 @@
+ # include <memcopy.h>
+ #endif
+ 
+-#if HAVE_STDLIB_H || defined _LIBC
++#if defined _LIBC || HAVE_STDLIB_H
+ # include <stdlib.h>
+ #endif
+ 
+-#if HAVE_LIMITS_H || defined _LIBC
++#if defined _LIBC || HAVE_LIMITS_H
+ # include <limits.h>
+ #endif
+ 

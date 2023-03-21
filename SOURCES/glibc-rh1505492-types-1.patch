@@ -1,0 +1,19 @@
+commit 87ded0c382b835e5d7ca8b5e059a8a044a6c3976
+Author: Andreas Krebbel <krebbel@linux.vnet.ibm.com>
+Date:   Tue Jan 7 09:40:39 2014 +0100
+
+    S/390: Remove __tls_get_addr argument cast.
+
+diff --git a/sysdeps/s390/dl-tls.h b/sysdeps/s390/dl-tls.h
+index 3afa3c89da2ad881..2d5c0807765e33ad 100644
+--- a/sysdeps/s390/dl-tls.h
++++ b/sysdeps/s390/dl-tls.h
+@@ -91,7 +91,7 @@ extern void *__tls_get_addr_internal (tls_index *ti);
+    compiler will take care of setting up r12 only if itself issued the
+    __tls_get_offset call.  */
+ # define __TLS_GET_ADDR(__ti)					\
+-  ({ (void *) __tls_get_addr_internal ((char *) (__ti))		\
++  ({ __tls_get_addr_internal (__ti)				\
+       + (unsigned long) __builtin_thread_pointer (); })
+ 
+ #endif

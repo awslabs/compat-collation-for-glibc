@@ -1,0 +1,30 @@
+commit 273cdee86d86e107c0eecef5614f57e37567b54e
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Tue Jan 15 16:39:07 2013 +0100
+
+    Fix invalid free of memory allocated during rtld init
+
+diff --git a/elf/dl-load.c b/elf/dl-load.c
+index 013efdb3814700d3..6a0005da502c8f37 100644
+--- a/elf/dl-load.c
++++ b/elf/dl-load.c
+@@ -822,6 +822,9 @@ _dl_init_paths (const char *llp)
+ 			   (const void *) (D_PTR (l, l_info[DT_STRTAB])
+ 					   + l->l_info[DT_RUNPATH]->d_un.d_val),
+ 			   l, "RUNPATH");
++	  /* During rtld init the memory is allocated by the stub malloc,
++	     prevent any attempt to free it by the normal malloc.  */
++	  l->l_runpath_dirs.malloced = 0;
+ 
+ 	  /* The RPATH is ignored.  */
+ 	  l->l_rpath_dirs.dirs = (void *) -1;
+@@ -838,6 +841,9 @@ _dl_init_paths (const char *llp)
+ 			       (const void *) (D_PTR (l, l_info[DT_STRTAB])
+ 					       + l->l_info[DT_RPATH]->d_un.d_val),
+ 			       l, "RPATH");
++	      /* During rtld init the memory is allocated by the stub
++		 malloc, prevent any attempt to free it by the normal
++		 malloc.  */
+ 	      l->l_rpath_dirs.malloced = 0;
+ 	    }
+ 	  else

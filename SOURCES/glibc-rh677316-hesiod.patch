@@ -1,0 +1,575 @@
+This backports the hesiod subdirectory up to and including these
+upstream commits:
+
+commit bfff8b1becd7d01c074177df7196ab327cd8c844
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Sun Jan 1 00:14:16 2017 +0000
+
+    Update copyright dates with scripts/update-copyrights.
+
+commit 8a03ccbb77f52ec4b55062eeedddb8daec1a33e4
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Mon May 2 16:04:32 2016 +0200
+
+    hesiod: Avoid heap overflow in get_txt_records [BZ #20031]
+
+It is required to eliminate a dependency on resolver internals.
+
+diff --git a/hesiod/Makefile b/hesiod/Makefile
+index 5aeb86eaf8971535..3c967441e17240b4 100644
+--- a/hesiod/Makefile
++++ b/hesiod/Makefile
+@@ -1,4 +1,4 @@
+-# Copyright (C) 1997, 1998, 2000, 2001, 2012 Free Software Foundation, Inc.
++# Copyright (C) 1997-2017 Free Software Foundation, Inc.
+ # This file is part of the GNU C Library.
+ 
+ # The GNU C Library is free software; you can redistribute it and/or
+@@ -20,13 +20,15 @@
+ #
+ subdir	:= hesiod
+ 
++include ../Makeconfig
++
+ extra-libs := libnss_hesiod
+ extra-libs-others = $(extra-libs)
+ 
+ subdir-dirs = nss_hesiod
+ vpath %.c nss_hesiod
+ 
+-libnss_hesiod-routines	:= hesiod hesiod-grp hesiod-init hesiod-proto \
++libnss_hesiod-routines	:= hesiod hesiod-grp hesiod-proto \
+ 			   hesiod-pwd hesiod-service
+ # Build only shared library
+ libnss_hesiod-inhibit-o	= $(filter-out .os,$(object-suffixes))
+diff --git a/hesiod/hesiod.c b/hesiod/hesiod.c
+index 657dabebc144db7d..9b54d1cb6b18f0e5 100644
+--- a/hesiod/hesiod.c
++++ b/hesiod/hesiod.c
+@@ -1,6 +1,19 @@
+-#if defined(LIBC_SCCS) && !defined(lint)
+-static const char rcsid[] = "$BINDId: hesiod.c,v 1.21 2000/02/28 14:51:08 vixie Exp $";
+-#endif
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
+ 
+ /*
+  * Copyright (c) 1996,1999 by Internet Software Consortium.
+@@ -46,24 +59,14 @@ static const char rcsid[] = "$BINDId: hesiod.c,v 1.21 2000/02/28 14:51:08 vixie
+ 
+ #include "hesiod.h"
+ #include "hesiod_p.h"
+-#undef DEF_RHS
+ 
+ #define _PATH_HESIOD_CONF "/etc/hesiod.conf"
+ 
+ /* Forward */
+ 
+-int		hesiod_init(void **context);
+-void		hesiod_end(void *context);
+-char *		hesiod_to_bind(void *context, const char *name,
+-			       const char *type);
+-char **		hesiod_resolve(void *context, const char *name,
+-			       const char *type);
+-void		hesiod_free_list(void *context, char **list);
+-
+ static int	parse_config_file(struct hesiod_p *ctx, const char *filename);
+ static char **	get_txt_records(struct hesiod_p *ctx, int class,
+ 				const char *name);
+-static int	init(struct hesiod_p *ctx);
+ 
+ /* Public */
+ 
+@@ -82,7 +85,6 @@ hesiod_init(void **context) {
+ 
+ 	ctx->LHS = NULL;
+ 	ctx->RHS = NULL;
+-	ctx->res = NULL;
+ 	/* Set default query classes. */
+ 	ctx->classes[0] = C_IN;
+ 	ctx->classes[1] = C_HS;
+@@ -91,19 +93,7 @@ hesiod_init(void **context) {
+ 	if (!configname)
+ 	  configname = _PATH_HESIOD_CONF;
+ 	if (parse_config_file(ctx, configname) < 0) {
+-#ifdef DEF_RHS
+-		/*
+-		 * Use compiled in defaults.
+-		 */
+-		ctx->LHS = malloc(strlen(DEF_LHS)+1);
+-		ctx->RHS = malloc(strlen(DEF_RHS)+1);
+-		if (ctx->LHS == 0 || ctx->RHS == 0)
+-			goto cleanup;
+-		strcpy(ctx->LHS, DEF_LHS);
+-		strcpy(ctx->RHS, DEF_RHS);
+-#else
+ 		goto cleanup;
+-#endif
+ 	}
+ 	/*
+ 	 * The default RHS can be overridden by an environment
+@@ -131,11 +121,6 @@ hesiod_init(void **context) {
+ 		goto cleanup;
+ 	}
+ 
+-#if 0
+-	if (res_ninit(ctx->res) < 0)
+-		goto cleanup;
+-#endif
+-
+ 	*context = ctx;
+ 	return (0);
+ 
+@@ -152,12 +137,8 @@ hesiod_end(void *context) {
+ 	struct hesiod_p *ctx = (struct hesiod_p *) context;
+ 	int save_errno = errno;
+ 
+-	if (ctx->res)
+-		res_nclose(ctx->res);
+ 	free(ctx->RHS);
+ 	free(ctx->LHS);
+-	if (ctx->res && ctx->free_res)
+-		(*ctx->free_res)(ctx->res);
+ 	free(ctx);
+ 	__set_errno(save_errno);
+ }
+@@ -232,10 +213,6 @@ hesiod_resolve(void *context, const char *name, const char *type) {
+ 
+ 	if (bindname == NULL)
+ 		return (NULL);
+-	if (init(ctx) == -1) {
+-		free(bindname);
+-		return (NULL);
+-	}
+ 
+ 	retvec = get_txt_records(ctx, ctx->classes[0], bindname);
+ 
+@@ -365,13 +342,13 @@ get_txt_records(struct hesiod_p *ctx, int class, const char *name) {
+ 	/*
+ 	 * Construct the query and send it.
+ 	 */
+-	n = res_nmkquery(ctx->res, QUERY, name, class, T_TXT, NULL, 0,
++	n = res_mkquery(QUERY, name, class, T_TXT, NULL, 0,
+ 			 NULL, qbuf, MAX_HESRESP);
+ 	if (n < 0) {
+ 		__set_errno(EMSGSIZE);
+ 		return (NULL);
+ 	}
+-	n = res_nsend(ctx->res, qbuf, n, abuf, MAX_HESRESP);
++	n = res_send(qbuf, n, abuf, MAX_HESRESP);
+ 	if (n < 0) {
+ 		__set_errno(ECONNREFUSED);
+ 		return (NULL);
+@@ -421,7 +398,7 @@ get_txt_records(struct hesiod_p *ctx, int class, const char *name) {
+ 		cp += INT16SZ + INT32SZ;	/* skip the ttl, too */
+ 		rr.dlen = ns_get16(cp);
+ 		cp += INT16SZ;
+-		if (cp + rr.dlen > eom) {
++		if (rr.dlen == 0 || cp + rr.dlen > eom) {
+ 			__set_errno(EMSGSIZE);
+ 			goto cleanup;
+ 		}
+@@ -464,44 +441,3 @@ get_txt_records(struct hesiod_p *ctx, int class, const char *name) {
+ 	free(list);
+ 	return (NULL);
+ }
+-
+-struct __res_state *
+-__hesiod_res_get(void *context) {
+-	struct hesiod_p *ctx = context;
+-
+-	if (!ctx->res) {
+-		struct __res_state *res;
+-		res = (struct __res_state *)calloc(1, sizeof *res);
+-		if (res == NULL)
+-			return (NULL);
+-		__hesiod_res_set(ctx, res, free);
+-	}
+-
+-	return (ctx->res);
+-}
+-
+-void
+-__hesiod_res_set(void *context, struct __res_state *res,
+-		 void (*free_res)(void *)) {
+-	struct hesiod_p *ctx = context;
+-
+-	if (ctx->res && ctx->free_res) {
+-		res_nclose(ctx->res);
+-		(*ctx->free_res)(ctx->res);
+-	}
+-
+-	ctx->res = res;
+-	ctx->free_res = free_res;
+-}
+-
+-static int
+-init(struct hesiod_p *ctx) {
+-
+-	if (!ctx->res && !__hesiod_res_get(ctx))
+-		return (-1);
+-
+-	if (__res_maybe_init (ctx->res, 0) == -1)
+-		return (-1);
+-
+-	return (0);
+-}
+diff --git a/hesiod/hesiod.h b/hesiod/hesiod.h
+index 82fce30764e15071..2cb640a7df668cab 100644
+--- a/hesiod/hesiod.h
++++ b/hesiod/hesiod.h
+@@ -1,3 +1,20 @@
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
+ /*
+  * Copyright (c) 1996,1999 by Internet Software Consortium.
+  *
+@@ -19,22 +36,15 @@
+  * This file is primarily maintained by <tytso@mit.edu> and <ghudson@mit.edu>.
+  */
+ 
+-/*
+- * $BINDId: hesiod.h,v 1.7 1999/01/08 19:22:45 vixie Exp $
+- */
+-
+ #ifndef _HESIOD_H_INCLUDED
+ #define _HESIOD_H_INCLUDED
+ 
+-int		hesiod_init (void **context);
+-void		hesiod_end (void *context);
++int		hesiod_init (void **context) attribute_hidden;
++void		hesiod_end (void *context) attribute_hidden;
+ char *		hesiod_to_bind (void *context, const char *name,
+-				const char *type);
++				const char *type) attribute_hidden;
+ char **		hesiod_resolve (void *context, const char *name,
+-				const char *type);
+-void		hesiod_free_list (void *context, char **list);
+-struct __res_state * __hesiod_res_get (void *context);
+-void		__hesiod_res_set (void *context, struct __res_state *,
+-				  void (*)(void *));
++				const char *type) attribute_hidden;
++void		hesiod_free_list (void *context, char **list) attribute_hidden;
+ 
+ #endif /*_HESIOD_H_INCLUDED*/
+diff --git a/hesiod/hesiod_p.h b/hesiod/hesiod_p.h
+index 5010d71bc91879c4..7ed70158d9ffc5cc 100644
+--- a/hesiod/hesiod_p.h
++++ b/hesiod/hesiod_p.h
+@@ -1,3 +1,20 @@
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <http://www.gnu.org/licenses/>.  */
++
+ /*
+  * Copyright (c) 1996,1999 by Internet Software Consortium.
+  *
+@@ -20,27 +37,17 @@
+  */
+ 
+ /*
+- * $BINDId: hesiod_p.h,v 1.9 1999/01/08 19:24:39 vixie Exp $
+- */
+-
+-/*
+  * hesiod_p.h -- private definitions for the hesiod library
+  */
+ 
+ #ifndef _HESIOD_P_H_INCLUDED
+ #define _HESIOD_P_H_INCLUDED
+ 
+-#define DEF_RHS		".Athena.MIT.EDU"	/* Defaults if HESIOD_CONF */
+ #define DEF_LHS		".ns"			/*    file is not */
+ 						/*    present. */
+ struct hesiod_p {
+ 	char *		LHS;		/* normally ".ns" */
+ 	char *		RHS;		/* AKA the default hesiod domain */
+-	struct __res_state * res;	/* resolver context */
+-	void		(*free_res)(void *);
+-	void		(*res_set)(struct hesiod_p *, struct __res_state *,
+-				   void (*)(void *));
+-	struct __res_state * (*res_get)(struct hesiod_p *);
+ 	int		classes[2];	/* The class search order. */
+ };
+ 
+diff --git a/hesiod/nss_hesiod/hesiod-grp.c b/hesiod/nss_hesiod/hesiod-grp.c
+index 5c14554ce9fd647e..a04f5309453047e2 100644
+--- a/hesiod/nss_hesiod/hesiod-grp.c
++++ b/hesiod/nss_hesiod/hesiod-grp.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 1997, 1999, 2000, 2002 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+    Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 1997.
+ 
+@@ -26,8 +26,6 @@
+ #include <string.h>
+ #include <sys/param.h>
+ 
+-#include "nss_hesiod.h"
+-
+ /* Get the declaration of the parser function.  */
+ #define ENTNAME grent
+ #define STRUCTURE group
+@@ -58,8 +56,7 @@ lookup (const char *name, const char *type, struct group *grp,
+   size_t len;
+   int olderr = errno;
+ 
+-  context = _nss_hesiod_init ();
+-  if (context == NULL)
++  if (hesiod_init (&context) < 0)
+     return NSS_STATUS_UNAVAIL;
+ 
+   list = hesiod_resolve (context, name, type);
+@@ -179,8 +176,7 @@ _nss_hesiod_initgroups_dyn (const char *user, gid_t group, long int *start,
+   gid_t *groups = *groupsp;
+   int save_errno;
+ 
+-  context = _nss_hesiod_init ();
+-  if (context == NULL)
++  if (hesiod_init (&context) < 0)
+     return NSS_STATUS_UNAVAIL;
+ 
+   list = hesiod_resolve (context, user, "grplist");
+@@ -191,33 +187,6 @@ _nss_hesiod_initgroups_dyn (const char *user, gid_t group, long int *start,
+       return errno == ENOENT ? NSS_STATUS_NOTFOUND : NSS_STATUS_UNAVAIL;
+     }
+ 
+-  if (!internal_gid_in_list (groups, group, *start))
+-    {
+-      if (__builtin_expect (*start == *size, 0))
+-	{
+-	  /* Need a bigger buffer.  */
+-	  gid_t *newgroups;
+-	  long int newsize;
+-
+-	  if (limit > 0 && *size == limit)
+-	    /* We reached the maximum.  */
+-	    goto done;
+-
+-	  if (limit <= 0)
+-	    newsize = 2 * *size;
+-	  else
+-	    newsize = MIN (limit, 2 * *size);
+-
+-	  newgroups = realloc (groups, newsize * sizeof (*groups));
+-	  if (newgroups == NULL)
+-	    goto done;
+-	  *groupsp = groups = newgroups;
+-	  *size = newsize;
+-	}
+-
+-      groups[(*start)++] = group;
+-    }
+-
+   save_errno = errno;
+ 
+   p = *list;
+@@ -254,7 +223,7 @@ _nss_hesiod_initgroups_dyn (const char *user, gid_t group, long int *start,
+ 	  if (status == NSS_STATUS_SUCCESS
+ 	      && !internal_gid_in_list (groups, group, *start))
+ 	    {
+-	      if (__builtin_expect (*start == *size, 0))
++	      if (__glibc_unlikely (*start == *size))
+ 		{
+ 		  /* Need a bigger buffer.  */
+ 		  gid_t *newgroups;
+diff --git a/hesiod/nss_hesiod/hesiod-init.c b/hesiod/nss_hesiod/hesiod-init.c
+deleted file mode 100644
+index 964987d0755425b5..0000000000000000
+--- a/hesiod/nss_hesiod/hesiod-init.c
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/* Copyright (C) 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 2000.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sys/cdefs.h>		/* Needs to come before <hesiod.h>.  */
+-#include <hesiod.h>
+-#include <resolv.h>
+-#include <stddef.h>
+-
+-#include "nss_hesiod.h"
+-
+-void *
+-_nss_hesiod_init (void)
+-{
+-  void *context;
+-
+-  if (hesiod_init (&context) == -1)
+-    return NULL;
+-
+-  /* Use the default (per-thread) resolver state.  */
+-  __hesiod_res_set (context, &_res, NULL);
+-
+-  return context;
+-}
+diff --git a/hesiod/nss_hesiod/hesiod-proto.c b/hesiod/nss_hesiod/hesiod-proto.c
+index 7ea38bc24fbff3ca..6af32aad35edfc0a 100644
+--- a/hesiod/nss_hesiod/hesiod-proto.c
++++ b/hesiod/nss_hesiod/hesiod-proto.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 1997, 2000, 2002 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+    Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 1997.
+ 
+@@ -25,8 +25,6 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
+-#include "nss_hesiod.h"
+-
+ /* Declare a parser for Hesiod protocol entries.  Although the format
+    of the entries is identical to those in /etc/protocols, here is no
+    predefined parser for us to use.  */
+@@ -68,8 +66,7 @@ lookup (const char *name, const char *type, struct protoent *proto,
+   int found;
+   int olderr = errno;
+ 
+-  context = _nss_hesiod_init ();
+-  if (context == NULL)
++  if (hesiod_init (&context) < 0)
+     return NSS_STATUS_UNAVAIL;
+ 
+   list = hesiod_resolve (context, name, type);
+diff --git a/hesiod/nss_hesiod/hesiod-pwd.c b/hesiod/nss_hesiod/hesiod-pwd.c
+index 929cbce80e238a67..8309af245d3f0268 100644
+--- a/hesiod/nss_hesiod/hesiod-pwd.c
++++ b/hesiod/nss_hesiod/hesiod-pwd.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 1997, 2000, 2002 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+    Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 1997.
+ 
+@@ -24,8 +24,6 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
+-#include "nss_hesiod.h"
+-
+ /* Get the declaration of the parser function.  */
+ #define ENTNAME pwent
+ #define STRUCTURE passwd
+@@ -56,8 +54,7 @@ lookup (const char *name, const char *type, struct passwd *pwd,
+   size_t len;
+   int olderr = errno;
+ 
+-  context = _nss_hesiod_init ();
+-  if (context == NULL)
++  if (hesiod_init (&context) < 0)
+     return NSS_STATUS_UNAVAIL;
+ 
+   list = hesiod_resolve (context, name, type);
+diff --git a/hesiod/nss_hesiod/hesiod-service.c b/hesiod/nss_hesiod/hesiod-service.c
+index 28bd31a70f31c89c..1942188517d94508 100644
+--- a/hesiod/nss_hesiod/hesiod-service.c
++++ b/hesiod/nss_hesiod/hesiod-service.c
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 1997, 2000, 2002 Free Software Foundation, Inc.
++/* Copyright (C) 1997-2017 Free Software Foundation, Inc.
+    This file is part of the GNU C Library.
+    Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 1997.
+ 
+@@ -25,8 +25,6 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
+-#include "nss_hesiod.h"
+-
+ /* Hesiod uses a format for service entries that differs from the
+    traditional format.  We therefore declare our own parser.  */
+ 
+@@ -69,8 +67,7 @@ lookup (const char *name, const char *type, const char *protocol,
+   int found;
+   int olderr = errno;
+ 
+-  context = _nss_hesiod_init ();
+-  if (context == NULL)
++  if (hesiod_init (&context) < 0)
+     return NSS_STATUS_UNAVAIL;
+ 
+   list = hesiod_resolve (context, name, type);
+diff --git a/hesiod/nss_hesiod/nss_hesiod.h b/hesiod/nss_hesiod/nss_hesiod.h
+deleted file mode 100644
+index fdf0241860b7e825..0000000000000000
+--- a/hesiod/nss_hesiod/nss_hesiod.h
++++ /dev/null
+@@ -1,20 +0,0 @@
+-/* Copyright (C) 2000 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Mark Kettenis <kettenis@phys.uva.nl>, 2000.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-/* Initialize a Hesiod context.  */
+-extern void *_nss_hesiod_init (void);

@@ -1,0 +1,1208 @@
+commit 8e254d8e0d0820716e0ccf5f2b89c4fd1325f051
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Jun 7 14:56:03 2013 +0000
+
+    Remove trailing whitespace from localedata.
+
+diff --git a/localedata/charmaps/BIG5 b/localedata/charmaps/BIG5
+index 1a0a66fc4be52d32..50f5f16cd22cb287 100644
+--- a/localedata/charmaps/BIG5
++++ b/localedata/charmaps/BIG5
+@@ -16,7 +16,7 @@
+ %     Aprhic Tech. CO., LTD. Big5 <==> Unicode mapping table.
+ %
+ % Irrevsible mapping Big5 characters (using %IRREVERSIBLE% notation):
+-%     /xa2/xcc, /xa2/xce, /xf9/xe9, /xf9/xea, /xf9/xeb, 
++%     /xa2/xcc, /xa2/xce, /xf9/xe9, /xf9/xea, /xf9/xeb,
+ %     /xf9/xf9, /xf9/xfa, /xf9/xfb, /xf9/xfc, /xf9/xfd
+ %
+ % alias BIG5-CP950
+diff --git a/localedata/charmaps/IBM866NAV b/localedata/charmaps/IBM866NAV
+index add2bf2ee76d0dfe..38cf436534537a19 100644
+--- a/localedata/charmaps/IBM866NAV
++++ b/localedata/charmaps/IBM866NAV
+@@ -3,10 +3,10 @@
+ <escape_char> /
+ % Obtained by editing IBM866 charmap  (Alexander Vidybida)
+ %
+-% Corresponds to Ukrainian texts produced with "keyrus" screen and 
++% Corresponds to Ukrainian texts produced with "keyrus" screen and
+ % keyboard driver under DOS
+ %
+-% Corresponds to file `cp866nav.def' from the 
++% Corresponds to file `cp866nav.def' from the
+ % standard LaTeX `Cyrillic Bundle' except of codes /xfd, /xfe
+ 
+ % alias CP866NAV
+diff --git a/localedata/charmaps/ISIRI-3342 b/localedata/charmaps/ISIRI-3342
+index 3dd589f63a2727f3..6165cc8c527d285f 100644
+--- a/localedata/charmaps/ISIRI-3342
++++ b/localedata/charmaps/ISIRI-3342
+@@ -5,7 +5,7 @@
+ % source: Iranian standard ISIRI 3342 (1993)
+ % author: Pablo Saratxaga, and Roozbeh Pournader
+ % email: pablo@mandrakesoft.com, roozbeh@sina.sharif.ac.ir
+- 
++
+ % I think the mnemonic for upper space (0xA0) should be different from
+ % lower space (0x20). Because the semantics are different, although they
+ % are mapped to a single Unicode character. This is specially important
+@@ -23,7 +23,7 @@
+ % </>f>, <kf>, <yf>, <)/>+>, <<(+>, <!)+>, <(!+>, <<<+>, </>/>+>, <*+>,
+ % <!!+>, and <////+>. Also, all character sequences
+ % <NU>..<US>, <SP>, <DT> have counter-parts <NU+>..<US+>, <SP+>, <DT+>
+- 
++
+ CHARMAP
+ <U0000>     /x00         NULL (NUL)
+ <U0001>     /x01         START OF HEADING (SOH)
+diff --git a/localedata/charmaps/ISO_8859-1,GL b/localedata/charmaps/ISO_8859-1,GL
+index 62d13d9c8782d8e0..99737202fd53b498 100644
+--- a/localedata/charmaps/ISO_8859-1,GL
++++ b/localedata/charmaps/ISO_8859-1,GL
+@@ -4,7 +4,7 @@
+ # to "A", the "LATIN SMALL LETTER A" has been shorted to "a", and the
+ # names are, wherever possible, shortened to approx 20 characters. I
+ # would like comments on this charmap...
+-# 
++#
+ # -Greger Leijonhufvud-
+ # INTERACTIVE Systems, UK
+ # greger@{iuk,ism}.isc.com
+diff --git a/localedata/locales/ber_DZ b/localedata/locales/ber_DZ
+index 4256a513cf1ab7f7..be334c5bf66492fa 100644
+--- a/localedata/locales/ber_DZ
++++ b/localedata/locales/ber_DZ
+@@ -2,7 +2,7 @@ comment_char %
+ escape_char  /
+ %
+ % Amazigh Language Locale for Algeria (latin)
+-% Source: 
++% Source:
+ % Contact: Pablo Saratxaga
+ % Email: <pablo@mandrakesoft.com>
+ % Language: ber
+@@ -47,8 +47,8 @@ END LC_IDENTIFICATION
+ % TODO: fix LC_TIME, LC_MONETARY, LC_MESSAGES, LC_NAME, LC_ADDRESS
+ 
+ LC_COLLATE
+-% The latin amazigh alphabet is:       
+-% <a>, <eps>, <b>, <b*>, <c>, <c<>, <d>, <d-.>, <e>, <f>, <g>, <g*>, <g(>, 
++% The latin amazigh alphabet is:
++% <a>, <eps>, <b>, <b*>, <c>, <c<>, <d>, <d-.>, <e>, <f>, <g>, <g*>, <g(>,
+ % <h>, <h-.>, <i>, <j>, <k>, <k*>, <l>, <m>, <n>, <q>, <q*>, <gam>, <gam*>,
+ % <r>, <r-.>, <s>, <s-.>, <t>, <t-.>, <u>, <w>, <x>, <x*>, <y>, <z>, <z-.>
+ %
+@@ -291,7 +291,7 @@ country_num 12
+ %country_isbn ""
+ %country_car ""
+ lang_name "<U0074><U0061><U006D><U0061><U007A><U0069><U0067><U0068><U0074>"
+-%lang_ab 
++%lang_ab
+ lang_term "<U0062><U0065><U0072>"
+ lang_lib "<U0062><U0065><U0072>"
+ 
+diff --git a/localedata/locales/bn_BD b/localedata/locales/bn_BD
+index 8b46636b25714c68..9dbc4057820a014a 100644
+--- a/localedata/locales/bn_BD
++++ b/localedata/locales/bn_BD
+@@ -53,7 +53,7 @@ map to_inpunct; /
+   (<U0036>,<U09EC>); /
+   (<U0037>,<U09ED>); /
+   (<U0038>,<U09EE>); /
+-  (<U0039>,<U09EF>); 
++  (<U0039>,<U09EF>);
+ 
+ translit_start
+ include "translit_combining";""
+diff --git a/localedata/locales/crh_UA b/localedata/locales/crh_UA
+index a6fceeae0ad5d086..d543b9b14e0c0429 100644
+--- a/localedata/locales/crh_UA
++++ b/localedata/locales/crh_UA
+@@ -11,7 +11,7 @@ escape_char  /
+ % Date:		2009-08-16
+ % Application:	general
+ % Users:	general
+-% Charset:	UTF-8 
++% Charset:	UTF-8
+ % Distribution and use is free, also
+ % for commercial purposes.
+ 
+@@ -48,7 +48,7 @@ END LC_IDENTIFICATION
+ 
+ LC_COLLATE
+ % The new Crimean Tatar alphabet (Latin) is:
+-% <a>, <b>, <c>, <c,>, <d>, <e>, <f>, <g>, <g(>, <h>, 
++% <a>, <b>, <c>, <c,>, <d>, <e>, <f>, <g>, <g(>, <h>,
+ % <i> (dotless i), <i.> (i with dot), <j>, <k>, <l>, <m>, <n>, <n?>, <o>,
+ % <o:>, <p>, <q>, <r>, <s>, <s,>, <t>, <u>, <u:>, <v>, <y>, <z>
+ 
+diff --git a/localedata/locales/en_NG b/localedata/locales/en_NG
+index 31bb4fb2d833d824..a418eb95709c5de4 100644
+--- a/localedata/locales/en_NG
++++ b/localedata/locales/en_NG
+@@ -104,7 +104,7 @@ day         "<U0053><U0075><U006E><U0064><U0061><U0079>";/
+             "<U0046><U0072><U0069><U0064><U0061><U0079>";/
+             "<U0053><U0061><U0074><U0075><U0072><U0064><U0061><U0079>"
+ 
+-% abmon - The abbreviations for the months 
++% abmon - The abbreviations for the months
+ % - Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+ abmon       "<U004A><U0061><U006E>";"<U0046><U0065><U0062>";/
+             "<U004D><U0061><U0072>";"<U0041><U0070><U0072>";/
+@@ -113,7 +113,7 @@ abmon       "<U004A><U0061><U006E>";"<U0046><U0065><U0062>";/
+             "<U0053><U0065><U0070>";"<U004F><U0063><U0074>";/
+             "<U004E><U006F><U0076>";"<U0044><U0065><U0063>"
+ 
+-% mon - The full names of the months - 
++% mon - The full names of the months -
+ % - January, February, March, April, May, June
+ %   July, August, September, October, November, December
+ mon         "<U004A><U0061><U006E><U0075><U0061><U0072><U0079>";/
+diff --git a/localedata/locales/es_US b/localedata/locales/es_US
+index 71e8ac803c65ffbc..c90f88c04e4ac9a7 100644
+--- a/localedata/locales/es_US
++++ b/localedata/locales/es_US
+@@ -86,7 +86,7 @@ reorder-after <U0063>
+ <c-H>	<ch>;<BAS>;<MIN-CAP>;IGNORE
+ <c-h>	<ch>;<BAS>;<MIN>;IGNORE
+ 
+-reorder-after <U0043> 
++reorder-after <U0043>
+ <C-H>	<ch>;<BAS>;<CAP>;IGNORE
+ <C-h>	<ch>;<BAS>;<CAP-MIN>;IGNORE
+ 
+@@ -97,7 +97,7 @@ reorder-after <U006C>
+ <l-L>	<ll>;<BAS>;<MIN-CAP>;IGNORE
+ <l-l>	<ll>;<BAS>;<MIN>;IGNORE
+ 
+-reorder-after <U004C> 
++reorder-after <U004C>
+ <L-L>	<ll>;<BAS>;<CAP>;IGNORE
+ <L-l>	<ll>;<BAS>;<CAP-MIN>;IGNORE
+ 
+diff --git a/localedata/locales/fil_PH b/localedata/locales/fil_PH
+index ad3ea8eab2e644b8..c1a6b1026c978ac3 100644
+--- a/localedata/locales/fil_PH
++++ b/localedata/locales/fil_PH
+@@ -2,8 +2,8 @@ comment_char %
+ escape_char  /
+ %
+ % Filipino Language Locale for Philippines
+-% Source: 
+-% Contact: Rene Torres, Pablo Saratxaga 
++% Source:
++% Contact: Rene Torres, Pablo Saratxaga
+ % Email: <rgtorre@rocketmail.com>, <pablo@mandrakesoft.com>
+ % Language: fil
+ % Territory: PH
+@@ -73,7 +73,7 @@ reorder-after <U006E>
+ <U00F1> <ntilde>;<TIL>;<MIN>;IGNORE
+ <n-g>	<n-g-ph>;<PCT>;<MIN>;IGNORE
+ <n-G>	<n-g-ph>;<PCT>;<MIN-CAP>;IGNORE
+-reorder-after <U004E> 
++reorder-after <U004E>
+ <U00D1> <ntilde>;<TIL>;<CAP>;IGNORE
+ <N-G>	<n-g-ph>;<PCT>;<CAP>;IGNORE
+ <N-g>	<n-g-ph>;<PCT>;<CAP-MIN>;IGNORE
+diff --git a/localedata/locales/fy_DE b/localedata/locales/fy_DE
+index 588f3e268e31fdb7..df894f21cf158157 100644
+--- a/localedata/locales/fy_DE
++++ b/localedata/locales/fy_DE
+@@ -3,7 +3,7 @@ escape_char  /
+ % charset "ISO_8859-1:1987"
+ % Distribution and use is
+ 
+-LC_IDENTIFICATION 
++LC_IDENTIFICATION
+ title "Sater Frisian and North Frisian Locale for Germany"
+ source "information from Kenneth Christiansen"
+ address ""
+diff --git a/localedata/locales/gu_IN b/localedata/locales/gu_IN
+index e908e70e3edb0200..49cd1e2b7f07b531 100644
+--- a/localedata/locales/gu_IN
++++ b/localedata/locales/gu_IN
+@@ -50,7 +50,7 @@ map to_inpunct; /
+   (<U0036>,<U0AEC>); /
+   (<U0037>,<U0AED>); /
+   (<U0038>,<U0AEE>); /
+-  (<U0039>,<U0AEF>); 
++  (<U0039>,<U0AEF>);
+ 
+ translit_start
+ include "translit_combining";""
+diff --git a/localedata/locales/ha_NG b/localedata/locales/ha_NG
+index d74d324dcafe96d5..8c431cc8e9c6a7c2 100644
+--- a/localedata/locales/ha_NG
++++ b/localedata/locales/ha_NG
+@@ -2,7 +2,7 @@ escape_char /
+ comment_char %
+ %
+ % Hausa language locale for Nigeria
+-% Source: 
++% Source:
+ % Contact: Pablo Saratxaga
+ % Email: pablo@mandriva.com
+ % Language: ha
+@@ -72,7 +72,7 @@ collating-element <'1y> from "<U0027><U0079>"
+ collating-element <'1Y> from "<U0027><U0059>"
+ collating-element <'2y> from "<U2019><U0079>"
+ collating-element <'2Y> from "<U2019><U0059>"
+-collating-symbol  <rtilde> 
++collating-symbol  <rtilde>
+ collating-element <r?>  from "<U0072><U0303>"
+ collating-element <R?>  from "<U0052><U0303>"
+ collating-symbol  <bcurl>
+@@ -81,10 +81,10 @@ collating-symbol  <kcurl>
+ 
+ collating-symbol <CAP-MIN>
+ collating-symbol <MIN-CAP>
+- 
++
+ reorder-after <MIN>
+ <MIN-CAP>
+- 
++
+ reorder-after <CAP>
+ <CAP-MIN>
+ 
+@@ -165,7 +165,7 @@ END LC_NUMERIC
+ LC_TELEPHONE
+ copy "en_NG"
+ END LC_TELEPHONE
+- 
++
+ LC_TIME
+ % Lah, Lit, Tal, Lar, Alh, Jum, Asa
+ % maybe "Lhd" "Lrb" => "Lh"/"Lb" on 2letter tables?
+@@ -188,7 +188,7 @@ abmon       "<U004A><U0061><U006E>";"<U0046><U0061><U0062>";/
+             "<U0059><U0075><U006C>";"<U0041><U0067><U0075>";/
+             "<U0053><U0061><U0074>";"<U004F><U006B><U0074>";/
+             "<U004E><U0075><U0077>";"<U0044><U0069><U0073>"
+-% Janairu, Fabrairu, Maris, Afrilu, Mayu, Yuni, 
++% Janairu, Fabrairu, Maris, Afrilu, Mayu, Yuni,
+ % Yuli, Agusta, Satumba, Oktoba, Nuwamba, Disamba
+ mon         "<U004A><U0061><U006E><U0061><U0069><U0072><U0075>";/
+             "<U0046><U0061><U0062><U0072><U0061><U0069><U0072><U0075>";/
+diff --git a/localedata/locales/hi_IN b/localedata/locales/hi_IN
+index bdba3e2b354ea92a..0ff10a115827d452 100644
+--- a/localedata/locales/hi_IN
++++ b/localedata/locales/hi_IN
+@@ -49,7 +49,7 @@ map to_inpunct; /
+   (<U0036>,<U096C>); /
+   (<U0037>,<U096D>); /
+   (<U0038>,<U096E>); /
+-  (<U0039>,<U096F>); 
++  (<U0039>,<U096F>);
+ 
+ translit_start
+ include "translit_combining";""
+diff --git a/localedata/locales/ig_NG b/localedata/locales/ig_NG
+index c808828b4a1098eb..47ad2124f5393c0e 100644
+--- a/localedata/locales/ig_NG
++++ b/localedata/locales/ig_NG
+@@ -2,7 +2,7 @@ escape_char /
+ comment_char %
+ %
+ % Igbo language locale for Nigeria
+-% Source: 
++% Source:
+ % Contact: Pablo Saratxaga
+ % Email: pablo@mandriva.com
+ % Language: ig
+@@ -50,7 +50,7 @@ LC_COLLATE
+ % aacute, eacute, iacute, oacute, uacute, nacute
+ % agrave, egrave, igrave, ograve, ugrave, ngrave
+ %
+-% order: a, b, [c], ch, d, e, f, g, gb, gh, gw, h, i, i., j, k, kp, kw, 
++% order: a, b, [c], ch, d, e, f, g, gb, gh, gw, h, i, i., j, k, kp, kw,
+ % l, m, n, n., nw, ny, o, o., p, [q], r, s, sh, t, u, u., v, w, [x], y, z
+ 
+ copy "iso14651_t1"
+@@ -169,10 +169,10 @@ collating-element <u`> from "<U0075><U0300>"
+ 
+ collating-symbol <CAP-MIN>
+ collating-symbol <MIN-CAP>
+- 
++
+ reorder-after <MIN>
+ <MIN-CAP>
+- 
++
+ reorder-after <CAP>
+ <CAP-MIN>
+ 
+@@ -363,7 +363,7 @@ END LC_NUMERIC
+ LC_TELEPHONE
+ copy "en_NG"
+ END LC_TELEPHONE
+- 
++
+ LC_TIME
+ % sọn, mọn, tuz, wen, tọs, fra, sat
+ abday       "<U0073><U1ECD><U006E>";"<U006D><U1ECD><U006E>";/
+@@ -385,7 +385,7 @@ abmon       "<U006A><U0065><U006E>";"<U0066><U0065><U0062>";/
+             "<U006A><U0075><U006C>";"<U1ECD><U0067><U1ECD>";/
+             "<U0073><U0065><U0070>";"<U1ECD><U006B><U0074>";/
+             "<U006E><U1ECD><U0076>";"<U0064><U0069><U0073>"
+-% jenụwarị, febụrụwarị, maachị, epreel, mee, juun, 
++% jenụwarị, febụrụwarị, maachị, epreel, mee, juun,
+ % julaị, ọgọstụ, septemba, ọktoba, nọvemba, disemba
+ mon         "<U006A><U0065><U006E><U1EE5><U0077><U0061><U0072><U1ECB>";/
+             "<U0066><U0065><U0062><U1EE5><U0072><U1EE5><U0077><U0061><U0072><U1ECB>";/
+diff --git a/localedata/locales/ik_CA b/localedata/locales/ik_CA
+index 1b967423ed174948..7648f24122bbfc7c 100644
+--- a/localedata/locales/ik_CA
++++ b/localedata/locales/ik_CA
+@@ -2,7 +2,7 @@ escape_char /
+ comment_char %
+ %
+ % Inupiaq language locale for Canada
+-% Source: 
++% Source:
+ % Contact: Pablo Saratxaga
+ % Email: pablo@mandriva.com
+ % Language: ik
+@@ -43,7 +43,7 @@ END LC_IDENTIFICATION
+ 
+ LC_COLLATE
+ 
+-% Inupiaq uses the following extra letters: 
++% Inupiaq uses the following extra letters:
+ % gdotabove, ldotbelow, lbarred, lbarreddotbelow (not in unicode,
+ % has to be composed as lbarred+composingdotbelow), eng, ntilde
+ %
+@@ -82,10 +82,10 @@ collating-symbol  <eng>
+ 
+ collating-symbol <CAP-MIN>
+ collating-symbol <MIN-CAP>
+- 
++
+ reorder-after <MIN>
+ <MIN-CAP>
+- 
++
+ reorder-after <CAP>
+ <CAP-MIN>
+ 
+@@ -142,7 +142,7 @@ reorder-after <U0053>
+ <S-R>   <s-r-ik>;<PCT>;<CAP>;IGNORE
+ <S-r>   <s-r-ik>;<PCT>;<CAP-MIN>;IGNORE
+ 
+- 
++
+ reorder-end
+ 
+ END LC_COLLATE
+@@ -162,7 +162,7 @@ END LC_NUMERIC
+ LC_TELEPHONE
+ copy "en_CA"
+ END LC_TELEPHONE
+- 
++
+ LC_TIME
+ abday       "<U004D><U0069><U006E>";"<U0053><U0061><U0076>";/
+             "<U0049><U006C><U0061>";"<U0051><U0069><U0074>";/
+diff --git a/localedata/locales/iu_CA b/localedata/locales/iu_CA
+index cb91f3ddfdae6926..e46910c06db99fcb 100644
+--- a/localedata/locales/iu_CA
++++ b/localedata/locales/iu_CA
+@@ -37,7 +37,7 @@ postal_fmt    "<U0025><U0061><U0025><U004E><U0025><U0066><U0025><U004E>/
+ <U004E><U0025><U0054><U0020><U0025><U007A><U0025>/
+ <U004E><U0025><U0063><U0025><U004E>"
+ % FIXME country_name "Canada" in inuktitut ?
+-% FIXME country_post "CA" for Canada ? 
++% FIXME country_post "CA" for Canada ?
+ country_ab2 "<U0043><U0041>"
+ country_ab3 "<U0043><U0041><U004E>"
+ country_num 124
+diff --git a/localedata/locales/kn_IN b/localedata/locales/kn_IN
+index 16e39748ef0b227e..f57031fc418d5f34 100644
+--- a/localedata/locales/kn_IN
++++ b/localedata/locales/kn_IN
+@@ -51,7 +51,7 @@ map to_inpunct; /
+   (<U0036>,<U0CEC>); /
+   (<U0037>,<U0CED>); /
+   (<U0038>,<U0CEE>); /
+-  (<U0039>,<U0CEF>); 
++  (<U0039>,<U0CEF>);
+ 
+ translit_start
+ include  "translit_combining";""
+diff --git a/localedata/locales/ks_IN@devanagari b/localedata/locales/ks_IN@devanagari
+index 888686042966077e..e1f629024f90bb49 100644
+--- a/localedata/locales/ks_IN@devanagari
++++ b/localedata/locales/ks_IN@devanagari
+@@ -1,7 +1,7 @@
+ comment_char    %
+ escape_char     /
+ % Kashmiri(devanagari) language locale for India.
+-% Contributed by Rakesh Pandit <rakesh.pandit@gmail.com> and 
++% Contributed by Rakesh Pandit <rakesh.pandit@gmail.com> and
+ % Pravin Satpute <psatpute@redhat.com>
+ 
+ LC_IDENTIFICATION
+diff --git a/localedata/locales/li_BE b/localedata/locales/li_BE
+index 7896092a75f0322f..3a13dbbc5ea2d4c5 100644
+--- a/localedata/locales/li_BE
++++ b/localedata/locales/li_BE
+@@ -2,7 +2,7 @@ comment_char %
+ escape_char  /
+ % Distribution and use is
+ 
+-LC_IDENTIFICATION 
++LC_IDENTIFICATION
+ title "Limburgish Language Locale for Belgium"
+ source "information from Kenneth Christiansen"
+ address ""
+diff --git a/localedata/locales/li_NL b/localedata/locales/li_NL
+index d0a710a7a0032249..0588cb85a2773af3 100644
+--- a/localedata/locales/li_NL
++++ b/localedata/locales/li_NL
+@@ -2,7 +2,7 @@ comment_char %
+ escape_char  /
+ % Distribution and use is
+ 
+-LC_IDENTIFICATION 
++LC_IDENTIFICATION
+ title "Limburgish Language Locale for the Netherlands"
+ source "information from Kenneth Christiansen"
+ address ""
+diff --git a/localedata/locales/mg_MG b/localedata/locales/mg_MG
+index 996f2c53e345f606..4f738cae5239f30e 100644
+--- a/localedata/locales/mg_MG
++++ b/localedata/locales/mg_MG
+@@ -154,7 +154,7 @@ tel_int_fmt    "<U002B><U0025><U0063><U0020><U0025><U0061><U0020><U0025>/
+ tel_dom_fmt    "<U0025><U0061><U0020><U0025><U006C>"
+ % 261
+ int_prefix     "<U0032><U0036><U0031>"
+-% 00 
++% 00
+ int_select     "<U0030><U0030>"
+ END LC_TELEPHONE
+ 
+diff --git a/localedata/locales/ml_IN b/localedata/locales/ml_IN
+index deee7ed8f4f77323..564f0de5d6555535 100644
+--- a/localedata/locales/ml_IN
++++ b/localedata/locales/ml_IN
+@@ -48,7 +48,7 @@ map to_inpunct; /
+   (<U0036>,<U0D6C>); /
+   (<U0037>,<U0D6D>); /
+   (<U0038>,<U0D6E>); /
+-  (<U0039>,<U0D6F>); 
++  (<U0039>,<U0D6F>);
+ 
+ translit_start
+ include     "translit_combining";""
+diff --git a/localedata/locales/mr_IN b/localedata/locales/mr_IN
+index dc93845a1a5137c0..7ce9dc58d817964f 100644
+--- a/localedata/locales/mr_IN
++++ b/localedata/locales/mr_IN
+@@ -54,8 +54,8 @@ reorder-after <d_ha>
+ <d_shra>
+ 
+ reorder-after <U0939>
+-<dv_ksha> <d_ksha>;<BAS>;<MIN>;IGNORE 
+-<dv_dnya> <d_dnya>;<BAS>;<MIN>;IGNORE 
++<dv_ksha> <d_ksha>;<BAS>;<MIN>;IGNORE
++<dv_dnya> <d_dnya>;<BAS>;<MIN>;IGNORE
+ <dv_shra> <d_shra>;<BAS>;<MIN>;IGNORE
+ 
+ reorder-end
+diff --git a/localedata/locales/nso_ZA b/localedata/locales/nso_ZA
+index c3351ee8b9fe0b86..5970e52ba6d90a6d 100644
+--- a/localedata/locales/nso_ZA
++++ b/localedata/locales/nso_ZA
+@@ -17,7 +17,7 @@ comment_char  %
+ %      2004-03-30 Dwayne Bailey <dwayne@translate.org.za>
+ %        - Added country_ab2/3, country_num
+ %      2004-02-27: Dwayne Bailey <dwayne@translate.org.za>
+-%        - Correction of lang_name comment	
++%        - Correction of lang_name comment
+ % 0.1 (2004-02-11):
+ %	Initial Northern Sotho locale for South Africa
+ %	by Zuza Software Foundation
+@@ -80,7 +80,7 @@ abday       "<U0053><U006F><U006E>";/
+             "<U004E><U0065>";/
+             "<U0048><U006C><U0061>";/
+             "<U004D><U006F><U006B>"
+- 
++
+ % day - The full names of the week days:
+ % - LaMorena, Mos^upologo, Labobedi, Laboraro, Labone, Labohlano, Mokibelo
+ day         "<U004C><U0061><U004D><U006F><U0072><U0065><U006E><U0061>";/
+@@ -90,8 +90,8 @@ day         "<U004C><U0061><U004D><U006F><U0072><U0065><U006E><U0061>";/
+             "<U004C><U0061><U0062><U006F><U006E><U0065>";/
+             "<U004C><U0061><U0062><U006F><U0068><U006C><U0061><U006E><U006F>";/
+             "<U004D><U006F><U006B><U0069><U0062><U0065><U006C><U006F>"
+- 
+-% abmon - The abbreviations for the months 
++
++% abmon - The abbreviations for the months
+ % - Jan, Feb, Mat, Apr, Mei, Jun, Jul, Ago, Set, Okt, Nof, Dis
+ abmon       "<U004A><U0061><U006E>";"<U0046><U0065><U0062>";/
+             "<U004D><U0061><U0074>";"<U0041><U0070><U0072>";/
+@@ -99,8 +99,8 @@ abmon       "<U004A><U0061><U006E>";"<U0046><U0065><U0062>";/
+             "<U004A><U0075><U006C>";"<U0041><U0067><U006F>";/
+             "<U0053><U0065><U0074>";"<U004F><U006B><U0074>";/
+             "<U004E><U006F><U0066>";"<U0044><U0069><U0073>"
+- 
+-% mon - The full names of the months - 
++
++% mon - The full names of the months -
+ % - Janaware, Febereware, Mats^he, Aprele, Mei, June
+ %   Julae, Agostose, Setemere, Oktobere, Nofemere, Disemere
+ mon         "<U004A><U0061><U006E><U0061><U0077><U0061><U0072><U0065>";/
+@@ -115,7 +115,7 @@ mon         "<U004A><U0061><U006E><U0061><U0077><U0061><U0072><U0065>";/
+             "<U004F><U006B><U0074><U006F><U0062><U0065><U0072><U0065>";/
+             "<U004E><U006F><U0066><U0065><U006D><U0065><U0072><U0065>";/
+             "<U0044><U0069><U0073><U0065><U006D><U0065><U0072><U0065>"
+- 
++
+ % Abreviated date and time representation to be referenced by the "%c" field descriptor -
+ d_t_fmt     "<U0025><U0061><U0020><U0025><U0064><U0020><U0025><U0062><U0020><U0025><U0059><U0020><U0025><U0054><U0020><U0025><U005A>"
+ %
+@@ -125,23 +125,23 @@ d_t_fmt     "<U0025><U0061><U0020><U0025><U0064><U0020><U0025><U0062><U0020><U00
+ % "%Y" (year with century as a decimal number),
+ % "%T" (24-hour clock time in format HH:MM:SS),
+ % "%Z" (Time zone name)
+- 
++
+ % Date representation to be referenced by the "%x" field descriptor -
+ d_fmt   "<U0025><U0064><U002F><U0025><U006D><U002F><U0025><U0059>"
+ % "%d/%m/%Y", day/month/year as decimal numbers (01/01/2000).
+- 
++
+ % Time representation to be referenced by the "%X" field descriptor -
+ t_fmt       "<U0025><U0054>"
+ % "%T" (24-hour clock time in format HH:MM:SS)
+- 
++
+ % Define representation of ante meridiem and post meridiem strings -
+ am_pm       "";""
+ % The "" mean 'default to "AM" and "PM".
+- 
++
+ % Define time representation in 12-hour format with "am_pm", to be referenced by the "%r"
+ t_fmt_ampm  ""
+ % The "" means that this format is not supported.
+- 
++
+ % Date representation not described in ISO/IEC 14652. Comes out as -
+ % "%a %b %e %H:%M:%S %Z %Y" which is default "date" command output
+ date_fmt "<U0025><U0061><U0020><U0025><U0062><U0020><U0025><U0065>/
+@@ -156,7 +156,7 @@ date_fmt "<U0025><U0061><U0020><U0025><U0062><U0020><U0025><U0065>/
+ % %S - seconds as a decimal number (00 to 59),
+ % %Z - time-zone name,
+ % %Y - year with century as a decimal number,e.g. 2001.
+- 
++
+ END LC_TIME
+ 
+ LC_MESSAGES
+@@ -194,14 +194,14 @@ name_fmt    "<U0025><U0064><U0025><U0074><U0025><U0067><U0025><U0074>/
+ % "Middle names",
+ % "Empty string, or <Space>",
+ % "Clan names"
+- 
++
+ % FIXME - define all the following name_*
+ % General salutation for any sex
+ % name_gen    ""
+ 
+ % Salutation for unmarried females - ""
+ % name_miss   ""
+- 
++
+ % Salutation for males - ""
+ % name_mr     ""
+ 
+@@ -217,7 +217,7 @@ LC_ADDRESS
+ % Country name in Northern Sotho - "Afrika Borwa"
+ country_name "<U0041><U0066><U0072><U0069><U006B><U0061><U0020>/
+ <U0042><U006F><U0072><U0077><U0061>"
+- 
++
+ % Abbreviated country postal name - "ZA"
+ country_post "<U005A><U0041>"
+ 
+@@ -228,7 +228,7 @@ country_car   "<U005A><U0041>"
+ 
+ % FIXME define the following correctly
+ % country_isbn ""
+- 
++
+ % Language name in Northern Sotho - "Sesotho sa Leboa"
+ lang_name "<U0053><U0065><U0073><U006F><U0074><U0068><U006F><U0020>/
+ <U0073><U0061><U0020><U004C><U0065><U0062><U006F><U0061>"
+@@ -238,7 +238,7 @@ lang_name "<U0053><U0065><U0073><U006F><U0074><U0068><U006F><U0020>/
+ lang_ab   ""
+ lang_term "<U006E><U0073><U006F>"
+ lang_lib  "<U006E><U0073><U006F>"
+- 
++
+ % Representation of postal addresses (minus the addressee's name) in South
+ % Africa. (Ignored for now)
+ postal_fmt    "<U0025><U0066><U0025><U004E><U0025><U0061><U0025><U004E>/
+diff --git a/localedata/locales/or_IN b/localedata/locales/or_IN
+index d7b253f3f4fb0df6..59b793fa906c2392 100644
+--- a/localedata/locales/or_IN
++++ b/localedata/locales/or_IN
+@@ -50,7 +50,7 @@ map to_inpunct; /
+   (<U0036>,<U0B6C>); /
+   (<U0037>,<U0B6D>); /
+   (<U0038>,<U0B6E>); /
+-  (<U0039>,<U0B6F>); 
++  (<U0039>,<U0B6F>);
+ 
+ translit_start
+ include  "translit_combining";""
+diff --git a/localedata/locales/pa_IN b/localedata/locales/pa_IN
+index 2a2dd1e60e259477..6128253b7e58a032 100644
+--- a/localedata/locales/pa_IN
++++ b/localedata/locales/pa_IN
+@@ -48,7 +48,7 @@ map to_inpunct; /
+   (<U0036>,<U0A6C>); /
+   (<U0037>,<U0A6D>); /
+   (<U0038>,<U0A6E>); /
+-  (<U0039>,<U0A6F>); 
++  (<U0039>,<U0A6F>);
+ 
+ translit_start
+ include     "translit_combining";""
+diff --git a/localedata/locales/ro_RO b/localedata/locales/ro_RO
+index 210d7f81b25b5004..b8953288fe0c2ffb 100644
+--- a/localedata/locales/ro_RO
++++ b/localedata/locales/ro_RO
+@@ -115,9 +115,9 @@ copy "i18n"
+ 
+ %
+ % Transliteration is _currently_ a good idea as most fonts/applications do not
+-% have the correct diacritics for "t comma bellow" (U021A, U021B) and 
++% have the correct diacritics for "t comma bellow" (U021A, U021B) and
+ % "s comma bellow" (U0218, U0219). Thus we currently use and compromise with
+-% "t cedilla" (U0162, U0163) - which, actually, does not belong to any 
++% "t cedilla" (U0162, U0163) - which, actually, does not belong to any
+ % language - and "s cedilla" (U015E, U015F) - which is _not_ correct for
+ % Romanian, but is correct for Turkish.
+ %
+@@ -197,11 +197,11 @@ abday   "<U0044><U0075>";"<U004C><U0075>";"<U004D><U0061>";"<U004D><U0069>";/
+ % Because in 1992 the Romanian Academy stated that within words the
+ % writing of the letter i> (i circumflex - U00EE) should be replaced
+ % by a> (acircumflex - U00E2), we use the post92 writing.
+-% Note: The actual rule is more complex, but the case which applies for 
++% Note: The actual rule is more complex, but the case which applies for
+ % Satruday is covered by the exposed explanation above.
+ %
+ % Day names are not capitalized:
+-% duminic<abreve>, luni, mar<tcomma>i, 
++% duminic<abreve>, luni, mar<tcomma>i,
+ % miercuri, joi, vineri,
+ % s<acircumflex>mb<abreve>t<abreve>
+ %
+@@ -247,7 +247,7 @@ mon     "<U0069><U0061><U006E><U0075><U0061><U0072><U0069><U0065>";/
+         "<U006E><U006F><U0069><U0065><U006D><U0062><U0072><U0069><U0065>";/
+         "<U0064><U0065><U0063><U0065><U006D><U0062><U0072><U0069><U0065>"
+ % Appropriate date and time representation (%c)
+-% Romania uses daylight saving and the names of the time zones are 
++% Romania uses daylight saving and the names of the time zones are
+ % not widely known nor used
+ %	"%a %d %b %Y %T %z"
+ d_t_fmt "<U0025><U0061><U0020><U0025><U0064><U0020><U0025><U0062><U0020>/
+@@ -296,7 +296,7 @@ END LC_MEASUREMENT
+ LC_NAME
+ % Format of a name, taken from the glibc locale for Ukrainian.
+ % %f Family names.
+-% %F Family names in uppercase. 
++% %F Family names in uppercase.
+ % %g First given name.
+ % %G First given initial.
+ % %l First given name with Latin letters.
+@@ -337,23 +337,23 @@ LC_ADDRESS
+ 
+ % %n Person's name, possibly constructed with the LC_NAME
+ %    "name_fmt" keyword. (it appears to be invalid)
+-% %a Care of person, or organization. 
+-% %f Firm name. 
+-% %d Department name. 
+-% %b Building name. 
+-% %s Street or block (eg. Japanese) name. 
+-% %h House number or designation. 
++% %a Care of person, or organization.
++% %f Firm name.
++% %d Department name.
++% %b Building name.
++% %s Street or block (eg. Japanese) name.
++% %h House number or designation.
+ % %N Insert an <end-of-line> if the previous descriptor
+ %    value was not an empty string; otherwise ignore.
+ % %t Insert a <space> if the previous descriptor value
+ %    was not an empty string; otherwise ignore.
+-% %r Room number, door designation. 
+-% %e Floor number. 
+-% %C Country designation, from the <country_post> keyword. 
++% %r Room number, door designation.
++% %e Floor number.
++% %C Country designation, from the <country_post> keyword.
+ % %l Local township within town or city. (it appears to be invalid)
+-% %z Zip number, postal code. 
+-% %T Town, city. 
+-% %S State, province, or prefecture. 
++% %z Zip number, postal code.
++% %T Town, city.
++% %S State, province, or prefecture.
+ % %c Country, as taken from data record.
+ %
+ % FIXME: it appears that %n and %l are not working; correct form is:
+diff --git a/localedata/locales/shs_CA b/localedata/locales/shs_CA
+index 6c1b77f19d44f6db..b3d0bcfba3c881f6 100644
+--- a/localedata/locales/shs_CA
++++ b/localedata/locales/shs_CA
+@@ -4,7 +4,7 @@ comment_char  %
+ % Secwepemctsin (Shuswap) language locale for Canada
+ % sorting according to CAN/CSA-Z243.4.1-1992
+ % Source: Neskie Manuel
+-% Address: 745 Ska-Hiish Dr 
++% Address: 745 Ska-Hiish Dr
+ %          Chase BC V0E 1M3
+ % Contact: Neskie Manuel
+ % Email: neskiem@gmail.com
+diff --git a/localedata/locales/so_ET b/localedata/locales/so_ET
+index ea6336e9b400a8d9..d36848e5b4bbdc72 100644
+--- a/localedata/locales/so_ET
++++ b/localedata/locales/so_ET
+@@ -115,7 +115,7 @@ LC_ADDRESS
+ %
+ postal_fmt    "<U0025><U007A><U0025><U0063><U0025><U0054><U0025><U0073>/
+ <U0025><U0062><U0025><U0065><U0025><U0072>"
+-country_name  "<U0049><U0074><U006F><U006F><U0062><U0069><U0079><U0061>"  
++country_name  "<U0049><U0074><U006F><U006F><U0062><U0069><U0079><U0061>"
+ country_post  "<U0045><U0054><U0048>"
+ country_ab2   "<U0045><U0054>"
+ country_ab3   "<U0045><U0054><U0048>"
+diff --git a/localedata/locales/ta_IN b/localedata/locales/ta_IN
+index 0f04265493561626..ad1d6fa9c599f5d2 100644
+--- a/localedata/locales/ta_IN
++++ b/localedata/locales/ta_IN
+@@ -52,7 +52,7 @@ map to_inpunct; /
+   (<U0036>,<U0BEC>); /
+   (<U0037>,<U0BED>); /
+   (<U0038>,<U0BEE>); /
+-  (<U0039>,<U0BEF>); 
++  (<U0039>,<U0BEF>);
+ 
+ translit_start
+ include  "translit_combining";""
+diff --git a/localedata/locales/te_IN b/localedata/locales/te_IN
+index 2467d0760c2a5c5b..4f14bd313d6d4b97 100644
+--- a/localedata/locales/te_IN
++++ b/localedata/locales/te_IN
+@@ -51,7 +51,7 @@ map to_inpunct; /
+   (<U0036>,<U0C6C>); /
+   (<U0037>,<U0C6D>); /
+   (<U0038>,<U0C6E>); /
+-  (<U0039>,<U0C6F>); 
++  (<U0039>,<U0C6F>);
+ 
+ translit_start
+ include  "translit_combining";""
+diff --git a/localedata/locales/tk_TM b/localedata/locales/tk_TM
+index e39fdb34eca428dc..43059af2941b4c0a 100644
+--- a/localedata/locales/tk_TM
++++ b/localedata/locales/tk_TM
+@@ -90,7 +90,7 @@ include "translit_combining";""
+ <U044A> ""               % hard sign omitted
+ <U044B> "<U0079>"        % yeru -> y
+ <U044C> ""               % soft sign omitted.
+-<U044D> "<U0065>"        % je=  -> e 
++<U044D> "<U0065>"        % je=  -> e
+ <U04D9> "<U00E4>"        % sw=  -> a:
+ <U044E> "<U00FD><U0075>" % ju   -> y'u
+ <U044F> "<U00FD><U0061>" % ja   -> y'a
+@@ -130,7 +130,7 @@ include "translit_combining";""
+ <U042A> ""               % hard sign omitted
+ <U042B> "<U0059>"        % yeru -> y
+ <U042C> ""               % soft sign omitted.
+-<U042D> "<U0045>"        % je=  -> e 
++<U042D> "<U0045>"        % je=  -> e
+ <U04D8> "<U00C4>"        % sw=  -> a:
+ <U042E> "<U00DD><U0075>" % ju   -> y'u
+ <U042F> "<U00DD><U0061>" % ja   -> y'a
+@@ -152,7 +152,7 @@ LC_COLLATE
+ % <a=>, <b=>, <v=>, <g=>, <d=>, <e=>, <io>, <z%>, <z%,=>, <z=>, <i=>,
+ % <j=>, <k=>, <l=>, <m=>, <n=>, <n,=>, <o=>, <o-=>, <p=>, <r=>, <s=>,
+ % <t=>, <u=>, <u'=>, <f=>, <h=>, <c=>, <c%>, <s%>, <='>, <y=>, <%'>,
+-% <je>, <sw=>, <ju>, <ja> 
++% <je>, <sw=>, <ju>, <ja>
+ %
+ copy "iso14651_t1"
+ 
+diff --git a/localedata/locales/tt_RU@iqtelif b/localedata/locales/tt_RU@iqtelif
+index 0564783e4758664b..a043de575eb8cc45 100644
+--- a/localedata/locales/tt_RU@iqtelif
++++ b/localedata/locales/tt_RU@iqtelif
+@@ -6,7 +6,7 @@ escape_char  /
+ % Contact:	Reshat Sabiq
+ % Email:	<tatar.iqtelif.i18n@gmail.com>
+ % Language:	tt@iqtelif
+-% Territory:	RU	
++% Territory:	RU
+ % Revision:	0.1
+ % Date:		2006-10-12
+ % Application:	general
+@@ -47,7 +47,7 @@ END LC_IDENTIFICATION
+ 
+ LC_COLLATE
+ % IQTElif:
+-% <a>, <b>, <c>, <c,>, <d>, <e>, <f>, <g>, <g(>, <h>, 
++% <a>, <b>, <c>, <c,>, <d>, <e>, <f>, <g>, <g(>, <h>,
+ % <i> (dotless i), <i.> (i with dot), <i'>, <j>, <k>, <l>, <m>, <n>, <n?>, <o>,
+ % <o:>, <p>, <q>, <r>, <s>, <s,>, <t>, <u>, <u:>, <v>, <w>, <x>, <y>, <z>
+ 
+diff --git a/localedata/locales/uk_UA b/localedata/locales/uk_UA
+index 3896d27a22d67404..b1df63085c485829 100644
+--- a/localedata/locales/uk_UA
++++ b/localedata/locales/uk_UA
+@@ -5,7 +5,7 @@ escape_char  /
+ % Copyright (C) 2006 Max Kutny <mkutny@gmail.com>
+ %
+ % Ukrainian Language Locale for Ukraine
+-% Source: 
++% Source:
+ % Contact: Volodymyr M. Lisivka
+ % Email: v_lisivka@users.sourceforge.net
+ % Contact: Max Kutny
+@@ -118,7 +118,7 @@ translit_start
+ %  transliteration into English.
+ %
+ % Ukrainian  English  Note  Example
+-% letter     letter 
++% letter     letter
+ %
+ 
+ % <U0410>	<U0410>	-	<U0410><U043B><U0443><U0448><U0442><U0430> - Alushta
+@@ -831,7 +831,7 @@ LC_NUMERIC
+ % 0,001
+ % 0,0001
+ % 0,00001
+-% 
++%
+ %  1
+ % -1
+ %
+@@ -954,7 +954,7 @@ abmon /
+         "<U0432><U0435><U0440>"; %ver  /
+         "<U0436><U043E><U0432>"; %zhov /
+         "<U043B><U0438><U0441>"; %lys  /
+-        "<U0433><U0440><U0443>"  %hru 
++        "<U0433><U0440><U0443>"  %hru
+ 
+ % A list of month names in proper form for calendar, see alt_digits. (%B)
+ mon /
+@@ -969,7 +969,7 @@ mon /
+         "<U0432><U0435><U0440><U0435><U0441><U0435><U043D><U044C>"; %veresen` /
+         "<U0436><U043E><U0432><U0442><U0435><U043D><U044C>";  %zhovten` /
+         "<U043B><U0438><U0441><U0442><U043E><U043F><U0430><U0434>"; %lystopad /
+-        "<U0433><U0440><U0443><U0434><U0435><U043D><U044C>"   %hruden` 
++        "<U0433><U0440><U0443><U0434><U0435><U043D><U044C>"   %hruden`
+ 
+ % Initially alt_digits was supposed to hold alternative symbols for _digits_,
+ % corresponding to %O modified conversion specification.
+@@ -1057,7 +1057,7 @@ timezone "<U0437><U002E><U0447><U002E><U002D><U0030><U0032><U003A><U0030><U0030>
+ % pt  +2++9+16 23 30       6 13 20 27
+ % *sb* *3*10*17*24*31*     *7*14*21+28+
+ % +nd+ +4+11+18+25+    +1+ +8+15+22+29+
+-% 
++%
+ % + - means red color
+ % * - means bold font
+ %
+@@ -1083,12 +1083,12 @@ LC_TELEPHONE
+ 
+ % Format of a telephone number for international use.
+ %
+-% a area code without nationwide prefix (prefix is often <0>). 
+-% A area code including nationwide prefix (prefix is often <0>). 
+-% l local number (within area code). 
+-% e extension (to local number) 
+-% c country code 
+-% C alternate carrier service code used for dialling abroad 
++% a area code without nationwide prefix (prefix is often <0>).
++% A area code including nationwide prefix (prefix is often <0>).
++% l local number (within area code).
++% e extension (to local number)
++% c country code
++% C alternate carrier service code used for dialling abroad
+ % t Insert a <space> if the previous descriptor's value was not an empty
+ %  string; otherwise ignore.
+ %
+@@ -1152,10 +1152,10 @@ LC_NAME
+ % FIXME:
+ %  to make proper salutation, we must change person name and middle name
+ %  to proper forms (klychna forma), but this is imposible without
+-%  ispell-like rules. 
++%  ispell-like rules.
+ %  Now I use regular form, like in Russian (sic!) langauge.
+ 
+-% Field descriptors for the <name_fmt> keyword: 
++% Field descriptors for the <name_fmt> keyword:
+ % f - family name
+ % F - family name in uppercase
+ % g - first given name
+@@ -1244,27 +1244,27 @@ LC_ADDRESS
+ % Means:
+ %  vul. Hranychna 7 - street and building
+ %  s. Bohdashiv - village name (s. - selo)
+-%  Zdolbunivs`koho rajonu - in region of town Zdolbuniv (rajon) 
++%  Zdolbunivs`koho rajonu - in region of town Zdolbuniv (rajon)
+ 
+ 
+-% n Person's name, possibly constructed with the LC_NAME <name_fmt> keyword. 
+-% a Care of person, or organization. 
+-% f Firm name. 
+-% d Department name. 
+-% b Building name. 
+-% s Street or block (eg. Japanese) name. 
+-% h House number or designation. 
++% n Person's name, possibly constructed with the LC_NAME <name_fmt> keyword.
++% a Care of person, or organization.
++% f Firm name.
++% d Department name.
++% b Building name.
++% s Street or block (eg. Japanese) name.
++% h House number or designation.
+ % N Insert an <end-of-line> if the previous descriptor s value was not an empty
+ % string; otherwise ignore.
+ % t Insert a <space> if the previous descriptor s value was not an empty string;
+ % otherwise ignore.
+-% r Room number, door designation. 
+-% e Floor number. 
+-% C Country designation, from the <country_post> keyword. 
+-% l Local township within town or city 
+-% z Zip number, postal code. 
+-% T Town, city. 
+-% S State, province, or prefecture. 
++% r Room number, door designation.
++% e Floor number.
++% C Country designation, from the <country_post> keyword.
++% l Local township within town or city
++% z Zip number, postal code.
++% T Town, city.
++% S State, province, or prefecture.
+ % c Country, as taken from data record.
+ %
+ % Each field descriptor may have an <R> after the <%> to specify that the
+@@ -1276,10 +1276,10 @@ LC_ADDRESS
+ %postal_fmt "<U0025><U0061><U0025><U0074><U0025><U006E><U0025><U0074><U0025><U0066><U0025><U0074><U0025><U0064><U0025><U004E><U0025><U0073><U0025><U0074><U0025><U0068><U0025><U0074><U002C><U0020><U0025><U0062><U0025><U0074><U0025><U0065><U0025><U0074><U0025><U0072><U0025><U004E><U0025><U006C><U0025><U0074><U0025><U0054><U0025><U0074><U0025><U0053><U0025><U004E><U0025><U007A><U0025><U004E><U0025><U0063>"
+ postal_fmt "<U0025><U0061><U0025><U0074><U0025><U0066><U0025><U0074><U0025><U0064><U0025><U004E><U0025><U0073><U0025><U0074><U0025><U0068><U0025><U0074><U002C><U0020><U0025><U0062><U0025><U0074><U0025><U0065><U0025><U0074><U0025><U0072><U0025><U004E><U0025><U0054><U0025><U0074><U0025><U0053><U0025><U004E><U0025><U007A><U0025><U004E><U0025><U0063>"
+ 
+-% Giving: 
++% Giving:
+ %
+-% Care of person Person's name Firm Department 
+-% Street Number, Building Floor Room 
++% Care of person Person's name Firm Department
++% Street Number, Building Floor Room
+ % Town City State
+ % Zip
+ % Country
+diff --git a/localedata/locales/ur_IN b/localedata/locales/ur_IN
+index 3ac8c737ea40a592..d14946f29c130669 100644
+--- a/localedata/locales/ur_IN
++++ b/localedata/locales/ur_IN
+@@ -2,7 +2,7 @@ comment_char    %
+ escape_char     /
+ % Urdu language locale for India.
+ % Contributed by Pravin Satpute <psatpute@redhat.com> and
+-% Mrs. Nasreen Khan 
++% Mrs. Nasreen Khan
+ 
+ LC_IDENTIFICATION
+ 
+diff --git a/localedata/locales/uz_UZ b/localedata/locales/uz_UZ
+index d003bc6811d2aac8..c529e61ee8a02bc5 100644
+--- a/localedata/locales/uz_UZ
++++ b/localedata/locales/uz_UZ
+@@ -93,10 +93,10 @@ include "translit_combining";""
+ <U0447> "<U0063><U0068>" % c% -> ch
+ <U0448> "<U0073><U0068>" % s% -> sh
+ <U0449> "<U0073><U0068>" % shcha -> sh
+-<U044A> "<U0027>"        % hard sign= -> ' 
++<U044A> "<U0027>"        % hard sign= -> '
+ <U044B> "<U0069>"        % yeru -> 1
+ <U044C> ""               % soft sign omitted. not in latin-uzbek alphabet. stupid, but it is a fact.
+-<U044D> "<U0065>"        % je= -> e 
++<U044D> "<U0065>"        % je= -> e
+ <U044E> "<U0079><U0075>" % ju -> yu
+ <U044F> "<U0079><U0061>" % ja -> ya
+ <U045E> "<U006F><U0027>" % v% -> o'
+diff --git a/localedata/locales/uz_UZ@cyrillic b/localedata/locales/uz_UZ@cyrillic
+index 6c3f7522fbc2cda6..4a34eacfc853eeb5 100644
+--- a/localedata/locales/uz_UZ@cyrillic
++++ b/localedata/locales/uz_UZ@cyrillic
+@@ -88,10 +88,10 @@ include "translit_combining";""
+ <U0447> "<U0063><U0068>" % c% -> ch
+ <U0448> "<U0073><U0068>" % s% -> sh
+ <U0449> "<U0073><U0068>" % shcha -> sh
+-<U044A> "<U0027>"        % hard sign= -> ' 
++<U044A> "<U0027>"        % hard sign= -> '
+ <U044B> "<U0069>"        % yeru -> 1
+ <U044C> ""               % soft sign omitted. not in latin-uzbek alphabet. stupid, but it is a fact.
+-<U044D> "<U0065>"        % je= -> e 
++<U044D> "<U0065>"        % je= -> e
+ <U044E> "<U0079><U0075>" % ju -> yu
+ <U044F> "<U0079><U0061>" % ja -> ya
+ <U045E> "<U006F><U0027>" % v% -> o'
+diff --git a/localedata/locales/yo_NG b/localedata/locales/yo_NG
+index 1a5dc78f1f14a1aa..f0206ae1a566ebf3 100644
+--- a/localedata/locales/yo_NG
++++ b/localedata/locales/yo_NG
+@@ -2,7 +2,7 @@ escape_char /
+ comment_char %
+ %
+ % Yoruba language locale for Nigeria
+-% Source: 
++% Source:
+ % Contact: Pablo Saratxaga
+ % Email: pablo@mandriva.com
+ % Language: yo
+@@ -52,7 +52,7 @@ LC_COLLATE
+ % * m and n may be nazalization marks when they follow a vowel;
+ %   or they can be vocalic, in such case they get the three
+ %   tones, and middle tone is marked with a macron
+-% * a same vowel with following up/down or down/up tones 
++% * a same vowel with following up/down or down/up tones
+ %   may be written with respectively a circumflex or a caron,
+ %   eg: áà = â, àá = ǎ
+ % * old orthography also has tilde on vowels, but is deprecated
+@@ -165,7 +165,7 @@ collating-element <u<> from "<U0075><U030C>"
+ 
+ collating-symbol <CAP-MIN>
+ collating-symbol <MIN-CAP>
+- 
++
+ reorder-after <BAS>
+ <ACA>
+ <MAC>
+@@ -173,7 +173,7 @@ reorder-after <BAS>
+ 
+ reorder-after <MIN>
+ <MIN-CAP>
+- 
++
+ reorder-after <CAP>
+ <CAP-MIN>
+ 
+@@ -370,7 +370,7 @@ END LC_NUMERIC
+ LC_TELEPHONE
+ copy "en_NG"
+ END LC_TELEPHONE
+- 
++
+ LC_TIME
+ % SUN, MON, TUE, WED, THU, FRI, SAT
+ abday       "<U0053><U0055><U004E>";"<U004D><U004F><U004E>";/
+diff --git a/localedata/tests-mbwc/dat_mblen.c b/localedata/tests-mbwc/dat_mblen.c
+index 507ab8f35c61ba1f..a5eff44052897ac8 100644
+--- a/localedata/tests-mbwc/dat_mblen.c
++++ b/localedata/tests-mbwc/dat_mblen.c
+@@ -80,11 +80,11 @@ TST_MBLEN tst_mblen_loc [] = {
+       {	 { 1, "a",	   USE_MBCURMAX }, { 0,	1,  1 }	 },
+       /* 03: a character + an invalid byte.  */
+       {	 { 1, "Z\204",	   USE_MBCURMAX }, { 0,	1, +1 }	 },
+-      /* 04: control/invalid characters.  */ 
++      /* 04: control/invalid characters.  */
+       {	 { 1, "\177\000",  USE_MBCURMAX }, { 0,	1, +1 }	 },
+-      /* 05: a null string.  */		     
++      /* 05: a null string.  */
+       {	 { 1, "",	   USE_MBCURMAX }, { 0,	1,  0 }	 },
+-      /* 06: a null pointer.  */	     
++      /* 06: a null pointer.  */
+       {	 { 0, "",	   USE_MBCURMAX }, { 0,	0,  0 }	 },
+       /* Last element.	*/
+       {	 .is_last = 1 }
+@@ -95,15 +95,15 @@ TST_MBLEN tst_mblen_loc [] = {
+     {
+       /* 01: a character.  */
+       {	 { 1, "\264\301",	   USE_MBCURMAX }, { 0, 1,  2 }	 },
+-      /* 02: a character.  */			     
++      /* 02: a character.  */
+       {	 { 1, "\216\261",	   USE_MBCURMAX }, { 0, 1,  2 }  },
+-      /* 03: a character + an invalid byte.  */	     
++      /* 03: a character + an invalid byte.  */
+       {	 { 1, "\260\241\200",	   USE_MBCURMAX }, { 0, 1,  2 }	 },
+       /* 04: control/invalid characters.  */
+       {	 { 1, "\377\202",  USE_MBCURMAX }, { EILSEQ, 1, -1 }	 },
+-      /* 05: a null string.  */		     
++      /* 05: a null string.  */
+       {	 { 1, "",	   USE_MBCURMAX }, { 0,	1,  0 }	 },
+-      /* 06: a null pointer.  */	     
++      /* 06: a null pointer.  */
+       {	 { 0, "",	   USE_MBCURMAX }, { 0,	0,  0 }	 },
+       /* Last element.	*/
+       {	 .is_last = 1 }
+diff --git a/localedata/tests-mbwc/dat_towctrans.c b/localedata/tests-mbwc/dat_towctrans.c
+index 6816af9c03e28ec2..e7fe1dc028cf4885 100644
+--- a/localedata/tests-mbwc/dat_towctrans.c
++++ b/localedata/tests-mbwc/dat_towctrans.c
+@@ -40,9 +40,9 @@ TST_TOWCTRANS tst_towctrans_loc [] = {
+     {
+ #ifdef SHOJI_IS_RIGHT
+       {	 { 0x0010, "xxxxxxx" }, { EINVAL,1,0x0010 }  },
+-#else				  
++#else
+       {	 { 0x0010, "xxxxxxx" }, { 0,     1,0x0010 }  },
+-#endif				  
++#endif
+       {	 { 0x007F, "tolower" }, { 0,	   1,0x007F }  },
+       {	 { 0x0061, "toupper" }, { 0,	   1,0x0041 }  },
+       {	 { 0x0041, "tolower" }, { 0,	   1,0x0061 }  },
+@@ -54,32 +54,32 @@ TST_TOWCTRANS tst_towctrans_loc [] = {
+     {
+ #ifdef SHOJI_IS_RIGHT
+       {	 { 0x0010, "tojkata" }, { EINVAL,1,0x0010 }  },
+-#else				  
++#else
+       {	 { 0x0010, "tojkata" }, { 0,     1,0x0010 }  },
+-#endif				  
++#endif
+       {	 { 0x0080, "tolower" }, { 0,	   1,0x0080 }  },
+       {	 { 0x00EC, "toupper" }, { 0,	   1,0x00CC }  },
+       {	 { 0x00CC, "tolower" }, { 0,	   1,0x00EC }  },
+-      { .is_last = 1 }		  
+-    }				  
+-  },				  
+-  {				  
+-    { Ttowctrans, TST_LOC_enUS }, 
+-    {				  
+-#ifdef SHOJI_IS_RIGHT		  
++      { .is_last = 1 }
++    }
++  },
++  {
++    { Ttowctrans, TST_LOC_enUS },
++    {
++#ifdef SHOJI_IS_RIGHT
+       {	 { 0x0010, "xxxxxxx" }, { EINVAL,1,0x0010 }  },
+-#else				  
++#else
+       {	 { 0x0010, "xxxxxxx" }, { 0,     1,0x0010 }  },
+-#endif				  
++#endif
+       {	 { 0x007F, "tolower" }, { 0,	   1,0x007F }  },
+       {	 { 0x0061, "toupper" }, { 0,	   1,0x0041 }  },
+       {	 { 0x0041, "tolower" }, { 0,	   1,0x0061 }  },
+-      { .is_last = 1 }		  
+-    }				  
+-  },				  
+-  {				  
++      { .is_last = 1 }
++    }
++  },
++  {
+     { Ttowctrans, TST_LOC_eucJP },
+-    {				  
++    {
+       {	 { 0xFF21, "tolower" }, { 0,	   1,0xFF41 }  },
+       {	 { 0xFF41, "toupper" }, { 0,	   1,0xFF21 }  },
+       {	 { 0x30A1, "tojhira" }, { 0,	   1,0x3041 }  },

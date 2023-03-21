@@ -1,0 +1,24 @@
+commit 7f29694236aab000eae24f36b7989a6b774044ae
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Thu Dec 11 14:54:22 2014 -0500
+
+    Fix __sendmmsg prototype guards
+    
+    Add __USE_GNU guards on 'socket/sys/socket.h' __sendmmsg prototype.
+
+diff --git a/include/sys/socket.h b/include/sys/socket.h
+index 9caf1bbdf5fa7782..99f60363a133cf93 100644
+--- a/include/sys/socket.h
++++ b/include/sys/socket.h
+@@ -91,9 +91,11 @@ extern ssize_t __libc_sendmsg (int __fd, const struct msghdr *__message,
+ extern ssize_t __sendmsg (int __fd, const struct msghdr *__message,
+ 			  int __flags) attribute_hidden;
+ 
++#ifdef __USE_GNU
+ extern int __sendmmsg (int __fd, struct mmsghdr *__vmessages,
+                        unsigned int __vlen, int __flags);
+ libc_hidden_proto (__sendmmsg)
++#endif
+ 
+ /* Receive a message as described by MESSAGE from socket FD.
+    Returns the number of bytes read or -1 for errors.  */

@@ -1,0 +1,28 @@
+Partial backport. Only the i686 piece is needed in glibc 2.17, and
+the x86_64 piece doesn't apply anyway because we lack the multiarch
+implementations present in upstream. Instead the the x86_64 piece
+is fixed by glibc-rh1447808-2.patch. 
+
+commit e826574c985a15a500262f2fbd21c7e9259d3d11 (origin/master, origin/HEAD)
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Tue Jun 12 15:00:33 2018 +0200
+
+    x86: Make strncmp usable from rtld
+    
+    Due to the way the conditions were written, the rtld build of strncmp
+    ended up with no definition of the strncmp symbol at all: The
+    implementations were renamed for use within an IFUNC resolver, but the
+    IFUNC resolver itself was missing (because rtld does not use IFUNCs).
+    
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+Index: glibc-2.17-c758a686/sysdeps/i386/i686/multiarch/strncmp-c.c
+===================================================================
+--- glibc-2.17-c758a686.orig/sysdeps/i386/i686/multiarch/strncmp-c.c
++++ glibc-2.17-c758a686/sysdeps/i386/i686/multiarch/strncmp-c.c
+@@ -1,4 +1,4 @@
+-#ifdef SHARED
++#if defined (SHARED) && IS_IN (libc)
+ # define STRNCMP __strncmp_ia32
+ # undef libc_hidden_builtin_def
+ # define libc_hidden_builtin_def(name)  \

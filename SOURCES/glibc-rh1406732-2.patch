@@ -1,0 +1,96 @@
+This patch is based on the following upstream commit:
+
+commit 94a4e9e4f401ffe829a992820439977ead0a0ce7
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Thu Apr 25 10:41:43 2019 +0200
+
+    Extend BIND_NOW to installed programs with --enable-bind-now
+    
+    Commit 2d6ab5df3b675e96ee587ae6a8c2ce004c6b1ba9 ("Document and fix
+    --enable-bind-now [BZ #21015]") extended BIND_NOW to all installed
+    shared objects.  This change also covers installed programs.
+    
+    Reviewed-by: Carlos O'Donell <carlos@redhat.com>
+
+diff --git a/INSTALL b/INSTALL
+index 230be71b9d0821c2..277ea46d9c25a9ae 100644
+--- a/INSTALL
++++ b/INSTALL
+@@ -144,10 +144,10 @@ will be used, and CFLAGS sets optimization options for the compiler.
+      Enable lock elision for pthread mutexes by default.
+ 
+ '--enable-bind-now'
+-     Disable lazy binding for installed shared objects.  This provides
+-     additional security hardening because it enables full RELRO and a
+-     read-only global offset table (GOT), at the cost of slightly
+-     increased program load times.
++     Disable lazy binding for installed shared objects and programs.
++     This provides additional security hardening because it enables full
++     RELRO and a read-only global offset table (GOT), at the cost of
++     slightly increased program load times.
+ 
+ `--disable-werror'
+      By default, the GNU C Library is built with `-Werror'.  If you wish
+diff --git a/Makeconfig b/Makeconfig
+index 1ad9b6f0d494c027..bc13b39c2ea5708a 100644
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -389,6 +389,8 @@ endif
+ # test modules.
+ ifeq ($(bind-now),yes)
+ LDFLAGS-lib.so += -Wl,-z,now
++# Extra flags for dynamically linked non-test main programs.
++link-extra-flags += -Wl,-z,now
+ endif
+ 
+ # Additional libraries to link into every test.
+@@ -405,7 +407,8 @@ ifndef +link-pie
+ 						    S$(start-installed-name))\
+ 			  $(+preinit) $(link-extra-libs) \
+ 			  $(common-objpfx)libc% $(+postinit),$^) \
+-	     $(link-extra-libs) $(link-libc) $(+postctorS) $(+postinit)
++	     $(link-extra-libs) $(link-extra-flags) $(link-libc) \
++	     $(+postctorS) $(+postinit)
+ endif
+ # Command for statically linking programs with the C library.
+ ifndef +link-static
+@@ -419,8 +422,8 @@ ifndef +link-static
+ 			   $(common-objpfx)libc% $(+postinit),$^) \
+ 	      $(link-extra-libs-static)
+ +link-static-after-libc = $(+postctorT) $(+postinit)
+-+link-static = $(+link-static-before-libc) $(link-libc-static) \
+-	       $(+link-static-after-libc)
+++link-static = $(+link-static-before-libc) $(link-extra-flags) \
++	       $(link-libc-static) $(+link-static-after-libc)
+ +link-static-tests = $(+link-static-before-libc) $(link-libc-static-tests) \
+ 		     $(+link-static-after-libc)
+ endif
+@@ -438,7 +441,8 @@ ifeq (yes,$(build-shared))
+ 			   $(common-objpfx)libc% $(+postinit),$^) \
+ 	      $(link-extra-libs)
+ +link-after-libc = $(+postctor) $(+postinit)
+-+link = $(+link-before-libc) $(link-libc) $(+link-after-libc)
+++link = $(+link-before-libc) $(link-extra-flags) $(link-libc) \
++	$(+link-after-libc)
+ +link-tests = $(+link-before-libc) $(link-libc-tests) $(+link-after-libc)
+ else
+ +link = $(+link-static)
+diff --git a/manual/install.texi b/manual/install.texi
+index 47d832cc59bc695e..5cacd974ce093ce9 100644
+--- a/manual/install.texi
++++ b/manual/install.texi
+@@ -161,10 +161,10 @@ so that they can be invoked directly.
+ Enable lock elision for pthread mutexes by default.
+ 
+ @item --enable-bind-now
+-Disable lazy binding for installed shared objects.  This provides
+-additional security hardening because it enables full RELRO and a
+-read-only global offset table (GOT), at the cost of slightly increased
+-program load times.
++Disable lazy binding for installed shared objects and programs.  This
++provides additional security hardening because it enables full RELRO
++and a read-only global offset table (GOT), at the cost of slightly
++increased program load times.
+ 
+ @pindex pt_chown
+ @findex grantpt

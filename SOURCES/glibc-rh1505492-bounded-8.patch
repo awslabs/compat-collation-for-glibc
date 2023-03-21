@@ -1,0 +1,956 @@
+commit f3aae3f3eb4e4345413dc238e941cdb52f747d16
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Feb 8 01:12:11 2013 +0000
+
+    Remove CHECK_1 and CHECK_1_NULL_OK.
+
+Conflicts:
+	sysdeps/unix/sysv/linux/powerpc/gettimeofday.c
+
+Change was already part of glibc-rh977110-2.patch.
+
+diff --git a/ports/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c b/ports/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c
+index 11194f6da7e56429..90d115577bad42ec 100644
+--- a/ports/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c
++++ b/ports/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c
+@@ -22,7 +22,6 @@
+ #undef __gettimeofday
+ 
+ #include <bits/libc-vdso.h>
+-#include <bp-checks.h>
+ 
+ /* Get the current time of day and timezone information,
+    putting it into *tv and *tz.  If tz is null, *tz is not filled.
+@@ -32,7 +31,7 @@ __gettimeofday (tv, tz)
+      struct timeval *tv;
+      struct timezone *tz;
+ {
+-  return INLINE_VSYSCALL (gettimeofday, 2, CHECK_1 (tv), CHECK_1 (tz));
++  return INLINE_VSYSCALL (gettimeofday, 2, tv, tz);
+ }
+ libc_hidden_def (__gettimeofday)
+ weak_alias (__gettimeofday, gettimeofday)
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/msgctl.c b/ports/sysdeps/unix/sysv/linux/alpha/msgctl.c
+index 82c734b9a06081e7..690efb470c784de8 100644
+--- a/ports/sysdeps/unix/sysv/linux/alpha/msgctl.c
++++ b/ports/sysdeps/unix/sysv/linux/alpha/msgctl.c
+@@ -21,13 +21,12 @@
+ #include <ipc_priv.h>
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ 
+ int
+ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+ {
+-  return INLINE_SYSCALL (msgctl, 3, msqid, cmd | __IPC_64, CHECK_1 (buf));
++  return INLINE_SYSCALL (msgctl, 3, msqid, cmd | __IPC_64, buf);
+ }
+ 
+ #include <shlib-compat.h>
+diff --git a/ports/sysdeps/unix/sysv/linux/alpha/shmctl.c b/ports/sysdeps/unix/sysv/linux/alpha/shmctl.c
+index fb825a80deb2a9be..009ef651cd2ffdb5 100644
+--- a/ports/sysdeps/unix/sysv/linux/alpha/shmctl.c
++++ b/ports/sysdeps/unix/sysv/linux/alpha/shmctl.c
+@@ -22,13 +22,12 @@
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+ #include <bits/wordsize.h>
+-#include <bp-checks.h>
+ 
+ 
+ int
+ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ {
+-  return INLINE_SYSCALL (shmctl, 3, shmid, cmd | __IPC_64, CHECK_1 (buf));
++  return INLINE_SYSCALL (shmctl, 3, shmid, cmd | __IPC_64, buf);
+ }
+ 
+ #include <shlib-compat.h>
+diff --git a/ports/sysdeps/unix/sysv/linux/ia64/sigaction.c b/ports/sysdeps/unix/sysv/linux/ia64/sigaction.c
+index bb0d53d54cdcf133..403b6d8fd0c9b92f 100644
+--- a/ports/sysdeps/unix/sysv/linux/ia64/sigaction.c
++++ b/ports/sysdeps/unix/sysv/linux/ia64/sigaction.c
+@@ -26,7 +26,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* The variable is shared between all wrappers around signal handling
+    functions which have RT equivalents.  This is the definition.  */
+@@ -42,8 +41,7 @@ __libc_sigaction (sig, act, oact)
+ {
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+-  return INLINE_SYSCALL (rt_sigaction, 4, sig,
+-			 CHECK_1_NULL_OK (act), CHECK_1_NULL_OK (oact), _NSIG / 8);
++  return INLINE_SYSCALL (rt_sigaction, 4, sig, act, oact, _NSIG / 8);
+ }
+ libc_hidden_def (__libc_sigaction)
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/msgctl.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/msgctl.c
+index 91c6f1ab28774288..327e951808509c31 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/msgctl.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/msgctl.c
+@@ -20,14 +20,12 @@
+ #include <ipc_priv.h>
+ #include <sysdep.h>
+ 
+-#include <bp-checks.h>
+-
+ int __msgctl (int msqid, int cmd, struct msqid_ds *buf);
+ 
+ int
+ __msgctl (int msqid, int cmd, struct msqid_ds *buf)
+ {
+-  return INLINE_SYSCALL (msgctl, 3, msqid, cmd | __IPC_64, CHECK_1 (buf));
++  return INLINE_SYSCALL (msgctl, 3, msqid, cmd | __IPC_64, buf);
+ }
+ 
+ #include <shlib-compat.h>
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/shmctl.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/shmctl.c
+index da07427c3aa6049d..911de66ccd45610f 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/shmctl.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/shmctl.c
+@@ -20,14 +20,12 @@
+ #include <ipc_priv.h>
+ #include <sysdep.h>
+ 
+-#include <bp-checks.h>
+-
+ int __shmctl (int shmid, int cmd, struct shmid_ds *buf);
+ 
+ int
+ __shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ {
+-  return INLINE_SYSCALL (shmctl, 3, shmid, cmd | __IPC_64, CHECK_1 (buf));
++  return INLINE_SYSCALL (shmctl, 3, shmid, cmd | __IPC_64, buf);
+ }
+ 
+ #include <shlib-compat.h>
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/ustat.c b/ports/sysdeps/unix/sysv/linux/mips/ustat.c
+index aa84b536245bbef3..d070403faa9143c9 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/ustat.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/ustat.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ int
+ ustat (dev_t dev, struct ustat *ubuf)
+@@ -32,5 +31,5 @@ ustat (dev_t dev, struct ustat *ubuf)
+   /* We must convert the value to dev_t type used by the kernel.  */
+   k_dev = ((major (dev) & 0xff) << 8) | (minor (dev) & 0xff);
+ 
+-  return INLINE_SYSCALL (ustat, 2, k_dev, CHECK_1 (ubuf));
++  return INLINE_SYSCALL (ustat, 2, k_dev, ubuf);
+ }
+diff --git a/sysdeps/generic/bp-checks.h b/sysdeps/generic/bp-checks.h
+index 980f3b68a84df8cf..90a07fc10fde3a84 100644
+--- a/sysdeps/generic/bp-checks.h
++++ b/sysdeps/generic/bp-checks.h
+@@ -36,18 +36,11 @@
+ /* Same as CHECK_N, but tolerate ARG == NULL.  */
+ # define CHECK_N_NULL_OK(ARG, N) _CHECK_N ((ARG), (N), __ptrvalue (ARG))
+ 
+-/* Check bounds of a pointer seated to a single object.  */
+-# define CHECK_1(ARG) CHECK_N ((ARG), 1)
+-/* Same as CHECK_1, but tolerate ARG == NULL.  */
+-# define CHECK_1_NULL_OK(ARG) CHECK_N_NULL_OK ((ARG), 1)
+-
+ #else /* !__BOUNDED_POINTERS__ */
+ 
+ /* Do nothing if not compiling with -fbounded-pointers.  */
+ 
+ # define BOUNDS_VIOLATED
+-# define CHECK_1(ARG) (ARG)
+-# define CHECK_1_NULL_OK(ARG) (ARG)
+ # define CHECK_N(ARG, N) (ARG)
+ # define CHECK_N_NULL_OK(ARG, N) (ARG)
+ 
+diff --git a/sysdeps/unix/sysv/linux/fxstat.c b/sysdeps/unix/sysv/linux/fxstat.c
+index e6ec9dee7fc044ea..369ceb818267086c 100644
+--- a/sysdeps/unix/sysv/linux/fxstat.c
++++ b/sysdeps/unix/sysv/linux/fxstat.c
+@@ -28,7 +28,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <xstatconv.h>
+ 
+@@ -37,7 +36,7 @@ int
+ __fxstat (int vers, int fd, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (fstat, 2, fd, CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (fstat, 2, fd, (struct kernel_stat *) buf);
+ 
+ #ifdef STAT_IS_KERNEL_STAT
+   errno = EINVAL;
+diff --git a/sysdeps/unix/sysv/linux/fxstat64.c b/sysdeps/unix/sysv/linux/fxstat64.c
+index b2ad48bdb76e0b39..ca948c64c247dc22 100644
+--- a/sysdeps/unix/sysv/linux/fxstat64.c
++++ b/sysdeps/unix/sysv/linux/fxstat64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -33,7 +32,7 @@ int
+ ___fxstat64 (int vers, int fd, struct stat64 *buf)
+ {
+   int result;
+-  result = INLINE_SYSCALL (fstat64, 2, fd, CHECK_1 (buf));
++  result = INLINE_SYSCALL (fstat64, 2, fd, buf);
+ #if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+   if (__builtin_expect (!result, 1) && buf->__st_ino != (__ino_t) buf->st_ino)
+     buf->st_ino = buf->__st_ino;
+diff --git a/sysdeps/unix/sysv/linux/fxstatat.c b/sysdeps/unix/sysv/linux/fxstatat.c
+index de98e667c76f9b3e..127f979adf050b45 100644
+--- a/sysdeps/unix/sysv/linux/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/fxstatat.c
+@@ -29,7 +29,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ #include <kernel-features.h>
+ 
+ #include <xstatconv.h>
+@@ -110,10 +109,10 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+     {
+       if (flag & AT_SYMLINK_NOFOLLOW)
+ 	result = INTERNAL_SYSCALL (lstat, err, 2, file,
+-				   CHECK_1 ((struct kernel_stat *) st));
++				   (struct kernel_stat *) st);
+       else
+ 	result = INTERNAL_SYSCALL (stat, err, 2, file,
+-				   CHECK_1 ((struct kernel_stat *) st));
++				   (struct kernel_stat *) st);
+ 
+       if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+ 	return result;
+diff --git a/sysdeps/unix/sysv/linux/fxstatat64.c b/sysdeps/unix/sysv/linux/fxstatat64.c
+index 10488b6c1daa210e..a14fd78c1cbaca19 100644
+--- a/sysdeps/unix/sysv/linux/fxstatat64.c
++++ b/sysdeps/unix/sysv/linux/fxstatat64.c
+@@ -25,7 +25,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -99,9 +98,9 @@ __fxstatat64 (int vers, int fd, const char *file, struct stat64 *st, int flag)
+     }
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat64, err, 2, file, CHECK_1 (st));
++    result = INTERNAL_SYSCALL (lstat64, err, 2, file, st);
+   else
+-    result = INTERNAL_SYSCALL (stat64, err, 2, file, CHECK_1 (st));
++    result = INTERNAL_SYSCALL (stat64, err, 2, file, st);
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     {
+ # if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+diff --git a/sysdeps/unix/sysv/linux/i386/fxstat.c b/sysdeps/unix/sysv/linux/i386/fxstat.c
+index a1a950ee7aff64f9..323039927e1687a3 100644
+--- a/sysdeps/unix/sysv/linux/i386/fxstat.c
++++ b/sysdeps/unix/sysv/linux/i386/fxstat.c
+@@ -27,7 +27,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -40,7 +39,7 @@ __fxstat (int vers, int fd, struct stat *buf)
+   int result;
+ 
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (fstat, 2, fd, CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (fstat, 2, fd, (struct kernel_stat *) buf);
+ 
+   {
+     struct stat64 buf64;
+diff --git a/sysdeps/unix/sysv/linux/i386/fxstatat.c b/sysdeps/unix/sysv/linux/i386/fxstatat.c
+index 010f637155d35d76..ad3a386864f8b04b 100644
+--- a/sysdeps/unix/sysv/linux/i386/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/i386/fxstatat.c
+@@ -29,7 +29,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -103,10 +102,10 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+     {
+       if (flag & AT_SYMLINK_NOFOLLOW)
+ 	result = INTERNAL_SYSCALL (lstat, err, 2, file,
+-				   CHECK_1 ((struct kernel_stat *) st));
++				   (struct kernel_stat *) st);
+       else
+ 	result = INTERNAL_SYSCALL (stat, err, 2, file,
+-				   CHECK_1 ((struct kernel_stat *) st));
++				   (struct kernel_stat *) st);
+       goto out;
+     }
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/getresgid.c b/sysdeps/unix/sysv/linux/i386/getresgid.c
+index d9ce513b1d80387d..46a3cccacb520602 100644
+--- a/sysdeps/unix/sysv/linux/i386/getresgid.c
++++ b/sysdeps/unix/sysv/linux/i386/getresgid.c
+@@ -23,15 +23,13 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Consider moving to syscalls.list.  */
+ 
+ int
+ __getresgid (gid_t *rgid, gid_t *egid, gid_t *sgid)
+ {
+-  return INLINE_SYSCALL (getresgid32, 3, CHECK_1 (rgid),
+-			 CHECK_1 (egid), CHECK_1 (sgid));
++  return INLINE_SYSCALL (getresgid32, 3, rgid, egid, sgid);
+ }
+ libc_hidden_def (__getresgid)
+ weak_alias (__getresgid, getresgid)
+diff --git a/sysdeps/unix/sysv/linux/i386/getresuid.c b/sysdeps/unix/sysv/linux/i386/getresuid.c
+index f9c3180fb1eb846e..42e68384da26b5db 100644
+--- a/sysdeps/unix/sysv/linux/i386/getresuid.c
++++ b/sysdeps/unix/sysv/linux/i386/getresuid.c
+@@ -23,15 +23,13 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Consider moving to syscalls.list.  */
+ 
+ int
+ __getresuid (uid_t *ruid, uid_t *euid, uid_t *suid)
+ {
+-  return INLINE_SYSCALL (getresuid32, 3, CHECK_1 (ruid),
+-			 CHECK_1 (euid), CHECK_1 (suid));
++  return INLINE_SYSCALL (getresuid32, 3, ruid, euid, suid);
+ }
+ libc_hidden_def (__getresuid)
+ weak_alias (__getresuid, getresuid)
+diff --git a/sysdeps/unix/sysv/linux/i386/lxstat.c b/sysdeps/unix/sysv/linux/i386/lxstat.c
+index 9be5ff0f0e382c7e..97b237404f8c8822 100644
+--- a/sysdeps/unix/sysv/linux/i386/lxstat.c
++++ b/sysdeps/unix/sysv/linux/i386/lxstat.c
+@@ -27,7 +27,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -41,7 +40,7 @@ __lxstat (int vers, const char *name, struct stat *buf)
+   int result;
+ 
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (lstat, 2, name, CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (lstat, 2, name, (struct kernel_stat *) buf);
+ 
+   {
+     struct stat64 buf64;
+diff --git a/sysdeps/unix/sysv/linux/i386/msgctl.c b/sysdeps/unix/sysv/linux/i386/msgctl.c
+index 2125ae192c12af99..7d009801b16fbdba 100644
+--- a/sysdeps/unix/sysv/linux/i386/msgctl.c
++++ b/sysdeps/unix/sysv/linux/i386/msgctl.c
+@@ -23,7 +23,6 @@
+ #include <sysdep.h>
+ #include <string.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <shlib-compat.h>
+ 
+@@ -56,8 +55,7 @@ int
+ attribute_compat_text_section
+ __old_msgctl (int msqid, int cmd, struct __old_msqid_ds *buf)
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+-			 msqid, cmd, 0, CHECK_1 (buf));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl, msqid, cmd, 0, buf);
+ }
+ compat_symbol (libc, __old_msgctl, msgctl, GLIBC_2_0);
+ #endif
+@@ -66,7 +64,7 @@ int
+ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+-			 msqid, cmd | __IPC_64, 0, CHECK_1 (buf));
++			 msqid, cmd | __IPC_64, 0, buf);
+ }
+ 
+ versioned_symbol (libc, __new_msgctl, msgctl, GLIBC_2_2);
+diff --git a/sysdeps/unix/sysv/linux/i386/setrlimit.c b/sysdeps/unix/sysv/linux/i386/setrlimit.c
+index 7683b858f7c9bb05..7d0840ded5fe3c70 100644
+--- a/sysdeps/unix/sysv/linux/i386/setrlimit.c
++++ b/sysdeps/unix/sysv/linux/i386/setrlimit.c
+@@ -22,7 +22,6 @@
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+ #include <shlib-compat.h>
+-#include <bp-checks.h>
+ 
+ extern int __new_setrlimit (enum __rlimit_resource resource,
+ 			    const struct rlimit *__unboundedrlimits);
+@@ -32,7 +31,7 @@ extern int __new_setrlimit (enum __rlimit_resource resource,
+ int
+ __new_setrlimit (enum __rlimit_resource resource, const struct rlimit *rlimits)
+ {
+-  return INLINE_SYSCALL (setrlimit, 2, resource, CHECK_1 (rlimits));
++  return INLINE_SYSCALL (setrlimit, 2, resource, rlimits);
+ }
+ 
+ weak_alias (__new_setrlimit, __setrlimit);
+diff --git a/sysdeps/unix/sysv/linux/i386/shmctl.c b/sysdeps/unix/sysv/linux/i386/shmctl.c
+index dd2167d9a78d524f..a1f4feb3fe1c815c 100644
+--- a/sysdeps/unix/sysv/linux/i386/shmctl.c
++++ b/sysdeps/unix/sysv/linux/i386/shmctl.c
+@@ -24,7 +24,6 @@
+ #include <string.h>
+ #include <sys/syscall.h>
+ #include <bits/wordsize.h>
+-#include <bp-checks.h>
+ 
+ #include <shlib-compat.h>
+ 
+@@ -63,8 +62,7 @@ int
+ attribute_compat_text_section
+ __old_shmctl (int shmid, int cmd, struct __old_shmid_ds *buf)
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl,
+-			 shmid, cmd, 0, CHECK_1 (buf));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0, buf);
+ }
+ compat_symbol (libc, __old_shmctl, shmctl, GLIBC_2_0);
+ #endif
+@@ -73,7 +71,7 @@ int
+ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ {
+   return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl,
+-			 shmid, cmd | __IPC_64, 0, CHECK_1 (buf));
++			 shmid, cmd | __IPC_64, 0, buf);
+ }
+ 
+ versioned_symbol (libc, __new_shmctl, shmctl, GLIBC_2_2);
+diff --git a/sysdeps/unix/sysv/linux/i386/xstat.c b/sysdeps/unix/sysv/linux/i386/xstat.c
+index e44599c85a836419..f063ac98d849ed7b 100644
+--- a/sysdeps/unix/sysv/linux/i386/xstat.c
++++ b/sysdeps/unix/sysv/linux/i386/xstat.c
+@@ -27,7 +27,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -41,7 +40,7 @@ __xstat (int vers, const char *name, struct stat *buf)
+   int result;
+ 
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (stat, 2, name, CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (stat, 2, name, (struct kernel_stat *) buf);
+ 
+   {
+     struct stat64 buf64;
+diff --git a/sysdeps/unix/sysv/linux/lxstat.c b/sysdeps/unix/sysv/linux/lxstat.c
+index 62b4650d8f771854..15f93b09ec1661f1 100644
+--- a/sysdeps/unix/sysv/linux/lxstat.c
++++ b/sysdeps/unix/sysv/linux/lxstat.c
+@@ -27,7 +27,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <xstatconv.h>
+ 
+@@ -36,8 +35,7 @@ int
+ __lxstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (lstat, 2, name,
+-			   CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (lstat, 2, name, (struct kernel_stat *) buf);
+ 
+ #ifdef STAT_IS_KERNEL_STAT
+   errno = EINVAL;
+diff --git a/sysdeps/unix/sysv/linux/lxstat64.c b/sysdeps/unix/sysv/linux/lxstat64.c
+index d5d9f93f782d0221..c4420904f936ec93 100644
+--- a/sysdeps/unix/sysv/linux/lxstat64.c
++++ b/sysdeps/unix/sysv/linux/lxstat64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -32,7 +31,7 @@ int
+ ___lxstat64 (int vers, const char *name, struct stat64 *buf)
+ {
+   int result;
+-  result = INLINE_SYSCALL (lstat64, 2, name, CHECK_1 (buf));
++  result = INLINE_SYSCALL (lstat64, 2, name, buf);
+ #if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+   if (__builtin_expect (!result, 1) && buf->__st_ino != (__ino_t) buf->st_ino)
+     buf->st_ino = buf->__st_ino;
+diff --git a/sysdeps/unix/sysv/linux/msgctl.c b/sysdeps/unix/sysv/linux/msgctl.c
+index 7819f3fbf76af81f..00285a7103d70cea 100644
+--- a/sysdeps/unix/sysv/linux/msgctl.c
++++ b/sysdeps/unix/sysv/linux/msgctl.c
+@@ -25,7 +25,6 @@
+ #include <string.h>
+ #include <sys/syscall.h>
+ #include <shlib-compat.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -58,7 +57,7 @@ int
+ attribute_compat_text_section
+ __old_msgctl (int msqid, int cmd, struct __old_msqid_ds *buf)
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl, msqid, cmd, 0, CHECK_1 (buf));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl, msqid, cmd, 0, buf);
+ }
+ compat_symbol (libc, __old_msgctl, msgctl, GLIBC_2_0);
+ #endif
+@@ -68,7 +67,7 @@ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+ {
+ #if __ASSUME_IPC64 > 0
+   return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+-			 msqid, cmd | __IPC_64, 0, CHECK_1 (buf));
++			 msqid, cmd | __IPC_64, 0, buf);
+ #else
+   switch (cmd) {
+     case MSG_STAT:
+@@ -77,7 +76,7 @@ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+       break;
+     default:
+       return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+-			     msqid, cmd, 0, CHECK_1 (buf));
++			     msqid, cmd, 0, buf);
+   }
+ 
+   {
+@@ -87,7 +86,7 @@ __new_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+     /* Unfortunately there is no way how to find out for sure whether
+        we should use old or new msgctl.  */
+     result = INLINE_SYSCALL (ipc, 5, IPCOP_msgctl,
+-			     msqid, cmd | __IPC_64, 0, CHECK_1 (buf));
++			     msqid, cmd | __IPC_64, 0, buf);
+     if (result != -1 || errno != EINVAL)
+       return result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/ptrace.c b/sysdeps/unix/sysv/linux/ptrace.c
+index c18590d1cf27e88d..a75e5ba0a8ab6b53 100644
+--- a/sysdeps/unix/sysv/linux/ptrace.c
++++ b/sysdeps/unix/sysv/linux/ptrace.c
+@@ -24,7 +24,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ long int
+ ptrace (enum __ptrace_request request, ...)
+@@ -43,77 +42,6 @@ ptrace (enum __ptrace_request request, ...)
+   if (request > 0 && request < 4)
+     data = &ret;
+ 
+-#if __BOUNDED_POINTERS__
+-  switch (request)
+-    {
+-    case PTRACE_PEEKTEXT:
+-    case PTRACE_PEEKDATA:
+-    case PTRACE_PEEKUSER:
+-    case PTRACE_POKETEXT:
+-    case PTRACE_POKEDATA:
+-    case PTRACE_POKEUSER:
+-      (void) CHECK_1 ((int *) addr);
+-      (void) CHECK_1 ((int *) data);
+-      break;
+-
+-    case PTRACE_GETREGS:
+-    case PTRACE_SETREGS:
+-#ifdef __i386__
+-      (void) CHECK_1 ((struct user_regs_struct *) data);
+-#else
+-      /* We don't know the size of data, so the best we can do is ensure
+-	 that `data' is valid for at least one word.  */
+-      (void) CHECK_1 ((int *) data);
+-#endif
+-      break;
+-
+-    case PTRACE_GETFPREGS:
+-    case PTRACE_SETFPREGS:
+-#ifdef __i386__
+-      (void) CHECK_1 ((struct user_fpregs_struct *) data);
+-#else
+-      /* We don't know the size of data, so the best we can do is ensure
+-	 that `data' is valid for at least one word.  */
+-      (void) CHECK_1 ((int *) data);
+-#endif
+-      break;
+-
+-    case PTRACE_GETFPXREGS:
+-    case PTRACE_SETFPXREGS:
+-#ifdef __i386__
+-      (void) CHECK_1 ((struct user_fpxregs_struct *) data);
+-#else
+-      /* We don't know the size of data, so the best we can do is ensure
+-	 that `data' is valid for at least one word.  */
+-      (void) CHECK_1 ((int *) data);
+-#endif
+-      break;
+-
+-    case PTRACE_GETSIGINFO:
+-    case PTRACE_SETSIGINFO:
+-      (void) CHECK_1 ((siginfo_t *) data);
+-      break;
+-
+-    case PTRACE_GETEVENTMSG:
+-      (void) CHECK_1 ((unsigned long *) data);
+-      break;
+-
+-    case PTRACE_SETOPTIONS:
+-      (void) CHECK_1 ((long *) data);
+-      break;
+-
+-    case PTRACE_TRACEME:
+-    case PTRACE_CONT:
+-    case PTRACE_KILL:
+-    case PTRACE_SINGLESTEP:
+-    case PTRACE_ATTACH:
+-    case PTRACE_DETACH:
+-    case PTRACE_SYSCALL:
+-      /* Neither `data' nor `addr' needs any checks.  */
+-      break;
+-    };
+-#endif
+-
+   res = INLINE_SYSCALL (ptrace, 4, request, pid,
+ 			__ptrvalue (addr), __ptrvalue (data));
+   if (res >= 0 && request > 0 && request < 4)
+diff --git a/sysdeps/unix/sysv/linux/s390/gettimeofday.c b/sysdeps/unix/sysv/linux/s390/gettimeofday.c
+index efbf1e8110f71cdb..d897e1a6b68c069a 100644
+--- a/sysdeps/unix/sysv/linux/s390/gettimeofday.c
++++ b/sysdeps/unix/sysv/linux/s390/gettimeofday.c
+@@ -16,7 +16,6 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #include <sysdep.h>
+-#include <bp-checks.h>
+ #include <stddef.h>
+ #include <sys/time.h>
+ #include <time.h>
+@@ -33,7 +32,7 @@ __gettimeofday (tv, tz)
+      struct timeval *tv;
+      struct timezone *tz;
+ {
+-  return INLINE_VSYSCALL (gettimeofday, 2, CHECK_1 (tv), CHECK_1 (tz));
++  return INLINE_VSYSCALL (gettimeofday, 2, tv, tz);
+ }
+ libc_hidden_def (__gettimeofday)
+ weak_alias (__gettimeofday, gettimeofday)
+diff --git a/sysdeps/unix/sysv/linux/shmctl.c b/sysdeps/unix/sysv/linux/shmctl.c
+index dbc965e29ca9c701..3fb6b0c0f203db08 100644
+--- a/sysdeps/unix/sysv/linux/shmctl.c
++++ b/sysdeps/unix/sysv/linux/shmctl.c
+@@ -26,7 +26,6 @@
+ #include <sys/syscall.h>
+ #include <bits/wordsize.h>
+ #include <shlib-compat.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -65,8 +64,7 @@ int
+ attribute_compat_text_section
+ __old_shmctl (int shmid, int cmd, struct __old_shmid_ds *buf)
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid,
+-			 cmd, 0, CHECK_1_NULL_OK (buf));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0, buf);
+ }
+ compat_symbol (libc, __old_shmctl, shmctl, GLIBC_2_0);
+ #endif
+@@ -76,7 +74,7 @@ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ {
+ #if __ASSUME_IPC64 > 0
+   return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd | __IPC_64, 0,
+-			 CHECK_1 (buf));
++			 buf);
+ #else
+   switch (cmd) {
+     case SHM_STAT:
+@@ -87,8 +85,7 @@ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+ #endif
+       break;
+     default:
+-      return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0,
+-			     CHECK_1 (buf));
++      return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0, buf);
+   }
+ 
+   {
+@@ -102,7 +99,7 @@ __new_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+     /* Unfortunately there is no way how to find out for sure whether
+        we should use old or new shmctl.  */
+     result = INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd | __IPC_64, 0,
+-			     CHECK_1 (buf));
++			     buf);
+     if (result != -1 || errno != EINVAL)
+       return result;
+ 
+diff --git a/sysdeps/unix/sysv/linux/sigtimedwait.c b/sysdeps/unix/sysv/linux/sigtimedwait.c
+index 34834c0cb1f9e362..1cf24d0e47330b8a 100644
+--- a/sysdeps/unix/sysv/linux/sigtimedwait.c
++++ b/sysdeps/unix/sysv/linux/sigtimedwait.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #ifdef __NR_rt_sigtimedwait
+ 
+@@ -52,7 +51,7 @@ do_sigtimedwait (const sigset_t *set, siginfo_t *info,
+     /* XXX The size argument hopefully will have to be changed to the
+        real size of the user-level sigset_t.  */
+   int result = INLINE_SYSCALL (rt_sigtimedwait, 4, set,
+-			       CHECK_1 (info), timeout, _NSIG / 8);
++			       info, timeout, _NSIG / 8);
+ 
+   /* The kernel generates a SI_TKILL code in si_code in case tkill is
+      used.  tkill is transparently used in raise().  Since having
+diff --git a/sysdeps/unix/sysv/linux/sigwaitinfo.c b/sysdeps/unix/sysv/linux/sigwaitinfo.c
+index f70386a31bce66bd..0e38dff1be6cc21a 100644
+--- a/sysdeps/unix/sysv/linux/sigwaitinfo.c
++++ b/sysdeps/unix/sysv/linux/sigwaitinfo.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep-cancel.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #ifdef __NR_rt_sigtimedwait
+ 
+@@ -53,7 +52,7 @@ do_sigwaitinfo (const sigset_t *set, siginfo_t *info)
+   /* XXX The size argument hopefully will have to be changed to the
+      real size of the user-level sigset_t.  */
+   int result = INLINE_SYSCALL (rt_sigtimedwait, 4, set,
+-			       CHECK_1 (info), NULL, _NSIG / 8);
++			       info, NULL, _NSIG / 8);
+ 
+   /* The kernel generates a SI_TKILL code in si_code in case tkill is
+      used.  tkill is transparently used in raise().  Since having
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/msgctl.c b/sysdeps/unix/sysv/linux/sparc/sparc64/msgctl.c
+index 98e06e3d0e7d0f46..3655426350652a7d 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/msgctl.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/msgctl.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Allows to control internal state and destruction of message queue
+    objects.  */
+@@ -33,5 +32,5 @@ msgctl (msqid, cmd, buf)
+      int cmd;
+      struct msqid_ds *buf;
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl, msqid, cmd, 0, CHECK_1 (buf));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_msgctl, msqid, cmd, 0, buf);
+ }
+diff --git a/sysdeps/unix/sysv/linux/sparc/sparc64/shmctl.c b/sysdeps/unix/sysv/linux/sparc/sparc64/shmctl.c
+index eb3b4f3bab2a22a7..89f755a984044fa7 100644
+--- a/sysdeps/unix/sysv/linux/sparc/sparc64/shmctl.c
++++ b/sysdeps/unix/sysv/linux/sparc/sparc64/shmctl.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Provide operations to control over shared memory segments.  */
+ 
+@@ -32,5 +31,5 @@ shmctl (shmid, cmd, buf)
+      int cmd;
+      struct shmid_ds *buf;
+ {
+-  return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0, CHECK_1 (buf));
++  return INLINE_SYSCALL (ipc, 5, IPCOP_shmctl, shmid, cmd, 0, buf);
+ }
+diff --git a/sysdeps/unix/sysv/linux/ustat.c b/sysdeps/unix/sysv/linux/ustat.c
+index 70d6e89ba8f6cadf..007ae35997d9c3d6 100644
+--- a/sysdeps/unix/sysv/linux/ustat.c
++++ b/sysdeps/unix/sysv/linux/ustat.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ int
+ ustat (dev_t dev, struct ustat *ubuf)
+@@ -37,5 +36,5 @@ ustat (dev_t dev, struct ustat *ubuf)
+       return -1;
+     }
+ 
+-  return INLINE_SYSCALL (ustat, 2, (unsigned int) k_dev, CHECK_1 (ubuf));
++  return INLINE_SYSCALL (ustat, 2, (unsigned int) k_dev, ubuf);
+ }
+diff --git a/sysdeps/unix/sysv/linux/wordsize-64/fxstat.c b/sysdeps/unix/sysv/linux/wordsize-64/fxstat.c
+index e6366c9edbe31bcc..401db59272eb91cb 100644
+--- a/sysdeps/unix/sysv/linux/wordsize-64/fxstat.c
++++ b/sysdeps/unix/sysv/linux/wordsize-64/fxstat.c
+@@ -27,14 +27,13 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Get information about the file FD in BUF.  */
+ int
+ __fxstat (int vers, int fd, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL || vers == _STAT_VER_LINUX)
+-    return INLINE_SYSCALL (fstat, 2, fd, CHECK_1 (buf));
++    return INLINE_SYSCALL (fstat, 2, fd, buf);
+ 
+   __set_errno (EINVAL);
+   return -1;
+diff --git a/sysdeps/unix/sysv/linux/wordsize-64/fxstatat.c b/sysdeps/unix/sysv/linux/wordsize-64/fxstatat.c
+index 3891e858af998003..f9289f4526e47fc6 100644
+--- a/sysdeps/unix/sysv/linux/wordsize-64/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/wordsize-64/fxstatat.c
+@@ -29,7 +29,6 @@
+ #include <sysdep.h>
+ #include <kernel-features.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ 
+ /* Get information about the file NAME relative to FD in ST.  */
+@@ -95,9 +94,9 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+   INTERNAL_SYSCALL_DECL (err);
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    res = INTERNAL_SYSCALL (lstat, err, 2, file, CHECK_1 (st));
++    res = INTERNAL_SYSCALL (lstat, err, 2, file, st);
+   else
+-    res = INTERNAL_SYSCALL (stat, err, 2, file, CHECK_1 (st));
++    res = INTERNAL_SYSCALL (stat, err, 2, file, st);
+ 
+   if (__builtin_expect (INTERNAL_SYSCALL_ERROR_P (res, err), 0))
+     {
+diff --git a/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c b/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c
+index f44778e787e5ad80..6830d567b5727875 100644
+--- a/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c
++++ b/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c
+@@ -27,14 +27,13 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Get information about the file FD in BUF.  */
+ int
+ __lxstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL || vers == _STAT_VER_LINUX)
+-    return INLINE_SYSCALL (lstat, 2, name, CHECK_1 (buf));
++    return INLINE_SYSCALL (lstat, 2, name, buf);
+ 
+   __set_errno (EINVAL);
+   return -1;
+diff --git a/sysdeps/unix/sysv/linux/wordsize-64/xstat.c b/sysdeps/unix/sysv/linux/wordsize-64/xstat.c
+index b4ab7b8fe9ebf2a8..3bee7a3fc88cd03a 100644
+--- a/sysdeps/unix/sysv/linux/wordsize-64/xstat.c
++++ b/sysdeps/unix/sysv/linux/wordsize-64/xstat.c
+@@ -27,14 +27,13 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Get information about the file NAME in BUF.  */
+ int
+ __xstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL || vers == _STAT_VER_LINUX)
+-    return INLINE_SYSCALL (stat, 2, name, CHECK_1 (buf));
++    return INLINE_SYSCALL (stat, 2, name, buf);
+ 
+   __set_errno (EINVAL);
+   return -1;
+diff --git a/sysdeps/unix/sysv/linux/xstat.c b/sysdeps/unix/sysv/linux/xstat.c
+index 179ea9e30123fb81..a3c0c1ca42424830 100644
+--- a/sysdeps/unix/sysv/linux/xstat.c
++++ b/sysdeps/unix/sysv/linux/xstat.c
+@@ -27,7 +27,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <xstatconv.h>
+ 
+@@ -36,8 +35,7 @@ int
+ __xstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (stat, 2, name,
+-			   CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (stat, 2, name, (struct kernel_stat *) buf);
+ 
+ #ifdef STAT_IS_KERNEL_STAT
+   errno = EINVAL;
+diff --git a/sysdeps/unix/sysv/linux/xstat64.c b/sysdeps/unix/sysv/linux/xstat64.c
+index 89976a68e9d86699..5c31a919828d311b 100644
+--- a/sysdeps/unix/sysv/linux/xstat64.c
++++ b/sysdeps/unix/sysv/linux/xstat64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -33,7 +32,7 @@ int
+ ___xstat64 (int vers, const char *name, struct stat64 *buf)
+ {
+   int result;
+-  result = INLINE_SYSCALL (stat64, 2, name, CHECK_1 (buf));
++  result = INLINE_SYSCALL (stat64, 2, name, buf);
+ #if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+   if (__builtin_expect (!result, 1) && buf->__st_ino != (__ino_t) buf->st_ino)
+     buf->st_ino = buf->__st_ino;

@@ -1,0 +1,50 @@
+commit 520d437b9455560d099fe6bd9664be1f9f76868b
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Tue Dec 3 12:26:12 2013 +0530
+
+    [BZ #16195] Fix build warnings from systemtap probes in non-systemtap configurations
+    
+    Joseph pointed out in the bug report (and in an earlier thread) that
+    systemtap probes cause build time warnings like the following:
+    
+        ../sysdeps/ieee754/dbl-64/e_atan2.c:602:4: warning: the address of
+        'p' will always evaluate as 'true' [-Waddress]
+    
+    due to the fact that we're now passing non-weak variables to
+    LIBC_PROBE in the libm probes.  This happens only on configurations
+    that do not enable systemtap.  The macro definition of LIBC_PROBE in
+    this case only acts as a sanity checker to ensure that the number
+    parameters passed to LIBC_PROBE is equal to the argument count
+    parameter passed before it.  This can be done in a much simpler manner
+    by just adding a macro definition for each number of arguments.  I am
+    assuming here that we don't really want to bother with supporting
+    LIBC_PROBE with an indeterminate number of arguments and if there is a
+    need for a probe to have more data than what is currently supported (4
+    arguments), one could simply add an additional macro here.
+
+diff --git a/include/stap-probe.h b/include/stap-probe.h
+index 0f65c29b2b5c5dde..0ddb5d5fc9f740dd 100644
+--- a/include/stap-probe.h
++++ b/include/stap-probe.h
+@@ -49,13 +49,14 @@
+ 
+ # ifndef __ASSEMBLER__
+ /* Evaluate all the arguments and verify that N matches their number.  */
+-#  define LIBC_PROBE(name, n, ...)					      \
+-  do {									      \
+-    _Bool __libc_probe_args[] = { 0, ## __VA_ARGS__ };			      \
+-    _Bool __libc_probe_verify_n[(sizeof __libc_probe_args / sizeof (_Bool))   \
+-                                == n + 1 ? 1 : -1];			      \
+-    (void) __libc_probe_verify_n;					      \
+-  } while (0)
++#define LIBC_PROBE(name, n, ...) STAP_PROBE##n (__VA_ARGS__)
++
++#define STAP_PROBE0()
++#define STAP_PROBE1(a1)
++#define STAP_PROBE2(a1, a2)
++#define STAP_PROBE3(a1, a2, a3)
++#define STAP_PROBE4(a1, a2, a3, a4)
++
+ # else
+ #  define LIBC_PROBE(name, n, ...)		/* Nothing.  */
+ # endif

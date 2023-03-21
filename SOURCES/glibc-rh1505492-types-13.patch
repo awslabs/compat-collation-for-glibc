@@ -1,0 +1,20 @@
+commit d22ce01becae90db0c65c82fd2e1aa7898df7ce6
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date:   Wed Dec 17 16:43:34 2014 +0100
+
+    Get rid of format warning in bug-vfprintf-nargs.c.
+
+diff --git a/stdio-common/bug-vfprintf-nargs.c b/stdio-common/bug-vfprintf-nargs.c
+index 4f621064cc0ca5c7..e8651823e6096c0e 100644
+--- a/stdio-common/bug-vfprintf-nargs.c
++++ b/stdio-common/bug-vfprintf-nargs.c
+@@ -65,7 +65,8 @@ do_test (void)
+      test this on 32-bit systems.  */
+   if (sizeof (long int) == 4)
+     {
+-      sprintf (buf, "%%1$d %%%" PRIdPTR "$d", UINT32_MAX / sizeof (int));
++      sprintf (buf, "%%1$d %%%" PRIdPTR "$d",
++	       (intptr_t) (UINT32_MAX / sizeof (int)));
+       if (format_failed (buf, "1 %$d") != 0)
+         rc = 1;
+     }

@@ -1,0 +1,121 @@
+From 63be4dc8f5be08f40df927377bdf0bae5239ce53 Mon Sep 17 00:00:00 2001
+From: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date: Thu, 27 Jul 2017 10:53:58 +0200
+Subject: [PATCH 01/10] S390: Configure checks
+ HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT.
+
+This configure check was added upstream with commit
+e9b424881a4f85284e56d8b561c54ff57a7c1c9b
+"S390: Do not set FE_INEXACT with feraiseexcept (FE_OWERFLOW|FE_UNDERFLOW)."
+
+HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT will be defined if gcc/assembler
+can handle zarch z196 instructions by default.
+Thus it is defined on s390x-glibc on RHEL 7, but not for s390-glibc.
+
+ChangeLog:
+
+	* config.h.in (HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT):
+	New undefine.
+	* sysdeps/s390/configure.ac: Add test for z196 zarch support.
+	* sysdeps/s390/configure: Regenerated.
+---
+ config.h.in               |  3 +++
+ sysdeps/s390/configure    | 36 ++++++++++++++++++++++++++++++++++++
+ sysdeps/s390/configure.in | 26 ++++++++++++++++++++++++++
+ 3 files changed, 65 insertions(+)
+
+diff --git a/config.h.in b/config.h.in
+index 66ac85a..07bc713 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -110,6 +110,9 @@
+ /* Define if assembler supports Intel MPX.  */
+ #undef  HAVE_MPX_SUPPORT
+ 
++/* Define if assembler supports z196 zarch instructions as default on S390.  */
++#undef  HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT
++
+ /* Define if assembler supports vector instructions on S390.  */
+ #undef  HAVE_S390_VX_ASM_SUPPORT
+ 
+diff --git a/sysdeps/s390/configure b/sysdeps/s390/configure
+index eb49a4c..bb670f3 100644
+--- a/sysdeps/s390/configure
++++ b/sysdeps/s390/configure
+@@ -75,3 +75,39 @@ then
+   $as_echo "#define HAVE_S390_VX_GCC_SUPPORT 1" >>confdefs.h
+ 
+ fi
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for S390 z196 zarch instruction support as default" >&5
++$as_echo_n "checking for S390 z196 zarch instruction support as default... " >&6; }
++if ${libc_cv_asm_s390_min_z196_zarch+:} false; then :
++  $as_echo_n "(cached) " >&6
++else
++  cat > conftest.c <<\EOF
++float testinsn (double e)
++{
++    float d;
++    __asm__ ("ledbra %0,5,%1,4" : "=f" (d) : "f" (e) );
++    return d;
++}
++EOF
++if { ac_try='${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS --shared conftest.c
++			-o conftest.o &> /dev/null'
++  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
++  (eval $ac_try) 2>&5
++  ac_status=$?
++  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
++  test $ac_status = 0; }; } ;
++then
++  libc_cv_asm_s390_min_z196_zarch=yes
++else
++  libc_cv_asm_s390_min_z196_zarch=no
++fi
++rm -f conftest*
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libc_cv_asm_s390_min_z196_zarch" >&5
++$as_echo "$libc_cv_asm_s390_min_z196_zarch" >&6; }
++
++if test "$libc_cv_asm_s390_min_z196_zarch" = yes ;
++then
++  $as_echo "#define HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT 1" >>confdefs.h
++
++fi
+diff --git a/sysdeps/s390/configure.in b/sysdeps/s390/configure.in
+index a3b1f25..bad92bd 100644
+--- a/sysdeps/s390/configure.in
++++ b/sysdeps/s390/configure.in
+@@ -53,3 +53,29 @@ if test "$libc_cv_gcc_s390_vx" = yes ;
+ then
+   AC_DEFINE(HAVE_S390_VX_GCC_SUPPORT)
+ fi
++
++AC_CACHE_CHECK(for S390 z196 zarch instruction support as default,
++	       libc_cv_asm_s390_min_z196_zarch, [dnl
++cat > conftest.c <<\EOF
++float testinsn (double e)
++{
++    float d;
++    __asm__ ("ledbra %0,5,%1,4" : "=f" (d) : "f" (e) );
++    return d;
++}
++EOF
++dnl
++dnl test, if assembler supports S390 z196 zarch instructions as default
++if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS --shared conftest.c
++			-o conftest.o &> /dev/null]) ;
++then
++  libc_cv_asm_s390_min_z196_zarch=yes
++else
++  libc_cv_asm_s390_min_z196_zarch=no
++fi
++rm -f conftest* ])
++
++if test "$libc_cv_asm_s390_min_z196_zarch" = yes ;
++then
++  AC_DEFINE(HAVE_S390_MIN_Z196_ZARCH_ASM_SUPPORT)
++fi
+-- 
+1.8.3.1
+

@@ -1,0 +1,19 @@
+commit 74589f738efd72e07f759a4aabd2e32613aaefb8
+Author: Paul Pluzhnikov <ppluzhnikov@google.com>
+Date:   Tue Sep 1 08:35:38 2015 -0700
+
+    Filter out NULL entries.
+
+diff --git a/malloc/mtrace.pl b/malloc/mtrace.pl
+index adf61c73737160fb..c48e227e9fee8521 100644
+--- a/malloc/mtrace.pl
++++ b/malloc/mtrace.pl
+@@ -167,7 +167,7 @@ while (<DATA>) {
+ 		printf ("+ %#0@XXX@x Alloc %d duplicate: %s %s\n",
+ 			hex($allocaddr), $nr, &location($addrwas{$allocaddr}),
+ 			$where);
+-	    } else {
++	    } elsif ($allocaddr =~ /^0x/) {
+ 		$allocated{$allocaddr}=$howmuch;
+ 		$addrwas{$allocaddr}=$where;
+ 	    }

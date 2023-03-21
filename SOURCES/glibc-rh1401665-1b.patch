@@ -1,0 +1,1642 @@
+commit 65810f0ef05e8c9e333f17a44e77808b163ca298
+Author: Torvald Riegel <triegel@redhat.com>
+Date:   Thu Dec 22 10:20:43 2016 +0100
+
+    robust mutexes: Fix broken x86 assembly by removing it
+    
+    lll_robust_unlock on i386 and x86_64 first sets the futex word to
+    FUTEX_WAITERS|0 before calling __lll_unlock_wake, which will set the
+    futex word to 0.  If the thread is killed between these steps, then the
+    futex word will be FUTEX_WAITERS|0, and the kernel (at least current
+    upstream) will not set it to FUTEX_OWNER_DIED|FUTEX_WAITERS because 0 is
+    not equal to the TID of the crashed thread.
+    
+    The lll_robust_lock assembly code on i386 and x86_64 is not prepared to
+    deal with this case because the fastpath tries to only CAS 0 to TID and
+    not FUTEX_WAITERS|0 to TID; the slowpath simply waits until it can CAS 0
+    to TID or the futex_word has the FUTEX_OWNER_DIED bit set.
+    
+    This issue is fixed by removing the custom x86 assembly code and using
+    the generic C code instead.  However, instead of adding more duplicate
+    code to the custom x86 lowlevellock.h, the code of the lll_robust* functions
+    is inlined into the single call sites that exist for each of these functions
+    in the pthread_mutex_* functions.  The robust mutex paths in the latter
+    have been slightly reorganized to make them simpler.
+    
+    This patch is meant to be easy to backport, so C11-style atomics are not
+    used.
+
+Index: glibc-2.17-c758a686/nptl/Makefile
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/Makefile
++++ glibc-2.17-c758a686/nptl/Makefile
+@@ -100,7 +100,7 @@ libpthread-routines = nptl-init vars eve
+ 		      cleanup_defer_compat unwind \
+ 		      pt-longjmp pt-cleanup\
+ 		      cancellation \
+-		      lowlevellock lowlevelrobustlock \
++		      lowlevellock \
+ 		      pt-vfork \
+ 		      ptw-write ptw-read ptw-close ptw-fcntl ptw-accept \
+ 		      ptw-connect ptw-recv ptw-recvfrom ptw-recvmsg ptw-send \
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_lock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_lock.c
+@@ -34,14 +34,14 @@
+ #define lll_trylock_elision(a,t) lll_trylock(a)
+ #endif
+ 
++/* Some of the following definitions differ when pthread_mutex_cond_lock.c
++   includes this file.  */
+ #ifndef LLL_MUTEX_LOCK
+ # define LLL_MUTEX_LOCK(mutex) \
+   lll_lock ((mutex)->__data.__lock, PTHREAD_MUTEX_PSHARED (mutex))
+ # define LLL_MUTEX_TRYLOCK(mutex) \
+   lll_trylock ((mutex)->__data.__lock)
+-# define LLL_ROBUST_MUTEX_LOCK(mutex, id) \
+-  lll_robust_lock ((mutex)->__data.__lock, id, \
+-		   PTHREAD_ROBUST_MUTEX_PSHARED (mutex))
++# define LLL_ROBUST_MUTEX_LOCK_MODIFIER 0
+ # define LLL_MUTEX_LOCK_ELISION(mutex) \
+   lll_lock_elision ((mutex)->__data.__lock, (mutex)->__data.__elision, \
+ 		   PTHREAD_MUTEX_PSHARED (mutex))
+@@ -186,11 +186,21 @@ __pthread_mutex_lock_full (pthread_mutex
+       /* This is set to FUTEX_WAITERS iff we might have shared the
+ 	 FUTEX_WAITERS flag with other threads, and therefore need to keep it
+ 	 set to avoid lost wake-ups.  We have the same requirement in the
+-	 simple mutex algorithm.  */
+-      unsigned int assume_other_futex_waiters = 0;
+-      do
++	 simple mutex algorithm.
++	 We start with value zero for a normal mutex, and FUTEX_WAITERS if we
++	 are building the special case mutexes for use from within condition
++	 variables.  */
++      unsigned int assume_other_futex_waiters = LLL_ROBUST_MUTEX_LOCK_MODIFIER;
++      while (1)
+ 	{
+-	again:
++	  /* Try to acquire the lock through a CAS from 0 (not acquired) to
++	     our TID | assume_other_futex_waiters.  */
++	  if (__glibc_likely ((oldval == 0)
++			      && (atomic_compare_and_exchange_bool_acq
++				  (&mutex->__data.__lock,
++				   id | assume_other_futex_waiters, 0) == 0)))
++	      break;
++
+ 	  if ((oldval & FUTEX_OWNER_DIED) != 0)
+ 	    {
+ 	      /* The previous owner died.  Try locking the mutex.  */
+@@ -210,7 +220,7 @@ __pthread_mutex_lock_full (pthread_mutex
+ 	      if (newval != oldval)
+ 		{
+ 		  oldval = newval;
+-		  goto again;
++		  continue;
+ 		}
+ 
+ 	      /* We got the mutex.  */
+@@ -261,24 +271,47 @@ __pthread_mutex_lock_full (pthread_mutex
+ 		}
+ 	    }
+ 
+-	  oldval = LLL_ROBUST_MUTEX_LOCK (mutex,
+-					  id | assume_other_futex_waiters);
+-	  /* See above.  We set FUTEX_WAITERS and might have shared this flag
+-	     with other threads; thus, we need to preserve it.  */
+-	  assume_other_futex_waiters = FUTEX_WAITERS;
+-
+-	  if (__builtin_expect (mutex->__data.__owner
+-				== PTHREAD_MUTEX_NOTRECOVERABLE, 0))
++	  /* We cannot acquire the mutex nor has its owner died.  Thus, try
++	     to block using futexes.  Set FUTEX_WAITERS if necessary so that
++	     other threads are aware that there are potentially threads
++	     blocked on the futex.  Restart if oldval changed in the
++	     meantime.  */
++	  if ((oldval & FUTEX_WAITERS) == 0)
+ 	    {
+-	      /* This mutex is now not recoverable.  */
+-	      mutex->__data.__count = 0;
+-	      lll_unlock (mutex->__data.__lock,
+-			  PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
+-	      THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+-	      return ENOTRECOVERABLE;
++	      if (atomic_compare_and_exchange_bool_acq (&mutex->__data.__lock,
++							oldval | FUTEX_WAITERS,
++							oldval)
++		  != 0)
++		{
++		  oldval = mutex->__data.__lock;
++		  continue;
++		}
++	      oldval |= FUTEX_WAITERS;
+ 	    }
++
++	  /* It is now possible that we share the FUTEX_WAITERS flag with
++	     another thread; therefore, update assume_other_futex_waiters so
++	     that we do not forget about this when handling other cases
++	     above and thus do not cause lost wake-ups.  */
++	  assume_other_futex_waiters |= FUTEX_WAITERS;
++
++	  /* Block using the futex and reload current lock value.  */
++	  lll_futex_wait (&mutex->__data.__lock, oldval,
++			  PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
++	  oldval = mutex->__data.__lock;
++	}
++
++      /* We have acquired the mutex; check if it is still consistent.  */
++      if (__builtin_expect (mutex->__data.__owner
++			    == PTHREAD_MUTEX_NOTRECOVERABLE, 0))
++	{
++	  /* This mutex is now not recoverable.  */
++	  mutex->__data.__count = 0;
++	  int private = PTHREAD_ROBUST_MUTEX_PSHARED (mutex);
++	  lll_unlock (mutex->__data.__lock, private);
++	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
++	  return ENOTRECOVERABLE;
+ 	}
+-      while ((oldval & FUTEX_OWNER_DIED) != 0);
+ 
+       mutex->__data.__count = 1;
+       ENQUEUE_MUTEX (mutex);
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_timedlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_timedlock.c
+@@ -147,9 +147,16 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	 set to avoid lost wake-ups.  We have the same requirement in the
+ 	 simple mutex algorithm.  */
+       unsigned int assume_other_futex_waiters = 0;
+-      do
++      while (1)
+ 	{
+-	again:
++	  /* Try to acquire the lock through a CAS from 0 (not acquired) to
++	     our TID | assume_other_futex_waiters.  */
++	  if (__glibc_likely ((oldval == 0)
++			      && (atomic_compare_and_exchange_bool_acq
++				  (&mutex->__data.__lock,
++				   id | assume_other_futex_waiters, 0) == 0)))
++	      break;
++
+ 	  if ((oldval & FUTEX_OWNER_DIED) != 0)
+ 	    {
+ 	      /* The previous owner died.  Try locking the mutex.  */
+@@ -162,7 +169,7 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 	      if (newval != oldval)
+ 		{
+ 		  oldval = newval;
+-		  goto again;
++		  continue;
+ 		}
+ 
+ 	      /* We got the mutex.  */
+@@ -209,30 +216,87 @@ pthread_mutex_timedlock (pthread_mutex_t
+ 		}
+ 	    }
+ 
+-	  result = lll_robust_timedlock (mutex->__data.__lock, abstime,
+-					 id | assume_other_futex_waiters,
+-					 PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
+-	  /* See above.  We set FUTEX_WAITERS and might have shared this flag
+-	     with other threads; thus, we need to preserve it.  */
+-	  assume_other_futex_waiters = FUTEX_WAITERS;
++	  /* We are about to block; check whether the timeout is invalid.  */
++	  if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
++	    return EINVAL;
++	  /* Work around the fact that the kernel rejects negative timeout
++	     values despite them being valid.  */
++	  if (__glibc_unlikely (abstime->tv_sec < 0))
++	    return ETIMEDOUT;
++#if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
++     || !defined lll_futex_timed_wait_bitset)
++	  struct timeval tv;
++	  struct timespec rt;
++
++	  /* Get the current time.  */
++	  (void) __gettimeofday (&tv, NULL);
++
++	  /* Compute relative timeout.  */
++	  rt.tv_sec = abstime->tv_sec - tv.tv_sec;
++	  rt.tv_nsec = abstime->tv_nsec - tv.tv_usec * 1000;
++	  if (rt.tv_nsec < 0)
++	    {
++	      rt.tv_nsec += 1000000000;
++	      --rt.tv_sec;
++	    }
+ 
+-	  if (__builtin_expect (mutex->__data.__owner
+-				== PTHREAD_MUTEX_NOTRECOVERABLE, 0))
++	  /* Already timed out?  */
++	  if (rt.tv_sec < 0)
++	    return ETIMEDOUT;
++#endif
++
++	  /* We cannot acquire the mutex nor has its owner died.  Thus, try
++	     to block using futexes.  Set FUTEX_WAITERS if necessary so that
++	     other threads are aware that there are potentially threads
++	     blocked on the futex.  Restart if oldval changed in the
++	     meantime.  */
++	  if ((oldval & FUTEX_WAITERS) == 0)
+ 	    {
+-	      /* This mutex is now not recoverable.  */
+-	      mutex->__data.__count = 0;
+-	      lll_unlock (mutex->__data.__lock,
+-			  PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
+-	      THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+-	      return ENOTRECOVERABLE;
++	      if (atomic_compare_and_exchange_bool_acq (&mutex->__data.__lock,
++							oldval | FUTEX_WAITERS,
++							oldval)
++		  != 0)
++		{
++		  oldval = mutex->__data.__lock;
++		  continue;
++		}
++	      oldval |= FUTEX_WAITERS;
+ 	    }
+ 
+-	  if (result == ETIMEDOUT || result == EINVAL)
+-	    goto out;
++	  /* It is now possible that we share the FUTEX_WAITERS flag with
++	     another thread; therefore, update assume_other_futex_waiters so
++	     that we do not forget about this when handling other cases
++	     above and thus do not cause lost wake-ups.  */
++	  assume_other_futex_waiters |= FUTEX_WAITERS;
++
++	  /* Block using the futex.  */
++#if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
++     || !defined lll_futex_timed_wait_bitset)
++	  lll_futex_timed wait (&mutex->__data.__lock, oldval,
++				&rt, PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
++#else
++	  int err = lll_futex_timed_wait_bitset (&mutex->__data.__lock,
++	      oldval, abstime, FUTEX_CLOCK_REALTIME,
++	      PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
++	  /* The futex call timed out.  */
++	  if (err == -ETIMEDOUT)
++	    return -err;
++#endif
++	  /* Reload current lock value.  */
++	  oldval = mutex->__data.__lock;
++	}
+ 
+-	  oldval = result;
++      /* We have acquired the mutex; check if it is still consistent.  */
++      if (__builtin_expect (mutex->__data.__owner
++			    == PTHREAD_MUTEX_NOTRECOVERABLE, 0))
++	{
++	  /* This mutex is now not recoverable.  */
++	  mutex->__data.__count = 0;
++	  int private = PTHREAD_ROBUST_MUTEX_PSHARED (mutex);
++	  lll_unlock (mutex->__data.__lock, private);
++	  THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
++	  return ENOTRECOVERABLE;
+ 	}
+-      while ((oldval & FUTEX_OWNER_DIED) != 0);
+ 
+       mutex->__data.__count = 1;
+       ENQUEUE_MUTEX (mutex);
+Index: glibc-2.17-c758a686/nptl/pthread_mutex_unlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/pthread_mutex_unlock.c
++++ glibc-2.17-c758a686/nptl/pthread_mutex_unlock.c
+@@ -96,6 +96,7 @@ internal_function
+ __pthread_mutex_unlock_full (pthread_mutex_t *mutex, int decr)
+ {
+   int newowner = 0;
++  int private;
+ 
+   switch (PTHREAD_MUTEX_TYPE (mutex))
+     {
+@@ -149,9 +150,14 @@ __pthread_mutex_unlock_full (pthread_mut
+ 	/* One less user.  */
+ 	--mutex->__data.__nusers;
+ 
+-      /* Unlock.  */
+-      lll_robust_unlock (mutex->__data.__lock,
+-			 PTHREAD_ROBUST_MUTEX_PSHARED (mutex));
++      /* Unlock by setting the lock to 0 (not acquired); if the lock had
++	 FUTEX_WAITERS set previously, then wake any waiters.
++         The unlock operation must be the last access to the mutex to not
++         violate the mutex destruction requirements (see __lll_unlock).  */
++      private = PTHREAD_ROBUST_MUTEX_PSHARED (mutex);
++      if (__glibc_unlikely ((atomic_exchange_rel (&mutex->__data.__lock, 0)
++			     & FUTEX_WAITERS) != 0))
++	lll_futex_wake (&mutex->__data.__lock, 1, private);
+ 
+       THREAD_SETMEM (THREAD_SELF, robust_head.list_op_pending, NULL);
+       break;
+@@ -233,9 +239,9 @@ __pthread_mutex_unlock_full (pthread_mut
+ 								  tid)))
+ 	{
+ 	  int robust = mutex->__data.__kind & PTHREAD_MUTEX_ROBUST_NORMAL_NP;
+-	  int private = (robust
+-			 ? PTHREAD_ROBUST_MUTEX_PSHARED (mutex)
+-			 : PTHREAD_MUTEX_PSHARED (mutex));
++	  private = (robust
++		     ? PTHREAD_ROBUST_MUTEX_PSHARED (mutex)
++		     : PTHREAD_MUTEX_PSHARED (mutex));
+ 	  INTERNAL_SYSCALL_DECL (__err);
+ 	  INTERNAL_SYSCALL (futex, __err, 2, &mutex->__data.__lock,
+ 			    __lll_private_flag (FUTEX_UNLOCK_PI, private));
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/i386/i486/lowlevelrobustlock.S
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/i386/i486/lowlevelrobustlock.S
++++ /dev/null
+@@ -1,232 +0,0 @@
+-/* Copyright (C) 2002, 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#include <pthread-errnos.h>
+-#include <lowlevellock.h>
+-#include <lowlevelrobustlock.h>
+-#include <kernel-features.h>
+-
+-	.text
+-
+-#define FUTEX_WAITERS		0x80000000
+-#define FUTEX_OWNER_DIED	0x40000000
+-
+-#ifdef __ASSUME_PRIVATE_FUTEX
+-# define LOAD_FUTEX_WAIT(reg) \
+-	xorl	$(FUTEX_WAIT | FUTEX_PRIVATE_FLAG), reg
+-#else
+-# if FUTEX_WAIT == 0
+-#  define LOAD_FUTEX_WAIT(reg) \
+-	xorl	$FUTEX_PRIVATE_FLAG, reg ; \
+-	andl	%gs:PRIVATE_FUTEX, reg
+-# else
+-#  define LOAD_FUTEX_WAIT(reg) \
+-	xorl	$FUTEX_PRIVATE_FLAG, reg ; \
+-	andl	%gs:PRIVATE_FUTEX, reg ; \
+-	orl	$FUTEX_WAIT, reg
+-# endif
+-#endif
+-
+-	.globl	__lll_robust_lock_wait
+-	.type	__lll_robust_lock_wait,@function
+-	.hidden	__lll_robust_lock_wait
+-	.align	16
+-__lll_robust_lock_wait:
+-	cfi_startproc
+-	pushl	%edx
+-	cfi_adjust_cfa_offset(4)
+-	pushl	%ebx
+-	cfi_adjust_cfa_offset(4)
+-	pushl	%esi
+-	cfi_adjust_cfa_offset(4)
+-	cfi_offset(%edx, -8)
+-	cfi_offset(%ebx, -12)
+-	cfi_offset(%esi, -16)
+-
+-	movl	%edx, %ebx
+-	xorl	%esi, %esi	/* No timeout.  */
+-	LOAD_FUTEX_WAIT (%ecx)
+-
+-4:	movl	%eax, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-
+-	testl	$FUTEX_OWNER_DIED, %eax
+-	jnz	3f
+-
+-	cmpl	%edx, %eax	/* NB:	 %edx == 2 */
+-	je	1f
+-
+-	LOCK
+-	cmpxchgl %edx, (%ebx)
+-	jnz	2f
+-
+-1:	movl	$SYS_futex, %eax
+-	ENTER_KERNEL
+-
+-	movl	(%ebx), %eax
+-
+-2:	test	%eax, %eax
+-	jne	4b
+-
+-	movl	%gs:TID, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-	LOCK
+-	cmpxchgl %edx, (%ebx)
+-	jnz	4b
+-	/* NB:	 %eax == 0 */
+-
+-3:	popl	%esi
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%esi)
+-	popl	%ebx
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%ebx)
+-	popl	%edx
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%edx)
+-	ret
+-	cfi_endproc
+-	.size	__lll_robust_lock_wait,.-__lll_robust_lock_wait
+-
+-
+-	.globl	__lll_robust_timedlock_wait
+-	.type	__lll_robust_timedlock_wait,@function
+-	.hidden	__lll_robust_timedlock_wait
+-	.align	16
+-__lll_robust_timedlock_wait:
+-	cfi_startproc
+-	/* Check for a valid timeout value.  */
+-	cmpl	$1000000000, 4(%edx)
+-	jae	3f
+-
+-	pushl	%edi
+-	cfi_adjust_cfa_offset(4)
+-	pushl	%esi
+-	cfi_adjust_cfa_offset(4)
+-	pushl	%ebx
+-	cfi_adjust_cfa_offset(4)
+-	pushl	%ebp
+-	cfi_adjust_cfa_offset(4)
+-	cfi_offset(%edi, -8)
+-	cfi_offset(%esi, -12)
+-	cfi_offset(%ebx, -16)
+-	cfi_offset(%ebp, -20)
+-
+-	/* Stack frame for the timespec and timeval structs.  */
+-	subl	$12, %esp
+-	cfi_adjust_cfa_offset(12)
+-
+-	movl	%ecx, %ebp
+-	movl	%edx, %edi
+-
+-1:	movl	%eax, 8(%esp)
+-
+-	/* Get current time.  */
+-	movl	%esp, %ebx
+-	xorl	%ecx, %ecx
+-	movl	$__NR_gettimeofday, %eax
+-	ENTER_KERNEL
+-
+-	/* Compute relative timeout.  */
+-	movl	4(%esp), %eax
+-	movl	$1000, %edx
+-	mul	%edx		/* Milli seconds to nano seconds.  */
+-	movl	(%edi), %ecx
+-	movl	4(%edi), %edx
+-	subl	(%esp), %ecx
+-	subl	%eax, %edx
+-	jns	4f
+-	addl	$1000000000, %edx
+-	subl	$1, %ecx
+-4:	testl	%ecx, %ecx
+-	js	8f		/* Time is already up.  */
+-
+-	/* Store relative timeout.  */
+-	movl	%ecx, (%esp)
+-	movl	%edx, 4(%esp)
+-
+-	movl	%ebp, %ebx
+-
+-	movl	8(%esp), %edx
+-	movl	%edx, %eax
+-	orl	$FUTEX_WAITERS, %edx
+-
+-	testl	$FUTEX_OWNER_DIED, %eax
+-	jnz	6f
+-
+-	cmpl	%eax, %edx
+-	je	2f
+-
+-	LOCK
+-	cmpxchgl %edx, (%ebx)
+-	movl	$0, %ecx	/* Must use mov to avoid changing cc.  */
+-	jnz	5f
+-
+-2:
+-	/* Futex call.  */
+-	movl	%esp, %esi
+-	movl	20(%esp), %ecx
+-	LOAD_FUTEX_WAIT (%ecx)
+-	movl	$SYS_futex, %eax
+-	ENTER_KERNEL
+-	movl	%eax, %ecx
+-
+-	movl	(%ebx), %eax
+-
+-5:	testl	%eax, %eax
+-	jne	7f
+-
+-	movl	%gs:TID, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-	LOCK
+-	cmpxchgl %edx, (%ebx)
+-	jnz	7f
+-
+-6:	addl	$12, %esp
+-	cfi_adjust_cfa_offset(-12)
+-	popl	%ebp
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%ebp)
+-	popl	%ebx
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%ebx)
+-	popl	%esi
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%esi)
+-	popl	%edi
+-	cfi_adjust_cfa_offset(-4)
+-	cfi_restore(%edi)
+-	ret
+-
+-3:	movl	$EINVAL, %eax
+-	ret
+-
+-	cfi_adjust_cfa_offset(28)
+-	cfi_offset(%edi, -8)
+-	cfi_offset(%esi, -12)
+-	cfi_offset(%ebx, -16)
+-	cfi_offset(%ebp, -20)
+-	/* Check whether the time expired.  */
+-7:	cmpl	$-ETIMEDOUT, %ecx
+-	jne	1b
+-
+-8:	movl	$ETIMEDOUT, %eax
+-	jmp	6b
+-	cfi_endproc
+-	.size	__lll_robust_timedlock_wait,.-__lll_robust_timedlock_wait
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/i386/i586/lowlevelrobustlock.S
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/i386/i586/lowlevelrobustlock.S
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/* Copyright (C) 2002, 2006 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include "../i486/lowlevelrobustlock.S"
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/i386/i686/lowlevelrobustlock.S
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/i386/i686/lowlevelrobustlock.S
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/* Copyright (C) 2002, 2006 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include "../i486/lowlevelrobustlock.S"
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/i386/lowlevellock.h
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/i386/lowlevellock.h
++++ glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/i386/lowlevellock.h
+@@ -338,27 +338,6 @@ LLL_STUB_UNWIND_INFO_END
+ 	 }								      \
+     })
+ 
+-#define lll_robust_lock(futex, id, private) \
+-  ({ int result, ignore1, ignore2;					      \
+-     __asm __volatile (LOCK_INSTR "cmpxchgl %1, %2\n\t"			      \
+-		       "jnz _L_robust_lock_%=\n\t"			      \
+-		       ".subsection 1\n\t"				      \
+-		       ".type _L_robust_lock_%=,@function\n"		      \
+-		       "_L_robust_lock_%=:\n"				      \
+-		       "1:\tleal %2, %%edx\n"				      \
+-		       "0:\tmovl %7, %%ecx\n"				      \
+-		       "2:\tcall __lll_robust_lock_wait\n"		      \
+-		       "3:\tjmp 18f\n"					      \
+-		       "4:\t.size _L_robust_lock_%=, 4b-1b\n\t"		      \
+-		       ".previous\n"					      \
+-		       LLL_STUB_UNWIND_INFO_4				      \
+-		       "18:"						      \
+-		       : "=a" (result), "=c" (ignore1), "=m" (futex),	      \
+-			 "=&d" (ignore2)				      \
+-		       : "0" (0), "1" (id), "m" (futex), "g" ((int) (private))\
+-		       : "memory");					      \
+-     result; })
+-
+ 
+ /* Special version of lll_lock which causes the unlock function to
+    always wakeup waiters.  */
+@@ -384,30 +363,6 @@ LLL_STUB_UNWIND_INFO_END
+ 			 : "memory");					      \
+     })
+ 
+-
+-#define lll_robust_cond_lock(futex, id, private) \
+-  ({ int result, ignore1, ignore2;					      \
+-     __asm __volatile (LOCK_INSTR "cmpxchgl %1, %2\n\t"			      \
+-		       "jnz _L_robust_cond_lock_%=\n\t"			      \
+-		       ".subsection 1\n\t"				      \
+-		       ".type _L_robust_cond_lock_%=,@function\n"	      \
+-		       "_L_robust_cond_lock_%=:\n"			      \
+-		       "1:\tleal %2, %%edx\n"				      \
+-		       "0:\tmovl %7, %%ecx\n"				      \
+-		       "2:\tcall __lll_robust_lock_wait\n"		      \
+-		       "3:\tjmp 18f\n"					      \
+-		       "4:\t.size _L_robust_cond_lock_%=, 4b-1b\n\t"	      \
+-		       ".previous\n"					      \
+-		       LLL_STUB_UNWIND_INFO_4				      \
+-		       "18:"						      \
+-		       : "=a" (result), "=c" (ignore1), "=m" (futex),	      \
+-			 "=&d" (ignore2)				      \
+-		       : "0" (0), "1" (id | FUTEX_WAITERS), "m" (futex),      \
+-			 "g" ((int) (private))				      \
+-		       : "memory");					      \
+-     result; })
+-
+-
+ #define lll_timedlock(futex, timeout, private) \
+   ({ int result, ignore1, ignore2, ignore3;				      \
+      __asm __volatile (LOCK_INSTR "cmpxchgl %1, %3\n\t"			      \
+@@ -437,28 +392,6 @@ extern int __lll_timedlock_elision (int
+ #define lll_timedlock_elision(futex, adapt_count, timeout, private)	\
+   __lll_timedlock_elision(&(futex), &(adapt_count), timeout, private)
+ 
+-#define lll_robust_timedlock(futex, timeout, id, private) \
+-  ({ int result, ignore1, ignore2, ignore3;				      \
+-     __asm __volatile (LOCK_INSTR "cmpxchgl %1, %3\n\t"			      \
+-		       "jnz _L_robust_timedlock_%=\n\t"			      \
+-		       ".subsection 1\n\t"				      \
+-		       ".type _L_robust_timedlock_%=,@function\n"	      \
+-		       "_L_robust_timedlock_%=:\n"			      \
+-		       "1:\tleal %3, %%ecx\n"				      \
+-		       "0:\tmovl %8, %%edx\n"				      \
+-		       "2:\tcall __lll_robust_timedlock_wait\n"		      \
+-		       "3:\tjmp 18f\n"					      \
+-		       "4:\t.size _L_robust_timedlock_%=, 4b-1b\n\t"	      \
+-		       ".previous\n"					      \
+-		       LLL_STUB_UNWIND_INFO_4				      \
+-		       "18:"						      \
+-		       : "=a" (result), "=c" (ignore1), "=&d" (ignore2),      \
+-			 "=m" (futex), "=S" (ignore3)			      \
+-		       : "0" (0), "1" (id), "m" (futex), "m" (timeout),	      \
+-			 "4" ((int) (private))				      \
+-		       : "memory");					      \
+-     result; })
+-
+ #if !IS_IN (libc) || defined UP
+ # define __lll_unlock_asm LOCK_INSTR "subl $1, %0\n\t"
+ #else
+@@ -510,29 +443,6 @@ extern int __lll_timedlock_elision (int
+ 	 }								      \
+     })
+ 
+-#define lll_robust_unlock(futex, private) \
+-  (void)								      \
+-    ({ int ignore, ignore2;						      \
+-       __asm __volatile (LOCK_INSTR "andl %3, %0\n\t"			      \
+-			 "jne _L_robust_unlock_%=\n\t"			      \
+-			 ".subsection 1\n\t"				      \
+-			 ".type _L_robust_unlock_%=,@function\n"	      \
+-			 "_L_robust_unlock_%=:\n\t"			      \
+-			 "1:\tleal %0, %%eax\n"				      \
+-			 "0:\tmovl %5, %%ecx\n"				      \
+-			 "2:\tcall __lll_unlock_wake\n"			      \
+-			 "3:\tjmp 18f\n"				      \
+-			 "4:\t.size _L_robust_unlock_%=, 4b-1b\n\t"	      \
+-			 ".previous\n"					      \
+-			 LLL_STUB_UNWIND_INFO_4				      \
+-			 "18:"						      \
+-			 : "=m" (futex), "=&a" (ignore), "=&c" (ignore2)      \
+-			 : "i" (FUTEX_WAITERS), "m" (futex),		      \
+-			   "g" ((int) (private))			      \
+-			 : "memory");					      \
+-    })
+-
+-
+ #define lll_robust_dead(futex, private) \
+   (void)								      \
+     ({ int __ignore;							      \
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/lowlevelrobustlock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/lowlevelrobustlock.c
++++ /dev/null
+@@ -1,127 +0,0 @@
+-/* Copyright (C) 2006-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Jakub Jelinek <jakub@redhat.com>, 2006.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <errno.h>
+-#include <sysdep.h>
+-#include <lowlevellock.h>
+-#include <sys/time.h>
+-#include <pthreadP.h>
+-
+-
+-int
+-__lll_robust_lock_wait (int *futex, int private)
+-{
+-  int oldval = *futex;
+-  int tid = THREAD_GETMEM (THREAD_SELF, tid);
+-
+-  /* If the futex changed meanwhile try locking again.  */
+-  if (oldval == 0)
+-    goto try;
+-
+-  do
+-    {
+-      if (__builtin_expect (oldval & FUTEX_OWNER_DIED, 0))
+-	return oldval;
+-
+-      int newval = oldval | FUTEX_WAITERS;
+-      if (oldval != newval
+-	  && atomic_compare_and_exchange_bool_acq (futex, newval, oldval))
+-	continue;
+-
+-      lll_futex_wait (futex, newval, private);
+-
+-    try:
+-      ;
+-    }
+-  while ((oldval = atomic_compare_and_exchange_val_acq (futex,
+-							tid | FUTEX_WAITERS,
+-							0)) != 0);
+-  return 0;
+-}
+-
+-
+-int
+-__lll_robust_timedlock_wait (int *futex, const struct timespec *abstime,
+-			     int private)
+-{
+-  /* Reject invalid timeouts.  */
+-  if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
+-    return EINVAL;
+-
+-  int tid = THREAD_GETMEM (THREAD_SELF, tid);
+-  int oldval = *futex;
+-
+-  /* If the futex changed meanwhile try locking again.  */
+-  if (oldval == 0)
+-    goto try;
+-
+-  /* Work around the fact that the kernel rejects negative timeout values
+-     despite them being valid.  */
+-  if (__builtin_expect (abstime->tv_sec < 0, 0))
+-    return ETIMEDOUT;
+-
+-  do
+-    {
+-#if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
+-     || !defined lll_futex_timed_wait_bitset)
+-      struct timeval tv;
+-      struct timespec rt;
+-
+-      /* Get the current time.  */
+-      (void) __gettimeofday (&tv, NULL);
+-
+-      /* Compute relative timeout.  */
+-      rt.tv_sec = abstime->tv_sec - tv.tv_sec;
+-      rt.tv_nsec = abstime->tv_nsec - tv.tv_usec * 1000;
+-      if (rt.tv_nsec < 0)
+-	{
+-	  rt.tv_nsec += 1000000000;
+-	  --rt.tv_sec;
+-	}
+-
+-      /* Already timed out?  */
+-      if (rt.tv_sec < 0)
+-	return ETIMEDOUT;
+-#endif
+-
+-      /* Wait.  */
+-      if (__builtin_expect (oldval & FUTEX_OWNER_DIED, 0))
+-	return oldval;
+-
+-      int newval = oldval | FUTEX_WAITERS;
+-      if (oldval != newval
+-	  && atomic_compare_and_exchange_bool_acq (futex, newval, oldval))
+-	continue;
+-
+-#if (!defined __ASSUME_FUTEX_CLOCK_REALTIME \
+-     || !defined lll_futex_timed_wait_bitset)
+-      lll_futex_timed_wait (futex, newval, &rt, private);
+-#else
+-      lll_futex_timed_wait_bitset (futex, newval, abstime,
+-				   FUTEX_CLOCK_REALTIME, private);
+-#endif
+-
+-    try:
+-      ;
+-    }
+-  while ((oldval = atomic_compare_and_exchange_val_acq (futex,
+-							tid | FUTEX_WAITERS,
+-							0)) != 0);
+-
+-  return 0;
+-}
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/lowlevelrobustlock.sym
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/lowlevelrobustlock.sym
++++ /dev/null
+@@ -1,6 +0,0 @@
+-#include <stddef.h>
+-#include <pthreadP.h>
+-
+---
+-
+-TID		offsetof (struct pthread, tid)
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c
++++ glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/pthread_mutex_cond_lock.c
+@@ -11,9 +11,9 @@
+   lll_cond_trylock ((mutex)->__data.__lock)
+ #define LLL_MUTEX_TRYLOCK_ELISION(mutex) LLL_MUTEX_TRYLOCK(mutex)
+ 
+-#define LLL_ROBUST_MUTEX_LOCK(mutex, id) \
+-  lll_robust_cond_lock ((mutex)->__data.__lock, id, \
+-			PTHREAD_ROBUST_MUTEX_PSHARED (mutex))
++/* We need to assume that there are other threads blocked on the futex.
++   See __pthread_mutex_lock_full for further details.  */
++#define LLL_ROBUST_MUTEX_LOCK_MODIFIER FUTEX_WAITERS
+ #define __pthread_mutex_lock internal_function __pthread_mutex_cond_lock
+ #define __pthread_mutex_lock_full __pthread_mutex_cond_lock_full
+ #define NO_INCR
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.h
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.h
++++ glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevellock.h
+@@ -349,28 +349,6 @@ LLL_STUB_UNWIND_INFO_END
+ 			   : "cx", "r11", "cc", "memory");		      \
+     })									      \
+ 
+-#define lll_robust_lock(futex, id, private) \
+-  ({ int result, ignore1, ignore2;					      \
+-    __asm __volatile (LOCK_INSTR "cmpxchgl %4, %2\n\t"			      \
+-		      "jnz 1f\n\t"					      \
+-		      ".subsection 1\n\t"				      \
+-		      ".type _L_robust_lock_%=, @function\n"		      \
+-		      "_L_robust_lock_%=:\n"				      \
+-		      "1:\tlea %2, %%" RDI_LP "\n"			      \
+-		      "2:\tsub $128, %%" RSP_LP "\n"			      \
+-		      "3:\tcallq __lll_robust_lock_wait\n"		      \
+-		      "4:\tadd $128, %%" RSP_LP "\n"			      \
+-		      "5:\tjmp 24f\n"					      \
+-		      "6:\t.size _L_robust_lock_%=, 6b-1b\n\t"		      \
+-		      ".previous\n"					      \
+-		      LLL_STUB_UNWIND_INFO_5				      \
+-		      "24:"						      \
+-		      : "=S" (ignore1), "=D" (ignore2), "=m" (futex),	      \
+-			"=a" (result)					      \
+-		      : "1" (id), "m" (futex), "3" (0), "0" (private)	      \
+-		      : "cx", "r11", "cc", "memory");			      \
+-    result; })
+-
+ #define lll_cond_lock(futex, private) \
+   (void)								      \
+     ({ int ignore1, ignore2, ignore3;					      \
+@@ -394,29 +372,6 @@ LLL_STUB_UNWIND_INFO_END
+ 			 : "cx", "r11", "cc", "memory");		      \
+     })
+ 
+-#define lll_robust_cond_lock(futex, id, private) \
+-  ({ int result, ignore1, ignore2;					      \
+-    __asm __volatile (LOCK_INSTR "cmpxchgl %4, %2\n\t"			      \
+-		      "jnz 1f\n\t"					      \
+-		      ".subsection 1\n\t"				      \
+-		      ".type _L_robust_cond_lock_%=, @function\n"	      \
+-		      "_L_robust_cond_lock_%=:\n"			      \
+-		      "1:\tlea %2, %%" RDI_LP "\n"			      \
+-		      "2:\tsub $128, %%" RSP_LP "\n"			      \
+-		      "3:\tcallq __lll_robust_lock_wait\n"		      \
+-		      "4:\tadd $128, %%" RSP_LP "\n"			      \
+-		      "5:\tjmp 24f\n"					      \
+-		      "6:\t.size _L_robust_cond_lock_%=, 6b-1b\n\t"	      \
+-		      ".previous\n"					      \
+-		      LLL_STUB_UNWIND_INFO_5				      \
+-		      "24:"						      \
+-		      : "=S" (ignore1), "=D" (ignore2), "=m" (futex),	      \
+-			"=a" (result)					      \
+-		      : "1" (id | FUTEX_WAITERS), "m" (futex), "3" (0),	      \
+-			"0" (private)					      \
+-		      : "cx", "r11", "cc", "memory");			      \
+-    result; })
+-
+ #define lll_timedlock(futex, timeout, private) \
+   ({ int result, ignore1, ignore2, ignore3;				      \
+      __asm __volatile (LOCK_INSTR "cmpxchgl %1, %4\n\t"			      \
+@@ -448,30 +403,6 @@ extern int __lll_timedlock_elision (int
+ #define lll_timedlock_elision(futex, adapt_count, timeout, private)	\
+   __lll_timedlock_elision(&(futex), &(adapt_count), timeout, private)
+ 
+-#define lll_robust_timedlock(futex, timeout, id, private) \
+-  ({ int result, ignore1, ignore2, ignore3;				      \
+-     __asm __volatile (LOCK_INSTR "cmpxchgl %1, %4\n\t"			      \
+-		       "jnz 1f\n\t"					      \
+-		       ".subsection 1\n\t"				      \
+-		       ".type _L_robust_timedlock_%=, @function\n"	      \
+-		       "_L_robust_timedlock_%=:\n"			      \
+-		       "1:\tlea %4, %%" RDI_LP "\n"			      \
+-		       "0:\tmov %8, %%" RDX_LP "\n"			      \
+-		       "2:\tsub $128, %%" RSP_LP "\n"			      \
+-		       "3:\tcallq __lll_robust_timedlock_wait\n"	      \
+-		       "4:\tadd $128, %%" RSP_LP "\n"			      \
+-		       "5:\tjmp 24f\n"					      \
+-		       "6:\t.size _L_robust_timedlock_%=, 6b-1b\n\t"	      \
+-		       ".previous\n"					      \
+-		       LLL_STUB_UNWIND_INFO_6				      \
+-		       "24:"						      \
+-		       : "=a" (result), "=D" (ignore1), "=S" (ignore2),       \
+-			 "=&d" (ignore3), "=m" (futex)			      \
+-		       : "0" (0), "1" (id), "m" (futex), "m" (timeout),	      \
+-			 "2" (private)					      \
+-		       : "memory", "cx", "cc", "r10", "r11");		      \
+-     result; })
+-
+ #if !IS_IN (libc) || defined UP
+ # define __lll_unlock_asm_start LOCK_INSTR "decl %0\n\t"		      \
+ 				"jne 1f\n\t"
+@@ -524,31 +455,6 @@ extern int __lll_timedlock_elision (int
+ 			   : "ax", "cx", "r11", "cc", "memory");	      \
+     })
+ 
+-#define lll_robust_unlock(futex, private) \
+-  do									      \
+-    {									      \
+-      int ignore;							      \
+-      __asm __volatile (LOCK_INSTR "andl %2, %0\n\t"			      \
+-			"jne 1f\n\t"					      \
+-			".subsection 1\n\t"				      \
+-			".type _L_robust_unlock_%=, @function\n"	      \
+-			"_L_robust_unlock_%=:\n"			      \
+-			"1:\tlea %0, %%" RDI_LP "\n"			      \
+-			"2:\tsub $128, %%" RSP_LP "\n"			      \
+-			"3:\tcallq __lll_unlock_wake\n"			      \
+-			"4:\tadd $128, %%" RSP_LP "\n"			      \
+-			"5:\tjmp 24f\n"					      \
+-			"6:\t.size _L_robust_unlock_%=, 6b-1b\n\t"	      \
+-			".previous\n"					      \
+-			LLL_STUB_UNWIND_INFO_5				      \
+-			"24:"						      \
+-			: "=m" (futex), "=&D" (ignore)			      \
+-			: "i" (FUTEX_WAITERS), "m" (futex),		      \
+-			  "S" (private)					      \
+-			: "ax", "cx", "r11", "cc", "memory");		      \
+-    }									      \
+-  while (0)
+-
+ #define lll_robust_dead(futex, private) \
+   do									      \
+     {									      \
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevelrobustlock.S
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/x86_64/lowlevelrobustlock.S
++++ /dev/null
+@@ -1,306 +0,0 @@
+-/* Copyright (C) 2002, 2011=2007, 2009, 2010 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#include <pthread-errnos.h>
+-#include <lowlevellock.h>
+-#include <lowlevelrobustlock.h>
+-#include <kernel-features.h>
+-
+-	.text
+-
+-#define FUTEX_WAITERS		0x80000000
+-#define FUTEX_OWNER_DIED	0x40000000
+-
+-#ifdef __ASSUME_PRIVATE_FUTEX
+-# define LOAD_FUTEX_WAIT(reg) \
+-	xorl	$(FUTEX_WAIT | FUTEX_PRIVATE_FLAG), reg
+-# define LOAD_FUTEX_WAIT_ABS(reg) \
+-	xorl	$(FUTEX_WAIT_BITSET | FUTEX_PRIVATE_FLAG | FUTEX_CLOCK_REALTIME), reg
+-#else
+-# if FUTEX_WAIT == 0
+-#  define LOAD_FUTEX_WAIT(reg) \
+-	xorl	$FUTEX_PRIVATE_FLAG, reg ; \
+-	andl	%fs:PRIVATE_FUTEX, reg
+-# else
+-#  define LOAD_FUTEX_WAIT(reg) \
+-	xorl	$FUTEX_PRIVATE_FLAG, reg ; \
+-	andl	%fs:PRIVATE_FUTEX, reg ; \
+-	orl	$FUTEX_WAIT, reg
+-# endif
+-# define LOAD_FUTEX_WAIT_ABS(reg) \
+-	xorl	$FUTEX_PRIVATE_FLAG, reg ; \
+-	andl	%fs:PRIVATE_FUTEX, reg ; \
+-	orl	$FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME, reg
+-#endif
+-
+-
+-	.globl	__lll_robust_lock_wait
+-	.type	__lll_robust_lock_wait,@function
+-	.hidden	__lll_robust_lock_wait
+-	.align	16
+-__lll_robust_lock_wait:
+-	cfi_startproc
+-	pushq	%r10
+-	cfi_adjust_cfa_offset(8)
+-	pushq	%rdx
+-	cfi_adjust_cfa_offset(8)
+-	cfi_offset(%r10, -16)
+-	cfi_offset(%rdx, -24)
+-
+-	xorq	%r10, %r10	/* No timeout.  */
+-	LOAD_FUTEX_WAIT (%esi)
+-
+-4:	movl	%eax, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-
+-	testl	$FUTEX_OWNER_DIED, %eax
+-	jnz	3f
+-
+-	cmpl	%edx, %eax
+-	je	1f
+-
+-	LOCK
+-	cmpxchgl %edx, (%rdi)
+-	jnz	2f
+-
+-1:	movl	$SYS_futex, %eax
+-	syscall
+-
+-	movl	(%rdi), %eax
+-
+-2:	testl	%eax, %eax
+-	jne	4b
+-
+-	movl	%fs:TID, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-	LOCK
+-	cmpxchgl %edx, (%rdi)
+-	jnz	4b
+-	/* NB:	 %rax == 0 */
+-
+-3:	popq	%rdx
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%rdx)
+-	popq	%r10
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r10)
+-	retq
+-	cfi_endproc
+-	.size	__lll_robust_lock_wait,.-__lll_robust_lock_wait
+-
+-
+-	.globl	__lll_robust_timedlock_wait
+-	.type	__lll_robust_timedlock_wait,@function
+-	.hidden	__lll_robust_timedlock_wait
+-	.align	16
+-__lll_robust_timedlock_wait:
+-	cfi_startproc
+-# ifndef __ASSUME_FUTEX_CLOCK_REALTIME
+-#  ifdef PIC
+-	cmpl	$0, __have_futex_clock_realtime(%rip)
+-#  else
+-	cmpl	$0, __have_futex_clock_realtime
+-#  endif
+-	je	.Lreltmo
+-# endif
+-
+-	cmpq	$0, (%rdx)
+-	js	7f
+-
+-	pushq	%r9
+-	cfi_adjust_cfa_offset(8)
+-	cfi_rel_offset(%r9, 0)
+-	movq	%rdx, %r10
+-	movl	$0xffffffff, %r9d
+-	LOAD_FUTEX_WAIT_ABS (%esi)
+-
+-1:	testl	$FUTEX_OWNER_DIED, %eax
+-	jnz	3f
+-
+-	movl	%eax, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-
+-	cmpl	%eax, %edx
+-	je	5f
+-
+-	LOCK
+-	cmpxchgl %edx, (%rdi)
+-	movq	$0, %rcx	/* Must use mov to avoid changing cc.  */
+-	jnz	6f
+-
+-5:	movl	$SYS_futex, %eax
+-	syscall
+-	movl	%eax, %ecx
+-
+-	movl	(%rdi), %eax
+-
+-6:	testl	%eax, %eax
+-	jne	2f
+-
+-	movl	%fs:TID, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-	LOCK
+-	cmpxchgl %edx, (%rdi)
+-	jnz	2f
+-
+-3:	popq	%r9
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r9)
+-	retq
+-
+-	cfi_adjust_cfa_offset(8)
+-	cfi_rel_offset(%r9, 0)
+-	/* Check whether the time expired.  */
+-2:	cmpl	$-ETIMEDOUT, %ecx
+-	je	4f
+-	cmpl	$-EINVAL, %ecx
+-	jne	1b
+-
+-4:	movl	%ecx, %eax
+-	negl	%eax
+-	jmp	3b
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r9)
+-
+-7:	movl	$ETIMEDOUT, %eax
+-	retq
+-
+-
+-# ifndef __ASSUME_FUTEX_CLOCK_REALTIME
+-.Lreltmo:
+-	/* Check for a valid timeout value.  */
+-	cmpq	$1000000000, 8(%rdx)
+-	jae	3f
+-
+-	pushq	%r8
+-	cfi_adjust_cfa_offset(8)
+-	pushq	%r9
+-	cfi_adjust_cfa_offset(8)
+-	pushq	%r12
+-	cfi_adjust_cfa_offset(8)
+-	pushq	%r13
+-	cfi_adjust_cfa_offset(8)
+-	cfi_offset(%r8, -16)
+-	cfi_offset(%r9, -24)
+-	cfi_offset(%r12, -32)
+-	cfi_offset(%r13, -40)
+-	pushq	%rsi
+-	cfi_adjust_cfa_offset(8)
+-
+-	/* Stack frame for the timespec and timeval structs.  */
+-	subq	$32, %rsp
+-	cfi_adjust_cfa_offset(32)
+-
+-	movq	%rdi, %r12
+-	movq	%rdx, %r13
+-
+-1:	movq	%rax, 16(%rsp)
+-
+-	/* Get current time.  */
+-	movq	%rsp, %rdi
+-	xorl	%esi, %esi
+-	/* This call works because we directly jump to a system call entry
+-	   which preserves all the registers.  */
+-	call	JUMPTARGET(__gettimeofday)
+-
+-	/* Compute relative timeout.  */
+-	movq	8(%rsp), %rax
+-	movl	$1000, %edi
+-	mul	%rdi		/* Milli seconds to nano seconds.  */
+-	movq	(%r13), %rdi
+-	movq	8(%r13), %rsi
+-	subq	(%rsp), %rdi
+-	subq	%rax, %rsi
+-	jns	4f
+-	addq	$1000000000, %rsi
+-	decq	%rdi
+-4:	testq	%rdi, %rdi
+-	js	8f		/* Time is already up.  */
+-
+-	/* Futex call.  */
+-	movq	%rdi, (%rsp)	/* Store relative timeout.  */
+-	movq	%rsi, 8(%rsp)
+-
+-	movq	16(%rsp), %rdx
+-	movl	%edx, %eax
+-	orl	$FUTEX_WAITERS, %edx
+-
+-	testl	$FUTEX_OWNER_DIED, %eax
+-	jnz	6f
+-
+-	cmpl	%eax, %edx
+-	je	2f
+-
+-	LOCK
+-	cmpxchgl %edx, (%r12)
+-	movq	$0, %rcx	/* Must use mov to avoid changing cc.  */
+-	jnz	5f
+-
+-2:	movq	%rsp, %r10
+-	movl	32(%rsp), %esi
+-	LOAD_FUTEX_WAIT (%esi)
+-	movq	%r12, %rdi
+-	movl	$SYS_futex, %eax
+-	syscall
+-	movq	%rax, %rcx
+-
+-	movl	(%r12), %eax
+-
+-5:	testl	%eax, %eax
+-	jne	7f
+-
+-	movl	%fs:TID, %edx
+-	orl	$FUTEX_WAITERS, %edx
+-	LOCK
+-	cmpxchgl %edx, (%r12)
+-	jnz	7f
+-
+-6:	addq	$40, %rsp
+-	cfi_adjust_cfa_offset(-40)
+-	popq	%r13
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r13)
+-	popq	%r12
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r12)
+-	popq	%r9
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r9)
+-	popq	%r8
+-	cfi_adjust_cfa_offset(-8)
+-	cfi_restore(%r8)
+-	retq
+-
+-3:	movl	$EINVAL, %eax
+-	retq
+-
+-	cfi_adjust_cfa_offset(72)
+-	cfi_offset(%r8, -16)
+-	cfi_offset(%r9, -24)
+-	cfi_offset(%r12, -32)
+-	cfi_offset(%r13, -40)
+-	/* Check whether the time expired.  */
+-7:	cmpl	$-ETIMEDOUT, %ecx
+-	jne	1b
+-
+-8:	movl	$ETIMEDOUT, %eax
+-	jmp	6b
+-#endif
+-	cfi_endproc
+-	.size	__lll_robust_timedlock_wait,.-__lll_robust_timedlock_wait
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/sh/lowlevelrobustlock.S
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/sh/lowlevelrobustlock.S
++++ /dev/null
+@@ -1,278 +0,0 @@
+-/* Copyright (C) 2003-2012 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, see
+-   <http://www.gnu.org/licenses/>.  */
+-
+-#include <sysdep.h>
+-#include <pthread-errnos.h>
+-#include <lowlevellock.h>
+-#include <lowlevelrobustlock.h>
+-#include <kernel-features.h>
+-#include "lowlevel-atomic.h"
+-
+-	.text
+-
+-#define FUTEX_WAITERS		0x80000000
+-#define FUTEX_OWNER_DIED	0x40000000
+-
+-#ifdef __ASSUME_PRIVATE_FUTEX
+-# define LOAD_FUTEX_WAIT(reg,tmp,tmp2) \
+-	mov	#(FUTEX_WAIT | FUTEX_PRIVATE_FLAG), tmp; \
+-	extu.b	tmp, tmp; \
+-	xor	tmp, reg
+-#else
+-# if FUTEX_WAIT == 0
+-#  define LOAD_FUTEX_WAIT(reg,tmp,tmp2) \
+-	stc	gbr, tmp	; \
+-	mov.w	99f, tmp2	; \
+-	add	tmp2, tmp 	; \
+-	mov.l	@tmp, tmp2	; \
+-	bra	98f		; \
+-	 mov	#FUTEX_PRIVATE_FLAG, tmp ; \
+-99:	.word	PRIVATE_FUTEX - TLS_PRE_TCB_SIZE ; \
+-98:	extu.b	tmp, tmp	; \
+-	xor	tmp, reg	; \
+-	and	tmp2, reg
+-# else
+-#  define LOAD_FUTEX_WAIT(reg,tmp,tmp2) \
+-	stc	gbr, tmp	; \
+-	mov.w	99f, tmp2	; \
+-	add	tmp2, tmp 	; \
+-	mov.l	@tmp, tmp2	; \
+-	bra	98f		; \
+-	 mov	#FUTEX_PRIVATE_FLAG, tmp ; \
+-99:	.word	PRIVATE_FUTEX - TLS_PRE_TCB_SIZE ; \
+-98:	extu.b	tmp, tmp	; \
+-	xor	tmp, reg	; \
+-	and	tmp2, reg	; \
+-	mov	#FUTEX_WAIT, tmp ; \
+-	or	tmp, reg
+-# endif
+-#endif
+-
+-	.globl	__lll_robust_lock_wait
+-	.type	__lll_robust_lock_wait,@function
+-	.hidden	__lll_robust_lock_wait
+-	.align	5
+-	cfi_startproc
+-__lll_robust_lock_wait:
+-	mov.l	r8, @-r15
+-	cfi_adjust_cfa_offset(4)
+-	cfi_rel_offset (r8, 0)
+-	mov	r5, r8
+-	mov	#0, r7		/* No timeout.  */
+-	mov	r6, r5
+-	LOAD_FUTEX_WAIT (r5, r0, r1)
+-
+-4:
+-	mov	r4, r6
+-	mov.l	.L_FUTEX_WAITERS, r0
+-	or	r0, r6
+-	shlr	r0		/* r0 = FUTEX_OWNER_DIED */
+-	tst	r0, r4
+-	bf/s	3f
+-	 cmp/eq	r4, r6
+-	bt	1f
+-
+-	CMPXCHG (r4, @r8, r6, r2)
+-	bf	2f
+-
+-1:
+-	mov	r8, r4
+-	mov	#SYS_futex, r3
+-	extu.b	r3, r3
+-	trapa	#0x14
+-	SYSCALL_INST_PAD
+-
+-	mov.l	@r8, r2
+-
+-2:
+-	tst	r2, r2
+-	bf/s	4b
+-	 mov	r2, r4
+-
+-	stc	gbr, r1
+-	mov.w	.Ltidoff, r2
+-	add	r2, r1
+-	mov.l	@r1, r6
+-	mov	#0, r3
+-	CMPXCHG (r3, @r8, r6, r4)
+-	bf	4b
+-	mov	#0, r4
+-
+-3:
+-	mov.l	@r15+, r8
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r8)
+-	ret
+-	 mov	r4, r0
+-	cfi_endproc
+-	.align	2
+-.L_FUTEX_WAITERS:
+-	.long	FUTEX_WAITERS
+-.Ltidoff:
+-	.word	TID - TLS_PRE_TCB_SIZE
+-	.size	__lll_robust_lock_wait,.-__lll_robust_lock_wait
+-
+-
+-	.globl	__lll_robust_timedlock_wait
+-	.type	__lll_robust_timedlock_wait,@function
+-	.hidden	__lll_robust_timedlock_wait
+-	.align	5
+-	cfi_startproc
+-__lll_robust_timedlock_wait:
+-	/* Check for a valid timeout value.  */
+-	mov.l	@(4,r6), r1
+-	mov.l	.L1g, r0
+-	cmp/hs	r0, r1
+-	bt	3f
+-
+-	cfi_remember_state
+-
+-	mov.l	r11, @-r15
+-	cfi_adjust_cfa_offset(4)
+-	cfi_rel_offset (r11, 0)
+-	mov.l	r10, @-r15
+-	cfi_adjust_cfa_offset(4)
+-	cfi_rel_offset (r10, 0)
+-	mov.l	r9, @-r15
+-	cfi_adjust_cfa_offset(4)
+-	cfi_rel_offset (r9, 0)
+-	mov.l	r8, @-r15
+-	cfi_adjust_cfa_offset(4)
+-	cfi_rel_offset (r8, 0)
+-	mov	r7, r11
+-	mov	r4, r10
+-	mov	r6, r9
+-	mov	r5, r8
+-
+-	/* Stack frame for the timespec and timeval structs.  */
+-	add	#-8, r15
+-	cfi_adjust_cfa_offset(8)
+-
+-1:
+-	/* Get current time.  */
+-	mov	r15, r4
+-	mov	#0, r5
+-	mov	#__NR_gettimeofday, r3
+-	trapa	#0x12
+-	SYSCALL_INST_PAD
+-
+-	/* Compute relative timeout.  */
+-	mov.l	@(4,r15), r0
+-	mov.w	.L1k, r1
+-	dmulu.l	r0, r1		/* Micro seconds to nano seconds.  */
+-	mov.l	@r9, r2
+-	mov.l	@(4,r9), r3
+-	mov.l	@r15, r0
+-	sts	macl, r1
+-	sub	r0, r2
+-	clrt
+-	subc	r1, r3
+-	bf	4f
+-	mov.l	.L1g, r1
+-	add	r1, r3
+-	add	#-1, r2
+-4:
+-	cmp/pz	r2
+-	bf	8f		/* Time is already up.  */
+-
+-	mov.l	r2, @r15	/* Store relative timeout.  */
+-	mov.l	r3, @(4,r15)
+-
+-	mov	r10, r6
+-	mov.l	.L_FUTEX_WAITERS2, r0
+-	or	r0, r6
+-	shlr	r0		/* r0 = FUTEX_OWNER_DIED */
+-	tst	r0, r4
+-	bf/s	6f
+-	 cmp/eq	r4, r6
+-	bt	2f
+-
+-	CMPXCHG (r4, @r8, r6, r2)
+-	bf/s	5f
+-	 mov	#0, r5
+-
+-2:
+-	mov	r8, r4
+-	mov	r11, r5
+-	LOAD_FUTEX_WAIT (r5, r0, r1)
+-	mov	r10, r6
+-	mov	r15, r7
+-	mov	#SYS_futex, r3
+-	extu.b	r3, r3
+-	trapa	#0x14
+-	SYSCALL_INST_PAD
+-	mov	r0, r5
+-
+-	mov.l	@r8, r2
+-
+-5:
+-	tst	r2, r2
+-	bf/s	7f
+-	 mov	r2, r10
+-
+-	stc	gbr, r1
+-	mov.w	.Ltidoff2, r2
+-	add	r2, r1
+-	mov.l	@r1, r4
+-	mov	#0, r3
+-	CMPXCHG (r3, @r8, r4, r10)
+-	bf	7f
+-	mov	#0, r0
+-
+-6:
+-	cfi_remember_state
+-	add	#8, r15
+-	cfi_adjust_cfa_offset (-8)
+-	mov.l	@r15+, r8
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r8)
+-	mov.l	@r15+, r9
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r9)
+-	mov.l	@r15+, r10
+-	cfi_adjust_cfa_offset (-4)
+-	cfi_restore (r10)
+-	rts
+-	 mov.l	@r15+, r11
+-	/* Omit CFI for restore in delay slot.  */
+-	cfi_restore_state
+-
+-7:
+-	/* Check whether the time expired.  */
+-	mov	#-ETIMEDOUT, r1
+-	cmp/eq	r5, r1
+-	bf	1b
+-
+-8:
+-	bra	6b
+-	 mov	#ETIMEDOUT, r0
+-
+-	cfi_restore_state
+-3:
+-	rts
+-	 mov	#EINVAL, r0
+-	cfi_endproc
+-	.align	2
+-.L_FUTEX_WAITERS2:
+-	.long	FUTEX_WAITERS
+-.L1g:
+-	.long	1000000000
+-.Ltidoff2:
+-	.word	TID - TLS_PRE_TCB_SIZE
+-.L1k:
+-	.word	1000
+-	.size	__lll_robust_timedlock_wait,.-__lll_robust_timedlock_wait
+Index: glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/Makefile
+===================================================================
+--- glibc-2.17-c758a686.orig/nptl/sysdeps/unix/sysv/linux/Makefile
++++ glibc-2.17-c758a686/nptl/sysdeps/unix/sysv/linux/Makefile
+@@ -24,7 +24,7 @@ libpthread-sysdep_routines += pt-fork pt
+ 
+ gen-as-const-headers += lowlevelcond.sym lowlevelrwlock.sym \
+ 			lowlevelbarrier.sym unwindbuf.sym \
+-			lowlevelrobustlock.sym pthread-pi-defines.sym
++			pthread-pi-defines.sym
+ endif
+ 
+ ifeq ($(subdir),posix)

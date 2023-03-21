@@ -1,0 +1,41 @@
+Introduce prototype-style function definitions for architecture-specific
+gettimeofday implementations.
+
+Upstream did this as part of:
+
+commit 97554e4382e5d85eccf146b58f85aaad7e3d687c
+Author: Adhemerval Zanella <adhemerval.zanella@linaro.com>
+Date:   Fri Apr 17 11:48:51 2015 -0300
+
+    Consolidate gettimeofday across aarch64/s390/tile
+
+diff --git a/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c b/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c
+index 90d115577bad42ec..0a43a1bf94432006 100644
+--- a/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c
++++ b/sysdeps/unix/sysv/linux/aarch64/gettimeofday.c
+@@ -27,9 +27,7 @@
+    putting it into *tv and *tz.  If tz is null, *tz is not filled.
+    Returns 0 on success, -1 on errors.  */
+ int
+-__gettimeofday (tv, tz)
+-     struct timeval *tv;
+-     struct timezone *tz;
++__gettimeofday (struct timeval *tv, struct timezone *tz)
+ {
+   return INLINE_VSYSCALL (gettimeofday, 2, tv, tz);
+ }
+diff --git a/sysdeps/unix/sysv/linux/s390/gettimeofday.c b/sysdeps/unix/sysv/linux/s390/gettimeofday.c
+index d897e1a6b68c069a..10777d17828fa9d0 100644
+--- a/sysdeps/unix/sysv/linux/s390/gettimeofday.c
++++ b/sysdeps/unix/sysv/linux/s390/gettimeofday.c
+@@ -28,9 +28,7 @@
+    Returns 0 on success, -1 on errors.  */
+ 
+ int
+-__gettimeofday (tv, tz)
+-     struct timeval *tv;
+-     struct timezone *tz;
++__gettimeofday (struct timeval *tv, struct timezone *tz)
+ {
+   return INLINE_VSYSCALL (gettimeofday, 2, tv, tz);
+ }

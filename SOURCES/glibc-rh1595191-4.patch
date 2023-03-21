@@ -1,0 +1,24 @@
+commit 2d1c89a5d7c872a1109768f50e2508cf9a4b0348
+Author: Florian Weimer <fweimer@redhat.com>
+Date:   Wed Jun 20 09:45:19 2018 +0200
+
+    libio: Avoid ptrdiff_t overflow in IO_validate_vtable
+    
+    If the candidate pointer is sufficiently far away from
+    __start___libc_IO_vtables, the result might not fit into ptrdiff_t.
+
+diff --git a/libio/libioP.h b/libio/libioP.h
+index b60244ac5fc3d908..f1576381500ffc85 100644
+--- a/libio/libioP.h
++++ b/libio/libioP.h
+@@ -957,8 +957,8 @@ IO_validate_vtable (const struct _IO_jump_t *vtable)
+   /* Fast path: The vtable pointer is within the __libc_IO_vtables
+      section.  */
+   uintptr_t section_length = __stop___libc_IO_vtables - __start___libc_IO_vtables;
+-  const char *ptr = (const char *) vtable;
+-  uintptr_t offset = ptr - __start___libc_IO_vtables;
++  uintptr_t ptr = (uintptr_t) vtable;
++  uintptr_t offset = ptr - (uintptr_t) __start___libc_IO_vtables;
+   if (__glibc_unlikely (offset >= section_length))
+     /* The vtable pointer is not in the expected section.  Use the
+        slow path, which will terminate the process if necessary.  */

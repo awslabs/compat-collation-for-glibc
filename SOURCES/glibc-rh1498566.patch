@@ -1,0 +1,70 @@
+This patch is from the upstream release/2.20/master branch, which is a
+backport containing only the syscalls.list changes in commit 016495b8 in
+master.
+
+commit adba20cf74bc6ea3910afe57d40ed755c92c2ddb
+Author: Stefan Liebler <stli@linux.vnet.ibm.com>
+Date:   Thu Mar 3 08:24:18 2016 +0100
+
+    S390: Do not use direct socket syscalls if build on kernels >= 4.3. [BZ #19682]
+    
+    Beginning with Linux 4.3, the kernel headers contain direct
+    system call numbers __NR_socket etc. on s390x. On older kernels,
+    the socket-multiplexer syscall __NR_socketcall was used.
+    
+    To enable these new syscalls, the patch
+    "S390: Call direct system calls for socket operations."
+    (https://sourceware.org/git/?p=glibc.git;a=commit;h=016495b818cb61df7d0d10e6db54074271b3e3a5)
+    was applied upstream.
+    
+    If glibc 2.23 is configured with --enable-kernel=4.3 and newer,
+    the direct socket syscalls are used.
+    For older kernels, the socket-multiplexer syscall is used instead.
+    
+    In glibc 2.22 and earlier, this patch is not applied.
+    If you build glibc on a kernel < 4.3, the socket-multiplexer
+    syscall is used. But if you build glibc on kernel >= 4.3, the
+    direct socket-syscalls are used. If you install this glibc on a
+    kernel < 4.3, all socket operations will fail.
+    See "Bug 19682 - s390x: Incorrect syscall definitions cause
+    breakage with Linux 4.3 headers"
+    (https://sourceware.org/bugzilla/show_bug.cgi?id=19682)
+    The configure switch --enable-kernel does not influence this
+    behaviour on older glibc-releases.
+    
+    The solution is to remove the direct socket-syscalls in
+    sysdeps/unix/sysv/linux/s390/s390-64/syscalls.list
+    (this patch) on older glibc-releases as it was done by the
+    upstream patch, too. These entries were never used on s390x,
+    but the c-files in sysdeps/unix/sysv/linux/.
+    After this removal, the behaviour of the socket functions are
+    not changed compared to the original glibc release version
+    and the socket-multiplexer-syscall is always used.
+
+Index: b/sysdeps/unix/sysv/linux/s390/s390-64/syscalls.list
+===================================================================
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/syscalls.list
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/syscalls.list
+@@ -14,22 +14,3 @@ shmget		-	shmget		i:iii	__shmget	shmget
+ semop		-	semop		i:ipi	__semop		semop
+ semget		-	semget		i:iii	__semget	semget
+ semctl		-	semctl		i:iiii	__semctl	semctl
+-
+-# proper socket implementations:
+-accept		-	accept		Ci:iBN	__libc_accept	__accept accept
+-bind		-	bind		i:ipi	__bind		bind
+-connect		-	connect		Ci:ipi	__libc_connect	__connect connect
+-getpeername	-	getpeername	i:ipp	__getpeername	getpeername
+-getsockname	-	getsockname	i:ipp	__getsockname	getsockname
+-getsockopt	-	getsockopt	i:iiiBN	__getsockopt	getsockopt
+-listen		-	listen		i:ii	__listen	listen
+-recv		-	recv		Ci:ibni	__libc_recv	__recv recv
+-recvfrom	-	recvfrom	Ci:ibniBN	__libc_recvfrom	__recvfrom recvfrom
+-recvmsg		-	recvmsg		Ci:ipi	__libc_recvmsg	__recvmsg recvmsg
+-send		-	send		Ci:ibni	__libc_send	__send send
+-sendmsg		-	sendmsg		Ci:ipi	__libc_sendmsg	__sendmsg sendmsg
+-sendto		-	sendto		Ci:ibnibn	__libc_sendto	__sendto sendto
+-setsockopt	-	setsockopt	i:iiibn	__setsockopt	setsockopt
+-shutdown	-	shutdown	i:ii	__shutdown	shutdown
+-socket		-	socket		i:iii	__socket	socket
+-socketpair	-	socketpair	i:iiif	__socketpair	socketpair

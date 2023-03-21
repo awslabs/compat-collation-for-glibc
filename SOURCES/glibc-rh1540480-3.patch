@@ -1,0 +1,92 @@
+commit 10e93d968716ab82931d593bada121c17c0a4b93
+Author: Dmitry V. Levin <ldv@altlinux.org>
+Date:   Mon Dec 18 21:46:07 2017 +0000
+
+    elf: remove redundant __libc_enable_secure check from fillin_rpath
+    
+    There are just two users of fillin_rpath: one is decompose_rpath that
+    sets check_trusted argument to 0, another one is _dl_init_paths that
+    sets check_trusted argument to __libc_enable_secure and invokes
+    fillin_rpath only when LD_LIBRARY_PATH is non-empty.
+    
+    Starting with commit
+    glibc-2.25.90-512-gf6110a8fee2ca36f8e2d2abecf3cba9fa7b8ea7d,
+    LD_LIBRARY_PATH is ignored for __libc_enable_secure executables,
+    so check_trusted argument of fillin_rpath is always zero.
+    
+    * elf/dl-load.c (is_trusted_path): Remove.
+    (fillin_rpath): Remove check_trusted argument and its use,
+    all callers changed.
+
+Index: glibc-2.17-c758a686/elf/dl-load.c
+===================================================================
+--- glibc-2.17-c758a686.orig/elf/dl-load.c
++++ glibc-2.17-c758a686/elf/dl-load.c
+@@ -169,24 +169,6 @@ local_strdup (const char *s)
+ 
+ 
+ static bool
+-is_trusted_path (const char *path, size_t len)
+-{
+-  const char *trun = system_dirs;
+-
+-  for (size_t idx = 0; idx < nsystem_dirs_len; ++idx)
+-    {
+-      if (len == system_dirs_len[idx] && memcmp (trun, path, len) == 0)
+-	/* Found it.  */
+-	return true;
+-
+-      trun += system_dirs_len[idx] + 1;
+-    }
+-
+-  return false;
+-}
+-
+-
+-static bool
+ is_trusted_path_normalize (const char *path, size_t len)
+ {
+   if (len == 0)
+@@ -487,8 +469,7 @@ static size_t max_dirnamelen;
+ 
+ static struct r_search_path_elem **
+ fillin_rpath (char *rpath, struct r_search_path_elem **result, const char *sep,
+-	      int check_trusted, const char *what, const char *where,
+-	      struct link_map *l)
++	      const char *what, const char *where, struct link_map *l)
+ {
+   char *cp;
+   size_t nelems = 0;
+@@ -518,13 +499,6 @@ fillin_rpath (char *rpath, struct r_sear
+       if (len > 0 && cp[len - 1] != '/')
+ 	cp[len++] = '/';
+ 
+-      /* Make sure we don't use untrusted directories if we run SUID.  */
+-      if (__builtin_expect (check_trusted, 0) && !is_trusted_path (cp, len))
+-	{
+-	  free (to_free);
+-	  continue;
+-	}
+-
+       /* See if this directory is already known.  */
+       for (dirp = GL(dl_all_dirs); dirp != NULL; dirp = dirp->next)
+ 	if (dirp->dirnamelen == len && memcmp (cp, dirp->dirname, len) == 0)
+@@ -674,7 +648,7 @@ decompose_rpath (struct r_search_path_st
+       _dl_signal_error (ENOMEM, NULL, NULL, errstring);
+     }
+ 
+-  fillin_rpath (copy, result, ":", 0, what, where, l);
++  fillin_rpath (copy, result, ":", what, where, l);
+ 
+   /* Free the copied RPATH string.  `fillin_rpath' make own copies if
+      necessary.  */
+@@ -847,8 +821,7 @@ _dl_init_paths (const char *llp)
+ 	}
+ 
+       (void) fillin_rpath (llp_tmp, env_path_list.dirs, ":;",
+-			   INTUSE(__libc_enable_secure), "LD_LIBRARY_PATH",
+-			   NULL, l);
++			   "LD_LIBRARY_PATH", NULL, l);
+ 
+       if (env_path_list.dirs[0] == NULL)
+ 	{

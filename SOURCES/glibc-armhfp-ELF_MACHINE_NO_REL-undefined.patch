@@ -1,0 +1,36 @@
+From patchwork Thu Jul  3 13:26:40 2014
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: ARM: Define ELF_MACHINE_NO_REL
+X-Patchwork-Submitter: Will Newton <will.newton@linaro.org>
+X-Patchwork-Id: 366862
+Message-Id: <1404394000-13429-1-git-send-email-will.newton@linaro.org>
+To: libc-alpha@sourceware.org
+Date: Thu,  3 Jul 2014 14:26:40 +0100
+From: Will Newton <will.newton@linaro.org>
+List-Id: <libc-alpha.sourceware.org>
+
+Fix a -Wundef warning on ARM.
+
+ChangeLog:
+
+2014-07-03  Will Newton  <will.newton@linaro.org>
+
+	* sysdeps/arm/dl-machine.h (ELF_MACHINE_NO_REL): Define.
+---
+ sysdeps/arm/dl-machine.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sysdeps/arm/dl-machine.h b/sysdeps/arm/dl-machine.h
+index c5ffc93..d6b0c52 100644
+--- a/sysdeps/arm/dl-machine.h
++++ b/sysdeps/arm/dl-machine.h
+@@ -296,6 +296,7 @@ elf_machine_plt_value (struct link_map *map, const Elf32_Rel *reloc,
+ /* ARM never uses Elf32_Rela relocations for the dynamic linker.
+    Prelinked libraries may use Elf32_Rela though.  */
+ #define ELF_MACHINE_NO_RELA defined RTLD_BOOTSTRAP
++#define ELF_MACHINE_NO_REL 0
+ 
+ /* Names of the architecture-specific auditing callback functions.  */
+ #define ARCH_LA_PLTENTER arm_gnu_pltenter

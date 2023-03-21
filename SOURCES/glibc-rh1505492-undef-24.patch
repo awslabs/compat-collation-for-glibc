@@ -1,0 +1,35 @@
+commit 4f02e2b8f94799b4f9e57e922c06c5eeec4272e6
+Author: Will Newton <will.newton@linaro.org>
+Date:   Fri Apr 25 15:48:48 2014 +0100
+
+    stdlib/gmp-impl.h: Silence -Wundef warning for USE_STACK_ALLOC
+    
+    The upstream version of GMP has long removed this conditional
+    altogether in this commit:
+    
+    changeset:   5254:88618a4694ac
+    user:        Kevin Ryde <user42@zip.com.au>
+    date:        Sun Jun 17 01:37:27 2001 +0200
+    
+    So just turn the #if into an #ifdef to silence the warning.
+    
+    ChangeLog:
+    
+    2014-05-14  Will Newton  <will.newton@linaro.org>
+    
+            * stdlib/gmp-impl.h: Test USE_STACK_ALLOC #ifdef
+            rather than #if.
+
+diff --git a/stdlib/gmp-impl.h b/stdlib/gmp-impl.h
+index 7e94624859dd7017..add63603f64ff39e 100644
+--- a/stdlib/gmp-impl.h
++++ b/stdlib/gmp-impl.h
+@@ -47,7 +47,7 @@ along with the GNU MP Library; see the file COPYING.LIB.  If not, see
+ #endif
+ #endif
+ 
+-#if ! defined (HAVE_ALLOCA) || USE_STACK_ALLOC
++#if ! defined (HAVE_ALLOCA) || defined (USE_STACK_ALLOC)
+ #include "stack-alloc.h"
+ #else
+ #define TMP_DECL(m)

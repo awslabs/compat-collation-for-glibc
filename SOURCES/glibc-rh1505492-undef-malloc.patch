@@ -1,0 +1,18 @@
+glibc-rh1293976-2.patch introduced a -Wundef warning related to the
+POWER architecture preprocessor macros.  No upstream patch because
+upstream has fixed the underlying malloc alignment issue on 32-bit POWER
+this portion of the code attempts to work around.
+
+diff --git a/malloc/tst-malloc-thread-fail.c b/malloc/tst-malloc-thread-fail.c
+index 7edcd7122fb084b7..5dfb24f5a3154fd7 100644
+--- a/malloc/tst-malloc-thread-fail.c
++++ b/malloc/tst-malloc-thread-fail.c
+@@ -156,7 +156,7 @@ static void *
+ allocate (void)
+ {
+   struct allocate_result r = allocate_1 ();
+-#if __powerpc__ == 1 && __powerpc64__ == 0
++#if defined (__powerpc__) == 1 && !defined (__powerpc64__)
+   /* Sourceware bug 6527 on 32-bit POWER.
+      Ignore 16-byte alignment requirement when using malloc, realloc, or
+      calloc, since these functions are known not to provide enough

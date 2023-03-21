@@ -1,0 +1,38 @@
+commit 9536661c6e8045f810cd227a7d676eaff19bf1b8
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Aug 19 00:51:07 2015 +0000
+
+    Fix -Wundef warnings in elf/tst-execstack.c.
+    
+    To remove -Wno-error=undef, we need to fix the remaining cases where
+    there are -Wundef warnings in the testsuite.  One of those places is
+    in elf/tst-execstack.c.
+    
+    tst-execstack.c tests USE_PTHREADS with #if.  nptl/tst-execstack.c
+    defines USE_PTHREADS to 1 before including ../elf/tst-execstack.c,
+    while elf/tst-execstack.c, when compiled directly, leaves it
+    undefined.
+    
+    This patch adds a setting of CPPFLAGS-tst-execstack.c to
+    elf/Makefile.  An alternative approach would be to rename
+    tst-execstack.c to tst-execstack-main.c and have two different
+    tst-execstack.c files include it, each with an appropriate
+    USE_PTHREADS #define.
+    
+    Tested for x86_64.
+    
+            * elf/Makefile [$(have-z-execstack) = yes]
+            (CPPFLAGS-tst-execstack.c): New variable.
+
+diff --git a/elf/Makefile b/elf/Makefile
+index 862e04eb484fa3f5..dea66ca1c12e5c29 100644
+--- a/elf/Makefile
++++ b/elf/Makefile
+@@ -866,6 +866,7 @@ endif
+ ifeq ($(have-z-execstack),yes)
+ $(objpfx)tst-execstack: $(libdl)
+ $(objpfx)tst-execstack.out: $(objpfx)tst-execstack-mod.so
++CPPFLAGS-tst-execstack.c = -DUSE_PTHREADS=0
+ LDFLAGS-tst-execstack = -Wl,-z,noexecstack
+ LDFLAGS-tst-execstack-mod = -Wl,-z,execstack
+ 

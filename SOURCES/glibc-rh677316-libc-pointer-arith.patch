@@ -1,0 +1,10 @@
+Add <libc-pointer-arith.h> header for simplifying backports.
+
+diff --git a/include/libc-pointer-arith.h b/include/libc-pointer-arith.h
+new file mode 100644
+index 0000000000000000..775374c9b8b31bcc
+--- /dev/null
++++ b/include/libc-pointer-arith.h
+@@ -0,0 +1,2 @@
++/* Compatibility header to simplify backports.  */
++#include <libc-internal.h>

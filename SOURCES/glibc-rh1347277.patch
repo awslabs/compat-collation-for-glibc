@@ -1,0 +1,20 @@
+This patch fixes a compile-time type mismatch.  No upstream
+patch; this originated in Fedora and upstream has changed the
+underlying code in a different way.
+
+diff -rup a/malloc/hooks.c b/malloc/hooks.c
+--- a/malloc/hooks.c	2017-08-11 14:20:36.000000000 -0400
++++ b/malloc/hooks.c	2017-08-11 15:43:15.939831964 -0400
+@@ -240,10 +240,10 @@ top_check(void)
+ 	(char*)t + chunksize(t) == mp_.sbrk_base + main_arena.system_mem)))
+     return 0;
+ 
+-  mutex_unlock(&main_arena);
++  mutex_unlock(&main_arena.mutex);
+   malloc_printerr (check_action, "malloc: top chunk is corrupt", t,
+ 		   &main_arena);
+-  mutex_lock(&main_arena);
++  mutex_lock(&main_arena.mutex);
+ 
+   /* Try to set up a new top chunk. */
+   brk = MORECORE(0);

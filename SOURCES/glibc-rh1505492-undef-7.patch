@@ -1,0 +1,32 @@
+commit d7329d4b4d297b5638aef7fc4d5eaf9ad7845d7a
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Fri Mar 14 10:46:38 2014 -0700
+
+    Fix two stray cases using #ifdef vs #if for TLS_TCB_AT_TP.
+
+diff --git a/nptl/pthread_create.c b/nptl/pthread_create.c
+index 9f2016c19f0c8248..1083d6faacca5ab6 100644
+--- a/nptl/pthread_create.c
++++ b/nptl/pthread_create.c
+@@ -460,7 +460,7 @@ __pthread_create_2_1 (newthread, attr, start_routine, arg)
+      performed in 'get_cached_stack'.  This way we avoid doing this if
+      the stack freshly allocated with 'mmap'.  */
+ 
+-#ifdef TLS_TCB_AT_TP
++#if TLS_TCB_AT_TP
+   /* Reference to the TCB itself.  */
+   pd->header.self = pd;
+ 
+diff --git a/nptl/sysdeps/pthread/createthread.c b/nptl/sysdeps/pthread/createthread.c
+index e8e10dcf73ed382d..baa12eb26c80e465 100644
+--- a/nptl/sysdeps/pthread/createthread.c
++++ b/nptl/sysdeps/pthread/createthread.c
+@@ -146,7 +146,7 @@ static int
+ create_thread (struct pthread *pd, const struct pthread_attr *attr,
+ 	       STACK_VARIABLES_PARMS)
+ {
+-#ifdef TLS_TCB_AT_TP
++#if TLS_TCB_AT_TP
+   assert (pd->header.tcb != NULL);
+ #endif
+ 

@@ -1,0 +1,68 @@
+commit b2c9eff43c49d528c7ad3d0d91d03ccf0ae5ae0f
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Fri Feb 8 01:10:40 2013 +0000
+
+    Remove CHECK_BOUNDS_LOW and CHECK_BOUNDS_HIGH for C code.
+
+diff --git a/string/strcpy.c b/string/strcpy.c
+index acc580ba3edb3073..812de20a3732cce5 100644
+--- a/string/strcpy.c
++++ b/string/strcpy.c
+@@ -18,7 +18,6 @@
+ #include <stddef.h>
+ #include <string.h>
+ #include <memcopy.h>
+-#include <bp-checks.h>
+ 
+ #undef strcpy
+ 
+@@ -29,8 +28,8 @@ strcpy (dest, src)
+      const char *src;
+ {
+   char c;
+-  char *__unbounded s = (char *__unbounded) CHECK_BOUNDS_LOW (src);
+-  const ptrdiff_t off = CHECK_BOUNDS_LOW (dest) - s - 1;
++  char *__unbounded s = (char *__unbounded) src;
++  const ptrdiff_t off = dest - s - 1;
+   size_t n;
+ 
+   do
+@@ -41,8 +40,6 @@ strcpy (dest, src)
+   while (c != '\0');
+ 
+   n = s - src;
+-  (void) CHECK_BOUNDS_HIGH (src + n);
+-  (void) CHECK_BOUNDS_HIGH (dest + n);
+ 
+   return dest;
+ }
+diff --git a/sysdeps/generic/bp-checks.h b/sysdeps/generic/bp-checks.h
+index bf10617a3f6b8474..980f3b68a84df8cf 100644
+--- a/sysdeps/generic/bp-checks.h
++++ b/sysdeps/generic/bp-checks.h
+@@ -24,16 +24,6 @@
+ 
+ # define BOUNDS_VIOLATED (__builtin_trap (), 0)
+ 
+-/* Verify that pointer's value >= low.  Return pointer value.  */
+-# define CHECK_BOUNDS_LOW(ARG)					\
+-  (((__ptrvalue (ARG) < __ptrlow (ARG)) && BOUNDS_VIOLATED),	\
+-   __ptrvalue (ARG))
+-
+-/* Verify that pointer's value < high.  Return pointer value.  */
+-# define CHECK_BOUNDS_HIGH(ARG)				\
+-  (((__ptrvalue (ARG) > __ptrhigh (ARG)) && BOUNDS_VIOLATED),	\
+-   __ptrvalue (ARG))
+-
+ # define _CHECK_N(ARG, N, COND)				\
+   (((COND)						\
+     && (__ptrvalue (ARG) < __ptrlow (ARG)		\
+@@ -56,8 +46,6 @@
+ /* Do nothing if not compiling with -fbounded-pointers.  */
+ 
+ # define BOUNDS_VIOLATED
+-# define CHECK_BOUNDS_LOW(ARG) (ARG)
+-# define CHECK_BOUNDS_HIGH(ARG) (ARG)
+ # define CHECK_1(ARG) (ARG)
+ # define CHECK_1_NULL_OK(ARG) (ARG)
+ # define CHECK_N(ARG, N) (ARG)

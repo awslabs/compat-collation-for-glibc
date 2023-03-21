@@ -1,0 +1,32 @@
+commit 99135114ba23c3110b7e4e650fabdc5e639746b7
+Author: DJ Delorie <dj@redhat.com>
+Date:   Fri Jun 28 18:30:00 2019 -0500
+
+    nss_db: fix endent wrt NULL mappings [BZ #24695] [BZ #24696]
+    
+    nss_db allows for getpwent et al to be called without a set*ent,
+    but it only works once.  After the last get*ent a set*ent is
+    required to restart, because the end*ent did not properly reset
+    the module.  Resetting it to NULL allows for a proper restart.
+    
+    If the database doesn't exist, however, end*ent erroniously called
+    munmap which set errno.
+
+Note: the test case has not been included in this backport as the
+required test harness infrastructure does not exist.
+    
+diff --git a/nss/nss_db/db-open.c b/nss/nss_db/db-open.c
+index 8a83d6b..3fa11e9 100644
+--- a/nss/nss_db/db-open.c
++++ b/nss/nss_db/db-open.c
+@@ -63,5 +63,9 @@ internal_setent (const char *file, struct nss_db_map *mapping)
+ void
+ internal_endent (struct nss_db_map *mapping)
+ {
+-  munmap (mapping->header, mapping->len);
++  if (mapping->header != NULL)
++    {
++      munmap (mapping->header, mapping->len);
++      mapping->header = NULL;
++    }
+ }

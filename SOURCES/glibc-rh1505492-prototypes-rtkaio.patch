@@ -1,0 +1,63 @@
+Introduce prototype-style function definitions to rtkaio (which is not
+upstream).
+
+diff --git a/rtkaio/sysdeps/unix/sysv/linux/kaio_cancel.c b/rtkaio/sysdeps/unix/sysv/linux/kaio_cancel.c
+index 018ccb6941d49e26..a531f7d5047860b8 100644
+--- a/rtkaio/sysdeps/unix/sysv/linux/kaio_cancel.c
++++ b/rtkaio/sysdeps/unix/sysv/linux/kaio_cancel.c
+@@ -42,9 +42,7 @@
+ #include <errno.h>
+ 
+ int
+-aio_cancel (fildes, aiocbp)
+-     int fildes;
+-     struct aiocb *aiocbp;
++aio_cancel (int fildes, struct aiocb *aiocbp)
+ {
+   struct requestlist *req = NULL;
+   int result = AIO_ALLDONE;
+diff --git a/rtkaio/sysdeps/unix/sysv/linux/kaio_error.c b/rtkaio/sysdeps/unix/sysv/linux/kaio_error.c
+index 23859c363a42bfc2..bc582cd3395b622e 100644
+--- a/rtkaio/sysdeps/unix/sysv/linux/kaio_error.c
++++ b/rtkaio/sysdeps/unix/sysv/linux/kaio_error.c
+@@ -37,8 +37,7 @@
+ #include <errno.h>
+ 
+ int
+-aio_error (aiocbp)
+-     const struct aiocb *aiocbp;
++aio_error (const struct aiocb *aiocbp)
+ {
+   int ret = aiocbp->__error_code;
+ 
+diff --git a/rtkaio/sysdeps/unix/sysv/linux/kaio_return.c b/rtkaio/sysdeps/unix/sysv/linux/kaio_return.c
+index 1d9f6cbabb8436e1..9d052d47b6f6b4b5 100644
+--- a/rtkaio/sysdeps/unix/sysv/linux/kaio_return.c
++++ b/rtkaio/sysdeps/unix/sysv/linux/kaio_return.c
+@@ -38,8 +38,7 @@
+ #include <errno.h>
+ 
+ ssize_t
+-aio_return (aiocbp)
+-     struct aiocb *aiocbp;
++aio_return (struct aiocb *aiocbp)
+ {
+   if (aiocbp->__error_code == EINPROGRESS)
+     __aio_read_one_event ();
+diff --git a/rtkaio/sysdeps/unix/sysv/linux/kaio_suspend.c b/rtkaio/sysdeps/unix/sysv/linux/kaio_suspend.c
+index 6c7b59c6fb0783b5..011393ea4c311d79 100644
+--- a/rtkaio/sysdeps/unix/sysv/linux/kaio_suspend.c
++++ b/rtkaio/sysdeps/unix/sysv/linux/kaio_suspend.c
+@@ -102,10 +102,8 @@ cleanup (void *arg)
+ 
+ 
+ int
+-aio_suspend (list, nent, timeout)
+-     const struct aiocb *const list[];
+-     int nent;
+-     const struct timespec *timeout;
++aio_suspend (const struct aiocb *const list[], int nent,
++	     const struct timespec *timeout)
+ {
+   if (__builtin_expect (nent < 0, 0))
+     {

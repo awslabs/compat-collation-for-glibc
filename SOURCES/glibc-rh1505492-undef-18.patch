@@ -1,0 +1,30 @@
+commit c727f0325376e202d095be718daf64661409e499
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Thu May 1 13:08:30 2014 -0700
+
+    Deconditionalize use of LLL_LOCK_INITIALIZER in bits/libc-lock.h.
+
+Conflicts:
+	nptl/sysdeps/pthread/bits/libc-lock.h
+
+Due to IS_IN backport in glibc-rh1256317-2.patch.
+
+diff --git a/nptl/sysdeps/pthread/bits/libc-lock.h b/nptl/sysdeps/pthread/bits/libc-lock.h
+index 361063febbfec054..f6e413ad435e3fb2 100644
+--- a/nptl/sysdeps/pthread/bits/libc-lock.h
++++ b/nptl/sysdeps/pthread/bits/libc-lock.h
+@@ -48,13 +48,8 @@ typedef struct __libc_lock_recursive_opaque__ __libc_lock_recursive_t;
+ /* Define an initialized recursive lock variable NAME with storage
+    class CLASS.  */
+ #if defined _LIBC && (IS_IN (libc) || IS_IN (libpthread))
+-# if LLL_LOCK_INITIALIZER == 0
+-#  define __libc_lock_define_initialized_recursive(CLASS,NAME) \
+-  CLASS __libc_lock_recursive_t NAME;
+-# else
+-#  define __libc_lock_define_initialized_recursive(CLASS,NAME) \
++# define __libc_lock_define_initialized_recursive(CLASS, NAME) \
+   CLASS __libc_lock_recursive_t NAME = _LIBC_LOCK_RECURSIVE_INITIALIZER;
+-# endif
+ # define _LIBC_LOCK_RECURSIVE_INITIALIZER \
+   { LLL_LOCK_INITIALIZER, 0, NULL }
+ #else

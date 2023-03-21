@@ -1,0 +1,38 @@
+commit c52ff39e8ee052e4a57676d65a27f09bd0a859ad
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Wed Nov 12 22:31:38 2014 +0000
+
+    Fix malloc_info namespace (bug 17570).
+    
+    malloc_info is defined in the same file as malloc and free, but is not
+    an ISO C function, so should be a weak symbol.  This patch makes it
+    so.
+    
+    Tested for x86_64 (testsuite, and that disassembly of installed shared
+    libraries is unchanged by the patch).
+    
+            [BZ #17570]
+            * malloc/malloc.c (malloc_info): Rename to __malloc_info and
+            define as weak alias of __malloc_info.
+
+diff --git a/malloc/malloc.c b/malloc/malloc.c
+index c99b26d4a85e1b22..18e00315c6edba4d 100644
+--- a/malloc/malloc.c
++++ b/malloc/malloc.c
+@@ -5007,7 +5007,7 @@ weak_alias (__posix_memalign, posix_memalign)
+ 
+ 
+ int
+-malloc_info (int options, FILE *fp)
++__malloc_info (int options, FILE *fp)
+ {
+   /* For now, at least.  */
+   if (options != 0)
+@@ -5180,6 +5180,7 @@ malloc_info (int options, FILE *fp)
+ 
+   return 0;
+ }
++weak_alias (__malloc_info, malloc_info)
+ 
+ 
+ strong_alias (__libc_calloc, __calloc) weak_alias (__libc_calloc, calloc)

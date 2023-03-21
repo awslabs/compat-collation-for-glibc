@@ -1,0 +1,12 @@
+diff -rup a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
+--- a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h	2018-04-13 17:49:11.000000000 -0400
++++ b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h	2018-04-13 17:58:48.234289426 -0400
+@@ -131,6 +131,7 @@
+ # define O_DIRECT	__O_DIRECT	/* Direct disk access.	*/
+ # define O_NOATIME	__O_NOATIME	/* Do not set atime.  */
+ # define O_PATH		__O_PATH	/* Resolve pathname but do not open file.  */
++# define O_TMPFILE	__O_TMPFILE	/* Atomically create nameless file.  */
+ #endif
+ 
+ /* For now, Linux has no separate synchronicitiy options for read
+Only in b/sysdeps/unix/sysv/linux/bits: fcntl-linux.h~

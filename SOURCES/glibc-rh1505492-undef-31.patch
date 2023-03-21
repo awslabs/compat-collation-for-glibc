@@ -1,0 +1,21 @@
+commit 256aa665963ebbc2893ed4519dde33e25d8f51c9
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Wed Jul 2 15:09:39 2014 +0530
+
+    Fix typo in macro name
+    
+    It is _POSIX_SIGNALS and not _POSUX_SIGNALS
+
+diff --git a/sysdeps/posix/sysconf.c b/sysdeps/posix/sysconf.c
+index 99043b7558e9aca4..6340b6250d57c295 100644
+--- a/sysdeps/posix/sysconf.c
++++ b/sysdeps/posix/sysconf.c
+@@ -998,7 +998,7 @@ __sysconf (name)
+ #endif
+ 
+     case _SC_SIGNALS:
+-#ifdef _POSUX_SIGNALS
++#ifdef _POSIX_SIGNALS
+       return _POSIX_SIGNALS;
+ #else
+       return -1;

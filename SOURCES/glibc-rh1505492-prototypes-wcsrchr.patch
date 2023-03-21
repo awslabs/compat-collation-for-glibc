@@ -1,0 +1,24 @@
+Introduce prototype-style function definition for 32-bit POWER wcsrchr.
+Upstream removed the old-style function definition in:
+
+commit bb04e529f60df7138a4fe5f1ed016dd87ade59a3
+Author: Adhemerval Zanella <azanella@linux.vnet.ibm.com>
+Date:   Mon Oct 14 09:26:07 2013 -0500
+
+    PowerPC: multiarch wcsrchr for PowerPC32
+
+diff --git a/sysdeps/powerpc/powerpc32/power6/wcsrchr.c b/sysdeps/powerpc/powerpc32/power6/wcsrchr.c
+index 333650190afff171..4deb44966915679f 100644
+--- a/sysdeps/powerpc/powerpc32/power6/wcsrchr.c
++++ b/sysdeps/powerpc/powerpc32/power6/wcsrchr.c
+@@ -21,9 +21,7 @@
+ 
+ /* Find the last occurrence of WC in WCS.  */
+ wchar_t *
+-wcsrchr (wcs, wc)
+-     const wchar_t *wcs;
+-     const wchar_t wc;
++wcsrchr (const wchar_t *wcs, const wchar_t wc)
+ {
+   const wchar_t *wcs2 = wcs + 1;
+   const wchar_t *retval = NULL;

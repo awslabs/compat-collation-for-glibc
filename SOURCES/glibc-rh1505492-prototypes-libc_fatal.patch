@@ -1,0 +1,23 @@
+Introduce prototype-style definition for __libc_fatal.  Upstream, this
+was done as part of:
+
+commit a600e5cef53e10147932d910cdb2fdfc62afae4e
+Author: Roland McGrath <roland@hack.frob.com>
+Date:   Tue Mar 19 17:07:15 2013 -0700
+
+    Consolidate Linux and POSIX libc_fatal code.
+
+diff --git a/sysdeps/unix/sysv/linux/libc_fatal.c b/sysdeps/unix/sysv/linux/libc_fatal.c
+index 6cc96d76e98fe191..90dd6265152824e5 100644
+--- a/sysdeps/unix/sysv/linux/libc_fatal.c
++++ b/sysdeps/unix/sysv/linux/libc_fatal.c
+@@ -199,8 +199,7 @@ __libc_message (int do_abort, const char *fmt, ...)
+ 
+ 
+ void
+-__libc_fatal (message)
+-     const char *message;
++__libc_fatal (const char *message)
+ {
+   /* The loop is added only to keep gcc happy.  */
+   while (1)

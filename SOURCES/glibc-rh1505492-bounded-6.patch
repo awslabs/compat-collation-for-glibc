@@ -1,0 +1,726 @@
+commit 6277fdabc074afa76ad5883a4b99cdf8e75de31a
+Author: Joseph Myers <joseph@codesourcery.com>
+Date:   Mon Feb 4 16:29:39 2013 +0000
+
+    Remove CHECK_STRING, CHECK_STRING_NULL_OK and __ubp_memchr.
+
+Conflicts:
+	sysdeps/unix/sysv/linux/getcwd.c
+
+Conflict due to context change in glibc-rh1534635.patch.
+
+diff --git a/ports/sysdeps/ia64/memchr.S b/ports/sysdeps/ia64/memchr.S
+index 6836571599c0a0af..a6f2451b9a3698a5 100644
+--- a/ports/sysdeps/ia64/memchr.S
++++ b/ports/sysdeps/ia64/memchr.S
+@@ -154,7 +154,4 @@ ENTRY(__memchr)
+ END(__memchr)
+ 
+ weak_alias (__memchr, memchr)
+-#if !__BOUNDED_POINTERS__
+-weak_alias (__memchr, __ubp_memchr)
+-#endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/ports/sysdeps/m68k/memchr.S b/ports/sysdeps/m68k/memchr.S
+index 9e7aff816d84c6e6..5f2478f5d150e787 100644
+--- a/ports/sysdeps/m68k/memchr.S
++++ b/ports/sysdeps/m68k/memchr.S
+@@ -304,7 +304,4 @@ L(L9:)
+ END(__memchr)
+ 
+ weak_alias (__memchr, memchr)
+-#if !__BOUNDED_POINTERS__
+-weak_alias (__memchr, __ubp_memchr)
+-#endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/truncate64.c b/ports/sysdeps/unix/sysv/linux/arm/truncate64.c
+index 3fad93f50e745396..a9a8059379fdbba5 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/truncate64.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/truncate64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Truncate the file FD refers to to LENGTH bytes.  */
+ int
+@@ -30,7 +29,7 @@ truncate64 (const char *path, off64_t length)
+ {
+   unsigned int low = length & 0xffffffff;
+   unsigned int high = length >> 32;
+-  int result = INLINE_SYSCALL (truncate64, 4, CHECK_STRING (path), 0,
++  int result = INLINE_SYSCALL (truncate64, 4, path, 0,
+ 			       __LONG_LONG_PAIR (high, low));
+   return result;
+ }
+diff --git a/ports/sysdeps/unix/sysv/linux/ia64/umount.c b/ports/sysdeps/unix/sysv/linux/ia64/umount.c
+index ae0c03659f0fef9b..86b1acc9c634e55c 100644
+--- a/ports/sysdeps/unix/sysv/linux/ia64/umount.c
++++ b/ports/sysdeps/unix/sysv/linux/ia64/umount.c
+@@ -20,11 +20,10 @@
+ #include <errno.h>
+ 
+ #include <sysdep.h>
+-#include <bp-checks.h>
+ 
+ /* Unmount a filesystem.  */
+ int
+ umount (const char *special_file)
+ {
+-  return INLINE_SYSCALL (umount, 2, CHECK_STRING (special_file), 0);
++  return INLINE_SYSCALL (umount, 2, special_file, 0);
+ }
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips32/truncate64.c b/ports/sysdeps/unix/sysv/linux/mips/mips32/truncate64.c
+index 3fad93f50e745396..a9a8059379fdbba5 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips32/truncate64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips32/truncate64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Truncate the file FD refers to to LENGTH bytes.  */
+ int
+@@ -30,7 +29,7 @@ truncate64 (const char *path, off64_t length)
+ {
+   unsigned int low = length & 0xffffffff;
+   unsigned int high = length >> 32;
+-  int result = INLINE_SYSCALL (truncate64, 4, CHECK_STRING (path), 0,
++  int result = INLINE_SYSCALL (truncate64, 4, path, 0,
+ 			       __LONG_LONG_PAIR (high, low));
+   return result;
+ }
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c
+index 1078cc35ac0cc129..645ffa122ea62de6 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/fxstatat64.c
+@@ -25,7 +25,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -96,11 +95,9 @@ __fxstatat64 (int vers, int fd, const char *file, struct stat64 *st, int flag)
+     }
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat, err, 2, CHECK_STRING (file),
+-			       __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (lstat, err, 2, file, __ptrvalue (&kst));
+   else
+-    result = INTERNAL_SYSCALL (stat, err, 2, CHECK_STRING (file),
+-			       __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (stat, err, 2, file, __ptrvalue (&kst));
+ 
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     return __xstat64_conv (vers, &kst, st);
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c
+index 71123f2bf9094c0f..f698d9298a3855e6 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/lxstat64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <xstatconv.h>
+ 
+@@ -34,7 +33,7 @@ __lxstat64 (int vers, const char *name, struct stat64 *buf)
+   int result;
+   struct kernel_stat kbuf;
+ 
+-  result = INLINE_SYSCALL (lstat, 2, CHECK_STRING (name), __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (lstat, 2, name, __ptrvalue (&kbuf));
+   if (result == 0)
+     result = __xstat64_conv (vers, &kbuf, buf);
+ 
+diff --git a/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c b/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c
+index b5bb93614340c02a..623299c6b8db85c4 100644
+--- a/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c
++++ b/ports/sysdeps/unix/sysv/linux/mips/mips64/xstat64.c
+@@ -23,7 +23,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <xstatconv.h>
+ 
+@@ -35,7 +34,7 @@ __xstat64 (int vers, const char *name, struct stat64 *buf)
+   int result;
+   struct kernel_stat kbuf;
+ 
+-  result = INLINE_SYSCALL (stat, 2, CHECK_STRING (name), __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (stat, 2, name, __ptrvalue (&kbuf));
+   if (result == 0)
+     result = __xstat64_conv (vers, &kbuf, buf);
+ 
+diff --git a/sysdeps/generic/bp-checks.h b/sysdeps/generic/bp-checks.h
+index f2610786aed0cc85..bf10617a3f6b8474 100644
+--- a/sysdeps/generic/bp-checks.h
++++ b/sysdeps/generic/bp-checks.h
+@@ -41,16 +41,6 @@
+     && BOUNDS_VIOLATED),				\
+    __ptrvalue (ARG))
+ 
+-extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+-
+-# define _CHECK_STRING(ARG, COND)				\
+-  (((COND)							\
+-    && (__ptrvalue (ARG) < __ptrlow (ARG)			\
+-	|| !__ubp_memchr (__ptrvalue (ARG), '\0',			\
+-		      (__ptrhigh (ARG) - __ptrvalue (ARG))))	\
+-    && BOUNDS_VIOLATED),					\
+-   __ptrvalue (ARG))
+-
+ /* Check bounds of a pointer seated to an array of N objects.  */
+ # define CHECK_N(ARG, N) _CHECK_N ((ARG), (N), 1)
+ /* Same as CHECK_N, but tolerate ARG == NULL.  */
+@@ -61,11 +51,6 @@ extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+ /* Same as CHECK_1, but tolerate ARG == NULL.  */
+ # define CHECK_1_NULL_OK(ARG) CHECK_N_NULL_OK ((ARG), 1)
+ 
+-/* Check for NUL-terminator within string's bounds.  */
+-# define CHECK_STRING(ARG) _CHECK_STRING ((ARG), 1)
+-/* Same as CHECK_STRING, but tolerate ARG == NULL.  */
+-# define CHECK_STRING_NULL_OK(ARG) _CHECK_STRING ((ARG), __ptrvalue (ARG))
+-
+ #else /* !__BOUNDED_POINTERS__ */
+ 
+ /* Do nothing if not compiling with -fbounded-pointers.  */
+@@ -77,7 +62,6 @@ extern void *__unbounded __ubp_memchr (const void *__unbounded, int, unsigned);
+ # define CHECK_1_NULL_OK(ARG) (ARG)
+ # define CHECK_N(ARG, N) (ARG)
+ # define CHECK_N_NULL_OK(ARG, N) (ARG)
+-# define CHECK_STRING(ARG) (ARG)
+ 
+ #endif /* !__BOUNDED_POINTERS__ */
+ 
+diff --git a/sysdeps/i386/memchr.S b/sysdeps/i386/memchr.S
+index 191641207efb9076..a3427c17dafd0cbf 100644
+--- a/sysdeps/i386/memchr.S
++++ b/sysdeps/i386/memchr.S
+@@ -333,7 +333,4 @@ L(pop):	popl %edi		/* pop saved registers */
+ END (BP_SYM (__memchr))
+ 
+ weak_alias (BP_SYM (__memchr), BP_SYM (memchr))
+-#if !__BOUNDED_POINTERS__
+-weak_alias (__memchr, __ubp_memchr)
+-#endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/sysdeps/sparc/sparc32/memchr.S b/sysdeps/sparc/sparc32/memchr.S
+index b7a77298ab916ee0..e22b3d8c1adf4322 100644
+--- a/sysdeps/sparc/sparc32/memchr.S
++++ b/sysdeps/sparc/sparc32/memchr.S
+@@ -139,7 +139,4 @@ ENTRY(__memchr)
+ END(__memchr)
+ 
+ weak_alias (__memchr, memchr)
+-#if !__BOUNDED_POINTERS__
+-weak_alias (__memchr, __ubp_memchr)
+-#endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/sysdeps/sparc/sparc64/memchr.S b/sysdeps/sparc/sparc64/memchr.S
+index 03423b93f5bd81e1..cf38e6a10329e37f 100644
+--- a/sysdeps/sparc/sparc64/memchr.S
++++ b/sysdeps/sparc/sparc64/memchr.S
+@@ -256,7 +256,4 @@ ENTRY(__memchr)
+ END(__memchr)
+ 
+ weak_alias (__memchr, memchr)
+-#if !__BOUNDED_POINTERS__
+-weak_alias (__memchr, __ubp_memchr)
+-#endif
+ libc_hidden_builtin_def (memchr)
+diff --git a/sysdeps/unix/sysv/linux/execve.c b/sysdeps/unix/sysv/linux/execve.c
+index f29615980c531bc2..34fd14bf6afc5417 100644
+--- a/sysdeps/unix/sysv/linux/execve.c
++++ b/sysdeps/unix/sysv/linux/execve.c
+@@ -21,7 +21,8 @@
+ #include <sysdep.h>
+ #include <alloca.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
++
++/* Consider moving to syscalls.list.  */
+ 
+ int
+ __execve (file, argv, envp)
+@@ -29,34 +30,6 @@ __execve (file, argv, envp)
+      char *const argv[];
+      char *const envp[];
+ {
+-#if __BOUNDED_POINTERS__
+-  {
+-    char *const *v;
+-    int i;
+-    char *__unbounded *__unbounded ubp_argv;
+-    char *__unbounded *__unbounded ubp_envp;
+-    char *__unbounded *__unbounded ubp_v;
+-
+-    for (v = argv; *v; v++)
+-      ;
+-    i = v - argv + 1;
+-    ubp_argv = (char *__unbounded *__unbounded) alloca (sizeof (*ubp_argv) * i);
+-    for (v = argv, ubp_v = ubp_argv; --i; v++, ubp_v++)
+-      *ubp_v = CHECK_STRING (*v);
+-    *ubp_v = 0;
+-
+-    for (v = envp; *v; v++)
+-      ;
+-    i = v - envp + 1;
+-    ubp_envp = (char *__unbounded *__unbounded) alloca (sizeof (*ubp_envp) * i);
+-    for (v = envp, ubp_v = ubp_envp; --i; v++, ubp_v++)
+-      *ubp_v = CHECK_STRING (*v);
+-    *ubp_v = 0;
+-
+-    return INLINE_SYSCALL (execve, 3, CHECK_STRING (file), ubp_argv, ubp_envp);
+-  }
+-#else
+   return INLINE_SYSCALL (execve, 3, file, argv, envp);
+-#endif
+ }
+ weak_alias (__execve, execve)
+diff --git a/sysdeps/unix/sysv/linux/fxstatat.c b/sysdeps/unix/sysv/linux/fxstatat.c
+index 9bb608957ac98c9d..de98e667c76f9b3e 100644
+--- a/sysdeps/unix/sysv/linux/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/fxstatat.c
+@@ -109,10 +109,10 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+   if (vers == _STAT_VER_KERNEL)
+     {
+       if (flag & AT_SYMLINK_NOFOLLOW)
+-	result = INTERNAL_SYSCALL (lstat, err, 2, CHECK_STRING (file),
++	result = INTERNAL_SYSCALL (lstat, err, 2, file,
+ 				   CHECK_1 ((struct kernel_stat *) st));
+       else
+-	result = INTERNAL_SYSCALL (stat, err, 2, CHECK_STRING (file),
++	result = INTERNAL_SYSCALL (stat, err, 2, file,
+ 				   CHECK_1 ((struct kernel_stat *) st));
+ 
+       if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+@@ -126,11 +126,9 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+     }
+ #else
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat, err, 2, CHECK_STRING (file),
+-			       __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (lstat, err, 2, file, __ptrvalue (&kst));
+   else
+-    result = INTERNAL_SYSCALL (stat, err, 2, CHECK_STRING (file),
+-			       __ptrvalue (&kst));
++    result = INTERNAL_SYSCALL (stat, err, 2, file, __ptrvalue (&kst));
+ 
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     return __xstat_conv (vers, &kst, st);
+diff --git a/sysdeps/unix/sysv/linux/fxstatat64.c b/sysdeps/unix/sysv/linux/fxstatat64.c
+index 4aa60df7abc9d929..10488b6c1daa210e 100644
+--- a/sysdeps/unix/sysv/linux/fxstatat64.c
++++ b/sysdeps/unix/sysv/linux/fxstatat64.c
+@@ -99,11 +99,9 @@ __fxstatat64 (int vers, int fd, const char *file, struct stat64 *st, int flag)
+     }
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat64, err, 2, CHECK_STRING (file),
+-			       CHECK_1 (st));
++    result = INTERNAL_SYSCALL (lstat64, err, 2, file, CHECK_1 (st));
+   else
+-    result = INTERNAL_SYSCALL (stat64, err, 2, CHECK_STRING (file),
+-			       CHECK_1 (st));
++    result = INTERNAL_SYSCALL (stat64, err, 2, file, CHECK_1 (st));
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     {
+ # if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+diff --git a/sysdeps/unix/sysv/linux/getcwd.c b/sysdeps/unix/sysv/linux/getcwd.c
+index 6a5e6262d997fc53..ab665ac9c6f6ac4d 100644
+--- a/sysdeps/unix/sysv/linux/getcwd.c
++++ b/sysdeps/unix/sysv/linux/getcwd.c
+@@ -26,7 +26,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <kernel-features.h>
+ 
+@@ -78,7 +77,7 @@ __getcwd (char *buf, size_t size)
+ 
+   int retval;
+ 
+-  retval = INLINE_SYSCALL (getcwd, 2, CHECK_STRING (path), alloc_size);
++  retval = INLINE_SYSCALL (getcwd, 2, path, alloc_size);
+   if (retval >= 0 && path[0] == '/')
+     {
+ #ifndef NO_ALLOCATION
+diff --git a/sysdeps/unix/sysv/linux/i386/chown.c b/sysdeps/unix/sysv/linux/i386/chown.c
+index 5ea3cfd8692f3bf5..0ddf0651ae2e03f3 100644
+--- a/sysdeps/unix/sysv/linux/i386/chown.c
++++ b/sysdeps/unix/sysv/linux/i386/chown.c
+@@ -21,7 +21,6 @@
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+ #include <shlib-compat.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -45,7 +44,7 @@ extern int __real_chown (const char *__file, uid_t __owner, gid_t __group);
+ int
+ __real_chown (const char *file, uid_t owner, gid_t group)
+ {
+-  return INLINE_SYSCALL (chown32, 3, CHECK_STRING (file), owner, group);
++  return INLINE_SYSCALL (chown32, 3, file, owner, group);
+ }
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/fchownat.c b/sysdeps/unix/sysv/linux/i386/fchownat.c
+index 18c8f0b317213b0f..116a24a07458e87c 100644
+--- a/sysdeps/unix/sysv/linux/i386/fchownat.c
++++ b/sysdeps/unix/sysv/linux/i386/fchownat.c
+@@ -24,7 +24,6 @@
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+ #include <shlib-compat.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ #include <kernel-features.h>
+@@ -86,11 +85,9 @@ fchownat (int fd, const char *file, uid_t owner, gid_t group, int flag)
+   INTERNAL_SYSCALL_DECL (err);
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lchown32, err, 3, CHECK_STRING (file), owner,
+-			       group);
++    result = INTERNAL_SYSCALL (lchown32, err, 3, file, owner, group);
+   else
+-    result = INTERNAL_SYSCALL (chown32, err, 3, CHECK_STRING (file), owner,
+-			       group);
++    result = INTERNAL_SYSCALL (chown32, err, 3, file, owner, group);
+ 
+   if (__builtin_expect (INTERNAL_SYSCALL_ERROR_P (result, err), 0))
+     {
+diff --git a/sysdeps/unix/sysv/linux/i386/fxstatat.c b/sysdeps/unix/sysv/linux/i386/fxstatat.c
+index d1e81e081b7e91bf..010f637155d35d76 100644
+--- a/sysdeps/unix/sysv/linux/i386/fxstatat.c
++++ b/sysdeps/unix/sysv/linux/i386/fxstatat.c
+@@ -102,20 +102,18 @@ __fxstatat (int vers, int fd, const char *file, struct stat *st, int flag)
+   if (vers == _STAT_VER_KERNEL)
+     {
+       if (flag & AT_SYMLINK_NOFOLLOW)
+-	result = INTERNAL_SYSCALL (lstat, err, 2, CHECK_STRING (file),
++	result = INTERNAL_SYSCALL (lstat, err, 2, file,
+ 				   CHECK_1 ((struct kernel_stat *) st));
+       else
+-	result = INTERNAL_SYSCALL (stat, err, 2, CHECK_STRING (file),
++	result = INTERNAL_SYSCALL (stat, err, 2, file,
+ 				   CHECK_1 ((struct kernel_stat *) st));
+       goto out;
+     }
+ 
+   if (flag & AT_SYMLINK_NOFOLLOW)
+-    result = INTERNAL_SYSCALL (lstat64, err, 2, CHECK_STRING (file),
+-			       __ptrvalue (&st64));
++    result = INTERNAL_SYSCALL (lstat64, err, 2, file, __ptrvalue (&st64));
+   else
+-    result = INTERNAL_SYSCALL (stat64, err, 2, CHECK_STRING (file),
+-			       __ptrvalue (&st64));
++    result = INTERNAL_SYSCALL (stat64, err, 2, file, __ptrvalue (&st64));
+   if (__builtin_expect (!INTERNAL_SYSCALL_ERROR_P (result, err), 1))
+     return __xstat32_conv (vers, &st64, st);
+ 
+diff --git a/sysdeps/unix/sysv/linux/i386/lchown.c b/sysdeps/unix/sysv/linux/i386/lchown.c
+index 6190d02a6f068c5b..d90a0b5e350221ab 100644
+--- a/sysdeps/unix/sysv/linux/i386/lchown.c
++++ b/sysdeps/unix/sysv/linux/i386/lchown.c
+@@ -20,7 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -29,7 +28,7 @@
+ int
+ __lchown (const char *file, uid_t owner, gid_t group)
+ {
+-  return INLINE_SYSCALL (lchown32, 3, CHECK_STRING (file), owner, group);
++  return INLINE_SYSCALL (lchown32, 3, file, owner, group);
+ }
+ 
+ weak_alias (__lchown, lchown)
+diff --git a/sysdeps/unix/sysv/linux/i386/lxstat.c b/sysdeps/unix/sysv/linux/i386/lxstat.c
+index 2b1ecaa0d94d86fc..9be5ff0f0e382c7e 100644
+--- a/sysdeps/unix/sysv/linux/i386/lxstat.c
++++ b/sysdeps/unix/sysv/linux/i386/lxstat.c
+@@ -41,12 +41,12 @@ __lxstat (int vers, const char *name, struct stat *buf)
+   int result;
+ 
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (lstat, 2, CHECK_STRING (name), CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (lstat, 2, name, CHECK_1 ((struct kernel_stat *) buf));
+ 
+   {
+     struct stat64 buf64;
+ 
+-    result = INLINE_SYSCALL (lstat64, 2, CHECK_STRING (name), __ptrvalue (&buf64));
++    result = INLINE_SYSCALL (lstat64, 2, name, __ptrvalue (&buf64));
+     if (result == 0)
+       result = __xstat32_conv (vers, &buf64, buf);
+     return result;
+diff --git a/sysdeps/unix/sysv/linux/i386/xstat.c b/sysdeps/unix/sysv/linux/i386/xstat.c
+index 0fe7a9dcdf028541..e44599c85a836419 100644
+--- a/sysdeps/unix/sysv/linux/i386/xstat.c
++++ b/sysdeps/unix/sysv/linux/i386/xstat.c
+@@ -41,12 +41,12 @@ __xstat (int vers, const char *name, struct stat *buf)
+   int result;
+ 
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (stat, 2, CHECK_STRING (name), CHECK_1 ((struct kernel_stat *) buf));
++    return INLINE_SYSCALL (stat, 2, name, CHECK_1 ((struct kernel_stat *) buf));
+ 
+   {
+     struct stat64 buf64;
+ 
+-    result = INLINE_SYSCALL (stat64, 2, CHECK_STRING (name), __ptrvalue (&buf64));
++    result = INLINE_SYSCALL (stat64, 2, name, __ptrvalue (&buf64));
+     if (result == 0)
+       result = __xstat32_conv (vers, &buf64, buf);
+     return result;
+diff --git a/sysdeps/unix/sysv/linux/lxstat.c b/sysdeps/unix/sysv/linux/lxstat.c
+index c7359647b67ee461..62b4650d8f771854 100644
+--- a/sysdeps/unix/sysv/linux/lxstat.c
++++ b/sysdeps/unix/sysv/linux/lxstat.c
+@@ -36,7 +36,7 @@ int
+ __lxstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (lstat, 2, CHECK_STRING (name),
++    return INLINE_SYSCALL (lstat, 2, name,
+ 			   CHECK_1 ((struct kernel_stat *) buf));
+ 
+ #ifdef STAT_IS_KERNEL_STAT
+@@ -46,7 +46,7 @@ __lxstat (int vers, const char *name, struct stat *buf)
+   struct kernel_stat kbuf;
+   int result;
+ 
+-  result = INLINE_SYSCALL (lstat, 2, CHECK_STRING (name), __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (lstat, 2, name, __ptrvalue (&kbuf));
+   if (result == 0)
+     result = __xstat_conv (vers, &kbuf, buf);
+ 
+diff --git a/sysdeps/unix/sysv/linux/lxstat64.c b/sysdeps/unix/sysv/linux/lxstat64.c
+index 765b195c6ceb6554..d5d9f93f782d0221 100644
+--- a/sysdeps/unix/sysv/linux/lxstat64.c
++++ b/sysdeps/unix/sysv/linux/lxstat64.c
+@@ -32,7 +32,7 @@ int
+ ___lxstat64 (int vers, const char *name, struct stat64 *buf)
+ {
+   int result;
+-  result = INLINE_SYSCALL (lstat64, 2, CHECK_STRING (name), CHECK_1 (buf));
++  result = INLINE_SYSCALL (lstat64, 2, name, CHECK_1 (buf));
+ #if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+   if (__builtin_expect (!result, 1) && buf->__st_ino != (__ino_t) buf->st_ino)
+     buf->st_ino = buf->__st_ino;
+diff --git a/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c b/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
+index c9f66164ce2397c9..6f416599e9ebdd1d 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc32/truncate64.c
+@@ -21,7 +21,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Truncate the file referenced by FD to LENGTH bytes.  */
+ int
+@@ -30,7 +29,7 @@ truncate64 (path, length)
+      off64_t length;
+ {
+   /* On PPC32 64bit values are aligned in odd/even register pairs.  */
+-  int result = INLINE_SYSCALL (truncate64, 4, CHECK_STRING (path), 0,
++  int result = INLINE_SYSCALL (truncate64, 4, path, 0,
+ 			       (long) (length >> 32),
+ 			       (long) length);
+   return result;
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-32/chown.c b/sysdeps/unix/sysv/linux/s390/s390-32/chown.c
+index cc0503cbca14e822..f6a533d2b3fbe74e 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-32/chown.c
++++ b/sysdeps/unix/sysv/linux/s390/s390-32/chown.c
+@@ -21,7 +21,6 @@
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+ #include <shlib-compat.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -42,7 +41,7 @@
+ int
+ __real_chown (const char *file, uid_t owner, gid_t group)
+ {
+-  return INLINE_SYSCALL (chown32, 3, CHECK_STRING (file), owner, group);
++  return INLINE_SYSCALL (chown32, 3, file, owner, group);
+ }
+ 
+ 
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-32/lchown.c b/sysdeps/unix/sysv/linux/s390/s390-32/lchown.c
+index 6190d02a6f068c5b..d90a0b5e350221ab 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-32/lchown.c
++++ b/sysdeps/unix/sysv/linux/s390/s390-32/lchown.c
+@@ -20,7 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -29,7 +28,7 @@
+ int
+ __lchown (const char *file, uid_t owner, gid_t group)
+ {
+-  return INLINE_SYSCALL (lchown32, 3, CHECK_STRING (file), owner, group);
++  return INLINE_SYSCALL (lchown32, 3, file, owner, group);
+ }
+ 
+ weak_alias (__lchown, lchown)
+diff --git a/sysdeps/unix/sysv/linux/sh/chown.c b/sysdeps/unix/sysv/linux/sh/chown.c
+index 5ae94b6b25b84e85..9ff0453d0ceb52ee 100644
+--- a/sysdeps/unix/sysv/linux/sh/chown.c
++++ b/sysdeps/unix/sysv/linux/sh/chown.c
+@@ -20,7 +20,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ #include <linux/posix_types.h>
+ 
+@@ -29,7 +28,7 @@
+ int
+ __chown (const char *file, uid_t owner, gid_t group)
+ {
+-  return INLINE_SYSCALL (chown32, 3, CHECK_STRING (file), owner, group);
++  return INLINE_SYSCALL (chown32, 3, file, owner, group);
+ }
+ libc_hidden_def (__chown)
+ weak_alias (__chown, chown)
+diff --git a/sysdeps/unix/sysv/linux/truncate64.c b/sysdeps/unix/sysv/linux/truncate64.c
+index b31b74d1dee485b4..98f8ec2691bad3a5 100644
+--- a/sysdeps/unix/sysv/linux/truncate64.c
++++ b/sysdeps/unix/sysv/linux/truncate64.c
+@@ -22,7 +22,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Truncate the file referenced by FD to LENGTH bytes.  */
+ int
+@@ -30,7 +29,7 @@ truncate64 (const char *path, off64_t length)
+ {
+   unsigned int low = length & 0xffffffff;
+   unsigned int high = length >> 32;
+-  int result = INLINE_SYSCALL (truncate64, 3, CHECK_STRING (path),
++  int result = INLINE_SYSCALL (truncate64, 3, path,
+ 			       __LONG_LONG_PAIR (high, low));
+   return result;
+ }
+diff --git a/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c b/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c
+index cec71518524c2bc2..f44778e787e5ad80 100644
+--- a/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c
++++ b/sysdeps/unix/sysv/linux/wordsize-64/lxstat.c
+@@ -34,7 +34,7 @@ int
+ __lxstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL || vers == _STAT_VER_LINUX)
+-    return INLINE_SYSCALL (lstat, 2, CHECK_STRING (name), CHECK_1 (buf));
++    return INLINE_SYSCALL (lstat, 2, name, CHECK_1 (buf));
+ 
+   __set_errno (EINVAL);
+   return -1;
+diff --git a/sysdeps/unix/sysv/linux/xmknod.c b/sysdeps/unix/sysv/linux/xmknod.c
+index 9bd8b6b0d46bee4b..5b782b7af070f2ce 100644
+--- a/sysdeps/unix/sysv/linux/xmknod.c
++++ b/sysdeps/unix/sysv/linux/xmknod.c
+@@ -24,7 +24,6 @@
+ 
+ #include <sysdep.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ /* Create a device file named PATH, with permission and special bits MODE
+    and device number DEV (which can be constructed from major and minor
+@@ -48,8 +47,7 @@ __xmknod (int vers, const char *path, mode_t mode, dev_t *dev)
+       return -1;
+     }
+ 
+-  return INLINE_SYSCALL (mknod, 3, CHECK_STRING (path), mode,
+-			 (unsigned int) k_dev);
++  return INLINE_SYSCALL (mknod, 3, path, mode, (unsigned int) k_dev);
+ }
+ 
+ weak_alias (__xmknod, _xmknod)
+diff --git a/sysdeps/unix/sysv/linux/xmknodat.c b/sysdeps/unix/sysv/linux/xmknodat.c
+index bf91d25329a0193a..a0fa0a7984d0aa51 100644
+--- a/sysdeps/unix/sysv/linux/xmknodat.c
++++ b/sysdeps/unix/sysv/linux/xmknodat.c
+@@ -26,7 +26,6 @@
+ #include <sysdep.h>
+ #include <kernel-features.h>
+ #include <sys/syscall.h>
+-#include <bp-checks.h>
+ 
+ 
+ /* Create a device file named PATH relative to FD, with permission and
+@@ -92,8 +91,7 @@ __xmknodat (int vers, int fd, const char *file, mode_t mode, dev_t *dev)
+       file = buf;
+     }
+ 
+-  return INLINE_SYSCALL (mknod, 3, CHECK_STRING (file), mode,
+-			 (unsigned int) k_dev);
++  return INLINE_SYSCALL (mknod, 3, file, mode, (unsigned int) k_dev);
+ #endif
+ }
+ 
+diff --git a/sysdeps/unix/sysv/linux/xstat.c b/sysdeps/unix/sysv/linux/xstat.c
+index d62feaf9fe5ee1df..179ea9e30123fb81 100644
+--- a/sysdeps/unix/sysv/linux/xstat.c
++++ b/sysdeps/unix/sysv/linux/xstat.c
+@@ -36,7 +36,7 @@ int
+ __xstat (int vers, const char *name, struct stat *buf)
+ {
+   if (vers == _STAT_VER_KERNEL)
+-    return INLINE_SYSCALL (stat, 2, CHECK_STRING (name),
++    return INLINE_SYSCALL (stat, 2, name,
+ 			   CHECK_1 ((struct kernel_stat *) buf));
+ 
+ #ifdef STAT_IS_KERNEL_STAT
+@@ -46,8 +46,7 @@ __xstat (int vers, const char *name, struct stat *buf)
+   struct kernel_stat kbuf;
+   int result;
+ 
+-  result = INLINE_SYSCALL (stat, 2, CHECK_STRING (name),
+-			   __ptrvalue (&kbuf));
++  result = INLINE_SYSCALL (stat, 2, name, __ptrvalue (&kbuf));
+   if (result == 0)
+     result = __xstat_conv (vers, &kbuf, buf);
+ 
+diff --git a/sysdeps/unix/sysv/linux/xstat64.c b/sysdeps/unix/sysv/linux/xstat64.c
+index dd0f996760502423..89976a68e9d86699 100644
+--- a/sysdeps/unix/sysv/linux/xstat64.c
++++ b/sysdeps/unix/sysv/linux/xstat64.c
+@@ -33,7 +33,7 @@ int
+ ___xstat64 (int vers, const char *name, struct stat64 *buf)
+ {
+   int result;
+-  result = INLINE_SYSCALL (stat64, 2, CHECK_STRING (name), CHECK_1 (buf));
++  result = INLINE_SYSCALL (stat64, 2, name, CHECK_1 (buf));
+ #if defined _HAVE_STAT64___ST_INO && __ASSUME_ST_INO_64_BIT == 0
+   if (__builtin_expect (!result, 1) && buf->__st_ino != (__ino_t) buf->st_ino)
+     buf->st_ino = buf->__st_ino;

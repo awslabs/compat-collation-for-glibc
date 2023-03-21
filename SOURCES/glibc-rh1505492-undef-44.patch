@@ -1,0 +1,46 @@
+commit 3f3dd810e03661535980e334723666205c693313
+Author: Siddhesh Poyarekar <siddhesh@redhat.com>
+Date:   Fri Aug 1 14:23:38 2014 +0530
+
+    Fix -Wundef warnings in fnmatch.c
+    
+    Fixes -Wundef warnings for MBSTATE_T and HAVE_STRING_H.  The
+    HAVE_STRING_H bit is a merge from the gnulib fnmatch.c and the
+    MBSTATE_T fix has been posted to gnulib for inclusion.
+
+diff --git a/include/libc-symbols.h b/include/libc-symbols.h
+index bf98c33cf3ba9df6..fa0d590b0f072871 100644
+--- a/include/libc-symbols.h
++++ b/include/libc-symbols.h
+@@ -68,9 +68,11 @@
+    so it's harmless.  */
+ #define HAVE_CONFIG_H	0
+ 
+-/* Define this for the benefit of portable GNU code that wants to check it.
+-   Of course, it's never false when building libc!  */
++/* Define these macros for the benefit of portable GNU code that wants to check
++   them.  Of course, STDC_HEADERS is never false when building libc!  */
+ #define STDC_HEADERS	1
++#define HAVE_MBSTATE_T	1
++#define HAVE_MBSRTOWCS	1
+ 
+ /* The symbols in all the user (non-_) macros are C symbols.  */
+ 
+diff --git a/posix/fnmatch.c b/posix/fnmatch.c
+index 99ec8c4a0eba49b3..eed12b7b515e390c 100644
+--- a/posix/fnmatch.c
++++ b/posix/fnmatch.c
+@@ -29,12 +29,7 @@
+ #include <errno.h>
+ #include <fnmatch.h>
+ #include <ctype.h>
+-
+-#if HAVE_STRING_H || defined _LIBC
+-# include <string.h>
+-#else
+-# include <strings.h>
+-#endif
++#include <string.h>
+ 
+ #if defined STDC_HEADERS || defined _LIBC
+ # include <stdlib.h>
