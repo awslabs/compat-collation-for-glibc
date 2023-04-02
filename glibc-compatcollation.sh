@@ -83,7 +83,7 @@ case "$1" in
         rebuild_libs
       ;;
     diff)
-        show_diff
+        show_diff $1 $2 $3
       ;;
     rpmpatch)
         rpmpatch
