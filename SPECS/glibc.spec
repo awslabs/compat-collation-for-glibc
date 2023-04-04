@@ -1510,7 +1510,7 @@ popd
 # compatcollation
 ##############################################################################
 pushd locale
-eval $(grep locarchive.c  ../compatcollation/glibc-rpmbuild.out | sed 's:"/usr/lib/locale":"%{compatprefix}/lib/locale-compatcollation22659":g;s:"/usr/share/locale":"%{compatprefix}/share/locale-compatcollation22659":g;s:locale/locarchive.o:locarchive.o:g')
+eval $(grep locarchive.c  ../compatcollation/glibc-rpmbuild.out | sed 's:"/usr/lib/locale":"%{compatprefix}/lib/locale-compatcollation%{compatcollationversion_nodots}":g;s:"/usr/share/locale":"%{compatprefix}/share/locale-compatcollation%{compatcollationversion_nodots}":g;s:locale/locarchive.o:locarchive.o:g')
 popd
 pushd build-%{target}
 mkdir -p ${RPM_BUILD_ROOT}%{compatprefix}/sbin
