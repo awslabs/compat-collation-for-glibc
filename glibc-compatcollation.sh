@@ -69,12 +69,12 @@ show_diff() {
 }
 
 rpmpatch() {
-	(cd $DEV_DIR; git diff --relative --patch ${BASELINE_TAG}..HEAD -- . :^./compatcollation) >SOURCES/9991-compatcollation-glibc.patch
-	(cd $DEV_DIR; git diff --relative --patch ${BASELINE_TAG}..HEAD -- compatcollation) >SOURCES/9992-compatcollation-build.patch
+	(cd $DEV_DIR; git diff --relative --patch ${BASELINE_TAG}..HEAD) >SOURCES/9991-compatcollation-glibc.patch
 }
 
 case "$1" in
     build)
+        rpmpatch
         build_rpm
       ;;
     rebuild)
