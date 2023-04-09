@@ -1663,7 +1663,6 @@ Patch9999: glibc-rh1256317-armhfp-build-issue.patch
 # compatcollation Patches
 ##############################################################################
 Patch9991: 9991-compatcollation-glibc.patch
-Patch9992: 9992-compatcollation-build.patch
 Source9993: build-locale-archive-compatcollation.c
 ##############################################################################
 # compatcollation Patches
@@ -3083,7 +3082,6 @@ rm -f %{_prefix}/lib/locale-compatcollation%{compatcollationversion_nodots}/loca
 # compatcollation Patches
 ##############################################################################
 %patch9991 -p1
-%patch9992 -p1
 ##############################################################################
 # compatcollation Patches
 ##############################################################################
