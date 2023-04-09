@@ -4200,6 +4200,7 @@ fi
 rm -rf "$RPM_BUILD_ROOT"
 rm -f *.filelist*
 
+%if ! %{onlycompatcollation}
 %files -f rpm.filelist
 %defattr(-,root,root)
 %dir /usr/%{_lib}/audit
@@ -4304,6 +4305,7 @@ rm -f *.filelist*
 %ifnarch %{auxarches}
 %files debuginfo-common -f debuginfocommon.filelist
 %defattr(-,root,root)
+%endif
 %endif
 %endif
 %endif
