@@ -76,6 +76,8 @@ GLIBC_2.16 {
 } GLIBC_2.15;
 COMPATCOLL_1.0 {
   global:
+    set_check_glibc_strcoll;
+    unset_check_glibc_strcoll;
     __ctype_b_loc;
     __ctype_init;
     __ctype_tolower;

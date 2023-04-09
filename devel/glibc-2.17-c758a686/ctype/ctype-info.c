@@ -26,6 +26,8 @@ __libc_tsd_define (, const int32_t *, CTYPE_TOUPPER)
 
 
 #ifdef LIBCOMPATCOLL_MODE
+__thread int __ctype_init_done = 42;
+
 __attribute__((constructor))
 #endif /* LIBCOMPATCOLL_MODE */
 void
@@ -37,6 +39,9 @@ __ctype_init (void)
   *up = ((int32_t *) _NL_CURRENT (LC_CTYPE, _NL_CTYPE_TOUPPER) + 128);
   const int32_t **lp = __libc_tsd_address (const int32_t *, CTYPE_TOLOWER);
   *lp = ((int32_t *) _NL_CURRENT (LC_CTYPE, _NL_CTYPE_TOLOWER) + 128);
+#ifdef LIBCOMPATCOLL_MODE
+  __ctype_init_done = 1;
+#endif /* LIBCOMPATCOLL_MODE */
 }
 #ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__ctype_init)

@@ -29,22 +29,37 @@ __libc_tsd_define (extern, const uint16_t *, CTYPE_B)
 __libc_tsd_define (extern, const int32_t *, CTYPE_TOUPPER)
 __libc_tsd_define (extern, const int32_t *, CTYPE_TOLOWER)
 
+#ifdef LIBCOMPATCOLL_MODE
+extern __thread int __ctype_init_done;
+#endif /* LIBCOMPATCOLL_MODE */
 
 CTYPE_EXTERN_INLINE const uint16_t ** __attribute__ ((const))
 __ctype_b_loc (void)
 {
+#ifdef LIBCOMPATCOLL_MODE
+  if (__ctype_init_done != 1)
+    __ctype_init();
+#endif /* LIBCOMPATCOLL_MODE */
   return __libc_tsd_address (const uint16_t *, CTYPE_B);
 }
 
 CTYPE_EXTERN_INLINE const int32_t ** __attribute__ ((const))
 __ctype_toupper_loc (void)
 {
+#ifdef LIBCOMPATCOLL_MODE
+  if (__ctype_init_done != 1)
+    __ctype_init();
+#endif /* LIBCOMPATCOLL_MODE */
   return __libc_tsd_address (const int32_t *, CTYPE_TOUPPER);
 }
 
 CTYPE_EXTERN_INLINE const int32_t ** __attribute__ ((const))
 __ctype_tolower_loc (void)
 {
+#ifdef LIBCOMPATCOLL_MODE
+  if (__ctype_init_done != 1)
+    __ctype_init();
+#endif /* LIBCOMPATCOLL_MODE */
   return __libc_tsd_address (const int32_t *, CTYPE_TOLOWER);
 }
 

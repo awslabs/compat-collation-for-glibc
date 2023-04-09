@@ -23,15 +23,62 @@
 # define STRCOLL strcoll
 # define STRCOLL_L __strcoll_l
 # define USE_HIDDEN_DEF
+#ifdef LIBCOMPATCOLL_MODE
+#define STRCOLLFUNC
+#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 #include "../locale/localeinfo.h"
 
+#if defined LIBCOMPATCOLL_MODE && defined STRCOLLFUNC
+#include <dlfcn.h>
+#include <stdio.h>
+
+static int (*strcoll_l_glibc)(const STRING_TYPE *s1, const STRING_TYPE *s2, locale_t l);
+static int check_glibc_strcoll = 0;
+
+void __attribute__ ((constructor))
+strcoll_l_glibc_init(void)
+{
+        strcoll_l_glibc = dlsym(RTLD_NEXT, "strcoll_l");
+}
+
+void
+set_check_glibc_strcoll(void)
+{
+  check_glibc_strcoll = 1;
+}
+
+void
+unset_check_glibc_strcoll(void)
+{
+  check_glibc_strcoll = 0;
+}
+#endif /* LIBCOMPATCOLL_MODE */
 
 int
 STRCOLL (const STRING_TYPE *s1, const STRING_TYPE *s2)
 {
+#ifndef LIBCOMPATCOLL_MODE
   return STRCOLL_L (s1, s2, _NL_CURRENT_LOCALE);
+#else
+#ifdef STRCOLLFUNC
+  int  retl = STRCOLL_L (s1, s2, _NL_CURRENT_LOCALE);
+
+  if (__glibc_unlikely(check_glibc_strcoll))
+  {
+    int   retg = strcoll_l_glibc(s1, s2, _NL_CURRENT_LOCALE);
+
+    if (((retg > 0) - (retg < 0)) != ((retl > 0) - (retl < 0)))
+      fprintf(stderr, "strcoll mismatch s1 = \"%s\", s2 = \"%s\": compat = %d, glibc = %d\n",
+              s1, s2, retl, retg);
+  }
+
+  return retl;
+#else
+  return STRCOLL_L (s1, s2, _NL_CURRENT_LOCALE);
+#endif /* STRCOLLFUNC */
+#endif /* LIBCOMPATCOLL_MODE */
 }
 
 #ifndef LIBCOMPATCOLL_MODE
