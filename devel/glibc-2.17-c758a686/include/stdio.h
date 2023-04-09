@@ -116,6 +116,7 @@ extern int __fxprintf (FILE *__fp, const char *__fmt, ...)
 extern const char *const _sys_errlist_internal[] attribute_hidden;
 extern int _sys_nerr_internal attribute_hidden;
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__asprintf)
 #  if IS_IN (libc)
 extern _IO_FILE *_IO_new_fopen (const char*, const char*);
@@ -132,7 +133,9 @@ extern int _IO_new_fsetpos (_IO_FILE *, const _IO_fpos_t *);
 extern int _IO_new_fgetpos (_IO_FILE *, _IO_fpos_t *);
 #   define fgetpos(fp, posp) _IO_new_fgetpos (fp, posp)
 #  endif
+#endif /* LIBCOMPATCOLL_MODE */
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (dprintf)
 libc_hidden_proto (fprintf)
 libc_hidden_proto (vfprintf)
@@ -151,7 +154,9 @@ libc_hidden_proto (fflush_unlocked)
 libc_hidden_proto (fread_unlocked)
 libc_hidden_proto (fwrite_unlocked)
 libc_hidden_proto (fgets_unlocked)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (fgets_unlocked) __fgets_unlocked;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__fgets_unlocked)
 libc_hidden_proto (fputs_unlocked)
 libc_hidden_proto (fmemopen)
@@ -163,6 +168,7 @@ libc_hidden_proto (__vfprintf_chk)
 libc_hidden_proto (__vasprintf_chk)
 libc_hidden_proto (__vdprintf_chk)
 libc_hidden_proto (__obstack_vprintf_chk)
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* The <stdio.h> header does not include the declaration for gets
    anymore when compiling with _GNU_SOURCE.  Provide a copy here.  */

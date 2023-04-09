@@ -55,6 +55,7 @@ extern unsigned long long int __wcstoull_internal (const wchar_t *
 extern unsigned long long int ____wcstoull_l_internal (const wchar_t *,
 						       wchar_t **, int, int,
 						       __locale_t);
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__wcstof_internal)
 libc_hidden_proto (__wcstod_internal)
 libc_hidden_proto (__wcstold_internal)
@@ -69,6 +70,7 @@ libc_hidden_proto (wcstol)
 libc_hidden_proto (wcstoll)
 libc_hidden_proto (wcstoul)
 libc_hidden_proto (wcstoull)
+#endif /* LIBCOMPATCOLL_MODE */
 
 libc_hidden_proto (__wcscasecmp_l)
 libc_hidden_proto (__wcsncasecmp_l)

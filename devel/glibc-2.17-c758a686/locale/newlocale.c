@@ -103,7 +103,11 @@ __newlocale (int category_mask, const char *locale, __locale_t base)
   locale_path = NULL;
   locale_path_len = 0;
 
+#ifndef LIBCOMPATCOLL_MODE  
   locpath_var = getenv ("LOCPATH");
+#else
+  locpath_var = getenv ("COMPAT_LOCPATH");
+#endif /* LIBCOMPATCOLL_MODE */
   if (locpath_var != NULL && locpath_var[0] != '\0')
     {
       if (__argz_create_sep (locpath_var, ':',

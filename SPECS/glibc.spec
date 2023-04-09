@@ -1,6 +1,16 @@
 %define glibcsrcdir glibc-2.17-c758a686
 %define glibcversion 2.17
 %define glibcrelease 326%{?dist}
+%define _unpackaged_files_terminate_build 0
+%define onlycompatcollation 1
+%define compatcollationversion_nodots 217326
+%define compatcollationversion 1.2
+%define compatcollationrelease el7_9
+%if %{?compatprefix:1}%{!?compatprefix:0}
+# use user defined compatprefix
+%else 
+%define compatprefix /usr
+%endif
 ##############################################################################
 # We support the following options:
 # --with/--without,
@@ -12,16 +22,16 @@
 # * valgrind - Run smoke tests with valgrind to verify dynamic loader.
 #
 # You must always run the testsuite for production builds.
-# Default: Always run the testsuite.
-%bcond_without testsuite
-# Default: Always build the benchtests.
-%bcond_without benchtests
+# Default: Don't run the testsuite.
+%bcond_with testsuite
+# Default: Don't build the benchtests.
+%bcond_with benchtests
 # Default: Not bootstrapping.
 %bcond_with bootstrap
 # Default: Enable using -Werror
 %bcond_without werror
-# Default: Always build documentation.
-%bcond_without docs
+# Default: Don't build documentation.
+%bcond_with docs
 # Default: Don't run valgrind tests
 %bcond_with valgrind
 
@@ -1650,6 +1660,16 @@ Patch9998: glibc-armhfp-ELF_MACHINE_NO_REL-undefined.patch
 Patch9999: glibc-rh1256317-armhfp-build-issue.patch
 
 ##############################################################################
+# compatcollation Patches
+##############################################################################
+Patch9991: 9991-compatcollation-glibc.patch
+Patch9992: 9992-compatcollation-build.patch
+Source9993: build-locale-archive-compatcollation.c
+##############################################################################
+# compatcollation Patches
+##############################################################################
+
+##############################################################################
 # End of glibc patches.
 ##############################################################################
 
@@ -1689,7 +1709,7 @@ Requires(pre): basesystem, libgcc
 
 # This is for building auxiliary programs like memusage, nscd
 # For initial glibc bootstraps it can be commented out
-BuildRequires: gd-devel libpng-devel zlib-devel
+#BuildRequires: gd-devel libpng-devel zlib-devel
 %if %{with docs}
 # Removing texinfo will cause check-safety.sh test to fail because it seems to
 # trigger documentation generation based on dependencies.  We need to fix this
@@ -1964,6 +1984,36 @@ package or when debugging this package.
 
 %endif # %{debuginfocommonarches}
 %endif # 0%{?_enable_debug_packages}
+
+##############################################################################
+# glibc compatcollation
+##############################################################################
+%package compatcollation%{compatcollationversion_nodots}
+Version: %{compatcollationversion}
+Release: %{compatcollationrelease}
+Summary: The GNU libc compatcollation %{compatcollationversion_nodots}
+Group: System Environment/Libraries
+
+%description compatcollation%{compatcollationversion_nodots}
+The glibc collation compatibility package for %{compatcollationversion_nodots}
+
+%files compatcollation%{compatcollationversion_nodots}
+%defattr(-,root,root)
+/usr/lib64/gconv-compatcollation%{compatcollationversion_nodots}
+/usr/lib/locale-compatcollation%{compatcollationversion_nodots}
+/usr/share/locale-compatcollation%{compatcollationversion_nodots}
+/usr/lib64/libcompatcollation.%{glibcversion}-%{glibcrelease}.so
+%{_prefix}/sbin/build-locale-archive-compatcollation%{compatcollationversion_nodots}
+
+%posttrans compatcollation%{compatcollationversion_nodots}
+%{_prefix}/sbin/build-locale-archive-compatcollation%{compatcollationversion_nodots}
+
+%postun compatcollation%{compatcollationversion_nodots}
+rm -f %{_prefix}/lib/locale-compatcollation%{compatcollationversion_nodots}/locale-archive
+
+##############################################################################
+# compatcollation
+##############################################################################
 
 ##############################################################################
 # Prepare for the build.
@@ -3030,6 +3080,15 @@ package or when debugging this package.
 %endif
 
 ##############################################################################
+# compatcollation Patches
+##############################################################################
+%patch9991 -p1
+%patch9992 -p1
+##############################################################################
+# compatcollation Patches
+##############################################################################
+
+##############################################################################
 # %%prep - Additional prep required...
 ##############################################################################
 
@@ -3239,7 +3298,7 @@ popd
 ##############################################################################
 # Build glibc for the default set of options.
 ##############################################################################
-build
+build | tee %{_builddir}/%{glibcsrcdir}/compatcollation/glibc-rpmbuild.out
 
 ##############################################################################
 # Build glibc for xen:
@@ -3297,6 +3356,14 @@ $GCC -static -L. -Os -g ../releng/glibc_post_upgrade.c -o glibc_post_upgrade.%{_
   '-DGCONV_MODULES_DIR="%{_prefix}/%{_lib}/gconv"' \
   '-DLD_SO_CONF="/etc/ld.so.conf"' \
   '-DICONVCONFIG="%{_sbindir}/iconvconfig.%{_target_cpu}"'
+popd
+
+##############################################################################
+# Build the glibc compatcollation
+##############################################################################
+
+pushd compatcollation
+make BUILDROOT=%{_builddir}/%{glibcsrcdir} COMPATPREFIX=%{compatprefix} BUILDDIR=%{_builddir}/%{glibcsrcdir}/build-%{target} INSTALLROOT=${RPM_BUILD_ROOT} GLIBCVERSION=%{glibcversion} GLIBCRELEASE=%{glibcrelease} COMPATCOLLATIONVERSION=%{compatcollationversion_nodots}
 popd
 
 ##############################################################################
@@ -3632,7 +3699,8 @@ mv -f $RPM_BUILD_ROOT/%{_lib}/lib{pcprofile,memusage}.so $RPM_BUILD_ROOT%{_prefi
 # The xtrace and memusage scripts have hard-coded paths that need to be
 # translated to a correct set of paths using the $LIB token which is
 # dynamically translated by ld.so as the default lib directory.
-for i in $RPM_BUILD_ROOT%{_prefix}/bin/{xtrace,memusage}; do
+#for i in $RPM_BUILD_ROOT%{_prefix}/bin/{xtrace,memusage}; do
+for i in $RPM_BUILD_ROOT%{_prefix}/bin/xtrace; do
   sed -e 's~=/%{_lib}/libpcprofile.so~=%{_prefix}/%{_lib}/libpcprofile.so~' \
       -e 's~=/%{_lib}/libmemusage.so~=%{_prefix}/%{_lib}/libmemusage.so~' \
       -e 's~='\''/\\\$LIB/libpcprofile.so~='\''%{_prefix}/\\$LIB/libpcprofile.so~' \
@@ -3737,8 +3805,8 @@ EOF
 
 # Add the utils scripts and programs to the utils subpackage.
 cat > utils.filelist <<EOF
-%{_prefix}/bin/memusage
-%{_prefix}/bin/memusagestat
+#%{_prefix}/bin/memusage
+#%{_prefix}/bin/memusagestat
 %{_prefix}/bin/mtrace
 %{_prefix}/bin/pcprofiledump
 %{_prefix}/bin/xtrace
@@ -3792,6 +3860,26 @@ rm -rf tmp-root
 install -m 700 build-locale-archive $RPM_BUILD_ROOT/usr/sbin/build-locale-archive
 popd
 
+##############################################################################
+# compatcollation
+##############################################################################
+pushd locale
+eval $(grep locarchive.c  ../compatcollation/glibc-rpmbuild.out | sed 's:"/usr/lib/locale":"/usr/lib/locale-compatcollation22659":g;s:"/usr/share/locale":"/usr/share/locale-compatcollation22659":g;s:locale/locarchive.o:locarchive.o:g')
+popd
+pushd build-%{target}
+$GCC -Os -g -static -o build-locale-archive-compatcollation%{compatcollationversion_nodots} %{SOURCE9993} \
+        ../build-%{target}/locarchive.o \
+        ../build-%{target}/locale/md5.o \
+        -I. -DDATADIR=\"%{_datadir}\" -DPREFIX=\"%{_prefix}\"  -DLOCALE_FOLDER=\"locale-compatcollation%{compatcollationversion_nodots}\" \
+        -L../build-%{target} \
+        -Wl,--allow-shlib-undefined \
+        -B../build-%{target}/csu/ -lc -lc_nonshared
+install -m 700 build-locale-archive-compatcollation%{compatcollationversion_nodots} $RPM_BUILD_ROOT%{_prefix}/sbin/build-locale-archive-compatcollation%{compatcollationversion_nodots}
+popd
+##############################################################################
+# compatcollation
+##############################################################################
+
 # Lastly copy some additional documentation for the packages.
 rm -rf documentation
 mkdir documentation
@@ -3812,6 +3900,14 @@ ln -sf /%{_lib}/ld64.so.1 $RPM_BUILD_ROOT/lib/ld64.so.1
 %ifarch armv7hl armv7hnl
 ln -sf /lib/ld-linux-armhf.so.3 $RPM_BUILD_ROOT/lib/ld-linux.so.3
 %endif
+
+##############################################################################
+# Install compatcollation
+##############################################################################
+
+pushd compatcollation
+make BUILDROOT=%{_builddir}/%{glibcsrcdir} COMPATPREFIX=%{compatprefix} BUILDDIR=%{_builddir}/%{glibcsrcdir}/build-%{target} INSTALLROOT=${RPM_BUILD_ROOT} GLIBCVERSION=%{glibcversion} GLIBCRELEASE=%{glibcrelease} COMPATCOLLATIONVERSION=%{compatcollationversion_nodots} install
+popd
 
 ##############################################################################
 # Run the glibc testsuite

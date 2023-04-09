@@ -92,6 +92,12 @@ char *alloca ();
 # define PRI_MACROS_BROKEN 0
 #endif
 
+#ifdef LIBCOMPATCOLL_MODE
+#undef open_not_cancel
+#define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (open, 3, (const char *) (name), (flags), (mode))
+#endif /* LIBCOMPATCOLL_MODE */
+
 /* Provide fallback values for macros that ought to be defined in <inttypes.h>.
    Note that our fallback values need not be literal strings, because we don't
    use them with preprocessor string concatenation.  */
@@ -452,6 +458,7 @@ char *alloca ();
 
 /* @@ end of prolog @@ */
 
+#ifndef LIBCOMPATCOLL_MODE
 #ifdef _LIBC
 /* Rename the non ISO C functions.  This is required by the standard
    because some ISO C functions will require linking with this object
@@ -463,6 +470,7 @@ char *alloca ();
   __mmap (addr, len, prot, flags, fd, offset)
 # define munmap(addr, len)	__munmap (addr, len)
 #endif
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* For those losing systems which don't have `alloca' we have to add
    some additional code emulating it.  */

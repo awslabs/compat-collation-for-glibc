@@ -17,6 +17,12 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __wcslen(s)             wcslen(s)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <langinfo.h>
 #include <locale.h>
@@ -443,7 +449,9 @@ STRXFRM (STRING_TYPE *dest, const STRING_TYPE *src, size_t n, __locale_t l)
      byte/word at the end.  */
   return needed - 1;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (STRXFRM)
+#endif /* LIBCOMPATCOLL_MODE */
 
 #ifndef WIDE_CHAR_VERSION
 weak_alias (__strxfrm_l, strxfrm_l)

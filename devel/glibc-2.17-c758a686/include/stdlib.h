@@ -22,6 +22,7 @@ extern __typeof (strtoull_l) __strtoull_l;
 extern __typeof (strtod_l) __strtod_l;
 extern __typeof (strtof_l) __strtof_l;
 extern __typeof (strtold_l) __strtold_l;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__strtol_l)
 libc_hidden_proto (__strtoul_l)
 libc_hidden_proto (__strtoll_l)
@@ -33,12 +34,15 @@ libc_hidden_proto (__strtold_l)
 libc_hidden_proto (exit)
 libc_hidden_proto (abort)
 libc_hidden_proto (getenv)
+#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (secure_getenv) __libc_secure_getenv;
 libc_hidden_proto (__libc_secure_getenv)
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (bsearch)
 libc_hidden_proto (qsort)
 extern __typeof (qsort_r) __qsort_r;
 libc_hidden_proto (__qsort_r)
+#endif /* LIBCOMPATCOLL_MODE */
 libc_hidden_proto (lrand48_r)
 libc_hidden_proto (wctomb)
 
@@ -140,6 +144,7 @@ extern unsigned long long int __strtoull_internal (const char *
 						   char **__restrict __endptr,
 						   int __base, int __group)
      __THROW __nonnull ((1)) __wur;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__strtof_internal)
 libc_hidden_proto (__strtod_internal)
 libc_hidden_proto (__strtold_internal)
@@ -147,6 +152,7 @@ libc_hidden_proto (__strtol_internal)
 libc_hidden_proto (__strtoll_internal)
 libc_hidden_proto (__strtoul_internal)
 libc_hidden_proto (__strtoull_internal)
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern double ____strtod_l_internal (const char *__restrict __nptr,
 				     char **__restrict __endptr, int __group,
@@ -179,6 +185,7 @@ extern unsigned long long int ____strtoull_l_internal (const char *
 						       int __base, int __group,
 						       __locale_t __loc);
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (____strtof_l_internal)
 libc_hidden_proto (____strtod_l_internal)
 libc_hidden_proto (____strtold_l_internal)
@@ -194,7 +201,8 @@ libc_hidden_proto (strtol)
 libc_hidden_proto (strtoll)
 libc_hidden_proto (strtoul)
 libc_hidden_proto (strtoull)
-
+#endif /* LIBCOMPATCOLL_MODE */
+	
 extern float __strtof_nan (const char *, char **, char) internal_function;
 extern double __strtod_nan (const char *, char **, char) internal_function;
 extern long double __strtold_nan (const char *, char **, char)
@@ -206,12 +214,14 @@ extern double __wcstod_nan (const wchar_t *, wchar_t **, wchar_t)
 extern long double __wcstold_nan (const wchar_t *, wchar_t **, wchar_t)
      internal_function;
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__strtof_nan)
 libc_hidden_proto (__strtod_nan)
 libc_hidden_proto (__strtold_nan)
 libc_hidden_proto (__wcstof_nan)
 libc_hidden_proto (__wcstod_nan)
 libc_hidden_proto (__wcstold_nan)
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern char *__ecvt (double __value, int __ndigit, int *__restrict __decpt,
 		     int *__restrict __sign);
@@ -244,7 +254,9 @@ extern int __qfcvt_r (long double __value, int __ndigit,
 # endif
 
 extern void *__default_morecore (ptrdiff_t) __THROW;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__default_morecore)
+#endif /* LIBCOMPATCOLL_MODE */
 
 struct abort_msg_s
 {
@@ -252,7 +264,9 @@ struct abort_msg_s
   char msg[0];
 };
 extern struct abort_msg_s *__abort_msg;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__abort_msg)
+#endif /* LIBCOMPATCOLL_MODE */
 
 __END_DECLS
 

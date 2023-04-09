@@ -3,6 +3,7 @@
    with a '\0' explicitly.  */
 #define UNSECURE_ENVVARS \
   "GCONV_PATH\0"							      \
+  "COMPAT_GCONV_PATH\0"							      \
   "GETCONF_DIR\0"							      \
   "HOSTALIASES\0"							      \
   "LD_AUDIT\0"								      \
@@ -18,6 +19,7 @@
   "LD_USE_LOAD_BIAS\0"							      \
   "LOCALDOMAIN\0"							      \
   "LOCPATH\0"								      \
+  "COMPAT_LOCPATH\0"                                                          \
   "MALLOC_TRACE\0"							      \
   "NIS_PATH\0"								      \
   "NLSPATH\0"								      \

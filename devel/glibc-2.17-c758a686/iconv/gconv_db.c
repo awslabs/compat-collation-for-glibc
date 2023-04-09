@@ -17,6 +17,14 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __tsearch(a,b,c)        tsearch(a,b,c)
+#define __tfind(a,b,c)          tfind(a,b,c)
+#define __tdestroy(a,b)		tdestroy(a,b)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <limits.h>
 #include <search.h>

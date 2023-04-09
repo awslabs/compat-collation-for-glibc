@@ -17,6 +17,15 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __tfind(a,b,c)          tfind(a,b,c)
+#define __tdestroy(a,b)		tdestroy(a,b)
+#define __getcwd(a,b)           getcwd(a,b)
+int __libc_enable_secure = 1;
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 /* Tell glibc's <string.h> to provide a prototype for mempcpy().
    This must come before <config.h> because <config.h> may include
    <features.h>, and once <features.h> has been included, it's too late.  */
@@ -31,7 +40,9 @@
 #include <sys/types.h>
 
 #ifdef __GNUC__
+#ifndef LIBCOMPATCOLL_MODE
 # define alloca __builtin_alloca
+#endif /* LIBCOMPATCOLL_MODE */
 # define HAVE_ALLOCA 1
 #else
 # if defined HAVE_ALLOCA_H || defined _LIBC
@@ -116,6 +127,7 @@ extern int errno;
 
 /* @@ end of prolog @@ */
 
+#ifndef LIBCOMPATCOLL_MODE
 #ifdef _LIBC
 /* Rename the non ANSI C functions.  This is required by the standard
    because some ANSI C functions will require linking with this object
@@ -139,6 +151,7 @@ static char *stpcpy PARAMS ((char *dest, const char *src));
 static void *mempcpy PARAMS ((void *dest, const void *src, size_t n));
 # endif
 #endif
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* Amount to increase buffer size by in each try.  */
 #define PATH_INCR 32
@@ -218,9 +231,11 @@ struct known_translation_t
 
 static void *root;
 
+#ifndef LIBCOMPATCOLL_MODE
 # ifdef _LIBC
 #  define tsearch __tsearch
 # endif
+#endif /* LIBCOMPATCOLL_MODE */
 
 /* Function to compare two entries in the table of known translations.  */
 static int transcmp PARAMS ((const void *p1, const void *p2));

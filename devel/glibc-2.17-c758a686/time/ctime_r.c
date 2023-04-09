@@ -17,6 +17,13 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __localtime_r(t,r)              localtime_r(t,r)
+#define __asctime_r(t,b)		asctime_r(t,b)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <time.h>
 
 /* Return a string as returned by asctime which is the representation

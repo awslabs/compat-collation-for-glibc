@@ -60,4 +60,6 @@ STRTOD_NAN (const STRING_TYPE *str, STRING_TYPE **endptr, STRING_TYPE endc)
     *endptr = (STRING_TYPE *) cp;
   return retval;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (STRTOD_NAN)
+#endif /* LIBCOMPATCOLL_MODE */

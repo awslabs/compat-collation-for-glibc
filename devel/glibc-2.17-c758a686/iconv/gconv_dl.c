@@ -18,8 +18,31 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __tsearch(a,b,c)        tsearch(a,b,c)
+#define __tfind(a,b,c)          tfind(a,b,c)
+#define __twalk(a,b)		twalk(a,b)
+#define __tdestroy(a,b)		tdestroy(a,b)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <dlfcn.h>
+#ifdef LIBCOMPATCOLL_MODE
+#ifdef __libc_dlopen
+#undef __libc_dlopen
+#endif
+#define __libc_dlopen(n)        dlopen (n, RTLD_LAZY)
+#ifdef __libc_dlclose
+#undef __libc_dlclose
+#endif
+#define __libc_dlclose(h)       dlclose(h)
+#ifdef __libc_dlsym
+#undef __libc_dlsym
+#endif
+#define __libc_dlsym(h,s)       dlsym(h,s)
+#endif /* LIBCOMPATCOLL_MODE */
 #include <inttypes.h>
 #include <search.h>
 #include <stdlib.h>

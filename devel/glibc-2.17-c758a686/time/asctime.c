@@ -16,6 +16,12 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __snprintf(s,n,f,...)		snprintf(s,n,f,__VA_ARGS__)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include "../locale/localeinfo.h"
 #include <errno.h>
 #include <limits.h>

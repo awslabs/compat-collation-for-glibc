@@ -59,6 +59,7 @@ extern __typeof (strncasecmp_l) __strncasecmp_l;
 /* Alternative version which doesn't pollute glibc's namespace.  */
 #if IS_IN (libc)
 # undef strndupa
+#ifndef LIBCOMPATCOLL_MODE
 # define strndupa(s, n)							      \
   (__extension__							      \
     ({									      \
@@ -68,8 +69,20 @@ extern __typeof (strncasecmp_l) __strncasecmp_l;
       __new[__len] = '\0';						      \
       (char *) memcpy (__new, __old, __len);				      \
     }))
-#endif
+#else
+# define strndupa(s, n)							      \
+  (__extension__							      \
+    ({									      \
+      const char *__old = (s);						      \
+      size_t __len = strnlen (__old, (n));				      \
+      char *__new = (char *) __builtin_alloca (__len + 1);		      \
+      __new[__len] = '\0';						      \
+      (char *) memcpy (__new, __old, __len);				      \
+    }))
+#endif /* LIBCOMPATCOLL_MODE */
+#endif /* IS_IN (libc) */
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__mempcpy)
 libc_hidden_proto (__stpcpy)
 libc_hidden_proto (__stpncpy)
@@ -86,11 +99,15 @@ libc_hidden_proto (strcoll)
 libc_hidden_proto (__strcoll_l)
 libc_hidden_proto (__strxfrm_l)
 libc_hidden_proto (__strtok_r)
+#endif /* LIBCOMPATCOLL_MODE */
 extern char *__strsep_g (char **__stringp, const char *__delim);
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__strsep_g)
 libc_hidden_proto (strnlen)
 libc_hidden_proto (memmem)
+#endif /* LIBCOMPATCOLL_MODE */
 
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_builtin_proto (memchr)
 libc_hidden_builtin_proto (memcpy)
 libc_hidden_builtin_proto (mempcpy)
@@ -111,6 +128,7 @@ libc_hidden_builtin_proto (strrchr)
 libc_hidden_builtin_proto (strspn)
 libc_hidden_builtin_proto (strstr)
 libc_hidden_builtin_proto (ffs)
+#endif /* LIBCOMPATCOLL_MODE */
 
 # ifndef _ISOMAC
 #  ifndef index

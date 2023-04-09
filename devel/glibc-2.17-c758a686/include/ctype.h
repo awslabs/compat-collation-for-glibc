@@ -3,7 +3,9 @@
 #ifndef _ISOMAC
 /* Initialize ctype locale data.  */
 extern void __ctype_init (void);
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__ctype_init)
+#endif /* LIBCOMPATCOLL_MODE */
 
 extern int __isctype (int __c, int __mask);
 

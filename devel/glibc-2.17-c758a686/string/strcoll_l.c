@@ -16,6 +16,11 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __wcslen(s)             wcslen(s)
+
+#endif /* LIBCOMPATCOLL_MODE */
 
 #include <assert.h>
 #include <langinfo.h>
@@ -637,7 +642,9 @@ STRCOLL (const STRING_TYPE *s1, const STRING_TYPE *s2, __locale_t l)
 
   return result;
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (STRCOLL)
+#endif /* LIBCOMPATCOLL_MODE */
 
 #ifndef WIDE_CHAR_VERSION
 weak_alias (__strcoll_l, strcoll_l)

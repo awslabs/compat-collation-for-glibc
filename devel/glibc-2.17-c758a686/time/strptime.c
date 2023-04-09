@@ -32,4 +32,6 @@ strptime (const char *buf, const char *format, struct tm *tm)
 {
   return __strptime_internal (buf, format, tm, NULL, _NL_CURRENT_LOCALE);
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (strptime)
+#endif /* LIBCOMPATCOLL_MODE */

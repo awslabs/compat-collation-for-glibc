@@ -26,4 +26,6 @@ wcsftime (wchar_t *s, size_t maxsize, const wchar_t *format,
 {
   return __wcsftime_l (s, maxsize, format, tp, _NL_CURRENT_LOCALE);
 }
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (wcsftime)
+#endif /* LIBCOMPATCOLL_MODE */

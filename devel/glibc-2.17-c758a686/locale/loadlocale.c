@@ -17,6 +17,13 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __mmap(a,b,c,d,e,f)             mmap(a,b,c,d,e,f)
+#define __munmap(a,b)                   munmap(a,b)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -32,6 +39,17 @@
 #include <not-cancel.h>
 #include "localeinfo.h"
 
+#ifdef LIBCOMPATCOLL_MODE
+#undef open_not_cancel
+#define open_not_cancel(name, flags, mode) \
+   INLINE_SYSCALL (open, 3, (const char *) (name), (flags), (mode))
+#undef open_not_cancel_2
+#define open_not_cancel_2(name, flags) \
+   INLINE_SYSCALL (open, 2, (const char *) (name), (flags))
+#undef read_not_cancel
+#define read_not_cancel(fd, buf, n) \
+  INLINE_SYSCALL (read, 3, (fd), (buf), (n))
+#endif /* LIBCOMPATCOLL_MODE */
 
 static const size_t _nl_category_num_items[] =
 {

@@ -28,7 +28,11 @@ extern int rtld_errno attribute_hidden;
 
 #  undef  errno
 #  if IS_IN (libc)
+#ifndef LIBCOMPATCOLL_MODE
 #   define errno __libc_errno
+#else
+#   define errno errno
+#endif /* LIBCOMPATCOLL_MODE */
 #  else
 #   define errno errno		/* For #ifndef errno tests.  */
 #  endif
@@ -44,7 +48,9 @@ extern int *__errno_location (void) __THROW __attribute__ ((__const__))
      attribute_hidden
 #  endif
 ;
+#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__errno_location)
+#endif /* LIBCOMPATCOLL_MODE */
 # endif
 
 #endif /* _ERRNO_H */

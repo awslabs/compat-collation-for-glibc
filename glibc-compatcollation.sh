@@ -30,7 +30,7 @@ usage() {
     echo "	diff <TAG|COMMIT> - Show diff from RELEASE TAG to given TAG or COMMIT"
     echo "	diff <TAG1|COMMIT1> <TAG2|COMMIT2> - Show diff between TAG1 and  TAG2 or COMMIT1 and COMMIT2"
     echo
-    echo "	patch - Generate RPM patches"
+    echo "	rpmpatch - Generate RPM patches"
     echo
     exit 2
 }

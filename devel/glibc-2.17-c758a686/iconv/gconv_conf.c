@@ -17,6 +17,15 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifdef LIBCOMPATCOLL_MODE
+
+#define __tsearch(a,b,c)	tsearch(a,b,c)
+#define __tfind(a,b,c)		tfind(a,b,c)
+#define __getcwd(a,b)		getcwd(a,b)
+#define __getdelim(line, len, c, fp) getdelim (line, len, c, fp)
+
+#endif /* LIBCOMPATCOLL_MODE */
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -89,8 +98,10 @@ static const char builtin_aliases[] =
 #undef BUILTIN_ALIAS
 };
 
+#ifndef LIBCOMPATCOLL_MODE
 #include <libio/libioP.h>
 #define __getdelim(line, len, c, fp) _IO_getdelim (line, len, c, fp)
+#endif /* LIBCOMPATCOLL_MODE */
 
 
 /* Value of the GCONV_PATH environment variable.  */
