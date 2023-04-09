@@ -248,7 +248,7 @@ GCCCOMPSTR="gcc -shared -Wl,-Bsymbolic \
 -L${BUILDDIR}/support -L${BUILDDIR}/nptl \
 -Wl,-rpath-link=${BUILDDIR}:${BUILDDIR}/math:${BUILDDIR}/elf:${BUILDDIR}/dlfcn:${BUILDDIR}/nss:${BUILDDIR}/nis:${BUILDDIR}/rt:${BUILDDIR}/resolv:${BUILDDIR}/crypt:${BUILDDIR}/support:${BUILDDIR}/nptl \
 -o ${BUILDDIR}/libcompatcollation.${GLIBCVERSION}-${GLIBCRELEASE}.so \
-${BUILDDIR}/libcompatcollation_pic.os -ldl"
+${BUILDDIR}/libcompatcollation_pic.os -ldl /usr/lib64/ld-linux-x86-64.so.2"
 
 # output for the record
 echo ${GCCCOMPSTR}
