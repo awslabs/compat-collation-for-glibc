@@ -3862,17 +3862,18 @@ popd
 # compatcollation
 ##############################################################################
 pushd locale
-eval $(grep locarchive.c  ../compatcollation/glibc-rpmbuild.out | sed 's:"/usr/lib/locale":"/usr/lib/locale-compatcollation22659":g;s:"/usr/share/locale":"/usr/share/locale-compatcollation22659":g;s:locale/locarchive.o:locarchive.o:g')
+eval $(grep locarchive.c  ../compatcollation/glibc-rpmbuild.out | sed 's:"/usr/lib/locale":"%{compatprefix}/lib/locale-compatcollation%{compatcollationversion_nodots}":g;s:"/usr/share/locale":"%{compatprefix}/share/locale-compatcollation%{compatcollationversion_nodots}":g;s:locale/locarchive.o:locarchive.o:g')
 popd
 pushd build-%{target}
+mkdir -p ${RPM_BUILD_ROOT}%{compatprefix}/sbin
 $GCC -Os -g -static -o build-locale-archive-compatcollation%{compatcollationversion_nodots} %{SOURCE9993} \
         ../build-%{target}/locarchive.o \
         ../build-%{target}/locale/md5.o \
-        -I. -DDATADIR=\"%{_datadir}\" -DPREFIX=\"%{_prefix}\"  -DLOCALE_FOLDER=\"locale-compatcollation%{compatcollationversion_nodots}\" \
+        -I. -DDATADIR=\"%{compatprefix}\" -DPREFIX=\"%{compatprefix}\"  -DLOCALE_FOLDER=\"locale-compatcollation%{compatcollationversion_nodots}\" \
         -L../build-%{target} \
         -Wl,--allow-shlib-undefined \
         -B../build-%{target}/csu/ -lc -lc_nonshared
-install -m 700 build-locale-archive-compatcollation%{compatcollationversion_nodots} $RPM_BUILD_ROOT%{_prefix}/sbin/build-locale-archive-compatcollation%{compatcollationversion_nodots}
+install -m 700 build-locale-archive-compatcollation%{compatcollationversion_nodots} ${RPM_BUILD_ROOT}%{compatprefix}/sbin/build-locale-archive-compatcollation%{compatcollationversion_nodots}
 popd
 ##############################################################################
 # compatcollation
