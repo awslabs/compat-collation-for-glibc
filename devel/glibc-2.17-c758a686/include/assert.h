@@ -21,9 +21,7 @@ extern void __assert_fail_base (const char *fmt, const char *assertion,
      __THROW  __attribute__ ((__noreturn__));
 
 # if IS_IN (libc) || IS_IN (rtld)
-#ifndef LIBCOMPATCOLL_MODE
 hidden_proto (__assert_fail)
 hidden_proto (__assert_perror_fail)
-#endif /* LIBCOMPATCOLL_MODE */
 # endif
 #endif

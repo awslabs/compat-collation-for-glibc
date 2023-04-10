@@ -48,9 +48,7 @@ extern int *__errno_location (void) __THROW __attribute__ ((__const__))
      attribute_hidden
 #  endif
 ;
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__errno_location)
-#endif /* LIBCOMPATCOLL_MODE */
 # endif
 
 #endif /* _ERRNO_H */

@@ -1729,9 +1729,7 @@ ____STRTOF_INTERNAL (const STRING_TYPE *nptr, STRING_TYPE **endptr, int group,
   /* NOTREACHED */
 }
 #if defined _LIBC && !defined USE_WIDE_CHAR
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (____STRTOF_INTERNAL)
-#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 /* External user entry point.  */
@@ -1744,12 +1742,10 @@ __STRTOF (const STRING_TYPE *nptr, STRING_TYPE **endptr, __locale_t loc)
 {
   return ____STRTOF_INTERNAL (nptr, endptr, 0, loc);
 }
-#ifndef LIBCOMPATCOLL_MODE
 #if defined _LIBC
 libc_hidden_def (__STRTOF)
 libc_hidden_ver (__STRTOF, STRTOF)
 #endif
-#endif /* LIBCOMPATCOLL_MODE */
 weak_alias (__STRTOF, STRTOF)
 
 #ifdef LONG_DOUBLE_COMPAT

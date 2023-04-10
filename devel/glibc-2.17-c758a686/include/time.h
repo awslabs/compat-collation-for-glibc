@@ -8,24 +8,16 @@
 __BEGIN_DECLS
 
 extern __typeof (strftime_l) __strftime_l;
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__strftime_l)
-#endif /* LIBCOMPATCOLL_MODE */
 extern __typeof (strptime_l) __strptime_l;
 
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (time)
-#endif /* LIBCOMPATCOLL_MODE */
 libc_hidden_proto (asctime)
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (mktime)
 libc_hidden_proto (timelocal)
 libc_hidden_proto (localtime)
-#endif /* LIBCOMPATCOLL_MODE */
 libc_hidden_proto (strftime)
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (strptime)
-#endif /* LIBCOMPATCOLL_MODE */
 
 extern __typeof (clock_getres) __clock_getres;
 extern __typeof (clock_gettime) __clock_gettime;

@@ -43,9 +43,7 @@ __ctype_init (void)
   __ctype_init_done = 1;
 #endif /* LIBCOMPATCOLL_MODE */
 }
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__ctype_init)
-#endif /* LIBCOMPATCOLL_MODE */
 
 
 #include <shlib-compat.h>

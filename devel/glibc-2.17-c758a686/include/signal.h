@@ -11,9 +11,7 @@ libc_hidden_proto (sigaddset)
 libc_hidden_proto (sigdelset)
 libc_hidden_proto (sigismember)
 libc_hidden_proto (__sigpause)
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (raise)
-#endif /* LIBCOMPATCOLL_MODE */
 libc_hidden_proto (__libc_current_sigrtmin)
 libc_hidden_proto (__libc_current_sigrtmax)
 libc_hidden_proto (_sys_siglist)

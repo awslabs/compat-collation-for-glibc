@@ -28,7 +28,5 @@ __mbrlen (const char *s, size_t n, mbstate_t *ps)
 {
   return __mbrtowc (NULL, s, n, ps ?: &internal);
 }
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (__mbrlen)
-#endif /* LIBCOMPATCOLL_MODE */
 weak_alias (__mbrlen, mbrlen)

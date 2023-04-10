@@ -51,9 +51,7 @@ INTERNAL (STRTOF) (const STRING_TYPE *nptr, STRING_TYPE **endptr, int group)
   return INTERNAL(STRTOF_L) (nptr, endptr, group, _NL_CURRENT_LOCALE);
 }
 #if defined _LIBC
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (INTERNAL (STRTOF))
-#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 
@@ -66,9 +64,7 @@ STRTOF (const STRING_TYPE *nptr, STRING_TYPE **endptr)
   return INTERNAL(STRTOF_L) (nptr, endptr, 0, _NL_CURRENT_LOCALE);
 }
 #if defined _LIBC
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (STRTOF)
-#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 #ifdef LONG_DOUBLE_COMPAT

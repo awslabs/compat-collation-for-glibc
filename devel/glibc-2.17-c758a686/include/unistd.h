@@ -4,9 +4,7 @@
 # ifndef _ISOMAC
 __BEGIN_DECLS
 
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (_exit, __noreturn__)
-#endif /* LIBCOMPATCOLL_MODE */
 libc_hidden_proto (alarm)
 libc_hidden_proto (confstr)
 libc_hidden_proto (execl)
@@ -89,9 +87,7 @@ extern int __execve (const char *__path, char *const __argv[],
 extern long int __pathconf (const char *__path, int __name);
 extern long int __fpathconf (int __fd, int __name);
 extern long int __sysconf (int __name);
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__sysconf)
-#endif /* LIBCOMPATCOLL_MODE */
 extern __pid_t __getpid (void);
 libc_hidden_proto (__getpid)
 extern __pid_t __getppid (void);
@@ -134,13 +130,9 @@ extern int __close (int __fd);
 libc_hidden_proto (__close)
 extern int __libc_close (int __fd);
 extern ssize_t __read (int __fd, void *__buf, size_t __nbytes);
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__read)
-#endif /* LIBCOMPATCOLL_MODE */
 extern ssize_t __write (int __fd, const void *__buf, size_t __n);
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_proto (__write)
-#endif /* LIBCOMPATCOLL_MODE */
 extern __pid_t __fork (void);
 libc_hidden_proto (__fork)
 extern int __getpagesize (void) __attribute__ ((__const__));

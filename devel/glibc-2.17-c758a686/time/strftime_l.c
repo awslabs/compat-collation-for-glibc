@@ -468,9 +468,7 @@ my_strftime (CHAR_T *s, size_t maxsize, const CHAR_T *format,
 			      ut_argument LOCALE_ARG);
 }
 #ifdef _LIBC
-#ifndef LIBCOMPATCOLL_MODE
 libc_hidden_def (my_strftime)
-#endif /* LIBCOMPATCOLL_MODE */
 #endif
 
 static size_t

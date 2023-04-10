@@ -512,6 +512,10 @@ for linking")
    versioned_symbol (libc, __real_foo, foo, GLIBC_2_1);
    libc_hidden_ver (__real_foo, foo)  */
 
+#ifdef LIBCOMPATCOLL_MODE
+#define NO_HIDDEN
+#endif /* LIBCOMPATCOLL_MODE */
+
 #if defined SHARED && defined DO_VERSIONING && !defined NO_HIDDEN
 # ifndef __ASSEMBLER__
 #  define __hidden_proto_hiddenattr(attrs...) \

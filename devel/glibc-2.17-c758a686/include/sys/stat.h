@@ -14,9 +14,7 @@ extern int __mknod (const char *__path,
 		    __mode_t __mode, __dev_t __dev);
 #if IS_IN (libc) || IS_IN (rtld)
 hidden_proto (__fxstat)
-#ifndef LIBCOMPATCOLL_MODE
 hidden_proto (__fxstat64)
-#endif /* LIBCOMPATCOLL_MODE */
 hidden_proto (__lxstat)
 hidden_proto (__lxstat64)
 hidden_proto (__xstat)
