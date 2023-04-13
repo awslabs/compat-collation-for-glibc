@@ -186,7 +186,6 @@ Source12: glibc.patches
 # compatcollation Patches
 ##############################################################################
 Patch9991: 9991-compatcollation-glibc.patch
-Patch9992: 9992-compatcollation-build.patch
 Source9993: build-locale-archive-compatcollation.c
 ##############################################################################
 # compatcollation Patches

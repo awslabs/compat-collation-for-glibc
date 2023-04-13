@@ -30,7 +30,7 @@ usage() {
     echo "	diff <TAG|COMMIT> - Show diff from RELEASE TAG to given TAG or COMMIT"
     echo "	diff <TAG1|COMMIT1> <TAG2|COMMIT2> - Show diff between TAG1 and  TAG2 or COMMIT1 and COMMIT2"
     echo
-    echo "	patch - Generate RPM patches"
+    echo "	rpmpatch - Generate RPM patches"
     echo
     exit 2
 }
@@ -51,7 +51,7 @@ rebuild_libs() {
    chmod 755 ${TOPDIR}/BUILD/${GLIBC_DIR}/compatcollation/build-compatcollation.sh
 BUILDROOT=${TOPDIR}/BUILD/${GLIBC_DIR} \
 BUILDDIR=${TOPDIR}/BUILD/${GLIBC_DIR}/build-x86_64-redhat-linux \
-INSTALLROOT=${TOPDIR}/BUILDROOT/glibc-2.26-59.amzn2.x86_64 \
+INSTALLROOT=${TOPDIR}/BUILDROOT/${GLIBC_DIR} \
 COMPATPREFIX=/usr \
 GLIBCVERSION=2.26 \
 GLIBCRELEASE=59.amzn2 \
@@ -71,12 +71,12 @@ show_diff() {
 }
 
 rpmpatch() {
-	(cd $DEV_DIR; git diff --relative --patch ${BASELINE_TAG}..HEAD -- . :^./compatcollation) >SOURCES/9991-compatcollation-glibc.patch
-	(cd $DEV_DIR; git diff --relative --patch ${BASELINE_TAG}..HEAD -- compatcollation) >SOURCES/9992-compatcollation-build.patch
+	(cd $DEV_DIR; git diff --relative --patch ${BASELINE_TAG}..HEAD) >SOURCES/9991-compatcollation-glibc.patch
 }
 
 case "$1" in
     build)
+        rpmpatch
         build_rpm
       ;;
     rebuild)
