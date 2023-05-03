@@ -103,6 +103,8 @@ COMPATCOLL_1.0 {
     set_check_glibc_strcoll;
     unset_check_glibc_strcoll;
     __ctype_b_loc;
+    __ctype_tolower_loc;
+    __ctype_toupper_loc;
     __ctype_init;
     __ctype_tolower;
     __ctype_toupper;
