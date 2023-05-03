@@ -4,7 +4,7 @@
 %define _unpackaged_files_terminate_build 0
 %define onlycompatcollation 1
 %define compatcollationversion_nodots 22659
-%define compatcollationversion 1.7
+%define compatcollationversion 1.8
 %define compatcollationrelease amzn2
 %if %{?compatprefix:1}%{!?compatprefix:0}
 # use user defined compatprefix
