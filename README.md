@@ -45,7 +45,7 @@ This branch `2.17-326.el7` is for glibc version 2.17-326 included with RHEL/Cent
 
 * Set extra args for rpmbuild
 
-`RPMBUILD_EXTRAS="--define 'compatprefix /opt'" ./glibc-compatcollation.sh build`
+`BUILD_EXTRAS="--define 'compatprefix /opt'" ./glibc-compatcollation.sh build`
 
 ### For patch developers
 
