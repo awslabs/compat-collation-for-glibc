@@ -46,7 +46,7 @@ This branch `2.26-59.amzn2` is for glibc version 2.26-59 included with Amazon Li
 
 * Set extra args for rpmbuild
 
-`RPMBUILD_EXTRAS="--define 'compatprefix /opt'" ./glibc-compatcollation.sh build`
+`BUILD_EXTRAS="--define 'compatprefix /opt'" ./glibc-compatcollation.sh build`
 
 ### For patch developers
 
