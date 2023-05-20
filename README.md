@@ -19,11 +19,13 @@ On a given major version of a Linux distribution, say CentOS, the major version 
 
 Moreover, when an existing database is moved from one Linux distribution major version to another (say CentOS 7 to CentOS 8), the major version of glibc typically changes (in this example from 2.17 to 2.28), bringing with it potentially widespread significant changes in collations and sort order. For anyone, but especially for large database fleets, this is a huge problem when the need to migrate Linux distribution for other reasons presents itself.
 
-In summary, if a PostgreSQL database resides on an CentOS7 system with glibc version 2.17, and the operating system (OS) is upgraded to CentOS8 with glibc version 2.28, the majority of indexes built on collatable columns will be broken.
+In summary, if a PostgreSQL database resides on an CentOS7 system with glibc version 2.17, and the operating system (OS) is upgraded to CentOS8 with glibc version 2.28, the majority of indexes built on collatable columns will be broken. The purpose of this project is to provide a solution to that problem, in the form of portable locale library extracted from a very specific glibc version -- i.e. from a versioned package belonging to a particular Linux distribution.
 
 ## Getting started
 
 The code in this repository is organized such that each base glibc version (the version who's collation you want to preserve) has its own branch. Once you have cloned the repository, switch to appropriate branch based on your desired base glibc verion and follow the branch specific README.md.
+
+If a branch does not exist for your desired base glibc version, create one starting with the RPM source of that glibc package. Lay it out using the pattern in the existing branches. Then merge the difference between the latest tag and the baseline for one of the existing branches, e.g. 2.17-326.el7-v1.2 diff'ed against 2.17-326.el7-BASELINE. The details are left as an exercise for the reader.
 
 ## Help & feedback
 
