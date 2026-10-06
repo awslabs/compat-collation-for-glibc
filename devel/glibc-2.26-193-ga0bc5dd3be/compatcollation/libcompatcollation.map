@@ -195,6 +195,7 @@ COMPATCOLL_1.0 {
     strfmon;
     strfmon_l;
     strftime;
+    strftime_l;
     strncasecmp;
     strncasecmp_l;
     strptime;
@@ -232,6 +233,7 @@ COMPATCOLL_1.0 {
     wcscoll;
     wcscoll_l;
     wcsftime;
+    wcsftime_l;
     wcsncasecmp;
     wcsncasecmp_l;
     wcstod;
